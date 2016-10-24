@@ -1,0 +1,40 @@
+name:                tensorflow-proto
+version:             0.1.0.0
+synopsis:            TensorFlow protocol buffers.
+description:         Please see README.md
+homepage:            https://github.com/tensorflow/haskell#readme
+license:             Apache
+author:              TensorFlow authors
+maintainer:          tensorflow-haskell@googlegroups.com
+copyright:           Google Inc.
+category:            Machine Learning
+build-type:          Custom
+cabal-version:       >=1.22
+extra-source-files:  ../third_party/tensorflow/tensorflow/core/framework/*.proto
+                   , ../third_party/tensorflow/tensorflow/core/protobuf/config.proto
+
+library
+  exposed-modules:     Proto.Tensorflow.Core.Framework.AttrValue
+                     , Proto.Tensorflow.Core.Framework.Graph
+                     , Proto.Tensorflow.Core.Framework.NodeDef
+                     , Proto.Tensorflow.Core.Framework.OpDef
+                     , Proto.Tensorflow.Core.Framework.ResourceHandle
+                     , Proto.Tensorflow.Core.Framework.Tensor
+                     , Proto.Tensorflow.Core.Framework.TensorShape
+                     , Proto.Tensorflow.Core.Framework.Types
+                     , Proto.Tensorflow.Core.Protobuf.Config
+  other-modules:       Proto.Tensorflow.Core.Framework.AllocationDescription
+                     , Proto.Tensorflow.Core.Framework.CostGraph
+                     , Proto.Tensorflow.Core.Framework.Function
+                     , Proto.Tensorflow.Core.Framework.StepStats
+                     , Proto.Tensorflow.Core.Framework.TensorDescription
+                     , Proto.Tensorflow.Core.Framework.Versions
+  build-depends:  proto-lens == 0.1.*
+                , proto-lens-protoc == 0.1.*
+                , base >= 4.7 && < 5
+  default-language:    Haskell2010
+  include-dirs: .
+
+source-repository head
+  type:     git
+  location: https://github.com/tensorflow/haskell

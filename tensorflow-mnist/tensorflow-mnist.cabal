@@ -1,0 +1,80 @@
+name:                tensorflow-mnist
+version:             0.1.0.0
+synopsis:            TensorFlow demo application for learning MNIST model.
+description:         Please see README.md
+homepage:            https://github.com/tensorflow/haskell#readme
+license:             Apache
+author:              TensorFlow authors
+maintainer:          tensorflow-haskell@googlegroups.com
+copyright:           Google Inc.
+category:            Machine Learning
+build-type:          Simple
+cabal-version:       >=1.22
+data-files:          data/*.ckpt
+                   , data/*.pb
+
+library
+  hs-source-dirs:  src
+                ,  src-data
+  exposed-modules: TensorFlow.Examples.MNIST.Parse
+                ,  TensorFlow.Examples.MNIST.TrainedGraph
+  other-modules:  Paths_tensorflow_mnist
+  build-depends:  proto-lens == 0.1.*
+                , base >= 4.7 && < 5
+                , binary
+                , bytestring
+                , filepath
+                , lens-family
+                , containers
+                , split
+                , tensorflow-proto == 0.1.*
+                , tensorflow-core-ops == 0.1.*
+                , tensorflow
+                , text
+                , vector
+                , zlib
+  default-language:    Haskell2010
+
+executable Main
+  default-language: Haskell2010
+  main-is: Main.hs
+  hs-source-dirs: app
+  build-depends: base
+               , bytestring
+               , filepath
+               , lens-family
+               , proto-lens
+               , tensorflow
+               , tensorflow-mnist
+               , tensorflow-mnist-input-data
+               , tensorflow-ops
+               , tensorflow-proto
+               , text
+               , transformers
+               , vector
+
+Test-Suite ParseTest
+  default-language: Haskell2010
+  type: exitcode-stdio-1.0
+  main-is: ParseTest.hs
+  hs-source-dirs: tests
+  build-depends: HUnit
+               , base
+               , bytestring
+               , proto-lens
+               , lens-family
+               , google-shim
+               , tensorflow
+               , tensorflow-mnist
+               , tensorflow-mnist-input-data
+               , tensorflow-ops
+               , tensorflow-proto
+               , test-framework
+               , test-framework-hunit
+               , text
+               , transformers
+               , vector
+
+source-repository head
+  type:     git
+  location: https://github.com/tensorflow/haskell

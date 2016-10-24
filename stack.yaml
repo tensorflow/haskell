@@ -1,0 +1,24 @@
+resolver: lts-6.2
+
+packages:
+- google-shim
+- tensorflow
+- tensorflow-core-ops
+- tensorflow-opgen
+- tensorflow-ops
+- tensorflow-proto
+- tensorflow-mnist
+- tensorflow-mnist-input-data
+- tensorflow-queue
+
+extra-deps:
+# proto-lens is not yet in Stackage.
+- proto-lens-0.1.0.4
+- proto-lens-protoc-0.1.0.4
+
+# Allow our custom Setup.hs scripts to import Data.ProtoLens.Setup from the version of
+# `proto-lens-protoc` in stack's local DB.  See:
+# https://github.com/google/proto-lens/blob/master/README.md#using-cabal
+explicit-setup-deps:
+  "*": true
+

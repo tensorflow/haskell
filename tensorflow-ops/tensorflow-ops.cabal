@@ -1,0 +1,191 @@
+name:                tensorflow-ops
+version:             0.1.0.0
+synopsis:            Friendly layer around TensorFlow bindings.
+description:         Please see README.md
+homepage:            https://github.com/tensorflow/haskell#readme
+license:             Apache
+author:              TensorFlow authors
+maintainer:          tensorflow-haskell@googlegroups.com
+copyright:           Google Inc.
+category:            Machine Learning
+build-type:          Simple
+cabal-version:       >=1.22
+
+library
+  hs-source-dirs:   src
+  exposed-modules: TensorFlow.Gradient
+                 , TensorFlow.Ops
+                 , TensorFlow.EmbeddingOps
+  build-depends:  proto-lens == 0.1.*
+                , base >= 4.7 && < 5
+                , bytestring
+                , fgl
+                , mtl
+                , data-default
+                , lens-family
+                , containers
+                , tensorflow == 0.1.*
+                , tensorflow-proto == 0.1.*
+                , tensorflow-core-ops == 0.1.*
+                , text
+  default-language:    Haskell2010
+
+Test-Suite BuildTest
+  default-language: Haskell2010
+  type: exitcode-stdio-1.0
+  main-is: BuildTest.hs
+  hs-source-dirs: tests
+  build-depends: HUnit
+               , base
+               , proto-lens
+               , lens-family
+               , google-shim
+               , tensorflow
+               , tensorflow-ops
+               , tensorflow-proto
+               , test-framework
+               , test-framework-hunit
+               , transformers
+               , vector
+
+Test-Suite EmbeddingOpsTest
+  default-language: Haskell2010
+  type: exitcode-stdio-1.0
+  main-is: EmbeddingOpsTest.hs
+  hs-source-dirs: tests
+  build-depends: HUnit
+               , QuickCheck
+               , base
+               , proto-lens
+               , lens-family
+               , google-shim
+               , tensorflow
+               , tensorflow-core-ops
+               , tensorflow-ops
+               , tensorflow-proto
+               , test-framework
+               , test-framework-hunit
+               , test-framework-quickcheck2
+               , vector
+
+Test-Suite ArrayOpsTest
+  default-language: Haskell2010
+  type: exitcode-stdio-1.0
+  main-is: ArrayOpsTest.hs
+  hs-source-dirs: tests
+  build-depends: HUnit
+               , QuickCheck
+               , base
+               , proto-lens
+               , lens-family
+               , google-shim
+               , tensorflow
+               , tensorflow-core-ops
+               , tensorflow-ops
+               , tensorflow-proto
+               , test-framework
+               , test-framework-hunit
+               , test-framework-quickcheck2
+               , transformers
+               , vector
+
+Test-Suite OpsTest
+  default-language: Haskell2010
+  type: exitcode-stdio-1.0
+  main-is: OpsTest.hs
+  hs-source-dirs: tests
+  build-depends: HUnit
+               , QuickCheck
+               , base
+               , bytestring
+               , proto-lens
+               , lens-family
+               , google-shim
+               , temporary
+               , tensorflow
+               , tensorflow-core-ops
+               , tensorflow-ops
+               , tensorflow-proto
+               , test-framework
+               , test-framework-hunit
+               , test-framework-quickcheck2
+               , transformers
+               , vector
+
+Test-Suite DataFlowOpsTest
+  default-language: Haskell2010
+  type: exitcode-stdio-1.0
+  main-is: DataFlowOpsTest.hs
+  hs-source-dirs: tests
+  build-depends: HUnit
+               , QuickCheck
+               , base
+               , proto-lens
+               , lens-family
+               , google-shim
+               , tensorflow
+               , tensorflow-core-ops
+               , tensorflow-ops
+               , tensorflow-proto
+               , test-framework
+               , test-framework-hunit
+               , test-framework-quickcheck2
+               , vector
+
+Test-Suite GradientTest
+  default-language: Haskell2010
+  type: exitcode-stdio-1.0
+  main-is: GradientTest.hs
+  hs-source-dirs: tests
+  build-depends: HUnit
+               , base
+               , proto-lens
+               , lens-family
+               , google-shim
+               , tensorflow
+               , tensorflow-ops
+               , tensorflow-proto
+               , test-framework
+               , test-framework-hunit
+
+Test-Suite MiscTest
+  default-language: Haskell2010
+  type: exitcode-stdio-1.0
+  main-is: MiscTest.hs
+  hs-source-dirs: tests
+  build-depends: HUnit
+               , base
+               , bytestring
+               , vector
+               , google-shim
+               , transformers
+               , tensorflow
+               , tensorflow-ops
+               , tensorflow-proto
+               , test-framework
+               , test-framework-hunit
+
+Test-Suite TypesTest
+  default-language: Haskell2010
+  type: exitcode-stdio-1.0
+  main-is: TypesTest.hs
+  hs-source-dirs: tests
+  build-depends: HUnit
+               , QuickCheck
+               , base
+               , bytestring
+               , proto-lens
+               , lens-family
+               , google-shim
+               , tensorflow
+               , tensorflow-ops
+               , tensorflow-proto
+               , transformers
+               , test-framework
+               , test-framework-hunit
+               , test-framework-quickcheck2
+               , vector
+
+source-repository head
+  type:     git
+  location: https://github.com/tensorflow/haskell

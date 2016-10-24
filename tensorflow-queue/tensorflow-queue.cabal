@@ -1,0 +1,51 @@
+name:                tensorflow-queue
+version:             0.1.0.0
+synopsis:            Basic access to TensorFlow queues.
+description:         Please see README.md
+homepage:            https://github.com/tensorflow/haskell#readme
+license:             Apache
+author:              TensorFlow authors
+maintainer:          tensorflow-haskell@googlegroups.com
+copyright:           Google Inc.
+category:            Machine Learning
+build-type:          Simple
+cabal-version:       >=1.22
+
+library
+  hs-source-dirs:  src
+  exposed-modules: TensorFlow.Queue
+  build-depends:  proto-lens == 0.1.*
+                , base >= 4.7 && < 5
+                , bytestring
+                , lens-family
+                , containers
+                , tensorflow-proto == 0.1.*
+                , tensorflow-core-ops == 0.1.*
+                , tensorflow
+                , text
+  default-language:    Haskell2010
+
+Test-Suite QueueTest
+  default-language: Haskell2010
+  type: exitcode-stdio-1.0
+  main-is: QueueTest.hs
+  hs-source-dirs: tests
+  -- Uses multiple threads and blocks without this option.
+  ghc-options: -threaded
+  build-depends: HUnit
+               , base
+               , bytestring
+               , proto-lens
+               , lens-family
+               , google-shim
+               , tensorflow
+               , tensorflow-ops
+               , tensorflow-queue
+               , test-framework
+               , test-framework-hunit
+               , transformers
+               , vector
+
+source-repository head
+  type:     git
+  location: https://github.com/tensorflow/haskell
