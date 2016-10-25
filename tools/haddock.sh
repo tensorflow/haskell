@@ -14,4 +14,5 @@ git rm -fr $DOCS
 mkdir -p $DOCS
 cp $DOC_ROOT/{*.html,*js,*.png,*.gif,*.css} $DOCS
 cp -a $DOC_ROOT/tensorflow* $DOCS
+rm -f $DOCS/*/*.haddock
 git add $DOCS
