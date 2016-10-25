@@ -7,7 +7,7 @@ This is not an official Google product.
 
 ## Build
 
-For now [docker](https://www.docker.com/) is required. Once you have docker
+As an expedient we use [docker](https://www.docker.com/) for building. Once you have docker
 working, the following commands will compile and run the tests.
 
     git clone --recursive https://github.com/tensorflow/haskell.git tensorflow-haskell
