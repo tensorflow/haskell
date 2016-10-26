@@ -37,7 +37,7 @@ The following instructions were verified with Mac OS X El Capitan.
         cd third_party/tensorflow
         ./configure  # Choose the defaults when prompted
         bazel build -c opt tensorflow:libtensorflow_c.so
-        cp bazel-bin/tensorflow/libtensorflow_c.so /usr/local/lib
+        install bazel-bin/tensorflow/libtensorflow_c.so /usr/local/lib
         cd ../..
 
 - Append the following lines to this project's `stack.yaml`:
