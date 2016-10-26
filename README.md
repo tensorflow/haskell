@@ -40,11 +40,6 @@ The following instructions were verified with Mac OS X El Capitan.
         install bazel-bin/tensorflow/libtensorflow_c.so /usr/local/lib
         cd ../..
 
-- Append the following lines to this project's `stack.yaml`:
-
-        extra-lib-dirs:
-            - /usr/local/lib
-
 - Run stack:
 
         stack test
