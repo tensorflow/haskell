@@ -63,8 +63,14 @@ instance Storable Tensor where
     peek p = fmap Tensor (peek (castPtr p))
     poke p (Tensor t) = poke (castPtr p) t
 
+-- A synonym for the int64_t type, which is used in the TensorFlow API.
+-- On some platforms it's `long`; on others (e.g., Mac OS X) it's `long long`;
+-- and as far as Haskell is concerned, those are distinct types (`CLong` vs
+-- `CLLong`).
+type CInt64 = {#type int64_t #}
+
 newTensor :: DataType
-          -> Ptr CLong    -- dimensions array
+          -> Ptr CInt64   -- dimensions array
           -> CInt         -- num dimensions
           -> Ptr ()       -- data
           -> CULong       -- data len
@@ -82,7 +88,7 @@ tensorType t = toEnum . fromIntegral <$> {# call TF_TensorType as ^ #} t
 numDims :: Tensor -> IO CInt
 numDims = {# call TF_NumDims as ^ #}
 
-dim :: Tensor -> CInt -> IO CLong
+dim :: Tensor -> CInt -> IO CInt64
 dim = {# call TF_Dim as ^ #}
 
 tensorByteSize :: Tensor -> IO CULong
