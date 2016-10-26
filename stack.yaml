@@ -22,3 +22,6 @@ extra-deps:
 explicit-setup-deps:
   "*": true
 
+# For Mac OS X, whose linker doesn't use this path by default:
+extra-lib-dirs:
+    - /usr/local/lib
