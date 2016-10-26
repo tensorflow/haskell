@@ -69,6 +69,7 @@ module TensorFlow.Ops
     , initializedVariable
     , zeroInitializedVariable
     , CoreOps.fill
+    , CoreOps.oneHot
     , CoreOps.matMul
     , matTranspose
     , CoreOps.mul
