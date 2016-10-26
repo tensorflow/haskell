@@ -5,7 +5,7 @@ This is not an official Google product.
 
 # Instructions
 
-## Build
+## Build with Docker on Linux
 
 As an expedient we use [docker](https://www.docker.com/) for building. Once you have docker
 working, the following commands will compile and run the tests.
@@ -22,3 +22,36 @@ There is also a demo application:
 
     cd tensorflow-mnist
     stack --docker --docker-image=$IMAGE_NAME build --exec Main
+
+## Build on Mac OS X
+
+The following instructions were verified with Mac OS X El Capitan.
+
+- Install dependencies via [Homebrew](http://brew.sh):
+
+        brew install swig
+        brew install bazel
+
+- Build the TensorFlow library and install it on your machine:
+
+        cd third_party/tensorflow
+        ./configure  # Choose the defaults when prompted
+        bazel build -c opt tensorflow:libtensorflow_c.so
+        cp bazel-bin/tensorflow/libtensorflow_c.so /usr/local/lib
+        cd ../..
+
+- Append the following lines to this project's `stack.yaml`:
+
+        extra-lib-dirs:
+            - /usr/local/lib
+
+- Run stack:
+
+        stack test
+
+Note: you may need to upgrade your version of Clang if you get an error like the following:
+
+    tensorflow/core/ops/ctc_ops.cc:60:7: error: return type 'tensorflow::Status' must match previous return type 'const ::tensorflow::Status' when lambda expression has unspecified explicit return type
+        return Status::OK();
+
+In that case you can just upgrade XCode and then run `gcc --version` to get the new version of the compiler.
