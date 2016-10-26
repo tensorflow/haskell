@@ -65,12 +65,15 @@ module TensorFlow.Ops
     , CoreOps.cast
     , CoreOps.concat
     , constant
+    , CoreOps.equal
     , expandDims
     , initializedVariable
     , zeroInitializedVariable
     , CoreOps.fill
+    , CoreOps.oneHot
     , CoreOps.matMul
     , matTranspose
+    , CoreOps.mean
     , CoreOps.mul
     , CoreOps.neg
     , CoreOps.pack
