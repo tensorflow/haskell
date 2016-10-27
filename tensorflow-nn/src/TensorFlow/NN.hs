@@ -22,10 +22,6 @@ module TensorFlow.NN
 import Prelude hiding           ( log
                                 , exp
                                 )
-import TensorFlow.Build         ( Build(..)
-                                , render
-                                , withNameScope
-                                )
 import TensorFlow.GenOps.Core   ( greaterEqual
                                 , select
                                 , log
