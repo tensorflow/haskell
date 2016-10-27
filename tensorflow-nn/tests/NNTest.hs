@@ -16,53 +16,101 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module Main where
 
-import Google.Test                      (googleTest)
-import Test.Framework.Providers.HUnit   (testCase)
-import Test.HUnit                       ((@?))
+import           Data.Maybe                         (fromMaybe)
+import           Google.Test                        (googleTest)
+import           Test.Framework.Providers.HUnit     (testCase)
+import           Test.HUnit                         ((@?))
+import           Test.HUnit.Lang                    (Assertion(..))
+import qualified Data.Vector                        as V
+import qualified TensorFlow.Build                   as TF
+import qualified TensorFlow.Gradient                as TF
+import qualified TensorFlow.NN                      as TF
+import qualified TensorFlow.Ops                     as TF
+import qualified TensorFlow.Session                 as TF
+import qualified TensorFlow.Tensor                  as TF
+import qualified TensorFlow.Types                   as TF
 
-import qualified Data.Vector            as V
-import qualified TensorFlow.Build       as TF
-import qualified TensorFlow.Ops         as TF
-import qualified TensorFlow.Session     as TF
-import qualified TensorFlow.Tensor      as TF
-import qualified TensorFlow.Types       as TF
-import qualified TensorFlow.NN          as TF
-
-
+-- | These tests are ported from:
+--
+--      <tensorflow>/tensorflow/python/ops/nn_xent_tests.py
+--
+-- This is the implementation we use to check the implementation we
+-- wrote in `TensorFlow.NN.sigmoidCrossEntropyWithLogits`.
+--
 sigmoidXentWithLogits :: Floating a => Ord a => [a] -> [a] -> [a]
 sigmoidXentWithLogits logits' targets' =
-    let pred  = map (\x -> 1 / (1 + exp (-x))) logits'
-        eps   = 0.0001
-        pred' = map (\p -> min (max p eps) (1 - eps)) pred
-        f y z = (-z) * (log y) - (1 - z) * log (1 - y)
-     in zipWith f pred' targets'
+    let sig  = map (\x -> 1 / (1 + exp (-x))) logits'
+        eps  = 0.0001
+        pred = map (\p -> min (max p eps) (1 - eps)) sig
+        xent y z = (-z) * (log y) - (1 - z) * log (1 - y)
+     in zipWith xent pred targets'
 
 
-x, y :: [Float]
-x = [-100, -2, -2, 0, 2, 2,   2, 100]
-y = [   0,  0,  1, 0, 0, 1, 0.5,   1]
-shape = TF.Shape [8]
+data Inputs = Inputs {
+      logits  :: [Float]
+    , targets :: [Float]
+    }
 
 
-logits, targets :: TF.Tensor TF.Value Float
-logits  = TF.constant shape x
-targets = TF.constant shape y
+defInputs :: Inputs
+defInputs = Inputs {
+      logits    = [-100, -2, -2, 0, 2, 2,   2, 100]
+    , targets   = [   0,  0,  1, 0, 0, 1, 0.5,   1]
+    }
 
 
-losses :: (TF.TensorType a, Floating a, Ord a) => [a] -> [a] -> [a]
-losses x' y' = sigmoidXentWithLogits x' y'
+assertAllClose :: V.Vector Float -> V.Vector Float -> Assertion
+assertAllClose xs ys = all (<= tol) (V.zipWith absDiff xs ys) @?
+    ("Difference > tolerance: \nxs: " ++ show xs ++ "\nys: " ++ show ys
+        ++ "\ntolerance: " ++ show tol)
+  where
+      absDiff x y = abs (x - y)
+      tol = 0.001 :: Float
 
 
 testLogisticOutput = testCase "testLogisticOutput" $ do
-    let loss    = TF.sigmoidCrossEntropyWithLogits logits targets
-        ourLoss = V.fromList (losses x y)
+    let inputs     = defInputs
+        vLogits    = TF.vector $ logits  inputs
+        vTargets   = TF.vector $ targets inputs
+        tfLoss     = TF.sigmoidCrossEntropyWithLogits vLogits vTargets
+        ourLoss    = V.fromList $ sigmoidXentWithLogits (logits inputs) (targets inputs)
     --
-    r <- TF.runSession . TF.buildAnd TF.run $ loss
-    (all id (V.zipWith (\a b -> abs (a - b) <= 0.001) r ourLoss)) @? ("Xents too different: \n" ++ (show r) ++ "\n" ++ (show ourLoss))
+    r <- TF.runSession . TF.buildAnd TF.run $ tfLoss
+    assertAllClose r ourLoss
+
+
+testLogisticOutputMultipleDim =
+        testCase "testLogisticOutputMultipleDim" $ do
+    let inputs   = defInputs 
+        shape    = [2, 2, 2]
+        vLogits  = TF.constant shape (logits  inputs)
+        vTargets = TF.constant shape (targets inputs)
+        tfLoss   = TF.sigmoidCrossEntropyWithLogits vLogits vTargets
+        ourLoss  = V.fromList $ sigmoidXentWithLogits (logits inputs) (targets inputs)
+    --
+    r <- TF.runSession . TF.buildAnd TF.run $ tfLoss
+    assertAllClose r ourLoss
+
+
+testGradientAtZero = testCase "testGradientAtZero" $ do
+    let inputs   = defInputs { logits = [0, 0], targets = [0, 1] }
+        vLogits  = TF.vector $ logits  inputs
+        vTargets = TF.vector $ targets inputs
+        tfLoss   = TF.sigmoidCrossEntropyWithLogits vLogits vTargets
+    --
+    r <- TF.runSession . TF.buildAnd TF.run $ do
+        l <- tfLoss
+        TF.gradients l [vLogits]
+    --
+    assertAllClose (head r) (V.fromList [0.5, -0.5])
 
 
 main :: IO ()
-main = googleTest [ testLogisticOutput ]
+main = googleTest [ testLogisticOutput
+                  , testLogisticOutputMultipleDim
+                  , testGradientAtZero
+                  ]
