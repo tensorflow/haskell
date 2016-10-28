@@ -10,6 +10,7 @@ packages:
 - tensorflow-mnist
 - tensorflow-mnist-input-data
 - tensorflow-queue
+- tensorflow-nn
 
 extra-deps:
 # proto-lens is not yet in Stackage.
