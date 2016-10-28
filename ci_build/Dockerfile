@@ -23,6 +23,8 @@ ADD . /tfhs
 
 WORKDIR /tfhs
 
+RUN git submodule init && git submodule update
+
 # Installs protoc and the libraries.
 RUN \
     cd third_party/tensorflow && \
