@@ -9,6 +9,7 @@ RUN \
     install -s bazel-bin/external/protobuf/protoc /usr/local/bin && \
     bazel --batch build -c opt '//tensorflow:libtensorflow_c.so' && \
     install bazel-bin/tensorflow/libtensorflow_c.so /usr/local/lib && \
+    ldconfig && \
     bazel --batch clean
 
 RUN apt-get update
