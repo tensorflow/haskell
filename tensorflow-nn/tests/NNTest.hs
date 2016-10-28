@@ -78,8 +78,8 @@ testLogisticOutput = testCase "testLogisticOutput" $ do
         vTargets   = TF.vector $ targets inputs
         tfLoss     = TF.sigmoidCrossEntropyWithLogits vLogits vTargets
         ourLoss    = V.fromList $ sigmoidXentWithLogits (logits inputs) (targets inputs)
-    --
-    r <- eval tfLoss
+    
+    r <- run tfLoss
     assertAllClose r ourLoss
 
 
@@ -91,8 +91,8 @@ testLogisticOutputMultipleDim =
         vTargets = TF.constant shape (targets inputs)
         tfLoss   = TF.sigmoidCrossEntropyWithLogits vLogits vTargets
         ourLoss  = V.fromList $ sigmoidXentWithLogits (logits inputs) (targets inputs)
-    --
-    r <- eval tfLoss
+    
+    r <- run tfLoss
     assertAllClose r ourLoss
 
 
@@ -101,13 +101,15 @@ testGradientAtZero = testCase "testGradientAtZero" $ do
         vLogits  = TF.vector $ logits  inputs
         vTargets = TF.vector $ targets inputs
         tfLoss   = TF.sigmoidCrossEntropyWithLogits vLogits vTargets
-    --
-    r <- TF.runSession . TF.buildAnd TF.run $ TF.gradients tfLoss [vLogits]
-    --
+    
+    r <- run $ do
+        l <- tfLoss
+        TF.gradients l [vLogits]
+
     assertAllClose (head r) (V.fromList [0.5, -0.5])
 
 
-eval = TF.runSession . TF.buildAnd TF.run . return
+run = TF.runSession . TF.buildAnd TF.run
 
 
 main :: IO ()

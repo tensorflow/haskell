@@ -22,6 +22,10 @@ module TensorFlow.NN
 import Prelude hiding           ( log
                                 , exp
                                 )
+import TensorFlow.Build         ( Build(..)
+                                , render
+                                , withNameScope
+                                )
 import TensorFlow.GenOps.Core   ( greaterEqual
                                 , select
                                 , log
@@ -69,12 +73,15 @@ sigmoidCrossEntropyWithLogits
   :: (OneOf '[Float, Double] a, TensorType a, Num a)
      => Tensor Value a          -- ^ __logits__
      -> Tensor Value a          -- ^ __targets__
-     -> Tensor Value a
+     -> Build (Tensor Value a)
 sigmoidCrossEntropyWithLogits logits targets = do
-    let zeros = zerosLike logits
-        cond = logits `greaterEqual` zeros
-        relu_logits = select cond logits zeros
-        neg_abs_logits = select cond (-logits) logits
-        left = relu_logits - logits * targets
-        right = log (1 + exp neg_abs_logits)
-    left `add` right
+    logits' <- render logits
+    targets' <- render targets
+    let zeros = zerosLike logits'
+        cond = logits' `greaterEqual` zeros
+        relu_logits = select cond logits' zeros
+        neg_abs_logits = select cond (-logits') logits'
+    withNameScope "logistic_loss" $ do
+        left  <- render $ relu_logits - logits' * targets'
+        right <- render $ log (1 + exp neg_abs_logits)
+        withNameScope "sigmoid_add" $ render $ left `add` right
