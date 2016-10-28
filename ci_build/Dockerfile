@@ -27,10 +27,10 @@ WORKDIR /tfhs
 RUN \
     cd third_party/tensorflow && \
     tensorflow/tools/ci_build/builds/configured CPU && \
-    bazel --batch build -c opt '@protobuf//:protoc' && \
+    bazel build -c opt '@protobuf//:protoc' && \
     install -s bazel-bin/external/protobuf/protoc /usr/local/bin && \
-    bazel --batch build -c opt '//tensorflow:libtensorflow_c.so' && \
+    bazel build -c opt '//tensorflow:libtensorflow_c.so' && \
     install bazel-bin/tensorflow/libtensorflow_c.so /usr/local/lib && \
-    bazel --batch clean
+    ldconfig
 
 RUN stack setup && stack test --only-dependencies
