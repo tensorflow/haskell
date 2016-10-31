@@ -22,7 +22,6 @@ RUN \
         libgmp-dev \
         libcurl3-dev \
         stack && \
-    git submodule init && git submodule update && \
     # Installs protoc and the libraries.
     ( cd third_party/tensorflow && \
       tensorflow/tools/ci_build/builds/configured CPU && \
