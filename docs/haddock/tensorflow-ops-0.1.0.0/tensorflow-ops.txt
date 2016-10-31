@@ -95,6 +95,14 @@ concat :: TensorType t => Tensor v1 Int32 -> [Tensor v2 t] -> Tensor Value t
 --   
 --   element 0: index (0, ..., 0) element 1: index (0, ..., 1) ...
 constant :: TensorType a => Shape -> [a] -> Tensor Value a
+
+-- | Returns the truth value of (x == y) element-wise.
+--   
+--   <ul>
+--   <li>NOTE*: <tt>Equal</tt> supports broadcasting. More about
+--   broadcasting <a>here</a></li>
+--   </ul>
+equal :: (TensorType t, OneOf ((:) * (Complex Double) ((:) * (Complex Float) ((:) * Bool ((:) * ByteString ((:) * Int16 ((:) * Int32 ((:) * Int64 ((:) * Int8 ((:) * Word16 ((:) * Word8 ((:) * Double ((:) * Float ([] *))))))))))))) t) => Tensor v1 t -> Tensor v2 t -> Tensor Value Bool
 expandDims :: (TensorType t) => Tensor v1 t -> Tensor v2 Int32 -> Tensor Value t
 
 -- | Creates a variable initialized to the given value. Initialization
@@ -115,6 +123,61 @@ zeroInitializedVariable :: (TensorType a, Num a) => Shape -> Build (Tensor Ref a
 --   ==&gt; [[9, 9, 9] [9, 9, 9]] ```
 fill :: TensorType t => Tensor v1 Int32 -> Tensor v2 t -> Tensor Value t
 
+-- | Returns a one-hot tensor.
+--   
+--   The locations represented by indices in <tt>indices</tt> take value
+--   <tt>on_value</tt>, while all other locations take value
+--   <tt>off_value</tt>.
+--   
+--   If the input <tt>indices</tt> is rank <tt>N</tt>, the output will have
+--   rank `N+1`, The new axis is created at dimension <tt>axis</tt>
+--   (default: the new axis is appended at the end).
+--   
+--   If <tt>indices</tt> is a scalar the output shape will be a vector of
+--   length <tt>depth</tt>.
+--   
+--   If <tt>indices</tt> is a vector of length <tt>features</tt>, the
+--   output shape will be: ``` features x depth if axis == -1 depth x
+--   features if axis == 0 ```
+--   
+--   If <tt>indices</tt> is a matrix (batch) with shape `[batch,
+--   features]`, the output shape will be: ``` batch x features x depth if
+--   axis == -1 batch x depth x features if axis == 1 depth x batch x
+--   features if axis == 0 ```
+--   
+--   Examples =========
+--   
+--   Suppose that
+--   
+--   ``` indices = [0, 2, -1, 1] depth = 3 on_value = 5.0 off_value = 0.0
+--   axis = -1 ```
+--   
+--   Then output is `[4 x 3]`:
+--   
+--   ```output = [5.0 0.0 0.0] // one_hot(0) [0.0 0.0 5.0] // one_hot(2)
+--   [0.0 0.0 0.0] // one_hot(-1) [0.0 5.0 0.0] // one_hot(1) ```
+--   
+--   Suppose that
+--   
+--   ``` indices = [0, 2, -1, 1] depth = 3 on_value = 0.0 off_value = 3.0
+--   axis = 0 ```
+--   
+--   Then output is `[3 x 4]`:
+--   
+--   ```output = [0.0 3.0 3.0 3.0] [3.0 3.0 3.0 0.0] [3.0 3.0 3.0 3.0] [3.0
+--   0.0 3.0 3.0] // ^ one_hot(0) // ^ one_hot(2) // ^ one_hot(-1) // ^
+--   one_hot(1) ``` Suppose that
+--   
+--   ``` indices = [[0, 2], [1, -1]] depth = 3 on_value = 1.0 off_value =
+--   0.0 axis = -1 ```
+--   
+--   Then output is `[2 x 2 x 3]`:
+--   
+--   ```output = [ [1.0, 0.0, 0.0] // one_hot(0) [0.0, 0.0, 1.0] //
+--   one_hot(2) ][ [0.0, 1.0, 0.0] // one_hot(1) [0.0, 0.0, 0.0] //
+--   one_hot(-1) ]```
+oneHot :: (TensorType t, TensorType tI, OneOf ((:) * Int32 ((:) * Int64 ((:) * Word8 ([] *)))) tI) => Tensor v1 tI -> Tensor v2 Int32 -> Tensor v3 t -> Tensor v4 t -> Tensor Value t
+
 -- | Multiply the matrix "a" by the matrix "b".
 --   
 --   The inputs must be two-dimensional matrices and the inner dimension of
@@ -128,6 +191,15 @@ fill :: TensorType t => Tensor v1 Int32 -> Tensor v2 t -> Tensor Value t
 --   </ul>
 matMul :: (TensorType t, OneOf ((:) * (Complex Double) ((:) * (Complex Float) ((:) * Int32 ((:) * Word16 ((:) * Double ((:) * Float ([] *))))))) t) => Tensor v1 t -> Tensor v2 t -> Tensor Value t
 matTranspose :: TensorType a => Tensor v a -> Tensor Value a
+
+-- | Computes the mean of elements across dimensions of a tensor.
+--   
+--   Reduces <tt>input</tt> along the dimensions given in
+--   <tt>reduction_indices</tt>. Unless <tt>keep_dims</tt> is true, the
+--   rank of the tensor is reduced by 1 for each entry in
+--   <tt>reduction_indices</tt>. If <tt>keep_dims</tt> is true, the reduced
+--   dimensions are retained with length 1.
+mean :: (TensorType t, OneOf ((:) * (Complex Double) ((:) * (Complex Float) ((:) * Int16 ((:) * Int32 ((:) * Int64 ((:) * Int8 ((:) * Word16 ((:) * Word8 ((:) * Double ((:) * Float ([] *))))))))))) t, TensorType tidx, OneOf ((:) * Int32 ((:) * Int64 ([] *))) tidx) => Tensor v1 t -> Tensor v2 tidx -> Tensor Value t
 
 -- | Returns x * y element-wise.
 --   
