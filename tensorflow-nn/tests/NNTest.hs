@@ -78,20 +78,20 @@ testLogisticOutput = testCase "testLogisticOutput" $ do
         vTargets   = TF.vector $ targets inputs
         tfLoss     = TF.sigmoidCrossEntropyWithLogits vLogits vTargets
         ourLoss    = V.fromList $ sigmoidXentWithLogits (logits inputs) (targets inputs)
-    
+
     r <- run tfLoss
     assertAllClose r ourLoss
 
 
 testLogisticOutputMultipleDim =
         testCase "testLogisticOutputMultipleDim" $ do
-    let inputs   = defInputs 
+    let inputs   = defInputs
         shape    = [2, 2, 2]
         vLogits  = TF.constant shape (logits  inputs)
         vTargets = TF.constant shape (targets inputs)
         tfLoss   = TF.sigmoidCrossEntropyWithLogits vLogits vTargets
         ourLoss  = V.fromList $ sigmoidXentWithLogits (logits inputs) (targets inputs)
-    
+
     r <- run tfLoss
     assertAllClose r ourLoss
 
@@ -101,7 +101,7 @@ testGradientAtZero = testCase "testGradientAtZero" $ do
         vLogits  = TF.vector $ logits  inputs
         vTargets = TF.vector $ targets inputs
         tfLoss   = TF.sigmoidCrossEntropyWithLogits vLogits vTargets
-    
+
     r <- run $ do
         l <- tfLoss
         TF.gradients l [vLogits]
@@ -113,7 +113,7 @@ run = TF.runSession . TF.buildAnd TF.run
 
 
 main :: IO ()
-main = googleTest [ testLogisticOutput
+main = googleTest [ testGradientAtZero
+                  , testLogisticOutput
                   , testLogisticOutputMultipleDim
-                  , testGradientAtZero
                   ]
