@@ -35,6 +35,7 @@ import TensorFlow.Tensor        ( Tensor(..)
                                 , Value(..)
                                 )
 import TensorFlow.Types         ( TensorType(..)
+                                , TensorProtoLens
                                 , OneOf
                                 )
 import TensorFlow.Ops           ( zerosLike
@@ -70,7 +71,7 @@ import TensorFlow.Ops           ( zerosLike
 --
 --  `logits` and `targets` must have the same type and shape.
 sigmoidCrossEntropyWithLogits
-  :: (OneOf '[Float, Double] a, TensorType a, Num a)
+  :: (OneOf '[Float, Double] a, TensorType a, TensorProtoLens a, Num a)
      => Tensor Value a          -- ^ __logits__
      -> Tensor Value a          -- ^ __targets__
      -> Build (Tensor Value a)

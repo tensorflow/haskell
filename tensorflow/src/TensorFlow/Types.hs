@@ -28,6 +28,7 @@
 
 module TensorFlow.Types
     ( TensorType(..)
+    , TensorProtoLens(..)
     , TensorData(..)
     , Shape(..)
     , protoShape
@@ -76,13 +77,12 @@ import Proto.Tensorflow.Core.Framework.AttrValue
     )
 import Proto.Tensorflow.Core.Framework.Tensor as Tensor
     ( TensorProto(..)
-    , floatVal
+    , boolVal
     , doubleVal
+    , floatVal
+    , int64Val
     , intVal
     , stringVal
-    , int64Val
-    , stringVal
-    , boolVal
     )
 import Proto.Tensorflow.Core.Framework.TensorShape
     ( TensorShapeProto(..)
@@ -101,7 +101,6 @@ newtype TensorData a = TensorData { unTensorData :: FFI.TensorData }
 class TensorType a where
     tensorType :: a -> DataType
     tensorRefType :: a -> DataType
-    tensorVal :: Lens' TensorProto [a]
     -- | Decode the bytes of a TensorData into a Vector.
     decodeTensorData :: TensorData a -> V.Vector a
     -- | Encode a Vector into a TensorData.
@@ -112,6 +111,25 @@ class TensorType a where
     --   element 1:   index (0, ..., 1)
     --   ...
     encodeTensorData :: Shape -> V.Vector a -> TensorData a
+
+-- | Class of types that can be used for constructing constant tensors.
+class TensorProtoLens a where
+    tensorVal :: Lens' TensorProto [a]
+
+instance TensorProtoLens Float where
+    tensorVal = floatVal
+
+instance TensorProtoLens Double where
+    tensorVal = doubleVal
+
+instance TensorProtoLens Int32 where
+    tensorVal = intVal
+
+instance TensorProtoLens Int64 where
+    tensorVal = int64Val
+
+instance TensorProtoLens ByteString where
+    tensorVal = stringVal
 
 -- All types, besides ByteString, are encoded as simple arrays and we can use
 -- Vector.Storable to encode/decode by type casting pointers.
@@ -130,28 +148,24 @@ simpleEncode (Shape xs)
 instance TensorType Float where
     tensorType _ = DT_FLOAT
     tensorRefType _ = DT_FLOAT_REF
-    tensorVal = floatVal
     decodeTensorData = simpleDecode
     encodeTensorData = simpleEncode
 
 instance TensorType Double where
     tensorType _ = DT_DOUBLE
     tensorRefType _ = DT_DOUBLE_REF
-    tensorVal = doubleVal
     decodeTensorData = simpleDecode
     encodeTensorData = simpleEncode
 
 instance TensorType Int32 where
     tensorType _ = DT_INT32
     tensorRefType _ = DT_INT32_REF
-    tensorVal = intVal
     decodeTensorData = simpleDecode
     encodeTensorData = simpleEncode
 
 instance TensorType Int64 where
     tensorType _ = DT_INT64
     tensorRefType _ = DT_INT64_REF
-    tensorVal = int64Val
     decodeTensorData = simpleDecode
     encodeTensorData = simpleEncode
 
@@ -161,40 +175,36 @@ integral = iso (fmap fromIntegral) (fmap fromIntegral)
 instance TensorType Word8 where
     tensorType _ = DT_UINT8
     tensorRefType _ = DT_UINT8_REF
-    tensorVal = intVal . integral
     decodeTensorData = simpleDecode
     encodeTensorData = simpleEncode
 
 instance TensorType Word16 where
     tensorType _ = DT_UINT16
     tensorRefType _ = DT_UINT16_REF
-    tensorVal = intVal . integral
     decodeTensorData = simpleDecode
     encodeTensorData = simpleEncode
 
 instance TensorType Int16 where
     tensorType _ = DT_INT16
     tensorRefType _ = DT_INT16_REF
-    tensorVal = intVal . integral
     decodeTensorData = simpleDecode
     encodeTensorData = simpleEncode
 
 instance TensorType Int8 where
     tensorType _ = DT_INT8
     tensorRefType _ = DT_INT8_REF
-    tensorVal = intVal . integral
     decodeTensorData = simpleDecode
     encodeTensorData = simpleEncode
 
 instance TensorType ByteString where
     tensorType _ = DT_STRING
     tensorRefType _ = DT_STRING_REF
-    tensorVal = stringVal
     -- Encoded data layout (described in third_party/tensorflow/c/c_api.h):
     --   table offsets for each element :: [Word64]
     --   at each element offset:
     --     string length :: VarInt64
     --     string data   :: [Word8]
+    -- C++ counterparts of these are TF_Tensor_{En,De}codeStrings.
     -- TODO(fmayle): Benchmark these functions.
     decodeTensorData tensorData =
         either (\err -> error $ "Malformed TF_STRING tensor; " ++ err) id $
@@ -244,21 +254,18 @@ instance TensorType ByteString where
 instance TensorType Bool where
     tensorType _ = DT_BOOL
     tensorRefType _ = DT_BOOL_REF
-    tensorVal = boolVal
     decodeTensorData = simpleDecode
     encodeTensorData = simpleEncode
 
 instance TensorType (Complex Float) where
     tensorType _ = DT_COMPLEX64
     tensorRefType _ = DT_COMPLEX64
-    tensorVal = error "TODO (Complex Float)"
     decodeTensorData = error "TODO (Complex Float)"
     encodeTensorData = error "TODO (Complex Float)"
 
 instance TensorType (Complex Double) where
     tensorType _ = DT_COMPLEX128
     tensorRefType _ = DT_COMPLEX128
-    tensorVal = error "TODO (Complex Double)"
     decodeTensorData = error "TODO (Complex Double)"
     encodeTensorData = error "TODO (Complex Double)"
 

@@ -31,8 +31,9 @@ import qualified TensorFlow.Types as TF
 
 -- DynamicSplit is undone with DynamicStitch to get the original input
 -- back.
-testDynamicPartitionStitchInverse :: forall a.
-    (TF.TensorType a, Show a, Eq a) => StitchExample a -> Property
+testDynamicPartitionStitchInverse ::
+    forall a. (TF.TensorType a, TF.TensorProtoLens a, Show a, Eq a)
+    => StitchExample a -> Property
 testDynamicPartitionStitchInverse (StitchExample numParts values partitions) =
    let splitParts :: [TF.Tensor TF.Value a] =
            CoreOps.dynamicPartition numParts (TF.vector values) partTensor

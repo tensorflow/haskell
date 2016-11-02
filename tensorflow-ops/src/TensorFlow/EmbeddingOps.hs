@@ -27,7 +27,7 @@ import Data.List (genericLength)
 import TensorFlow.Build (Build, colocateWith, render)
 import TensorFlow.Ops ()  -- Num instance for Tensor
 import TensorFlow.Tensor (Tensor, Value)
-import TensorFlow.Types (OneOf, TensorType)
+import TensorFlow.Types (OneOf, TensorType, TensorProtoLens)
 import qualified TensorFlow.GenOps.Core as CoreOps
 
 -- | Looks up `ids` in a list of embedding tensors.
@@ -46,6 +46,7 @@ import qualified TensorFlow.GenOps.Core as CoreOps
 -- tensor. The returned tensor has shape `shape(ids) + shape(params)[1:]`.
 embeddingLookup :: forall a b v .
                    ( TensorType a
+                   , TensorProtoLens b
                    , OneOf '[Int64, Int32] b
                    , Num b
                    )

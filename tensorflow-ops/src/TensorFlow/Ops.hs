@@ -138,6 +138,7 @@ import qualified Prelude (abs)
 -- "neg 1 :: Tensor Value Float", it helps find the type of the subexpression
 -- "1".
 instance ( TensorType a
+         , TensorProtoLens a
          , Num a
          , v ~ Value
          , OneOf '[ Double, Float, Int32, Int64
@@ -191,7 +192,7 @@ initializedVariable initializer = do
 
 -- | Creates a zero-initialized variable with the given shape.
 zeroInitializedVariable
-  :: (TensorType a, Num a) =>
+  :: (TensorType a, TensorProtoLens a, Num a) =>
      TensorFlow.Types.Shape -> Build (Tensor TensorFlow.Tensor.Ref a)
 zeroInitializedVariable = initializedVariable . zeros
 
@@ -238,7 +239,8 @@ restore path x = do
 --   element 0:   index (0, ..., 0)
 --   element 1:   index (0, ..., 1)
 --   ...
-constant :: forall a . TensorType a => Shape -> [a] -> Tensor Value a
+constant :: forall a . (TensorType a, TensorProtoLens a)
+            => Shape -> [a] -> Tensor Value a
 constant (Shape shape') values
     | invalidLength = error invalidLengthMsg
     | otherwise = buildOp $ opDef "Const"
@@ -258,11 +260,11 @@ constant (Shape shape') values
                 & tensorVal .~ values
 
 -- | Create a constant vector.
-vector :: TensorType a => [a] -> Tensor Value a
+vector :: (TensorType a, TensorProtoLens a) => [a] -> Tensor Value a
 vector xs = constant [fromIntegral $ length xs] xs
 
 -- | Create a constant scalar.
-scalar :: forall a . TensorType a => a -> Tensor Value a
+scalar :: (TensorType a, TensorProtoLens a) => a -> Tensor Value a
 scalar x = constant [] [x]
 
 -- Random tensor from the unit normal distribution with bounded values.
@@ -273,7 +275,8 @@ truncatedNormal = buildOp $ opDef "TruncatedNormal"
                           & opAttr "dtype" .~ tensorType (undefined :: a)
                           & opAttr "T" .~ tensorType (undefined :: Int64)
 
-zeros :: forall a . (Num a, TensorType a) => Shape -> Tensor Value a
+zeros :: (Num a, TensorType a, TensorProtoLens a)
+ => Shape -> Tensor Value a
 zeros (Shape shape') = CoreOps.fill (vector $ map fromIntegral shape') (scalar 0)
 
 shape :: (TensorType t) => Tensor v1 t -> Tensor Value Int32

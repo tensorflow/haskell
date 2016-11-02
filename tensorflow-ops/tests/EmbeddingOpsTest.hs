@@ -36,8 +36,9 @@ import qualified TensorFlow.Types as TF
 
 -- Verifies that direct gather is the same as dynamic split into
 -- partitions, followed by embedding lookup.
-testEmbeddingLookupUndoesSplit :: forall a. (TF.TensorType a, Show a, Eq a)
-                               => LookupExample a -> Property
+testEmbeddingLookupUndoesSplit ::
+    forall a. (TF.TensorType a, TF.TensorProtoLens a, Show a, Eq a)
+    => LookupExample a -> Property
 testEmbeddingLookupUndoesSplit
     (LookupExample numParts
                    shape@(TF.Shape (firstDim : restDims))

@@ -94,13 +94,13 @@ import TensorFlow.Tensor
     , tensorOutput
     , tensorAttr
     )
-import TensorFlow.Types (OneOf, TensorType, attrLens)
+import TensorFlow.Types (OneOf, TensorType, TensorProtoLens, attrLens)
 import Proto.Tensorflow.Core.Framework.NodeDef
     (NodeDef, attr, input, op, name)
 
 type GradientCompatible a =
     -- TODO(fmayle): MaxPoolGrad doesn't support Double for some reason.
-    (Num a, OneOf '[ Float, Complex Float, Complex Double ] a)
+    (Num a, OneOf '[ Float, Complex Float, Complex Double ] a, TensorProtoLens a)
 
 -- TODO(fmayle): Support control flow.
 -- TODO(fmayle): Support gate_gradients-like option to avoid race conditions.
