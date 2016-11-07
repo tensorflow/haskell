@@ -13,6 +13,9 @@
 -- limitations under the License.
 
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TupleSections #-}
 
 module TensorFlow.BuildOp
@@ -77,11 +80,17 @@ instance ( OpResult a1
                <*> toResult
 
 tensorResult :: TensorKind v -> Result (Tensor v a)
-tensorResult v = do
+tensorResult v = (Tensor v) <$> recordResult
+
+recordResult :: Result Output
+recordResult = do
     o <- ask
     ResultState i ns <- get
     put $! ResultState (i+1) ns
-    return $! Tensor v $ output i o
+    return $! output i o
+
+instance OpResult (ResourceHandle a) where
+    toResult = ResourceHandle <$> recordResult
 
 instance OpResult (Tensor Value a) where
     toResult = tensorResult ValueKind
@@ -144,6 +153,9 @@ buildListOp counts o = buildOp' counts o []
 instance BuildOp ControlNode where
     buildOp' _ o ts = ControlNode $ Unrendered $ addReversedInputs o ts
 
+instance BuildOp (ResourceHandle a) where
+    buildOp' = pureResult
+
 instance BuildOp (Tensor Value a) where
     buildOp' = pureResult
 
@@ -179,6 +191,9 @@ instance ( OpResult t1
 
 instance OpResult a => BuildOp (Build a) where
     buildOp' = buildResult
+
+instance BuildOp f => BuildOp (ResourceHandle a -> f) where
+    buildOp' rf o ts (ResourceHandle t) = buildOp' rf o (t : ts)
 
 instance BuildOp f => BuildOp (Tensor v a -> f) where
     buildOp' rf o ts t = buildOp' rf o (t ^. tensorOutput : ts)
