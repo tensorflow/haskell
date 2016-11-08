@@ -60,9 +60,12 @@ embeddingLookup :: forall a b v .
                 -- fewer than 2^31 entries.
                 -> Build (Tensor Value a)
                 -- ^ A dense tensor with shape `shape(ids) + shape(params)[1:]`.
-embeddingLookup params ids =
-    CoreOps.dynamicStitch pindices <$> partitionedResult
-  where np = genericLength params
+embeddingLookup params@(p1 : _) ids =
+        go (np :: Int32)
+  where 
+        go 1 = colocateWith p1 (render $ CoreOps.gather p1 ids)
+        go _ = CoreOps.dynamicStitch pindices <$> partitionedResult
+        np = genericLength params 
         pAssignments = CoreOps.cast (ids `CoreOps.mod` np)
         newIds = ids `CoreOps.div` np
         originalIndices = CoreOps.range 0 (CoreOps.size ids) 1
