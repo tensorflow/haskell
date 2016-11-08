@@ -156,7 +156,7 @@ instance IsString Output where
         where assigned n = Rendered $ def & name .~ Text.pack n
 
 
--- | Represents an opaque handle to a mutable resource in the graph.
--- Typical such resources are variables. The type parameter
--- corresponds to the dtype of the tensor held in the variable.
-data ResourceHandle dtype = ResourceHandle Output
+-- | Opaque handle to a mutable resource in the graph.  Typical such
+-- resources are variables. The type parameter corresponds to the
+-- dtype of the tensor held in the variable.
+newtype ResourceHandle a = ResourceHandle Output

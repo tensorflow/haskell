@@ -13,9 +13,6 @@
 -- limitations under the License.
 
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TupleSections #-}
 
 module TensorFlow.BuildOp
@@ -80,7 +77,7 @@ instance ( OpResult a1
                <*> toResult
 
 tensorResult :: TensorKind v -> Result (Tensor v a)
-tensorResult v = (Tensor v) <$> recordResult
+tensorResult v = Tensor v <$> recordResult
 
 recordResult :: Result Output
 recordResult = do

@@ -260,9 +260,9 @@ typeSig d =
                            "TensorType" <+> strictText t
                            : maybeToList (oneOfRestrictions aDef t))
                          (Map.elems typeMap)) <+> "=>"
+    refVariableNames = catMaybes (map fst tensorInputs)
     tensorInputs = zipWith tensorArg refTypes (d ^. inputArg)
     refTypes = ["v" <> int x | x <- [1..length (d ^. inputArg)]]
-    refVariableNames = catMaybes (map fst tensorInputs)
     tensorArg refType arg = wrapArg refType arg <**>
                             pure (<+> hang 0 ("-- ^" <+> argComment arg))
     -- Argument type is a list of tensors if number_attr is set;
