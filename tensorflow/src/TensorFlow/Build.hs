@@ -34,6 +34,7 @@ module TensorFlow.Build
     , GraphState
     , render
     , renderNodeName
+    , renderResourceHandle
     , renderedNodeDefs
     , BuildT
     , Build
@@ -360,6 +361,9 @@ render = tensorOutput $ outputOp $ fmap Rendered . resolveOp
 -- | Render a 'Tensor' and get its node's name.
 renderNodeName :: Tensor v a -> Build NodeName
 renderNodeName t = getOrAddOp (t ^. tensorOutput . outputOp)
+
+renderResourceHandle :: ResourceHandle a -> Build NodeName
+renderResourceHandle (ResourceHandle r) = getOrAddOp (r ^. outputOp)
 
 -- | Records the given summary action in Build for retrieval with
 -- 'collectAllSummaries'. The summary op is required to produce a

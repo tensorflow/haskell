@@ -112,8 +112,9 @@ testEmbeddingLookupGradients = testCase "testEmbeddingLookupGradients" $ do
             let ids           = TF.constant (TF.Shape [1, 2]) idValues
 
             x <- TF.placeholder (TF.Shape [2])
-            embedding <- TF.initializedVariable
-                            =<< TF.render (TF.constant embShape embeddingInit)
+            embedding <- CoreOps.readVariableOp <$>
+                         (TF.initializedVariable
+                          =<< TF.render (TF.constant embShape embeddingInit))
 
             op <- embeddingLookup [embedding] ids
             let twoNorm = CoreOps.square $ TF.abs (op - x)

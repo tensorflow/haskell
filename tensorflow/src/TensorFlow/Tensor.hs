@@ -24,7 +24,14 @@ import qualified Data.Text as Text
 import Lens.Family2 (Lens', Traversal')
 import Lens.Family2.Unchecked (lens)
 
-import TensorFlow.Output (Output, outputOp, opUnrendered, opAttr)
+import TensorFlow.Output
+    ( Output
+    , ResourceHandle
+    , outputOp
+    , opUnrendered
+    , opAttr
+    , resourceHandleOutput
+    )
 import TensorFlow.Types (TensorData(..), Attribute)
 import qualified TensorFlow.Internal.FFI as FFI
 
@@ -60,6 +67,11 @@ tensorOutput = lens (\(Tensor _ o) -> o) (\(Tensor v _) o -> Tensor v o)
 -- written).
 tensorAttr :: Attribute attr => Text.Text -> Traversal' (Tensor v a) attr
 tensorAttr x = tensorOutput . outputOp . opUnrendered . opAttr x
+
+resourceHandleAttr :: Attribute attr
+                      => Text.Text -> Traversal' (ResourceHandle a) attr
+resourceHandleAttr attr =
+    resourceHandleOutput . outputOp . opUnrendered . opAttr attr
 
 -- | Cast a 'Tensor *' into a 'Tensor Value'. Common usage is to cast a
 -- Ref into Value. This behaves like a no-op.

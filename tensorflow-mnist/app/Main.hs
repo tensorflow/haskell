@@ -15,7 +15,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedLists #-}
 
-import Control.Monad (zipWithM, when, forM_)
+import Control.Monad (forM_, when)
 import Control.Monad.IO.Class (liftIO)
 import Data.Int (Int32, Int64)
 import Data.List (genericLength)
@@ -30,6 +30,7 @@ import qualified TensorFlow.Ops as TF
 import qualified TensorFlow.Session as TF
 import qualified TensorFlow.Tensor as TF
 import qualified TensorFlow.Types as TF
+import qualified TensorFlow.GenOps.Core as CoreOps
 
 import TensorFlow.Examples.MNIST.InputData
 import TensorFlow.Examples.MNIST.Parse
@@ -64,6 +65,7 @@ data Model = Model {
 
 createModel :: TF.Build Model
 createModel = do
+    let rd = CoreOps.readVariableOp
     -- Use -1 batch size to support variable sized batches.
     let batchSize = -1
     -- Inputs.
@@ -73,13 +75,14 @@ createModel = do
     hiddenWeights <-
         TF.initializedVariable =<< randomParam numPixels [numPixels, numUnits]
     hiddenBiases <- TF.zeroInitializedVariable [numUnits]
-    let hiddenZ = (images `TF.matMul` hiddenWeights) `TF.add` hiddenBiases
+    let hiddenZ = (images `TF.matMul` rd hiddenWeights)
+                  `TF.add` rd hiddenBiases
     let hidden = TF.relu hiddenZ
     -- Logits.
     logitWeights <-
         TF.initializedVariable =<< randomParam numUnits [numUnits, numLabels]
     logitBiases <- TF.zeroInitializedVariable [numLabels]
-    let logits = (hidden `TF.matMul` logitWeights) `TF.add` logitBiases
+    let logits = (hidden `TF.matMul` rd logitWeights) `TF.add` rd logitBiases
     predict <- TF.render $ TF.cast $
                TF.argMax (TF.softmax logits) (TF.scalar (1 :: LabelType))
 
@@ -89,11 +92,11 @@ createModel = do
         loss =
             reduceMean $ fst $ TF.softmaxCrossEntropyWithLogits logits labelVecs
         params = [hiddenWeights, hiddenBiases, logitWeights, logitBiases]
-    grads <- TF.gradients loss params
+    grads <- TF.gradients loss (map rd params)
 
-    let lr = TF.scalar 0.00001
-        applyGrad param grad = TF.assign param $ param `TF.sub` (lr * grad)
-    trainStep <- TF.group =<< zipWithM applyGrad params grads
+    let lr = TF.scalar (-0.00001 :: Float)  -- Negative to make it descend.
+        applyGrad var grad = CoreOps.assignVariableOp var (lr * grad)
+    trainStep <- TF.group (zipWith applyGrad params grads)
 
     let correctPredictions = TF.equal predict labels
     errorRateTensor <- TF.render $ 1 - reduceMean (TF.cast correctPredictions)

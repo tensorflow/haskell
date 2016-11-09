@@ -654,6 +654,7 @@ opGrad "ZerosLike" _ _ _ = [Nothing]
 opGrad "Const" _ _ _ = [Nothing, Nothing]
 opGrad "Placeholder" _ _ _ = []
 opGrad "Variable" _ _ _ = []
+opGrad "ReadVariableOp" _ _ _ = [Nothing, Nothing]
 
 opGrad n nodeDef ins grads =
     error $ "no gradient implemented for " ++
@@ -699,6 +700,7 @@ numOutputs o =
         "Transpose" -> 1
         "TruncatedNormal" -> 1
         "Variable" -> 1
+        "ReadVariableOp" -> 2
         "ZerosLike" -> 1
         _ -> error $ "numOuputs not implemented for " ++ show (o ^. op)
 

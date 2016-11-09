@@ -121,8 +121,7 @@ import qualified Proto.Tensorflow.Core.Framework.TensorShape
   as TensorShape
 import TensorFlow.Build
 import TensorFlow.BuildOp
-import TensorFlow.ControlFlow (group)
-import TensorFlow.Output (unNodeName)
+import TensorFlow.Output (ResourceHandle, unNodeName)
 import TensorFlow.Tensor
 import TensorFlow.Types
 
@@ -176,37 +175,30 @@ assign = buildOp $ opDef "Assign"
 -- | Creates a variable initialized to the given value.
 -- Initialization happens next time session runs.
 initializedVariable :: forall a . TensorType a
-                    => Tensor Value a -> Build (Tensor Ref a)
+                    => Tensor Value a -> Build (ResourceHandle a)
 initializedVariable initializer = do
-    v <- variable []  -- The shape is not known initially.
-    (i :: Tensor Ref a) <-
-        buildOp (opDef "Assign"
-                 & opAttr "T" .~ tensorType (undefined :: a)
-                 & opAttr "use_locking" .~ True
-                 & opAttr "validate_shape" .~ False
-                 )
-        v initializer
-    addInitializer =<< group i
+    let v = CoreOps.varHandleOp
+            & resourceHandleAttr "shape" .~ (Shape [])
+    addInitializer (CoreOps.createVariableOp v initializer)
     return v
 
 -- | Creates a zero-initialized variable with the given shape.
 zeroInitializedVariable
-  :: (TensorType a, Num a) =>
-     TensorFlow.Types.Shape -> Build (Tensor TensorFlow.Tensor.Ref a)
+  :: (TensorType a, Num a) => TensorFlow.Types.Shape -> Build (ResourceHandle a)
 zeroInitializedVariable = initializedVariable . zeros
 
 -- TODO: Support heterogeneous list of tensors.
-save :: forall a v . TensorType a
+save :: forall a . TensorType a
         => ByteString     -- ^ File path.
-        -> [Tensor v a]  -- ^ Tensors to save.
+        -> [ResourceHandle a]  -- ^ Tensors to save.
         -> Build ControlNode
 save path xs = do
     let toByteStringTensor = scalar . encodeUtf8 . unNodeName
-    names <- mapM (fmap toByteStringTensor . renderNodeName) xs
+    names <- mapM (fmap toByteStringTensor . renderResourceHandle) xs
     let types = replicate (length xs) (tensorType (undefined :: a))
     let saveOp = buildOp $ opDef "Save"
                          & opAttr "T" .~ types
-    saveOp (scalar path) (CoreOps.pack names) xs
+    saveOp (scalar path) (CoreOps.pack names) (map CoreOps.readVariableOp xs)
 
 -- | Restore a tensor's value from a checkpoint file.
 --
@@ -215,21 +207,21 @@ save path xs = do
 restoreFromName :: forall a . TensorType a
                 => ByteString    -- ^ File path.
                 -> ByteString    -- ^ Tensor name override.
-                -> Tensor Ref a  -- ^ Tensor to restore.
-                -> Build ControlNode
-restoreFromName path name x = do
+                -> Build (Tensor Value a)
+restoreFromName path name = do
     let restoreOp = buildOp $ opDef "Restore"
                             & opAttr "dt" .~ tensorType (undefined :: a)
-    group =<< assign x (restoreOp (scalar path) (scalar name) :: Tensor Value a)
+    restoreOp (scalar path) (scalar name)
+
 
 -- | Restore a tensor's value from a checkpoint file.
 restore :: forall a . TensorType a
         => ByteString    -- ^ File path.
-        -> Tensor Ref a  -- ^ Tensor to restore.
+        -> ResourceHandle a
         -> Build ControlNode
 restore path x = do
-    name <- encodeUtf8 . unNodeName <$> renderNodeName x
-    restoreFromName path name x
+    name <- encodeUtf8 . unNodeName <$> renderResourceHandle x
+    CoreOps.assignVariableOp x <$> restoreFromName path name
 
 -- | Create a constant tensor.
 --
@@ -253,12 +245,13 @@ constant (Shape shape') values
     typedNode :: TensorProto
     typedNode = def
                 & dtype .~ nodeType
+                -- Use shapeToProto from Types.hs
                 & tensorShape.TensorShape.dim .~
                       [def & TensorShape.size .~ x | x <- shape']
                 & tensorVal .~ values
 
 -- | Reshape a N-D tensor down to a scalar.
--- 
+--
 -- See `TensorFlow.GenOps.Core.reshape`.
 scalarize :: (TensorType a) => Tensor v a -> Tensor Value a
 scalarize t = CoreOps.reshape t (vector scalarShape)

@@ -38,6 +38,7 @@ module TensorFlow.Output
     , outputOp
     , PendingNodeName(..)
     , ResourceHandle(..)
+    , resourceHandleOutput
     )  where
 
 import qualified Data.Map.Strict as Map
@@ -160,4 +161,7 @@ instance IsString Output where
 -- | Opaque handle to a mutable resource in the graph.  Typical such
 -- resources are variables. The type parameter corresponds to the
 -- dtype of the tensor held in the variable.
-newtype ResourceHandle a = ResourceHandle Output
+newtype ResourceHandle a = ResourceHandle { unResourceHandle :: Output }
+
+resourceHandleOutput :: Lens' (ResourceHandle a) Output
+resourceHandleOutput = lens unResourceHandle (\_ x -> ResourceHandle x)
