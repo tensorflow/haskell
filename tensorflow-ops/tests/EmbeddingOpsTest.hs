@@ -24,6 +24,7 @@ import Google.Test (googleTest)
 import TensorFlow.EmbeddingOps (embeddingLookup)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
 import Test.HUnit ((@=?))
+import Test.Framework.Providers.HUnit (testCase)
 import Test.QuickCheck (Arbitrary(..), Property, choose, vectorOf)
 import Test.QuickCheck.Monadic (monadicIO, run)
 
@@ -33,6 +34,56 @@ import qualified TensorFlow.Ops as TF
 import qualified TensorFlow.Session as TF
 import qualified TensorFlow.Tensor as TF
 import qualified TensorFlow.Types as TF
+
+
+buildAndRun = TF.runSession . TF.buildAnd TF.run
+
+-- | Tries to perform a simple embedding lookup, with two partitions.
+testEmbeddingLookupHasRightShapeWithPartition = testCase "testEmbeddingLookupHasRightShapeWithPartition" $ do
+    let shape       = TF.Shape [1, 3] -- Consider a 3-dim embedding of two items.
+    let embedding1  = [ 1, 1, 1 ] :: [Int32]
+    let embedding2  = [ 0, 0, 0 ] :: [Int32]
+
+    let embedding = [ TF.constant shape embedding1
+                    , TF.constant shape embedding2
+                    ]
+
+    let idValues  = [0, 1] :: [Int32]
+    let ids       = TF.constant (TF.Shape [1, 2]) idValues
+    let op        = embeddingLookup embedding ids
+
+    (values, shape) <- buildAndRun $ do
+        vs <- op
+        return (vs, TF.shape vs)
+
+    -- This is the shape that is returned in the equiv. Python.
+    shape  @=? V.fromList [ 1, 2, 3 ]
+
+    -- "[0, 1]" should pull out the resulting vector.
+    values @=? V.fromList [ 1, 1, 1, 0, 0, 0 ]
+
+
+-- | Tries to perform a simple embedding lookup, with only a single partition.
+testEmbeddingLookupHasRightShape = testCase "testEmbeddingLookupHasRightShape" $ do
+    let shape         = TF.Shape [2, 3] -- Consider a 3-dim embedding of two items.
+    let embeddingInit = [ 1, 1, 1
+                        , 0, 0, 0 ] :: [Int32]
+
+    let embedding = TF.constant shape embeddingInit
+    let idValues  = [0, 1] :: [Int32]
+    let ids       = TF.constant (TF.Shape [1, 2]) idValues
+    let op        = embeddingLookup [embedding] ids
+
+    (values, shape) <- buildAndRun $ do
+        vs <- op
+        return (vs, TF.shape vs)
+
+    -- This is the shape that is returned in the equiv. Python.
+    shape  @=? V.fromList [ 1, 2, 3 ]
+
+    -- "[0, 1]" should pull out the resulting vector.
+    values @=? V.fromList [ 1, 1, 1, 0, 0, 0 ]
+
 
 -- Verifies that direct gather is the same as dynamic split into
 -- partitions, followed by embedding lookup.
@@ -85,4 +136,6 @@ main :: IO ()
 main = googleTest
        [ testProperty "EmbeddingLookupUndoesSplit"
          (testEmbeddingLookupUndoesSplit :: LookupExample Double -> Property)
+       , testEmbeddingLookupHasRightShape
+       , testEmbeddingLookupHasRightShapeWithPartition
        ]
