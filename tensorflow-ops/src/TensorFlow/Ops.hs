@@ -95,7 +95,6 @@ module TensorFlow.Ops
     , CoreOps.sparseToDense
     , CoreOps.sub
     , CoreOps.sum
-    , CoreOps.topK
     , CoreOps.transpose
     , truncatedNormal
     , variable

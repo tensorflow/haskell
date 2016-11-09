@@ -23,6 +23,7 @@ import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit ((@=?))
 import Google.Test
 import qualified Data.Vector as V
+import qualified TensorFlow.GenOps.Core as CoreOps
 
 import TensorFlow.Ops
 import TensorFlow.Session
@@ -30,7 +31,8 @@ import TensorFlow.Session
 -- | Test fetching multiple outputs from an op.
 testMultipleOutputs = testCase "testMultipleOutputs" $
     runSession $ do
-        (values, indices) <- run $ topK 2 $ constant [1, 4] [10, 40, 20, 30]
+        (values, indices) <-
+            run $ CoreOps.topKV2 (constant [1, 4] [10, 40, 20, 30]) 2
         liftIO $ [40, 30] @=? V.toList (values :: V.Vector Float)
         liftIO $ [1, 3] @=? V.toList (indices :: V.Vector Int32)
 
