@@ -160,6 +160,7 @@ Test-Suite MiscTest
                , google-shim
                , transformers
                , tensorflow
+               , tensorflow-core-ops
                , tensorflow-ops
                , tensorflow-proto
                , test-framework
