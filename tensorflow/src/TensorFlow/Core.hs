@@ -19,12 +19,8 @@
 -- Unless you are defining ops, you do not need to import other modules from
 -- this package.
 --
--- Ops are provided in the following modules:
---
---     * "TensorFlow.Ops"
---     * "TensorFlow.GenOps.Core"
---     * "TensorFlow.Gradient"
---     * "TensorFlow.EmbeddingOps"
+-- Basic ops are provided in the tensorflow-ops and tensorflow-core-ops
+-- packages.
 module TensorFlow.Core
     ( -- * Session
       Session
