@@ -187,6 +187,14 @@ Test-Suite TypesTest
                , test-framework-quickcheck2
                , vector
 
+Benchmark FeedFetchBench
+  default-language: Haskell2010
+  type:       exitcode-stdio-1.0
+  main-is:    FeedFetchBench.hs
+  hs-source-dirs: tests
+  build-depends: base, criterion, tensorflow, tensorflow-ops, vector, transformers
+  ghc-options: -O2 -threaded
+
 source-repository head
   type:     git
   location: https://github.com/tensorflow/haskell
