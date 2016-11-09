@@ -16,7 +16,32 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeFamilies #-}
--- | Rendering of TensorFlow operations as Haskell functions.
+{- | Rendering of TensorFlow operations as Haskell functions.
+
+The basic type signature generated for each op is:
+
+> {constraints} => {mandatory attrs} -> {input tensors} -> {output tensors}
+
+where:
+
+* @{mandatory attrs}@ is of the form @A_1 -> ... -> A_N@, where each @A@ is an
+ op attribute that doesn't have a default and can't be
+  inferred from other inputs.
+
+* @{constraints}@ constrain the type parameters of the input and output tensors
+ (for example: 'TensorType' or 'OneOf').
+
+* @{input tensors}@ is of the form @T_1 -> ... -> T_N@, where each @T@ is of
+the form @Tensor Ref a@, @Tensor v a@ or @ResourceHandle a@ (or a list of one
+of those types), and @a@ is either a concrete type or a (constrained) type
+variable.
+
+* @{output tensors}@ is of the form @(T_1,...,T_N)@ for "pure" ops, and
+@Build (T_1,...,T_N)@ for "stateful" ops.  An op is considered "stateful" if
+it takes a @Tensor Ref@ or @ResourceHandle@ as input, or if it's explicitly
+marked \"Stateful\" in its @REGISTER_OP@ definition.  (If there are no outputs,
+it is either @ControlNode@ or @Build ControlNode@.)
+-}
 
 module TensorFlow.OpGen
   ( OpGenFlags(..)
@@ -259,15 +284,18 @@ typeSig pOp = constraints
         AttrFloat -> "Float"
         AttrBool -> "Bool"
         AttrType -> "DataType"
-        AttrShape -> "TensorShapeProto"
+        AttrShape -> "Shape"
         AttrTensor -> "TensorProto"
 
     tensorArgAndComment t = tensorArg t <+> hang 0 ("-- ^" <+> argComment t)
     outputs = case parsedOutputs pOp of
-        [] -> "ControlNode"
+        [] -> wrapOutput "ControlNode"
         -- TODO(judahjacobson): To improve indentation: `tensorArgAndComment a`
-        [a] -> tensorArg a <+> "-- ^" <+> argComment a
-        as -> tuple (map tensorArg as) <+/> resultComment as
+        [a] -> wrapOutput (tensorArg a) <+> "-- ^" <+> argComment a
+        as -> wrapOutput (tuple (map tensorArg as)) <+/> resultComment as
+    wrapOutput o
+        | parsedOpIsMonadic pOp = "Build (" <> o <> ")"
+        | otherwise = o
         
 -- | Render an op input or output.
 -- For example: "Tensor Ref Int64", "Tensor v t", "ResourceHandle dtype"

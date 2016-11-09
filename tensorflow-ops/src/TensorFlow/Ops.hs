@@ -60,7 +60,7 @@ module TensorFlow.Ops
     , CoreOps.abs
     , CoreOps.addN
     , CoreOps.argMax
-    , assign
+    , CoreOps.assign
     , CoreOps.broadcastGradientArgs
     , CoreOps.cast
     , CoreOps.concat
@@ -97,7 +97,7 @@ module TensorFlow.Ops
     , CoreOps.sum
     , CoreOps.transpose
     , truncatedNormal
-    , variable
+    , CoreOps.variable
     , vector
     , zeros
     , CoreOps.zerosLike
@@ -154,31 +154,18 @@ matTranspose :: forall a v . TensorType a
              => Tensor v a -> Tensor Value a
 matTranspose = flip CoreOps.transpose (vector [1, 0 :: Int32])
 
--- | Create a new, uninitialized stateful Tensor of the given shape.
-variable :: forall a . TensorType a => Shape -> Build (Tensor Ref a)
-variable shape' = buildOp $ opDef "Variable"
-                          & opAttr "shape" .~ shape'
-                          & opAttr "dtype" .~ tensorType (undefined :: a)
-
 placeholder :: forall a . TensorType a => Shape -> Build (Tensor Value a)
 placeholder shape' =
     buildOp $ opDef "Placeholder"
             & opAttr "dtype" .~ tensorType (undefined :: a)
             & opAttr "shape" .~ shape'
 
--- Assign returns the input ref.
-assign :: forall a v . TensorType a
-       => Tensor Ref a -> Tensor v a -> Build (Tensor Ref a)
-assign = buildOp $ opDef "Assign"
-                      & opAttr "T" .~ tensorType (undefined :: a)
-                      & opAttr "use_locking" .~ True
-
 -- | Creates a variable initialized to the given value.
 -- Initialization happens next time session runs.
 initializedVariable :: forall a . TensorType a
                     => Tensor Value a -> Build (Tensor Ref a)
 initializedVariable initializer = do
-    v <- variable []  -- The shape is not known initially.
+    v <- CoreOps.variable []  -- The shape is not known initially.
     (i :: Tensor Ref a) <-
         buildOp (opDef "Assign"
                  & opAttr "T" .~ tensorType (undefined :: a)
@@ -220,7 +207,8 @@ restoreFromName :: forall a . TensorType a
 restoreFromName path name x = do
     let restoreOp = buildOp $ opDef "Restore"
                             & opAttr "dt" .~ tensorType (undefined :: a)
-    group =<< assign x (restoreOp (scalar path) (scalar name) :: Tensor Value a)
+    group =<< CoreOps.assign x
+                (restoreOp (scalar path) (scalar name) :: Tensor Value a)
 
 -- | Restore a tensor's value from a checkpoint file.
 restore :: forall a . TensorType a
