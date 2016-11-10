@@ -19,7 +19,6 @@
 
 module TensorFlow.Session (
     Session,
-    -- * Opaque value created via 'sessionConfig' and 'sessionTarget'.
     SessionOption,
     sessionConfig,
     sessionTarget,
@@ -76,6 +75,7 @@ runSession :: Session a -> IO a
 runSession = runSessionWithOptions []
 
 -- | Setting of an option for the session (see 'runSessionWithOptions').
+-- Opaque value created via 'sessionConfig' and 'sessionTarget'.
 newtype SessionOption =
     SessionOption { unSesssionOption :: Raw.SessionOptions -> IO () }
 
