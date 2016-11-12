@@ -24,9 +24,10 @@
 module TensorFlow.Core
     ( -- * Session
       Session
-    , SessionOption
+    , Options
     , sessionConfig
     , sessionTarget
+    , sessionTracer
     , runSession
     , runSessionWithOptions
       -- ** Building graphs
