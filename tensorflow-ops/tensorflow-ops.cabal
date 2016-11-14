@@ -192,7 +192,13 @@ Benchmark FeedFetchBench
   type:       exitcode-stdio-1.0
   main-is:    FeedFetchBench.hs
   hs-source-dirs: tests
-  build-depends: base, criterion, tensorflow, tensorflow-ops, vector, transformers
+  build-depends: base
+               , criterion
+               , deepseq
+               , tensorflow
+               , tensorflow-ops
+               , transformers
+               , vector
   ghc-options: -O2 -threaded
 
 source-repository head
