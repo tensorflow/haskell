@@ -35,7 +35,7 @@ testTracing = do
     -- Verifies that tracing happens as a side-effect of graph extension.
     loggedValue <- newEmptyMVar
     TF.runSessionWithOptions
-        (def & TF.sessionTracer .~ (putMVar loggedValue))
+        (def & TF.sessionTracer .~ putMVar loggedValue)
         (TF.buildAnd TF.run_ (pure (TF.scalar (0 :: Float))))
     tryReadMVar loggedValue >>=
         maybe (assertFailure "Logging never happened") expectedFormat
