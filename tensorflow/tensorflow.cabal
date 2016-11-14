@@ -16,13 +16,14 @@ library
   exposed-modules:  TensorFlow.Build
                   , TensorFlow.BuildOp
                   , TensorFlow.ControlFlow
+                  , TensorFlow.Core
                   , TensorFlow.Internal.FFI
+                  , TensorFlow.Internal.VarInt
                   , TensorFlow.Nodes
                   , TensorFlow.Output
                   , TensorFlow.Session
                   , TensorFlow.Tensor
                   , TensorFlow.Types
-                  , TensorFlow.Internal.VarInt
   other-modules:    TensorFlow.Internal.Raw
                   , TensorFlow.Orphans
   build-tools:      c2hs
