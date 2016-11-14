@@ -118,9 +118,9 @@ sessionTracer = lens _sessionTracer (\g x -> g { _sessionTracer = x })
 runSessionWithOptions :: Options -> Session a -> IO a
 runSessionWithOptions options (Session m) =
     FFI.withSession applyOptions $
-        \as rs -> do
+        \as rs ->
             let initState = SessionState rs as (options ^. sessionTracer)
-            evalBuildT (runReaderT m initState)
+            in evalBuildT (runReaderT m initState)
   where applyOptions opt = do
             FFI.setSessionTarget (options ^. sessionTarget) opt
             FFI.setSessionConfig (options ^. sessionConfig) opt
