@@ -99,4 +99,7 @@ blackList =
     , "_ListToArray"
       -- Easy: support larger result tuples.
     , "Skipgram"
+    -- Can be removed after 139129469 is released.
+    , "ResourceGather"
+    , "ResourceScatterAdd"
     ]
