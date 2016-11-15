@@ -77,6 +77,7 @@ import TensorFlow.Ops
     , shape
     , softmaxCrossEntropyWithLogits
     , sum
+    , toScalar
     , vector
     , zerosLike
     )
@@ -402,6 +403,7 @@ type GradientFunc a = NodeDef
 toT :: Output -> Tensor Value a
 toT = Tensor ValueKind
 
+
 -- | The gradient function for an op type.
 --
 -- These implementations should match their python counterparts in:
@@ -430,10 +432,10 @@ opGrad "Gather" _ [toT -> x, toT -> indices] [dz] =
   where
     -- TODO(gnezdo): Use colocateWith but it requires Build monad.
     denseShape = shape (x :: Tensor Value a)
-    numRows = CoreOps.slice denseShape 0 (1 :: Tensor Value Int32)
+    numRows = toScalar $ CoreOps.slice denseShape (vector [0 :: Int32]) (vector [1])
     valuesShape = CoreOps.concat 0 [
                                  allDimensions
-                               , CoreOps.slice denseShape 1 (-1 :: Tensor Value Int32)
+                               , CoreOps.slice denseShape (vector [1]) (vector [-1 :: Int32])
                                ]
     values = reshape dz valuesShape
     -- TODO(fmayle): This could be either Int32 or Int64.
@@ -628,7 +630,7 @@ opGrad "SparseSegmentSum" _ [toT -> x, toT -> y, toT -> t] [dz] =
     , Nothing
     , Nothing
     ]
-  where inputRows = CoreOps.slice (shape (x :: Tensor Value a)) (scalar (0 :: Int32)) (scalar 1)
+  where inputRows = CoreOps.slice (shape (x :: Tensor Value a)) (vector [0 :: Int32]) (vector [1])
 
 opGrad "LabelClasses" _ _ _ = [Nothing, Nothing]
 opGrad "LabelWeights" _ _ _ = [Nothing]

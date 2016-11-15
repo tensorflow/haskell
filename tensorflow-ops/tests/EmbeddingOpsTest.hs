@@ -93,14 +93,14 @@ testEmbeddingLookupHasRightShape = testCase "testEmbeddingLookupHasRightShape" $
 
 -- | Check that we can calculate gradients w.r.t embeddings.
 testEmbeddingLookupGradients = testCase "testEmbeddingLookupGradients" $ do
-    let xVals = V.fromList ([10, 20] :: [Float]) -- Same as "embedding", so gradient should be zero.
+    let xVals = V.fromList ([20, 20] :: [Float]) -- Agrees with "embedding", so gradient should be zero.
     let shape = TF.Shape [2]
 
     gs <- TF.runSession $ do
         grads <- TF.build $ do
             let shape         = TF.Shape [2, 1] 
-            let embeddingInit = [10, 20] :: [Float]
-            let idValues      = [0, 1] :: [Int32]
+            let embeddingInit = [1, 20] :: [Float]
+            let idValues      = [1, 1]   :: [Int32]
             let ids           = TF.constant (TF.Shape [1, 2]) idValues
 
             x <- TF.placeholder (TF.Shape [2]) 
