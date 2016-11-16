@@ -75,6 +75,7 @@ blackList =
     , "QueueDequeueUpTo"
     , "Stack"
     , "TensorArray"
+    , "TensorArrayV2"
       -- These should be possible to support by adding a bunch of
       -- overloads with a variable number of tuple arguments.
     , "Assert"
@@ -99,7 +100,4 @@ blackList =
     , "_ListToArray"
       -- Easy: support larger result tuples.
     , "Skipgram"
-    -- Can be removed after 139136489 is released.
-    , "ResourceGather"
-    , "ResourceScatterAdd"
     ]
