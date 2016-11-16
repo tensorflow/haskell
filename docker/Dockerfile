@@ -1,6 +1,6 @@
 # Prepare the image with:
 #   docker build -t tensorflow/haskell:v0 docker
-FROM gcr.io/tensorflow/tensorflow:latest-devel
+FROM tensorflow/tensorflow:nightly-devel
 MAINTAINER TensorFlow authors <tensorflow-haskell@googlegroups.com>
 # Installs protoc and the libraries.
 RUN \
