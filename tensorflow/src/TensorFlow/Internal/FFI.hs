@@ -137,6 +137,7 @@ run session feeds fetches targets = do
                 fetchNames tensorOuts (fromIntegral fetchesLen)
                 ctargets (fromIntegral targetsLen)
                 nullPtr
+            mapM_ Raw.deleteTensor feedTensors
             outTensors <- peekArray fetchesLen tensorOuts
             mapM createTensorData outTensors
 
