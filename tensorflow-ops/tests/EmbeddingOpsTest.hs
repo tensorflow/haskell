@@ -23,10 +23,12 @@ import Data.List (genericLength)
 import Google.Test (googleTest)
 import TensorFlow.EmbeddingOps (embeddingLookup)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
-import Test.HUnit ((@=?))
+import Test.HUnit.Lang (Assertion(..))
+import Test.HUnit ((@=?), (@?))
 import Test.Framework.Providers.HUnit (testCase)
 import Test.QuickCheck (Arbitrary(..), Property, choose, vectorOf)
 import Test.QuickCheck.Monadic (monadicIO, run)
+import TensorFlow.Test (assertAllClose)
 
 import qualified Data.Vector as V
 import qualified TensorFlow.GenOps.Core as CoreOps
@@ -34,21 +36,26 @@ import qualified TensorFlow.Ops as TF
 import qualified TensorFlow.Session as TF
 import qualified TensorFlow.Tensor as TF
 import qualified TensorFlow.Types as TF
+import qualified TensorFlow.Gradient as TF
+import qualified TensorFlow.Build as TF
+import qualified TensorFlow.Nodes as TF
 
 
+buildAndRun :: TF.Fetchable t a => TF.Build t -> IO a
 buildAndRun = TF.runSession . TF.buildAnd TF.run
 
+
 -- | Tries to perform a simple embedding lookup, with two partitions.
-testEmbeddingLookupHasRightShapeWithPartition = testCase "testEmbeddingLookupHasRightShapeWithPartition" $ do
+testEmbeddingLookupHasRightShapeWithPartition = 
+        testCase "testEmbeddingLookupHasRightShapeWithPartition" $ do
     let shape       = TF.Shape [1, 3] -- Consider a 3-dim embedding of two items.
-    let embedding1  = [ 1, 1, 1 ] :: [Int32]
-    let embedding2  = [ 0, 0, 0 ] :: [Int32]
+    let embedding1  = [1, 1, 1 :: Int32]
+    let embedding2  = [0, 0, 0 :: Int32]
+    let embedding   = [ TF.constant shape embedding1
+                      , TF.constant shape embedding2
+                      ]
 
-    let embedding = [ TF.constant shape embedding1
-                    , TF.constant shape embedding2
-                    ]
-
-    let idValues  = [0, 1] :: [Int32]
+    let idValues  = [0, 1 :: Int32]
     let ids       = TF.constant (TF.Shape [1, 2]) idValues
     let op        = embeddingLookup embedding ids
 
@@ -57,20 +64,23 @@ testEmbeddingLookupHasRightShapeWithPartition = testCase "testEmbeddingLookupHas
         return (vs, TF.shape vs)
 
     -- This is the shape that is returned in the equiv. Python.
-    shape  @=? V.fromList [ 1, 2, 3 ]
+    shape  @=? V.fromList [1, 2, 3]
 
     -- "[0, 1]" should pull out the resulting vector.
-    values @=? V.fromList [ 1, 1, 1, 0, 0, 0 ]
+    values @=? V.fromList [1, 1, 1, 0, 0, 0]
 
 
 -- | Tries to perform a simple embedding lookup, with only a single partition.
-testEmbeddingLookupHasRightShape = testCase "testEmbeddingLookupHasRightShape" $ do
-    let shape         = TF.Shape [2, 3] -- Consider a 3-dim embedding of two items.
+testEmbeddingLookupHasRightShape = 
+        testCase "testEmbeddingLookupHasRightShape" $ do
+    -- Consider a 3-dim embedding of two items
+    let shape         = TF.Shape [2, 3]
     let embeddingInit = [ 1, 1, 1
-                        , 0, 0, 0 ] :: [Int32]
+                        , 0, 0, 0 :: Int32
+                        ]
 
     let embedding = TF.constant shape embeddingInit
-    let idValues  = [0, 1] :: [Int32]
+    let idValues  = [0, 1 :: Int32]
     let ids       = TF.constant (TF.Shape [1, 2]) idValues
     let op        = embeddingLookup [embedding] ids
 
@@ -79,10 +89,39 @@ testEmbeddingLookupHasRightShape = testCase "testEmbeddingLookupHasRightShape" $
         return (vs, TF.shape vs)
 
     -- This is the shape that is returned in the equiv. Python.
-    shape  @=? V.fromList [ 1, 2, 3 ]
+    shape  @=? V.fromList [1, 2, 3]
 
     -- "[0, 1]" should pull out the resulting vector.
-    values @=? V.fromList [ 1, 1, 1, 0, 0, 0 ]
+    values @=? V.fromList [1, 1, 1, 0, 0, 0]
+
+
+-- | Check that we can calculate gradients w.r.t embeddings.
+testEmbeddingLookupGradients = testCase "testEmbeddingLookupGradients" $ do
+    -- Agrees with "embedding", so gradient should be zero.
+    let xVals = V.fromList ([20, 20 :: Float])
+    let shape = TF.Shape [2]
+
+    gs <- TF.runSession $ do
+        grads <- TF.build $ do
+            let shape         = TF.Shape [2, 1] 
+            let embeddingInit = [1, 20 ::Float]
+            let idValues      = [1, 1 :: Int32]
+            let ids           = TF.constant (TF.Shape [1, 2]) idValues
+
+            x <- TF.placeholder (TF.Shape [2]) 
+            embedding <- TF.initializedVariable 
+                            =<< TF.render (TF.constant shape embeddingInit)
+            
+            op <- embeddingLookup [embedding] ids
+            let twoNorm = CoreOps.square $ TF.abs (op - x)
+                loss    = TF.mean twoNorm (TF.scalar (0 :: Int32))
+
+            grad <- fmap head (TF.gradients loss [embedding])
+            return $ \xs -> TF.runWithFeeds [TF.feed x xs] grad
+
+        grads (TF.encodeTensorData shape xVals :: TF.TensorData Float)
+    -- Gradients should be zero (or close)
+    assertAllClose gs (V.fromList ([0, 0 :: Float]))
 
 
 -- Verifies that direct gather is the same as dynamic split into
@@ -138,4 +177,5 @@ main = googleTest
          (testEmbeddingLookupUndoesSplit :: LookupExample Double -> Property)
        , testEmbeddingLookupHasRightShape
        , testEmbeddingLookupHasRightShapeWithPartition
+       , testEmbeddingLookupGradients
        ]

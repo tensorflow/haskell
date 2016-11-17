@@ -101,6 +101,7 @@ module TensorFlow.Ops
     , vector
     , zeros
     , CoreOps.zerosLike
+    , scalarize
     ) where
 
 import Data.ByteString (ByteString)
@@ -255,6 +256,15 @@ constant (Shape shape') values
                 & tensorShape.TensorShape.dim .~
                       [def & TensorShape.size .~ x | x <- shape']
                 & tensorVal .~ values
+
+-- | Reshape a N-D tensor down to a scalar.
+-- 
+-- See `TensorFlow.GenOps.Core.reshape`.
+scalarize :: (TensorType a) => Tensor v a -> Tensor Value a
+scalarize t = CoreOps.reshape t (vector scalarShape)
+    where
+        scalarShape = [] :: [Int32]
+
 
 -- | Create a constant vector.
 vector :: TensorType a => [a] -> Tensor Value a
