@@ -697,6 +697,5 @@ allDimensions = vector [-1 :: Int32]
 rangeOfRank :: forall v1 t. TensorType t => Tensor v1 t -> Tensor Value Int32
 rangeOfRank x = CoreOps.range 0 (CoreOps.rank x) 1
 
--- lookupAttr :: NodeDef -> ( -> _
 lookupAttr ::  Attribute a1 => NodeDef -> Text -> a1
 lookupAttr nodeDef attrName = nodeDef ^. attr . at attrName . non def . attrLens
