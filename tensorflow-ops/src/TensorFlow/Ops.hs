@@ -260,9 +260,7 @@ constant (Shape shape') values
 -- | Reshape a N-D tensor down to a scalar.
 -- 
 -- See `TensorFlow.GenOps.Core.reshape`.
-scalarize :: (TensorType a) 
-         => Tensor v a 
-         -> Tensor Value a
+scalarize :: (TensorType a) => Tensor v a -> Tensor Value a
 scalarize t = CoreOps.reshape t (vector scalarShape)
     where
         scalarShape = [] :: [Int32]
