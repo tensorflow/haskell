@@ -77,6 +77,7 @@ import TensorFlow.Ops
     , shape
     , softmaxCrossEntropyWithLogits
     , sum
+    , scalarize
     , vector
     , zerosLike
     )
@@ -402,6 +403,21 @@ type GradientFunc a = NodeDef
 toT :: Output -> Tensor Value a
 toT = Tensor ValueKind
 
+
+-- | Wrapper around `TensorFlow.GenOps.Core.slice` that builds vectors from scalars for
+-- simple slicing operations.
+flatSlice :: forall v1 t i . (TensorType t)
+         => Tensor v1 t    -- ^ __input__
+         -> Int32          -- ^ __begin__: specifies the offset into the first dimension of
+                           -- 'input' to slice from.
+         -> Int32          -- ^ __size__: specifies the number of elements of the first dimension
+                           -- of 'input' to slice. If size is -1, all remaining elements in the dimension
+                           -- are included in the slice (i.e. this is equivalent to setting
+                           -- size = input.dim_size(0) - begin).
+         -> Tensor Value t -- ^ __output__
+flatSlice input begin size = CoreOps.slice input (vector [begin]) (vector [size])
+
+
 -- | The gradient function for an op type.
 --
 -- These implementations should match their python counterparts in:
@@ -430,11 +446,10 @@ opGrad "Gather" _ [toT -> x, toT -> indices] [dz] =
   where
     -- TODO(gnezdo): Use colocateWith but it requires Build monad.
     denseShape = shape (x :: Tensor Value a)
-    numRows = CoreOps.slice denseShape 0 (1 :: Tensor Value Int32)
-    valuesShape = CoreOps.concat 0 [
-                                 allDimensions
-                               , CoreOps.slice denseShape 1 (-1 :: Tensor Value Int32)
-                               ]
+    numRows = scalarize $ flatSlice denseShape 0 1
+    valuesShape = CoreOps.concat 0 [ allDimensions
+                                   , flatSlice denseShape 1 (-1)
+                                   ]
     values = reshape dz valuesShape
     -- TODO(fmayle): This could be either Int32 or Int64.
     indices' = reshape indices allDimensions :: Tensor Value Int32
@@ -628,7 +643,7 @@ opGrad "SparseSegmentSum" _ [toT -> x, toT -> y, toT -> t] [dz] =
     , Nothing
     , Nothing
     ]
-  where inputRows = CoreOps.slice (shape (x :: Tensor Value a)) (scalar (0 :: Int32)) (scalar 1)
+  where inputRows = flatSlice (shape (x :: Tensor Value a)) 0 1
 
 opGrad "LabelClasses" _ _ _ = [Nothing, Nothing]
 opGrad "LabelWeights" _ _ _ = [Nothing]
