@@ -22,7 +22,7 @@ module TensorFlow.NN
 import Prelude hiding           ( log
                                 , exp
                                 )
-import TensorFlow.Build         ( Build(..)
+import TensorFlow.Build         ( Build
                                 , render
                                 , withNameScope
                                 )
@@ -32,7 +32,7 @@ import TensorFlow.GenOps.Core   ( greaterEqual
                                 , exp
                                 )
 import TensorFlow.Tensor        ( Tensor(..)
-                                , Value(..)
+                                , Value
                                 )
 import TensorFlow.Types         ( TensorType(..)
                                 , OneOf
