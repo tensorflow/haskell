@@ -52,7 +52,7 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 import qualified Data.Text.Encoding.Error as T
 import qualified Data.Vector.Storable as S
-import qualified Data.Vector.Storable.Mutable as SM
+import qualified Foreign.Concurrent as ForeignC
 
 import Data.ProtoLens (Message, encodeMessage)
 import Proto.Tensorflow.Core.Framework.Graph (GraphDef)
@@ -203,14 +203,8 @@ createTensorData t = do
     -- Read data.
     len <- safeConvert <$> Raw.tensorByteSize t
     bytes <- castPtr <$> Raw.tensorData t :: IO (Ptr Word8)
-    -- Note: We would like to avoid the copy by creating an S.Vector directly
-    -- from 'bytes' and calling Raw.deleteTensor when it gets GC'd, but we can't
-    -- because the vector may outlive the tensorflow session and become invalid.
-    mv <- SM.new len
-    SM.unsafeWith mv $ \dest -> copyArray dest bytes len
-    v <- S.unsafeFreeze mv
-    -- Free tensor.
-    Raw.deleteTensor t
+    fp <- ForeignC.newForeignPtr bytes (Raw.deleteTensor t)
+    let v = S.unsafeFromForeignPtr0 fp len
     return $ TensorData (map safeConvert dims) dtype v
 
 -- | Runs the given action which does FFI calls updating a provided
