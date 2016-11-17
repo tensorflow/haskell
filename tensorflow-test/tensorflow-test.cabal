@@ -1,7 +1,6 @@
 name:                tensorflow-test
 version:             0.1.0.0
-synopsis:            Friendly layer around TensorFlow bindings.
-description:         Please see README.md
+synopsis:            Some common functions for test suites.
 homepage:            https://github.com/tensorflow/haskell#readme
 license:             Apache
 author:              TensorFlow authors

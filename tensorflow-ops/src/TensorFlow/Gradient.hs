@@ -406,11 +406,11 @@ toT = Tensor ValueKind
 
 -- | Wrapper around `TensorFlow.GenOps.Core.slice` that builds vectors from scalars for
 -- simple slicing operations.
-flatSlice :: forall v1 t i . (TensorType t, OneOf '[Int32, Int64] i)
+flatSlice :: forall v1 t i . (TensorType t)
          => Tensor v1 t -- ^ __input__
-         -> i -- ^ __begin__: specifies the offset into the first dimension of
+         -> Int32 -- ^ __begin__: specifies the offset into the first dimension of
                             -- 'input' to slice from.
-         -> i -- ^ __size__: specifies the number of elements of the first dimension
+         -> Int32 -- ^ __size__: specifies the number of elements of the first dimension
                             -- of 'input' to slice. If size is -1, all remaining elements in the dimension
                             -- are included in the slice (i.e. this is equivalent to setting
                             -- size = input.dim_size(0) - begin).

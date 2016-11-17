@@ -18,16 +18,16 @@ module TensorFlow.Test
     ( assertAllClose
     ) where
 
-import Test.HUnit.Lang (Assertion(..))
 import qualified Data.Vector as V
 import Test.HUnit ((@?))
+import Test.HUnit.Lang (Assertion(..))
 
 -- | Compares that the vectors are element-by-element equal within the given
 -- tolerance. Raises an assertion and prints some information if not.
 assertAllClose :: V.Vector Float -> V.Vector Float -> Assertion
 assertAllClose xs ys = all (<= tol) (V.zipWith absDiff xs ys) @?
-    ("Difference > tolerance: \nxs: " ++ show xs ++ "\nys: " ++ show ys
-        ++ "\ntolerance: " ++ show tol)
+    "Difference > tolerance: \nxs: " ++ show xs ++ "\nys: " ++ show ys
+        ++ "\ntolerance: " ++ show tol
   where
       absDiff x y = abs (x - y)
       tol = 0.001 :: Float
