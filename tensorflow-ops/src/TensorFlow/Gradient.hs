@@ -77,7 +77,7 @@ import TensorFlow.Ops
     , shape
     , softmaxCrossEntropyWithLogits
     , sum
-    , toScalar
+    , scalarize
     , vector
     , zerosLike
     )
@@ -404,7 +404,7 @@ toT :: Output -> Tensor Value a
 toT = Tensor ValueKind
 
 
--- | Wrapper around `GenOps.Core.slice` that builds vectors from scalars for
+-- | Wrapper around `TensorFlow.GenOps.Core.slice` that builds vectors from scalars for
 -- simple slicing operations.
 flatSlice :: forall v1 t i . (TensorType t, OneOf '[Int32, Int64] i)
          => Tensor v1 t -- ^ __input__
@@ -446,12 +446,10 @@ opGrad "Gather" _ [toT -> x, toT -> indices] [dz] =
   where
     -- TODO(gnezdo): Use colocateWith but it requires Build monad.
     denseShape = shape (x :: Tensor Value a)
-    numRows = toScalar $ flatSlice denseShape (0 :: Int32) 1
-    -- numRows = toScalar $ CoreOps.slice denseShape (vector [0 :: Int32]) (vector [1])
-    valuesShape = CoreOps.concat 0 [
-                                 allDimensions
-                               , flatSlice denseShape 1 (-1 :: Int32)
-                               ]
+    numRows = scalarize $ flatSlice denseShape (0 :: Int32) 1
+    valuesShape = CoreOps.concat 0 [ allDimensions
+                                   , flatSlice denseShape 1 (-1 :: Int32)
+                                   ]
     values = reshape dz valuesShape
     -- TODO(fmayle): This could be either Int32 or Int64.
     indices' = reshape indices allDimensions :: Tensor Value Int32
