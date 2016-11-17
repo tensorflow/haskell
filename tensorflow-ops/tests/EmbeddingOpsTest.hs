@@ -49,12 +49,11 @@ buildAndRun = TF.runSession . TF.buildAnd TF.run
 testEmbeddingLookupHasRightShapeWithPartition = 
         testCase "testEmbeddingLookupHasRightShapeWithPartition" $ do
     let shape       = TF.Shape [1, 3] -- Consider a 3-dim embedding of two items.
-    let embedding1  = [ 1, 1, 1 :: Int32]
-    let embedding2  = [ 0, 0, 0 :: Int32]
-
-    let embedding = [ TF.constant shape embedding1
-                    , TF.constant shape embedding2
-                    ]
+    let embedding1  = [1, 1, 1 :: Int32]
+    let embedding2  = [0, 0, 0 :: Int32]
+    let embedding   = [ TF.constant shape embedding1
+                      , TF.constant shape embedding2
+                      ]
 
     let idValues  = [0, 1 :: Int32]
     let ids       = TF.constant (TF.Shape [1, 2]) idValues
@@ -65,17 +64,20 @@ testEmbeddingLookupHasRightShapeWithPartition =
         return (vs, TF.shape vs)
 
     -- This is the shape that is returned in the equiv. Python.
-    shape  @=? V.fromList [ 1, 2, 3 ]
+    shape  @=? V.fromList [1, 2, 3]
 
     -- "[0, 1]" should pull out the resulting vector.
-    values @=? V.fromList [ 1, 1, 1, 0, 0, 0 ]
+    values @=? V.fromList [1, 1, 1, 0, 0, 0]
 
 
 -- | Tries to perform a simple embedding lookup, with only a single partition.
-testEmbeddingLookupHasRightShape = testCase "testEmbeddingLookupHasRightShape" $ do
-    let shape         = TF.Shape [2, 3] -- Consider a 3-dim embedding of two items.
+testEmbeddingLookupHasRightShape = 
+        testCase "testEmbeddingLookupHasRightShape" $ do
+    -- Consider a 3-dim embedding of two items
+    let shape         = TF.Shape [2, 3]
     let embeddingInit = [ 1, 1, 1
-                        , 0, 0, 0 ] :: [Int32]
+                        , 0, 0, 0 :: Int32
+                        ]
 
     let embedding = TF.constant shape embeddingInit
     let idValues  = [0, 1 :: Int32]
@@ -87,10 +89,10 @@ testEmbeddingLookupHasRightShape = testCase "testEmbeddingLookupHasRightShape" $
         return (vs, TF.shape vs)
 
     -- This is the shape that is returned in the equiv. Python.
-    shape  @=? V.fromList [ 1, 2, 3 ]
+    shape  @=? V.fromList [1, 2, 3]
 
     -- "[0, 1]" should pull out the resulting vector.
-    values @=? V.fromList [ 1, 1, 1, 0, 0, 0 ]
+    values @=? V.fromList [1, 1, 1, 0, 0, 0]
 
 
 -- | Check that we can calculate gradients w.r.t embeddings.
@@ -107,10 +109,12 @@ testEmbeddingLookupGradients = testCase "testEmbeddingLookupGradients" $ do
             let ids           = TF.constant (TF.Shape [1, 2]) idValues
 
             x <- TF.placeholder (TF.Shape [2]) 
-            embedding <- TF.initializedVariable =<< TF.render (TF.constant shape embeddingInit)
+            embedding <- TF.initializedVariable 
+                            =<< TF.render (TF.constant shape embeddingInit)
             
             op <- embeddingLookup [embedding] ids
-            let loss = TF.mean (CoreOps.square (TF.abs (op - x))) (TF.scalar (0 :: Int32))
+            let twoNorm = CoreOps.square $ TF.abs (op - x)
+                loss    = TF.mean twoNorm (TF.scalar (0 :: Int32))
 
             grad <- fmap head (TF.gradients loss [embedding])
             return $ \xs -> TF.runWithFeeds [TF.feed x xs] grad
