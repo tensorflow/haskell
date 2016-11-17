@@ -30,6 +30,7 @@ Test-Suite NNTest
                , QuickCheck
                , base
                , tensorflow
+               , tensorflow-test
                , tensorflow-ops
                , tensorflow-nn
                , google-shim

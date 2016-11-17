@@ -22,6 +22,7 @@ module Main where
 
 import           Data.Maybe                         (fromMaybe)
 import           Google.Test                        (googleTest)
+import           TensorFlow.Test                    (assertAllClose)
 import           Test.Framework.Providers.HUnit     (testCase)
 import           Test.HUnit                         ((@?))
 import           Test.HUnit.Lang                    (Assertion(..))
@@ -61,15 +62,6 @@ defInputs = Inputs {
       logits    = [-100, -2, -2, 0, 2, 2,   2, 100]
     , targets   = [   0,  0,  1, 0, 0, 1, 0.5,   1]
     }
-
-
-assertAllClose :: V.Vector Float -> V.Vector Float -> Assertion
-assertAllClose xs ys = all (<= tol) (V.zipWith absDiff xs ys) @?
-    ("Difference > tolerance: \nxs: " ++ show xs ++ "\nys: " ++ show ys
-        ++ "\ntolerance: " ++ show tol)
-  where
-      absDiff x y = abs (x - y)
-      tol = 0.001 :: Float
 
 
 testLogisticOutput = testCase "testLogisticOutput" $ do

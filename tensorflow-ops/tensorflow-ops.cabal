@@ -60,6 +60,7 @@ Test-Suite EmbeddingOpsTest
                , lens-family
                , google-shim
                , tensorflow
+               , tensorflow-test
                , tensorflow-core-ops
                , tensorflow-ops
                , tensorflow-proto

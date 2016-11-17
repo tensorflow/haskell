@@ -28,6 +28,7 @@ import Test.HUnit ((@=?), (@?))
 import Test.Framework.Providers.HUnit (testCase)
 import Test.QuickCheck (Arbitrary(..), Property, choose, vectorOf)
 import Test.QuickCheck.Monadic (monadicIO, run)
+import TensorFlow.Test (assertAllClose)
 
 import qualified Data.Vector as V
 import qualified TensorFlow.GenOps.Core as CoreOps
@@ -119,15 +120,6 @@ testEmbeddingLookupGradients = testCase "testEmbeddingLookupGradients" $ do
     assertAllClose gs (V.fromList ([0, 0] :: [Float]))
 
 
--- TODO: Move this out into a central testing utils lib and remove from NN
--- tests
-assertAllClose :: V.Vector Float -> V.Vector Float -> Assertion
-assertAllClose xs ys = all (<= tol) (V.zipWith absDiff xs ys) @?
-    ("Difference > tolerance: \nxs: " ++ show xs ++ "\nys: " ++ show ys
-        ++ "\ntolerance: " ++ show tol)
-  where
-      absDiff x y = abs (x - y)
-      tol = 0.001 :: Float
 
 
 -- Verifies that direct gather is the same as dynamic split into
