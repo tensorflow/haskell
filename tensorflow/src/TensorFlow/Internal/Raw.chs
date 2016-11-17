@@ -115,16 +115,16 @@ deleteSessionOptions = {# call TF_DeleteSessionOptions as ^ #}
 
 
 -- Session.
-{# pointer *TF_Session as Session newtype #}
+{# pointer *TF_DeprecatedSession as Session newtype #}
 
 newSession :: SessionOptions -> Status -> IO Session
-newSession = {# call TF_NewSession as ^ #}
+newSession = {# call TF_NewDeprecatedSession as ^ #}
 
 closeSession :: Session -> Status -> IO ()
-closeSession = {# call TF_CloseSession as ^ #}
+closeSession = {# call TF_CloseDeprecatedSession as ^ #}
 
 deleteSession :: Session -> Status -> IO ()
-deleteSession = {# call TF_DeleteSession as ^ #}
+deleteSession = {# call TF_DeleteDeprecatedSession as ^ #}
 
 extendGraph :: Session -> Ptr () -> CULong -> Status -> IO ()
 extendGraph = {# call TF_ExtendGraph as ^ #}

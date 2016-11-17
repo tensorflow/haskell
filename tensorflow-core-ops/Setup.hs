@@ -75,6 +75,7 @@ blackList =
     , "QueueDequeueUpTo"
     , "Stack"
     , "TensorArray"
+    , "TensorArrayV2"
       -- These should be possible to support by adding a bunch of
       -- overloads with a variable number of tuple arguments.
     , "Assert"

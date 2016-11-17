@@ -166,6 +166,21 @@ Test-Suite MiscTest
                , test-framework
                , test-framework-hunit
 
+Test-Suite TracingTest
+  default-language: Haskell2010
+  type: exitcode-stdio-1.0
+  main-is: TracingTest.hs
+  hs-source-dirs: tests
+  build-depends: HUnit
+               , base
+               , bytestring
+               , data-default
+               , lens-family
+               , tensorflow
+               , tensorflow-ops
+               , test-framework
+               , test-framework-hunit
+
 Test-Suite TypesTest
   default-language: Haskell2010
   type: exitcode-stdio-1.0
