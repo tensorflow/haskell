@@ -14,7 +14,6 @@
 
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedLists #-}
-{-# LANGUAGE RankNTypes #-}
 
 module Main where
 
@@ -98,7 +97,7 @@ testGradientAtZero = testCase "testGradientAtZero" $ do
 
     assertAllClose (head r) (V.fromList [0.5, -0.5])
 
-run :: forall a t. TF.Fetchable t a => TF.Build t -> IO a
+run :: TF.Fetchable t a => TF.Build t -> IO a
 run = TF.runSession . TF.buildAnd TF.run
 
 main :: IO ()

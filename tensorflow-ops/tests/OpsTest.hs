@@ -41,7 +41,7 @@ testSize = testCase "testSize" $ do
     x <- eval $ TF.size (TF.constant (TF.Shape [2, 3]) [0..5 :: Float])
     TF.Scalar (2 * 3 :: Int32) @=? x
 
-eval :: forall a t. TF.Fetchable t a => t -> IO a
+eval :: TF.Fetchable t a => t -> IO a
 eval = TF.runSession . TF.buildAnd TF.run . return
 
 -- | Confirms that the original example from Python code works.
