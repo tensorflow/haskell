@@ -21,11 +21,10 @@ import Control.Concurrent.MVar (newEmptyMVar, putMVar, tryReadMVar)
 import Data.ByteString.Builder (toLazyByteString)
 import Data.ByteString.Lazy (isPrefixOf)
 import Data.Default (def)
-import Data.Monoid ((<>))
 import Lens.Family2 ((&), (.~))
 import Test.Framework (defaultMain)
 import Test.Framework.Providers.HUnit (testCase)
-import Test.HUnit ((@=?), assertBool, assertFailure)
+import Test.HUnit (assertBool, assertFailure)
 
 import qualified TensorFlow.Core as TF
 import qualified TensorFlow.Ops as TF
@@ -44,6 +43,7 @@ testTracing = do
             assertBool ("Unexpected log entry " ++ show got)
                        ("Session.extend" `isPrefixOf` got)
 
+main :: IO ()
 main = defaultMain
     [ testCase "Tracing" testTracing
     ]

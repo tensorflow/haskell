@@ -33,6 +33,7 @@ testParseAll = do
          . not . null . view op)
         (decodeMessage opList :: Either String OpList)
 
+main :: IO ()
 main = defaultMain
     [ testCase "ParseAllOps" testParseAll
     ]

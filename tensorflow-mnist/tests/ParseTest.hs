@@ -52,12 +52,14 @@ import TensorFlow.Nodes (unScalar)
 import TensorFlow.Session
     (runSession, run, run_, runWithFeeds, build, buildAnd)
 import TensorFlow.Types (TensorType(..), Shape(..))
+import Test.Framework (Test)
 import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit ((@=?), Assertion)
 import Google.Test
 import qualified Data.Vector as V
 
 -- | Test that a file can be read and the GraphDef proto correctly parsed.
+testReadMessageFromFileOrDie :: Test
 testReadMessageFromFileOrDie = testCase "testReadMessageFromFileOrDie" $ do
     -- Check the function on a known well-formatted file.
     mnist <- readMessageFromFileOrDie =<< mnistPb :: IO GraphDef
@@ -72,6 +74,7 @@ testReadMessageFromFileOrDie = testCase "testReadMessageFromFileOrDie" $ do
 
 -- | Parse the test set for label and image data. Will only fail if the file is
 --   missing or incredibly corrupt.
+testReadMNIST :: Test
 testReadMNIST = testCase "testReadMNIST" $ do
     imageData <- readMNISTSamples =<< testImageData
     10000 @=? length imageData
@@ -84,6 +87,7 @@ testNodeName n g = n @=? opName
     opName = head (gDef^.node)^.op
     gDef = asGraphDef $ render g
 
+testGraphDefGen :: Test
 testGraphDefGen = testCase "testGraphDefGen" $ do
     -- Test the inferred operation type.
     let f0 :: Tensor Value Float
@@ -101,6 +105,7 @@ testGraphDefGen = testCase "testGraphDefGen" $ do
     testNodeName "Mul"  $ (1 + f0) * 2
 
 -- | Convert a simple graph to GraphDef, load it, run it, and check the output.
+testGraphDefExec :: Test
 testGraphDefExec = testCase "testGraphDefExec" $ do
     let graphDef = asGraphDef $ render $ scalar (5 :: Float) * 10
     runSession $ do
@@ -110,6 +115,7 @@ testGraphDefExec = testCase "testGraphDefExec" $ do
 
 -- | Load MNIST from a GraphDef and the weights from a checkpoint and run on
 --   sample data.
+testMNISTExec :: Test
 testMNISTExec = testCase "testMNISTExec" $ do
     -- Switch to unicode to enable pretty printing of MNIST digits.
     IO.hSetEncoding IO.stdout IO.utf8

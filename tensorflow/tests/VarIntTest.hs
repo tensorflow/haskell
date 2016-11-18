@@ -16,11 +16,13 @@ module Main where
 
 import Data.ByteString.Builder (toLazyByteString)
 import Google.Test (googleTest)
+import Test.Framework (Test)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
 import qualified Data.Attoparsec.ByteString.Lazy as Atto
 
 import TensorFlow.Internal.VarInt
 
+testEncodeDecode :: Test
 testEncodeDecode = testProperty "testEncodeDecode" $ \x ->
     let bytes = toLazyByteString (putVarInt x)
     in case Atto.eitherResult $ Atto.parse getVarInt bytes of

@@ -31,11 +31,13 @@ import TensorFlow.Session
     , runSession
     , run_
     )
+import Test.Framework (Test)
 import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit ((@=?))
 import qualified Data.ByteString as BS
 
 -- | Test basic queue behaviors.
+testBasic :: Test
 testBasic = testCase "testBasic" $ runSession $ do
     (q :: Queue2 Int64 BS.ByteString) <- build $ makeQueue2 1 ""
     buildAnd run_ (enqueue q 42 (scalar "Hi"))
@@ -47,6 +49,7 @@ testBasic = testCase "testBasic" $ runSession $ do
     liftIO $ (Scalar 56, Scalar "Bar") @=? y
 
 -- | Test queue pumping.
+testPump :: Test
 testPump = testCase "testPump" $ runSession $ do
     (deq, pump) <- build $ do
         q :: Queue2 Int64 BS.ByteString <- makeQueue2 2 "ThePumpQueue"
@@ -61,6 +64,7 @@ testPump = testCase "testPump" $ runSession $ do
     liftIO $ (Scalar 31, Scalar "Baz") @=? x
     liftIO $ (Scalar 31, Scalar "Baz") @=? y
 
+testAsync :: Test
 testAsync = testCase "testAsync" $ runSession $ do
     (deq, pump) <- build $ do
         q :: Queue2 Int64 BS.ByteString <- makeQueue2 2 ""
