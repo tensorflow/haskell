@@ -13,7 +13,6 @@
 -- limitations under the License.
 
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RankNTypes #-}
 
 module Main where
 
