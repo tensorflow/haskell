@@ -22,9 +22,9 @@ import Data.Int (Int32, Int64)
 import Data.List (genericLength)
 import Google.Test (googleTest)
 import TensorFlow.EmbeddingOps (embeddingLookup)
+import Test.Framework (Test)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
-import Test.HUnit.Lang (Assertion(..))
-import Test.HUnit ((@=?), (@?))
+import Test.HUnit ((@=?))
 import Test.Framework.Providers.HUnit (testCase)
 import Test.QuickCheck (Arbitrary(..), Property, choose, vectorOf)
 import Test.QuickCheck.Monadic (monadicIO, run)
@@ -46,13 +46,14 @@ buildAndRun = TF.runSession . TF.buildAnd TF.run
 
 
 -- | Tries to perform a simple embedding lookup, with two partitions.
-testEmbeddingLookupHasRightShapeWithPartition = 
+testEmbeddingLookupHasRightShapeWithPartition :: Test
+testEmbeddingLookupHasRightShapeWithPartition =
         testCase "testEmbeddingLookupHasRightShapeWithPartition" $ do
-    let shape       = TF.Shape [1, 3] -- Consider a 3-dim embedding of two items.
+    let embShape     = TF.Shape [1, 3] -- Consider a 3-dim embedding of two items.
     let embedding1  = [1, 1, 1 :: Int32]
     let embedding2  = [0, 0, 0 :: Int32]
-    let embedding   = [ TF.constant shape embedding1
-                      , TF.constant shape embedding2
+    let embedding   = [ TF.constant embShape embedding1
+                      , TF.constant embShape embedding2
                       ]
 
     let idValues  = [0, 1 :: Int32]
@@ -71,15 +72,16 @@ testEmbeddingLookupHasRightShapeWithPartition =
 
 
 -- | Tries to perform a simple embedding lookup, with only a single partition.
-testEmbeddingLookupHasRightShape = 
+testEmbeddingLookupHasRightShape :: Test
+testEmbeddingLookupHasRightShape =
         testCase "testEmbeddingLookupHasRightShape" $ do
     -- Consider a 3-dim embedding of two items
-    let shape         = TF.Shape [2, 3]
+    let embShape      = TF.Shape [2, 3]
     let embeddingInit = [ 1, 1, 1
                         , 0, 0, 0 :: Int32
                         ]
 
-    let embedding = TF.constant shape embeddingInit
+    let embedding = TF.constant embShape embeddingInit
     let idValues  = [0, 1 :: Int32]
     let ids       = TF.constant (TF.Shape [1, 2]) idValues
     let op        = embeddingLookup [embedding] ids
@@ -96,6 +98,7 @@ testEmbeddingLookupHasRightShape =
 
 
 -- | Check that we can calculate gradients w.r.t embeddings.
+testEmbeddingLookupGradients :: Test
 testEmbeddingLookupGradients = testCase "testEmbeddingLookupGradients" $ do
     -- Agrees with "embedding", so gradient should be zero.
     let xVals = V.fromList ([20, 20 :: Float])
@@ -103,15 +106,15 @@ testEmbeddingLookupGradients = testCase "testEmbeddingLookupGradients" $ do
 
     gs <- TF.runSession $ do
         grads <- TF.build $ do
-            let shape         = TF.Shape [2, 1] 
+            let embShape      = TF.Shape [2, 1]
             let embeddingInit = [1, 20 ::Float]
             let idValues      = [1, 1 :: Int32]
             let ids           = TF.constant (TF.Shape [1, 2]) idValues
 
-            x <- TF.placeholder (TF.Shape [2]) 
-            embedding <- TF.initializedVariable 
-                            =<< TF.render (TF.constant shape embeddingInit)
-            
+            x <- TF.placeholder (TF.Shape [2])
+            embedding <- TF.initializedVariable
+                            =<< TF.render (TF.constant embShape embeddingInit)
+
             op <- embeddingLookup [embedding] ids
             let twoNorm = CoreOps.square $ TF.abs (op - x)
                 loss    = TF.mean twoNorm (TF.scalar (0 :: Int32))
@@ -163,7 +166,9 @@ instance Arbitrary a => Arbitrary (LookupExample a) where
     arbitrary = do
         rank <- choose (1, 4)
         -- Takes rank-th root of 100 to cap the tensor size.
-        let maxDim = fromIntegral $ ceiling $ 100 ** (1 / fromIntegral rank)
+        let maxDim = fromIntegral (ceiling doubleMaxDim :: Int64)
+            doubleMaxDim :: Double
+            doubleMaxDim = 100 ** (1 / fromIntegral rank)
         shape@(firstDim : _) <- vectorOf rank (choose (1, maxDim))
         values <- vectorOf (fromIntegral $ product shape) arbitrary
         numParts <- choose (2, 15)
