@@ -8,4 +8,4 @@ IMAGE_NAME=tensorflow/haskell/ci_build:v0
 
 git submodule update
 docker build -t $IMAGE_NAME -f ci_build/Dockerfile .
-docker run  $IMAGE_NAME stack test
+docker run  $IMAGE_NAME stack build --pedantic --test

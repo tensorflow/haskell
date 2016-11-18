@@ -12,28 +12,22 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
-{-# LANGUAGE OverloadedLists #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE OverloadedLists #-}
 
 module Main where
 
-import           Data.Maybe                         (fromMaybe)
 import           Google.Test                        (googleTest)
 import           TensorFlow.Test                    (assertAllClose)
+import           Test.Framework (Test)
 import           Test.Framework.Providers.HUnit     (testCase)
-import           Test.HUnit                         ((@?))
-import           Test.HUnit.Lang                    (Assertion(..))
 import qualified Data.Vector                        as V
 import qualified TensorFlow.Build                   as TF
 import qualified TensorFlow.Gradient                as TF
+import qualified TensorFlow.Nodes                   as TF
 import qualified TensorFlow.NN                      as TF
 import qualified TensorFlow.Ops                     as TF
 import qualified TensorFlow.Session                 as TF
-import qualified TensorFlow.Tensor                  as TF
-import qualified TensorFlow.Types                   as TF
 
 -- | These tests are ported from:
 --
@@ -46,9 +40,9 @@ sigmoidXentWithLogits :: Floating a => Ord a => [a] -> [a] -> [a]
 sigmoidXentWithLogits logits' targets' =
     let sig  = map (\x -> 1 / (1 + exp (-x))) logits'
         eps  = 0.0001
-        pred = map (\p -> min (max p eps) (1 - eps)) sig
+        predictions = map (\p -> min (max p eps) (1 - eps)) sig
         xent y z = (-z) * (log y) - (1 - z) * log (1 - y)
-     in zipWith xent pred targets'
+     in zipWith xent predictions targets'
 
 
 data Inputs = Inputs {
@@ -64,6 +58,7 @@ defInputs = Inputs {
     }
 
 
+testLogisticOutput :: Test
 testLogisticOutput = testCase "testLogisticOutput" $ do
     let inputs     = defInputs
         vLogits    = TF.vector $ logits  inputs
@@ -75,6 +70,7 @@ testLogisticOutput = testCase "testLogisticOutput" $ do
     assertAllClose r ourLoss
 
 
+testLogisticOutputMultipleDim :: Test
 testLogisticOutputMultipleDim =
         testCase "testLogisticOutputMultipleDim" $ do
     let inputs   = defInputs
@@ -88,6 +84,7 @@ testLogisticOutputMultipleDim =
     assertAllClose r ourLoss
 
 
+testGradientAtZero :: Test
 testGradientAtZero = testCase "testGradientAtZero" $ do
     let inputs   = defInputs { logits = [0, 0], targets = [0, 1] }
         vLogits  = TF.vector $ logits  inputs
@@ -100,9 +97,8 @@ testGradientAtZero = testCase "testGradientAtZero" $ do
 
     assertAllClose (head r) (V.fromList [0.5, -0.5])
 
-
+run :: TF.Fetchable t a => TF.Build t -> IO a
 run = TF.runSession . TF.buildAnd TF.run
-
 
 main :: IO ()
 main = googleTest [ testGradientAtZero

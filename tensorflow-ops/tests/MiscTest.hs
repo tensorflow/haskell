@@ -19,6 +19,7 @@ module Main where
 
 import Control.Monad.IO.Class (liftIO)
 import Data.Int (Int32)
+import Test.Framework (Test)
 import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit ((@=?))
 import Google.Test
@@ -29,6 +30,7 @@ import TensorFlow.Ops
 import TensorFlow.Session
 
 -- | Test fetching multiple outputs from an op.
+testMultipleOutputs :: Test
 testMultipleOutputs = testCase "testMultipleOutputs" $
     runSession $ do
         (values, indices) <-
@@ -37,6 +39,7 @@ testMultipleOutputs = testCase "testMultipleOutputs" $
         liftIO $ [1, 3] @=? V.toList (indices :: V.Vector Int32)
 
 -- | Test op with variable number of inputs.
+testVarargs :: Test
 testVarargs = testCase "testVarargs" $
     runSession $ do
         xs <- run $ pack $ map scalar [1..8]

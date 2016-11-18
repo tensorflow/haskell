@@ -13,8 +13,9 @@
 -- limitations under the License.
 
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE Rank2Types #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module TensorFlow.Output
     ( ControlNode(..)
@@ -150,8 +151,8 @@ opControlInputs = lens _opControlInputs (\o x -> o {_opControlInputs = x})
 -- code into a Build function
 instance IsString Output where
     fromString s = case break (==':') s of
-        (n, ':':ixStr)
-            | [(ix, "")] <- read ixStr -> Output (fromInteger ix) $ assigned n
+        (n, ':':ixStr) | [(ix, "" :: String)] <- read ixStr
+                         -> Output (fromInteger ix) $ assigned n
         _ -> Output 0 $ assigned s
         where assigned n = Rendered $ def & name .~ Text.pack n
 

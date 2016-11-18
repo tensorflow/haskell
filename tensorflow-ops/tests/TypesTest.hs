@@ -19,11 +19,14 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
+-- Purposely disabled to confirm doubleFuncNoSig can be written without type.
+{-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 
 import Control.Monad (replicateM)
 import Control.Monad.IO.Class (liftIO)
 import Data.Int (Int64)
 import Google.Test (googleTest)
+import Test.Framework (Test)
 import Test.Framework.Providers.HUnit (testCase)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
 import Test.HUnit ((@=?))
@@ -43,10 +46,11 @@ instance Arbitrary B.ByteString where
 
 -- Test encoding tensors, feeding them through tensorflow, and decoding the
 -- results.
+testFFIRoundTrip :: Test
 testFFIRoundTrip = testCase "testFFIRoundTrip" $
     TF.runSession $ do
         let floatData = V.fromList [1..6 :: Float]
-            stringData = V.fromList [B8.pack (show x) | x <- [1..6]]
+            stringData = V.fromList [B8.pack (show x) | x <- [1..6::Integer]]
         f <- TF.build $ TF.placeholder [2,3]
         s <- TF.build $ TF.placeholder [2,3]
         let feeds = [ TF.feed f (TF.encodeTensorData [2,3] floatData)
@@ -78,12 +82,15 @@ encodeDecodeProp :: (TF.TensorType a, Eq a) => TensorDataInputs a -> Bool
 encodeDecodeProp (TensorDataInputs shape vec) =
     TF.decodeTensorData (TF.encodeTensorData (TF.Shape shape) vec) == vec
 
+testEncodeDecodeQcFloat :: Test
 testEncodeDecodeQcFloat = testProperty "testEncodeDecodeQcFloat"
     (encodeDecodeProp :: TensorDataInputs Float -> Bool)
 
+testEncodeDecodeQcInt64 :: Test
 testEncodeDecodeQcInt64 = testProperty "testEncodeDecodeQcInt64"
     (encodeDecodeProp :: TensorDataInputs Int64 -> Bool)
 
+testEncodeDecodeQcString :: Test
 testEncodeDecodeQcString = testProperty "testEncodeDecodeQcString"
     (encodeDecodeProp :: TensorDataInputs B.ByteString -> Bool)
 
@@ -101,6 +108,7 @@ doubleFunc = doubleOrFloatFunc . doubleOrInt64Func
 -- can't simplify the type all the way to `Double -> Double`.
 doubleFuncNoSig = doubleOrFloatFunc . doubleOrInt64Func
 
+typeConstraintTests :: Test
 typeConstraintTests = testCase "type constraints" $ do
     42 @=? doubleOrInt64Func (42 :: Double)
     42 @=? doubleOrInt64Func (42 :: Int64)

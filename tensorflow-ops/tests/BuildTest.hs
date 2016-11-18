@@ -59,12 +59,14 @@ import TensorFlow.Session
     , runSession
     , run_
     )
+import Test.Framework (Test)
 import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit ((@=?))
 import Google.Test (googleTest)
 import qualified Data.Vector as V
 
 -- | Test named behavior.
+testNamed :: Test
 testNamed = testCase "testNamed" $ do
     let graph = named "foo" <$> variable [] >>= render :: Build (Tensor Ref Float)
         nodeDef :: NodeDef
@@ -73,6 +75,7 @@ testNamed = testCase "testNamed" $ do
     "foo" @=? (nodeDef ^. name)
 
 -- | Test named deRef behavior.
+testNamedDeRef :: Test
 testNamedDeRef = testCase "testNamedDeRef" $ do
     let graph = named "foo" <$> do
                     v :: Tensor Ref Float <- variable []
@@ -84,11 +87,13 @@ testNamedDeRef = testCase "testNamedDeRef" $ do
 
 -- | Test that "run" will render and extend any pure ops that haven't already
 -- been rendered.
+testPureRender :: Test
 testPureRender = testCase "testPureRender" $ runSession $ do
     result <- run $ 2 `add` 2
     liftIO $ 4 @=? (unScalar result :: Float)
 
 -- | Test that "run" assigns any previously accumulated initializers.
+testInitializedVariable :: Test
 testInitializedVariable =
     testCase "testInitializedVariable" $ runSession $ do
         (formula, reset) <- build $ do
@@ -101,6 +106,7 @@ testInitializedVariable =
         rerunResult <- run formula
         liftIO $ 25 @=? (unScalar rerunResult :: Float)
 
+testInitializedVariableShape :: Test
 testInitializedVariableShape =
     testCase "testInitializedVariableShape" $ runSession $ do
         vector <- build $ initializedVariable (constant [1] [42 :: Float])
@@ -108,6 +114,7 @@ testInitializedVariableShape =
         liftIO $ [42] @=? (result :: V.Vector Float)
 
 -- | Test nameScoped behavior.
+testNameScoped :: Test
 testNameScoped = testCase "testNameScoped" $ do
     let graph = withNameScope "foo" $ variable [] :: Build (Tensor Ref Float)
         nodeDef :: NodeDef
@@ -116,6 +123,7 @@ testNameScoped = testCase "testNameScoped" $ do
     "Variable" @=? (nodeDef ^. op)
 
 -- | Test combined named and nameScoped behavior.
+testNamedAndScoped :: Test
 testNamedAndScoped = testCase "testNamedAndScoped" $ do
     let graph :: Build (Tensor Ref Float)
         graph = withNameScope "foo1" ((named "bar1" <$> variable []) >>= render)
@@ -133,6 +141,7 @@ flushed :: Ord a => (NodeDef -> a) -> BuildT IO [a]
 flushed field = sort . map field <$> liftBuild flushNodeBuffer
 
 -- | Test the interaction of rendering, CSE and scoping.
+testRenderDedup :: Test
 testRenderDedup = testCase "testRenderDedup" $ evalBuildT $ do
    liftBuild renderNodes
    names <- flushed (^. name)
@@ -154,6 +163,7 @@ testRenderDedup = testCase "testRenderDedup" $ evalBuildT $ do
         return ()
 
 -- | Test the interaction of rendering, CSE and scoping.
+testDeviceColocation :: Test
 testDeviceColocation = testCase "testDeviceColocation" $ evalBuildT $ do
    liftBuild renderNodes
    devices <- flushed (\x -> (x ^. name, x ^. device))

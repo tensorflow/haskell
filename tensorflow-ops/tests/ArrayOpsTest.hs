@@ -17,6 +17,7 @@ module Main where
 
 import Control.Monad.IO.Class (liftIO)
 import Google.Test (googleTest)
+import Test.Framework (Test)
 import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit ((@=?))
 import qualified Data.Vector as V
@@ -26,6 +27,7 @@ import qualified TensorFlow.Session as TF
 import qualified TensorFlow.GenOps.Core as CoreOps
 
 -- | Test split and concat are inverses.
+testSplit :: Test
 testSplit = testCase "testSplit" $ TF.runSession $ do
     let original = TF.constant [2, 3] [0..5 :: Float]
         splitList = CoreOps.split 3 dim original

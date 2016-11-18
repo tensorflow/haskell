@@ -46,24 +46,22 @@ import Data.ByteString (ByteString)
 import Data.Default (Default, def)
 import Data.Functor.Identity (runIdentity)
 import Data.Monoid ((<>))
-import qualified Data.Map.Strict as Map
-import qualified Data.Set as Set
+import Data.ProtoLens (showMessage)
 import Data.Set (Set)
 import Data.Text.Encoding (encodeUtf8)
-import Data.ProtoLens (def, showMessage)
 import Lens.Family2 (Lens', (^.), (&), (.~))
 import Lens.Family2.Unchecked (lens)
 import Proto.Tensorflow.Core.Framework.Graph (node)
 import Proto.Tensorflow.Core.Protobuf.Config (ConfigProto)
-
 import TensorFlow.Build
 import TensorFlow.Nodes
 import TensorFlow.Output (NodeName, unNodeName)
 import TensorFlow.Tensor
 
 import qualified Data.ByteString.Builder as Builder
+import qualified Data.Map.Strict as Map
+import qualified Data.Set as Set
 import qualified TensorFlow.Internal.FFI as FFI
-import qualified TensorFlow.Internal.Raw as Raw
 
 -- | An action for logging.
 type Tracer = Builder.Builder -> IO ()

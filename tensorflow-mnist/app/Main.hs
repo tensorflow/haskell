@@ -15,7 +15,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedLists #-}
 
-import Control.Monad (zipWithM, when, forM, forM_)
+import Control.Monad (zipWithM, when, forM_)
 import Control.Monad.IO.Class (liftIO)
 import Data.Int (Int32, Int64)
 import Data.List (genericLength)
@@ -34,7 +34,8 @@ import qualified TensorFlow.Types as TF
 import TensorFlow.Examples.MNIST.InputData
 import TensorFlow.Examples.MNIST.Parse
 
-numPixels = 28^2 :: Int64
+numPixels, numLabels :: Int64
+numPixels = 28*28 :: Int64
 numLabels = 10 :: Int64
 
 -- | Create tensor with random values where the stddev depends on the width.
@@ -44,6 +45,7 @@ randomParam width (TF.Shape shape) =
   where
     stddev = TF.scalar (1 / sqrt (fromIntegral width))
 
+reduceMean :: TF.Tensor TF.Value Float -> TF.Tensor TF.Value Float
 reduceMean xs = TF.mean xs (TF.scalar (0 :: Int32))
 
 -- Types must match due to model structure.
@@ -108,6 +110,7 @@ createModel = do
               ] errorRateTensor
         }
 
+main :: IO ()
 main = TF.runSession $ do
     -- Read training and test data.
     trainingImages <- liftIO (readMNISTSamples =<< trainingImageData)
