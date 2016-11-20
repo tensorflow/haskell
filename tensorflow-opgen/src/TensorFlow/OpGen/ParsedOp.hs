@@ -3,6 +3,7 @@
 -- generated code.
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards #-}
 module TensorFlow.OpGen.ParsedOp
     ( ParsedOp(..)
     , Name(..)
@@ -119,10 +120,11 @@ data ArgType
     = ArgTypeFixed DataType -- ^ A fixed type.
     | ArgTypeAttr Name  -- ^ A type that depends on an attribute.
 
+-- The kind of an op input or output (not including the argument type `a`).
 data ArgKind
     = ArgTensorRef -- Tensor Ref a
     | ArgTensorValue -- Tensor Value a
-    | ArgTensorEither Text -- Tensor v a
+    | ArgTensorEither Text -- Tensor v a; the Text is the variable `v`
     | ArgResource -- Resource a
 
 
@@ -183,7 +185,6 @@ forceCase convert s = maybe "" (\(c, cs) -> Text.cons (convert c) cs)
 
 camelCase :: Text -> Text
 camelCase s = Text.concat $ map upCase
-                          $ filter (/= "ops")
                           $ Text.splitOn "_" s
 
 -- | Upper-case the given text.
@@ -196,25 +197,22 @@ parseOp o = ParsedOp
     { parsedOpName = makeName $ o ^. name
     , parsedOpSummary = o ^. summary
     , parsedOpDescription = o ^. description
-    , parsedInputs = inputs
-    , parsedOutputs = outputs
-    , explicitInputAttrs = explicitInputs
-    , inferredTypeAttrs = inferredTypes
-    , inferredListSizeAttrs = inferredListSizes
+    , ..
     }
   where
-    inputs = zipWith (\a v -> parseArg a (inputTensorKind a v))
+    parsedInputs = zipWith (\a v -> parseArg a (inputTensorKind a v))
                 (o ^. inputArg) tensorKindParams
     tensorKindParams = ["v" <> Text.pack (show x) | x <- [1::Integer ..]]
-    outputs = map (\a -> parseArg a (outputTensorKind a)) (o ^. outputArg)
-    explicitInputs = sortBy (comparing (tfName . attrName))
+    parsedOutputs = map (\a -> parseArg a (outputTensorKind a)) (o ^. outputArg)
+    explicitInputAttrs = sortBy (comparing (tfName . attrName))
                         $ mapMaybeAttrs (getExplicitInputAttr implicitAttrs)
                         $ o ^. attr
-    inferredTypes = mapMaybeAttrs getInferredTypeAttr $ o ^. attr
-    inferredListSizes = mapMaybeAttrs (getInferredListSizeAttr inputs) $ o ^. attr
+    inferredTypeAttrs = mapMaybeAttrs getInferredTypeAttr $ o ^. attr
+    inferredListSizeAttrs = mapMaybeAttrs (getInferredListSizeAttr parsedInputs)
+                                $ o ^. attr
     implicitAttrs = Set.fromList $ map tfName $
-                        map attrName inferredTypes
-                            ++ map attrName inferredListSizes
+                        map attrName inferredTypeAttrs
+                            ++ map attrName inferredListSizeAttrs
 
 -- TODO(judahjacobson): Some arguments should be refs.
 inputTensorKind :: OpDef'ArgDef -> Text -> ArgKind
@@ -252,13 +250,13 @@ getInferredListSizeAttr inputs a
     
 -- | Like mapMaybe, but associates the attribute name/description with the given info.
 mapMaybeAttrs :: (OpDef'AttrDef -> Maybe a) -> [OpDef'AttrDef] -> [Attr a]
-mapMaybeAttrs f = mapMaybe $ \a -> case f a of
-                                Nothing -> Nothing
-                                Just x -> Just Attr
-                                            { attrName = makeName (a ^. name)
-                                            , attrDescription = a ^. description
-                                            , attrInfo = x
-                                            }
+mapMaybeAttrs f = mapMaybe $ \a -> do
+                            x <- f a
+                            Just Attr
+                                { attrName = makeName (a ^. name)
+                                , attrDescription = a ^. description
+                                , attrInfo = x
+                                }
   
 parseArg :: OpDef'ArgDef -> ArgKind -> ParsedArg
 parseArg a tKind = ParsedArg
