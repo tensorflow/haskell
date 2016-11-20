@@ -13,7 +13,7 @@ cabal-version:       >=1.22
 
 library
   hs-source-dirs:      src
-  exposed-modules:     TensorFlow.OpGen.AttrVal
+  exposed-modules:     TensorFlow.OpGen.ParsedOp
                      , TensorFlow.OpGen
   build-depends:  proto-lens == 0.1.*
                 , tensorflow-proto == 0.1.*
