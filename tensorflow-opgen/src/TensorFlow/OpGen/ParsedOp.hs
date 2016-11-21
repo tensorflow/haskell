@@ -41,6 +41,8 @@ import Proto.Tensorflow.Core.Framework.OpDef
     , description
     , name
     , inputArg
+    , isRef
+    , isStateful
     , outputArg
     , summary
     , typeListAttr
@@ -67,6 +69,10 @@ data ParsedOp = ParsedOp
         -- Attributes which are list sizes (ints) that are inferred automatically
         -- from one or more of the input tensors.
         -- Associated with the list of tensors whose size it describes.
+    , parsedOpIsMonadic :: Bool
+        -- ^ Whether this op is stateful or takes a stateful input.  Such ops
+        -- should not be CSE'd and must be monadic in our API (i.e., return a
+        -- Build action).
     }
 
 data Name = Name
@@ -127,6 +133,10 @@ data ArgKind
     | ArgTensorEither Text -- Tensor v a; the Text is the variable `v`
     | ArgResource -- Resource a
 
+isRefKind :: ArgKind -> Bool
+isRefKind ArgTensorRef = True
+isRefKind ArgResource = True
+isRefKind _ = False
 
 makeName :: Text -> Name
 makeName n = Name
@@ -197,6 +207,8 @@ parseOp o = ParsedOp
     { parsedOpName = makeName $ o ^. name
     , parsedOpSummary = o ^. summary
     , parsedOpDescription = o ^. description
+    , parsedOpIsMonadic = o ^. isStateful
+                            || any (isRefKind . parsedArgKind) parsedInputs
     , ..
     }
   where
@@ -218,11 +230,13 @@ parseOp o = ParsedOp
 inputTensorKind :: OpDef'ArgDef -> Text -> ArgKind
 inputTensorKind a v
     | a ^. type' == DT_RESOURCE = ArgResource
+    | a ^. isRef = ArgTensorRef
     | otherwise = ArgTensorEither v
 
 outputTensorKind :: OpDef'ArgDef -> ArgKind
 outputTensorKind a
     | a ^. type' == DT_RESOURCE = ArgResource
+    | a ^. isRef = ArgTensorRef
     | otherwise = ArgTensorValue
 
 getExplicitInputAttr :: Set.Set TFName -> OpDef'AttrDef -> Maybe AttrType
@@ -230,7 +244,7 @@ getExplicitInputAttr implicitAttrs a
     | TFName (a ^. name) `Set.notMember` implicitAttrs
     , a ^. maybe'defaultValue == Nothing
     , t <- parseAttrType (a ^. type')
-    , t `elem` map AttrSingle [AttrBool, AttrInt64, AttrFloat] = Just t
+    , t `elem` map AttrSingle [AttrBool, AttrInt64, AttrFloat, AttrShape] = Just t
     | otherwise = Nothing
 
 getInferredTypeAttr :: OpDef'AttrDef -> Maybe [DataType]
