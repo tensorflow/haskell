@@ -373,7 +373,7 @@ type family Delete a as where
 -- | Takes the difference of two lists of types.
 type family as \\ bs where
     as \\ '[] = as
-    as \\ b ': bs = Delete b as \\ bs
+    as \\ (b ': bs) = Delete b as \\ bs
 
 -- | A constraint that the type @a@ doesn't appear in the type list @ts@.
 -- Assumes that @a@ and each of the elements of @ts@ are 'TensorType's.
