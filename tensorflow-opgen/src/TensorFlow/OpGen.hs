@@ -25,10 +25,10 @@ The basic type signature generated for each op is:
 where:
 
 * @{mandatory attrs}@ is of the form @A_1 -> ... -> A_N@, where each @A@ is an
- op attribute that doesn't have a default and can't be
-  inferred from other inputs.
+ op attribute that doesn't have a default and can't be inferred from other
+ inputs.
 
-* @{constraints}@ constrain the type parameters of the input and output tensors
+* @{constraints}@ restrict the type parameters of the input and output tensors
  (for example: 'TensorType' or 'OneOf').
 
 * @{input tensors}@ is of the form @T_1 -> ... -> T_N@, where each @T@ is of
@@ -294,7 +294,7 @@ typeSig pOp = constraints
         [a] -> wrapOutput (tensorArg a) <+> "-- ^" <+> argComment a
         as -> wrapOutput (tuple (map tensorArg as)) <+/> resultComment as
     wrapOutput o
-        | parsedOpIsMonadic pOp = "Build (" <> o <> ")"
+        | parsedOpIsMonadic pOp = "Build" <+> parens o
         | otherwise = o
         
 -- | Render an op input or output.

@@ -70,7 +70,7 @@ data ParsedOp = ParsedOp
         -- from one or more of the input tensors.
         -- Associated with the list of tensors whose size it describes.
     , parsedOpIsMonadic :: Bool
-        -- ^ Whether this op is stateful or takes a variable as input.  Such ops
+        -- ^ Whether this op is stateful or takes a stateful input.  Such ops
         -- should not be CSE'd and must be monadic in our API (i.e., return a
         -- Build action).
     }
