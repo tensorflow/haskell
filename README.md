@@ -40,6 +40,7 @@ The following instructions were verified with Mac OS X El Capitan.
         ./configure  # Choose the defaults when prompted
         bazel build -c opt tensorflow:libtensorflow_c.so
         install bazel-bin/tensorflow/libtensorflow_c.so /usr/local/lib
+        ln -s /usr/local/lib/libtensorflow_c.{so,dylib}
         cd ../..
 
 - Run stack:
