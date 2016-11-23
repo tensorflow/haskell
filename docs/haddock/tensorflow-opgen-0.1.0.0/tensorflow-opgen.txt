@@ -9,35 +9,138 @@
 @version 0.1.0.0
 
 
--- | Wrapping of TensorFlow attributes into Haskell entities.
-module TensorFlow.OpGen.AttrVal
-data AttrDef
-data AttrCase f
-AttrBytes :: (f ByteString) -> AttrCase f
-AttrInt64 :: (f Int64) -> AttrCase f
-AttrFloat :: (f Float) -> AttrCase f
-AttrBool :: (f Bool) -> AttrCase f
-AttrType :: (f DataType) -> AttrCase f
-AttrShape :: (f TensorShapeProto) -> AttrCase f
+-- | This module helps parse the proto OpDef into a Haskell type which is
+--   more descriptive of how the attributes and arguments will be used in
+--   the generated code.
+module TensorFlow.OpGen.ParsedOp
+data ParsedOp
+ParsedOp :: Name -> Text -> Text -> [ParsedArg] -> [ParsedArg] -> [Attr AttrType] -> [Attr [DataType]] -> [Attr (NonEmpty Name)] -> Bool -> ParsedOp
+[parsedOpName] :: ParsedOp -> Name
+[parsedOpSummary] :: ParsedOp -> Text
+[parsedOpDescription] :: ParsedOp -> Text
+[parsedInputs] :: ParsedOp -> [ParsedArg]
+[parsedOutputs] :: ParsedOp -> [ParsedArg]
 
--- | Type-reified representation of TensorFlow AttrDef. Initially limited
---   to just the types in Op descriptors.
-data AttrTemplate
-AttrSingle :: (AttrCase Template) -> AttrTemplate
-AttrList :: (AttrCase []) -> AttrTemplate
-AttrTensor :: UnusedTensor -> AttrTemplate
+-- | Attributes that must be set explicitly when creating the op.
+--   Associated with the type of the attribute.
+[explicitInputAttrs] :: ParsedOp -> [Attr AttrType]
 
--- | Specifies the optional default value and a set of allowed values for
---   the given type.
-data Template a
-attrDef :: OpDef'AttrDef -> AttrDef
-attrOriginal :: Lens' AttrDef OpDef'AttrDef
-attrTemplate :: Lens' AttrDef AttrTemplate
-templateDefault :: Lens' (Template a) (Maybe a)
-templateRestrictions :: Lens' (Template a) [a]
+-- | Attributes that are type parameters. Associated with the list of
+--   allowed types (see: TensorFlow.Types.OneOf). If this list is empty,
+--   then any type is acceptable.
+[inferredTypeAttrs] :: ParsedOp -> [Attr [DataType]]
+[inferredListSizeAttrs] :: ParsedOp -> [Attr (NonEmpty Name)]
+
+-- | Whether this op is stateful or takes a stateful input. Such ops should
+--   not be CSE'd and must be monadic in our API (i.e., return a Build
+--   action).
+[parsedOpIsMonadic] :: ParsedOp -> Bool
+data Name
+Name :: HaskellName -> TFName -> Name
+[haskellName] :: Name -> HaskellName
+[tfName] :: Name -> TFName
+
+-- | A name that's appropriate for a variable in a Haskell source file.
+newtype HaskellName
+HaskellName :: Text -> HaskellName
+[unHaskellName] :: HaskellName -> Text
+
+-- | A raw name as specified in the OpDef proto.
+newtype TFName
+TFName :: Text -> TFName
+[unTFName] :: TFName -> Text
+
+-- | A named attribute, associated with some information about it.
+data Attr a
+Attr :: Name -> Text -> a -> Attr a
+[attrName] :: Attr a -> Name
+[attrDescription] :: Attr a -> Text
+[attrInfo] :: Attr a -> a
+
+-- | The type of an attribute.
+data AttrType
+AttrSingle :: AttrBaseType -> AttrType
+AttrList :: AttrBaseType -> AttrType
+data AttrBaseType
+AttrBytes :: AttrBaseType
+AttrInt64 :: AttrBaseType
+AttrFloat :: AttrBaseType
+AttrBool :: AttrBaseType
+AttrType :: AttrBaseType
+AttrShape :: AttrBaseType
+AttrTensor :: AttrBaseType
+
+-- | An input or output argument (Tensor) for an op.
+data ParsedArg
+ParsedArg :: Name -> Text -> ParsedArgCase -> ArgKind -> ParsedArg
+[parsedArgName] :: ParsedArg -> Name
+[parsedArgDescription] :: ParsedArg -> Text
+[parsedArgCase] :: ParsedArg -> ParsedArgCase
+[parsedArgKind] :: ParsedArg -> ArgKind
+data ParsedArgCase
+SimpleArg :: ArgType -> ParsedArgCase
+[argType] :: ParsedArgCase -> ArgType
+ListArg :: Name -> ArgType -> ParsedArgCase
+
+-- | The attribute that specifies this list's length.
+[argLength] :: ParsedArgCase -> Name
+[argType] :: ParsedArgCase -> ArgType
+
+-- | A heterogeneous list. TODO(judahjacobson): Implement this.
+MixedListArg :: Name -> ParsedArgCase
+[argTypeAttr] :: ParsedArgCase -> Name
+
+-- | The type of an argument.
+data ArgType
+
+-- | A fixed type.
+ArgTypeFixed :: DataType -> ArgType
+
+-- | A type that depends on an attribute.
+ArgTypeAttr :: Name -> ArgType
+data ArgKind
+ArgTensorRef :: ArgKind
+ArgTensorValue :: ArgKind
+ArgTensorEither :: Text -> ArgKind
+ArgResource :: ArgKind
+parseOp :: OpDef -> ParsedOp
+camelCase :: Text -> Text
+instance GHC.Classes.Eq TensorFlow.OpGen.ParsedOp.AttrType
+instance GHC.Classes.Eq TensorFlow.OpGen.ParsedOp.AttrBaseType
+instance GHC.Classes.Ord TensorFlow.OpGen.ParsedOp.TFName
+instance GHC.Classes.Eq TensorFlow.OpGen.ParsedOp.TFName
 
 
 -- | Rendering of TensorFlow operations as Haskell functions.
+--   
+--   The basic type signature generated for each op is:
+--   
+--   <pre>
+--   {constraints} =&gt; {mandatory attrs} -&gt; {input tensors} -&gt; {output tensors}
+--   </pre>
+--   
+--   where:
+--   
+--   <ul>
+--   <li><tt>{mandatory attrs}</tt> is of the form <tt>A_1 -&gt; ... -&gt;
+--   A_N</tt>, where each <tt>A</tt> is an op attribute that doesn't have a
+--   default and can't be inferred from other inputs.</li>
+--   <li><tt>{constraints}</tt> restrict the type parameters of the input
+--   and output tensors (for example: <tt>TensorType</tt> or
+--   <tt>OneOf</tt>).</li>
+--   <li><tt>{input tensors}</tt> is of the form <tt>T_1 -&gt; ... -&gt;
+--   T_N</tt>, where each <tt>T</tt> is of the form <tt>Tensor Ref a</tt>,
+--   <tt>Tensor v a</tt> or <tt>ResourceHandle a</tt> (or a list of one of
+--   those types), and <tt>a</tt> is either a concrete type or a
+--   (constrained) type variable.</li>
+--   <li><tt>{output tensors}</tt> is of the form <tt>(T_1,...,T_N)</tt>
+--   for "pure" ops, and <tt>Build (T_1,...,T_N)</tt> for "stateful" ops.
+--   An op is considered "stateful" if it takes a <tt>Tensor Ref</tt> or
+--   <tt>ResourceHandle</tt> as input, or if it's explicitly marked
+--   "Stateful" in its <tt>REGISTER_OP</tt> definition. (If there are no
+--   outputs, it is either <tt>ControlNode</tt> or <tt>Build
+--   ControlNode</tt>.)</li>
+--   </ul>
 module TensorFlow.OpGen
 data OpGenFlags
 OpGenFlags :: String -> String -> String -> OpGenFlags
