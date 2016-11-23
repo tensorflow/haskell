@@ -4,8 +4,9 @@
 
 set -eu -o pipefail
 
-IMAGE_NAME=tensorflow/haskell/ci_build:v0
+STACK_RESOLVER=${STACK_RESOLVER:-lts-6.2}
+IMAGE_NAME=tensorflow/haskell/ci_build:$STACK_RESOLVER
 
 git submodule update
-docker build -t $IMAGE_NAME -f ci_build/Dockerfile .
-docker run  $IMAGE_NAME stack build --pedantic --test
+docker build --build-arg STACK_RESOLVER=$STACK_RESOLVER -t $IMAGE_NAME -f ci_build/Dockerfile .
+docker run $IMAGE_NAME stack build --resolver=$STACK_RESOLVER --pedantic --test
