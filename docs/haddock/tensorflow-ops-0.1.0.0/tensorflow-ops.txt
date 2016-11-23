@@ -12,8 +12,8 @@
 -- | This module contains definitions for some built-in TensorFlow
 --   operations.
 --   
---   Note that certain, "stateful" ops like <a>variable</a> and
---   <a>assign</a> return a <a>Build</a> action (e.g., <tt>Build (Tensor
+--   Note that certain, "stateful" ops like <tt>variable</tt> and
+--   <tt>assign</tt> return a <a>Build</a> action (e.g., <tt>Build (Tensor
 --   Ref a)</tt> instead of a pure value; the returned <a>Tensor</a>s are
 --   always rendered in the current <a>Build</a> context. This approach
 --   helps us avoid problems with inlining or common subexpression
@@ -74,7 +74,12 @@ addN :: (TensorType t, OneOf ((:) * (Complex Double) ((:) * (Complex Float) ((:)
 -- | Returns the index with the largest value across dimensions of a
 --   tensor.
 argMax :: (TensorType t, OneOf ((:) * (Complex Double) ((:) * (Complex Float) ((:) * Int16 ((:) * Int32 ((:) * Int64 ((:) * Int8 ((:) * Word16 ((:) * Word8 ((:) * Double ((:) * Float ([] *))))))))))) t, TensorType tidx, OneOf ((:) * Int32 ((:) * Int64 ([] *))) tidx) => Tensor v1 t -> Tensor v2 tidx -> Tensor Value Int64
-assign :: TensorType a => Tensor Ref a -> Tensor v a -> Build (Tensor Ref a)
+
+-- | Update <tt>ref</tt> by assigning <a>value</a> to it.
+--   
+--   This operation outputs "ref" after the assignment is done. This makes
+--   it easier to chain operations that need to use the reset value.
+assign :: TensorType t => Tensor Ref t -> Tensor v2 t -> Build (Tensor Ref t)
 
 -- | Return the reduction indices for computing gradients of s0 op s1 with
 --   broadcast.
@@ -84,7 +89,7 @@ assign :: TensorType a => Tensor Ref a -> Tensor v a -> Build (Tensor Ref a)
 broadcastGradientArgs :: (TensorType t, OneOf ((:) * Int32 ((:) * Int64 ([] *))) t) => Tensor v1 t -> Tensor v2 t -> (Tensor Value t, Tensor Value t)
 
 -- | Cast x of type SrcT to y of DstT.
-cast :: (TensorType dstT, TensorType srcT) => Tensor v1 srcT -> Tensor Value dstT
+cast :: (TensorType srcT, TensorType dstT) => Tensor v1 srcT -> Tensor Value dstT
 
 -- | Concatenates tensors along one dimension.
 concat :: TensorType t => Tensor v1 Int32 -> [Tensor v2 t] -> Tensor Value t
@@ -237,9 +242,9 @@ neg :: (TensorType t, OneOf ((:) * (Complex Double) ((:) * (Complex Float) ((:) 
 pack :: TensorType t => [Tensor v1 t] -> Tensor Value t
 placeholder :: TensorType a => Shape -> Build (Tensor Value a)
 
--- | Creates a sequence of integers.
+-- | Creates a sequence of numbers.
 --   
---   This operation creates a sequence of integers that begins at
+--   This operation creates a sequence of numbers that begins at
 --   <tt>start</tt> and extends by increments of <tt>delta</tt> up to but
 --   not including <tt>limit</tt>.
 --   
@@ -247,7 +252,7 @@ placeholder :: TensorType a => Shape -> Build (Tensor Value a)
 --   
 --   ``` # <tt>start</tt> is 3 # <tt>limit</tt> is 18 # <tt>delta</tt> is 3
 --   tf.range(start, limit, delta) ==&gt; [3, 6, 9, 12, 15] ```
-range :: (TensorType tidx, OneOf ((:) * Int32 ((:) * Int64 ([] *))) tidx) => Tensor v1 tidx -> Tensor v2 tidx -> Tensor v3 tidx -> Tensor Value tidx
+range :: (TensorType tidx, OneOf ((:) * Int32 ((:) * Int64 ((:) * Double ((:) * Float ([] *))))) tidx) => Tensor v1 tidx -> Tensor v2 tidx -> Tensor v3 tidx -> Tensor Value tidx
 
 -- | Helper function for reduction ops (translation of
 --   math_ops.reduced_shape).
@@ -388,24 +393,6 @@ sub :: (TensorType t, OneOf ((:) * (Complex Double) ((:) * (Complex Float) ((:) 
 --   dimensions are retained with length 1.
 sum :: (TensorType t, OneOf ((:) * (Complex Double) ((:) * (Complex Float) ((:) * Int16 ((:) * Int32 ((:) * Int64 ((:) * Int8 ((:) * Word16 ((:) * Word8 ((:) * Double ((:) * Float ([] *))))))))))) t, TensorType tidx, OneOf ((:) * Int32 ((:) * Int64 ([] *))) tidx) => Tensor v1 t -> Tensor v2 tidx -> Tensor Value t
 
--- | Finds values and indices of the <tt>k</tt> largest elements for the
---   last dimension.
---   
---   If the input is a vector (rank-1), finds the <tt>k</tt> largest
---   entries in the vector and outputs their values and indices as vectors.
---   Thus `values[j]` is the <tt>j</tt>-th largest entry in <tt>input</tt>,
---   and its index is `indices[j]`.
---   
---   For matrices (resp. higher rank input), computes the top <tt>k</tt>
---   entries in each row (resp. vector along the last dimension). Thus,
---   
---   values.shape = indices.shape = input.shape[:-1] + [k]
---   
---   If two elements are equal, the lower-index element appears first.
---   
---   If <tt>k</tt> varies dynamically, use <tt>TopKV2</tt> below.
-topK :: (TensorType t, OneOf ((:) * Int16 ((:) * Int32 ((:) * Int64 ((:) * Int8 ((:) * Word16 ((:) * Word8 ((:) * Double ((:) * Float ([] *))))))))) t) => Int64 -> Tensor v1 t -> (Tensor Value t, Tensor Value Int32)
-
 -- | Shuffle dimensions of x according to a permutation.
 --   
 --   The output <tt>y</tt> has the same rank as <tt>x</tt>. The shapes of
@@ -414,8 +401,12 @@ topK :: (TensorType t, OneOf ((:) * Int16 ((:) * Int32 ((:) * Int64 ((:) * Int8 
 transpose :: (TensorType t, TensorType tperm, OneOf ((:) * Int32 ((:) * Int64 ([] *))) tperm) => Tensor v1 t -> Tensor v2 tperm -> Tensor Value t
 truncatedNormal :: TensorType a => Tensor v Int64 -> Build (Tensor Value a)
 
--- | Create a new, uninitialized stateful Tensor of the given shape.
-variable :: TensorType a => Shape -> Build (Tensor Ref a)
+-- | Holds state in the form of a tensor that persists across steps.
+--   
+--   Outputs a ref to the tensor state so it may be read or modified.
+--   TODO(zhifengc/mrry): Adds a pointer to a more detail document about
+--   sharing states in tensorflow.
+variable :: TensorType dtype => Shape -> Build (Tensor Ref dtype)
 
 -- | Create a constant vector.
 vector :: TensorType a => [a] -> Tensor Value a
@@ -423,6 +414,11 @@ zeros :: (Num a, TensorType a) => Shape -> Tensor Value a
 
 -- | Returns a tensor of zeros with the same shape and type as x.
 zerosLike :: TensorType t => Tensor v1 t -> Tensor Value t
+
+-- | Reshape a N-D tensor down to a scalar.
+--   
+--   See <a>reshape</a>.
+scalarize :: (TensorType a) => Tensor v a -> Tensor Value a
 instance (TensorFlow.Types.TensorType a, GHC.Num.Num a, v ~ TensorFlow.Tensor.Value, TensorFlow.Types.OneOf '[GHC.Types.Double, GHC.Types.Float, GHC.Int.Int32, GHC.Int.Int64, Data.Complex.Complex GHC.Types.Float, Data.Complex.Complex GHC.Types.Double] a) => GHC.Num.Num (TensorFlow.Tensor.Tensor v a)
 
 

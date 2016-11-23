@@ -44,7 +44,7 @@ getAllOpList :: IO ByteString
 
 -- | Serializes the given msg and provides it as (ptr,len) argument to the
 --   given action.
-useProtoAsVoidPtrLen :: (Message msg, Num c) => msg -> (Ptr b -> c -> IO a) -> IO a
+useProtoAsVoidPtrLen :: (Message msg, Integral c, Show c, Bits c) => msg -> (Ptr b -> c -> IO a) -> IO a
 instance GHC.Classes.Eq TensorFlow.Internal.FFI.TensorData
 instance GHC.Show.Show TensorFlow.Internal.FFI.TensorData
 instance GHC.Classes.Eq TensorFlow.Internal.FFI.TensorFlowException
@@ -219,6 +219,12 @@ outputOp :: Lens' Output Op
 data PendingNodeName
 ExplicitName :: !Text -> PendingNodeName
 ImplicitName :: PendingNodeName
+
+-- | Opaque handle to a mutable resource in the graph. Typical such
+--   resources are variables. The type parameter corresponds to the dtype
+--   of the tensor held in the variable.
+newtype ResourceHandle a
+ResourceHandle :: Output -> ResourceHandle a
 instance GHC.Classes.Ord TensorFlow.Output.Op
 instance GHC.Classes.Eq TensorFlow.Output.Op
 instance GHC.Show.Show TensorFlow.Output.Output
@@ -450,11 +456,13 @@ instance (TensorFlow.BuildOp.OpResult a1, TensorFlow.BuildOp.OpResult a2, Tensor
 instance (TensorFlow.BuildOp.OpResult a1, TensorFlow.BuildOp.OpResult a2, TensorFlow.BuildOp.OpResult a3, TensorFlow.BuildOp.OpResult a4) => TensorFlow.BuildOp.OpResult (a1, a2, a3, a4)
 instance (TensorFlow.BuildOp.OpResult a1, TensorFlow.BuildOp.OpResult a2, TensorFlow.BuildOp.OpResult a3, TensorFlow.BuildOp.OpResult a4, TensorFlow.BuildOp.OpResult a5) => TensorFlow.BuildOp.OpResult (a1, a2, a3, a4, a5)
 instance (TensorFlow.BuildOp.OpResult a1, TensorFlow.BuildOp.OpResult a2, TensorFlow.BuildOp.OpResult a3, TensorFlow.BuildOp.OpResult a4, TensorFlow.BuildOp.OpResult a5, TensorFlow.BuildOp.OpResult a6) => TensorFlow.BuildOp.OpResult (a1, a2, a3, a4, a5, a6)
+instance TensorFlow.BuildOp.OpResult (TensorFlow.Output.ResourceHandle a)
 instance TensorFlow.BuildOp.OpResult (TensorFlow.Tensor.Tensor TensorFlow.Tensor.Value a)
 instance TensorFlow.BuildOp.OpResult (TensorFlow.Tensor.Tensor TensorFlow.Tensor.Ref a)
 instance TensorFlow.BuildOp.OpResult TensorFlow.Output.ControlNode
 instance TensorFlow.BuildOp.OpResult a => TensorFlow.BuildOp.OpResult [a]
 instance TensorFlow.BuildOp.BuildOp TensorFlow.Output.ControlNode
+instance TensorFlow.BuildOp.BuildOp (TensorFlow.Output.ResourceHandle a)
 instance TensorFlow.BuildOp.BuildOp (TensorFlow.Tensor.Tensor TensorFlow.Tensor.Value a)
 instance TensorFlow.BuildOp.BuildOp (TensorFlow.Tensor.Tensor TensorFlow.Tensor.Ref a)
 instance TensorFlow.BuildOp.BuildOp [TensorFlow.Tensor.Tensor TensorFlow.Tensor.Value a]
@@ -464,6 +472,7 @@ instance (TensorFlow.BuildOp.OpResult t1, TensorFlow.BuildOp.OpResult t2, Tensor
 instance (TensorFlow.BuildOp.OpResult t1, TensorFlow.BuildOp.OpResult t2, TensorFlow.BuildOp.OpResult t3, TensorFlow.BuildOp.OpResult t4, TensorFlow.BuildOp.OpResult t5) => TensorFlow.BuildOp.BuildOp (t1, t2, t3, t4, t5)
 instance (TensorFlow.BuildOp.OpResult t1, TensorFlow.BuildOp.OpResult t2, TensorFlow.BuildOp.OpResult t3, TensorFlow.BuildOp.OpResult t4, TensorFlow.BuildOp.OpResult t5, TensorFlow.BuildOp.OpResult t6) => TensorFlow.BuildOp.BuildOp (t1, t2, t3, t4, t5, t6)
 instance TensorFlow.BuildOp.OpResult a => TensorFlow.BuildOp.BuildOp (TensorFlow.Build.Build a)
+instance TensorFlow.BuildOp.BuildOp f => TensorFlow.BuildOp.BuildOp (TensorFlow.Output.ResourceHandle a -> f)
 instance TensorFlow.BuildOp.BuildOp f => TensorFlow.BuildOp.BuildOp (TensorFlow.Tensor.Tensor v a -> f)
 instance TensorFlow.BuildOp.BuildOp f => TensorFlow.BuildOp.BuildOp ([TensorFlow.Tensor.Tensor v a] -> f)
 
@@ -550,18 +559,19 @@ named :: TensorType a => Text -> Tensor v a -> Tensor v a
 module TensorFlow.Session
 data Session a
 
--- | Setting of an option for the session (see
---   <a>runSessionWithOptions</a>).
-data SessionOption
+-- | Customization for session. Use the lenses to update:
+--   <a>sessionTarget</a>, <a>sessionTracer</a>, <a>sessionConfig</a>.
+data Options
 
 -- | Uses the specified config for the created session.
-sessionConfig :: ConfigProto -> SessionOption
+sessionConfig :: Lens' Options ConfigProto
 
 -- | Target can be: "local", ip:port, host:port. The set of supported
---   factories depends on the linked in libraries. REQUIRES
---   "/<i>learning</i>brain/public:tensorflow_remote" dependency for the
---   binary.
-sessionTarget :: ByteString -> SessionOption
+--   factories depends on the linked in libraries.
+sessionTarget :: Lens' Options ByteString
+
+-- | Uses the given logger to monitor session progress.
+sessionTracer :: Lens' Options Tracer
 
 -- | Run <a>Session</a> actions in a new TensorFlow session.
 runSession :: Session a -> IO a
@@ -569,7 +579,7 @@ runSession :: Session a -> IO a
 -- | Run <a>Session</a> actions in a new TensorFlow session created with
 --   the given option setter actions (<a>sessionTarget</a>,
 --   <a>sessionConfig</a>).
-runSessionWithOptions :: [SessionOption] -> Session a -> IO a
+runSessionWithOptions :: Options -> Session a -> IO a
 
 -- | Lift a <a>Build</a> action into a <a>Session</a>, including any
 --   explicit op renderings.
@@ -624,3 +634,249 @@ instance Control.Monad.IO.Class.MonadIO TensorFlow.Session.Session
 instance GHC.Base.Monad TensorFlow.Session.Session
 instance GHC.Base.Applicative TensorFlow.Session.Session
 instance GHC.Base.Functor TensorFlow.Session.Session
+instance Data.Default.Class.Default TensorFlow.Session.Options
+
+
+-- | The core functionality of TensorFlow.
+--   
+--   Unless you are defining ops, you do not need to import other modules
+--   from this package.
+--   
+--   Basic ops are provided in the tensorflow-ops and tensorflow-core-ops
+--   packages.
+module TensorFlow.Core
+data Session a
+
+-- | Customization for session. Use the lenses to update:
+--   <a>sessionTarget</a>, <a>sessionTracer</a>, <a>sessionConfig</a>.
+data Options
+
+-- | Uses the specified config for the created session.
+sessionConfig :: Lens' Options ConfigProto
+
+-- | Target can be: "local", ip:port, host:port. The set of supported
+--   factories depends on the linked in libraries.
+sessionTarget :: Lens' Options ByteString
+
+-- | Uses the given logger to monitor session progress.
+sessionTracer :: Lens' Options Tracer
+
+-- | Run <a>Session</a> actions in a new TensorFlow session.
+runSession :: Session a -> IO a
+
+-- | Run <a>Session</a> actions in a new TensorFlow session created with
+--   the given option setter actions (<a>sessionTarget</a>,
+--   <a>sessionConfig</a>).
+runSessionWithOptions :: Options -> Session a -> IO a
+
+-- | Lift a <a>Build</a> action into a <a>Session</a>, including any
+--   explicit op renderings.
+build :: Build a -> Session a
+
+-- | Helper combinator for doing something with the result of a
+--   <a>Build</a> action. Example usage:
+--   
+--   <pre>
+--   buildAnd run :: Fetchable t a =&gt; Build t -&gt; Session a
+--   </pre>
+buildAnd :: (a -> Session b) -> Build a -> Session b
+
+-- | Lift a <a>Build</a> action into a <a>Session</a>, including any
+--   explicit op renderings. Returns the merged summary ops which can be
+--   used for logging, see <a>build</a> for a convenient wrapper.
+buildWithSummary :: Build a -> Session (a, [SummaryTensor])
+
+-- | Types that tensor representations (e.g. <a>Tensor</a>,
+--   <a>ControlNode</a>) can be fetched into.
+--   
+--   Includes collections of tensors (e.g. tuples).
+class Nodes t => Fetchable t a
+newtype Scalar a
+Scalar :: a -> Scalar a
+[unScalar] :: Scalar a -> a
+
+-- | Types that contain ops which can be run.
+class Nodes t
+
+-- | Run a subgraph <tt>t</tt>, rendering any dependent nodes that aren't
+--   already rendered, and fetch the corresponding values for <tt>a</tt>.
+run :: Fetchable t a => t -> Session a
+
+-- | Run a subgraph <tt>t</tt>, rendering and extending any dependent nodes
+--   that aren't already rendered. This behaves like <a>run</a> except that
+--   it doesn't do any fetches.
+run_ :: Nodes t => t -> Session ()
+
+-- | A pair of a <a>Tensor</a> and some data that should be fed into that
+--   <a>Tensor</a> when running the graph.
+data Feed
+
+-- | Create a <a>Feed</a> for feeding the given data into a <a>Tensor</a>
+--   when running the graph.
+--   
+--   Note that if a <a>Tensor</a> is rendered, its identity may change; so
+--   feeding the rendered <a>Tensor</a> may be different than feeding the
+--   original <a>Tensor</a>.
+feed :: Tensor v a -> TensorData a -> Feed
+
+-- | Run a subgraph <tt>t</tt>, rendering any dependent nodes that aren't
+--   already rendered, feed the given input values, and fetch the
+--   corresponding result values for <tt>a</tt>.
+runWithFeeds :: Fetchable t a => [Feed] -> t -> Session a
+
+-- | Run a subgraph <tt>t</tt>, rendering any dependent nodes that aren't
+--   already rendered, feed the given input values, and fetch the
+--   corresponding result values for <tt>a</tt>. This behaves like
+--   <a>runWithFeeds</a> except that it doesn't do any fetches.
+runWithFeeds_ :: Nodes t => [Feed] -> t -> Session ()
+
+-- | Starts a concurrent thread which evaluates the given Nodes forever
+--   until runSession exits or an exception occurs. Graph extension happens
+--   synchronously, but the resultant run proceeds as a separate thread.
+asyncProdNodes :: Nodes t => t -> Session ()
+
+-- | An action for building nodes in a TensorFlow graph.
+type Build = BuildT Identity
+
+-- | An action for building nodes in a TensorFlow graph. Used to manage
+--   build state internally as part of the <tt>Session</tt> monad.
+data BuildT m a
+
+-- | Render a <a>Tensor</a>, fixing its name, scope, device and control
+--   inputs from the <a>Build</a> context. Also renders any dependencies of
+--   the <a>Tensor</a> that weren't already rendered.
+--   
+--   This operation is idempotent; <tt>render &gt;=&gt; render ===
+--   render</tt>. However, rendering a (previously un-rendered)
+--   <a>Tensor</a> in two different contexts may result in two different
+--   <a>Tensor</a>s.
+render :: Tensor v a -> Build (Tensor v a)
+
+-- | Produce a GraphDef proto representation of the nodes that are rendered
+--   in the given <a>Build</a> action.
+asGraphDef :: Build a -> GraphDef
+addGraphDef :: GraphDef -> Build ()
+
+-- | A type of graph node which has no outputs. These nodes are valuable
+--   for causing side effects when they are run.
+data ControlNode
+
+-- | A named output of a TensorFlow operation.
+--   
+--   The type parameter <tt>a</tt> is the type of the elements in the
+--   <a>Tensor</a>. The parameter <tt>v</tt> is either <a>Value</a> or
+--   <a>Ref</a>, depending on whether the graph is treating this op output
+--   as an immutable <a>Value</a> or a stateful <a>Ref</a> (e.g., a
+--   variable). Note that a <tt>Tensor Ref</tt> can be casted into a
+--   <tt>Tensor Value</tt> via <a>value</a>.
+data Tensor v a
+data Value
+data Ref
+
+-- | This class provides a runtime switch on whether a <a>Tensor</a> should
+--   be treated as a <a>Value</a> or as a <a>Ref</a>.
+data TensorKind v
+ValueKind :: TensorKind Value
+RefKind :: TensorKind Ref
+
+-- | Lens for the attributes of a tensor.
+--   
+--   Only valid if the tensor has not yet been rendered. If the tensor has
+--   been rendered, the traversal will be over nothing (nothing can be read
+--   or written).
+tensorAttr :: Attribute attr => Text -> Traversal' (Tensor v a) attr
+
+-- | Cast a 'Tensor *' into a 'Tensor Value'. Common usage is to cast a Ref
+--   into Value. This behaves like a no-op.
+value :: Tensor v a -> Tensor Value a
+
+-- | Create a <a>Tensor</a> for a given name. This can be used to reference
+--   nodes in a <tt>GraphDef</tt> that was loaded via <tt>addGraphDef</tt>.
+--   TODO(judahjacobson): add more safety checks here.
+tensorFromName :: TensorKind v -> Text -> Tensor v a
+
+-- | Data about a tensor that is encoded for the TensorFlow APIs.
+data TensorData a
+
+-- | The class of scalar types supported by tensorflow.
+class TensorType a
+
+-- | Decode the bytes of a TensorData into a Vector.
+decodeTensorData :: TensorType a => TensorData a -> Vector a
+
+-- | Encode a Vector into a TensorData.
+--   
+--   The values should be in row major order, e.g.,
+--   
+--   element 0: index (0, ..., 0) element 1: index (0, ..., 1) ...
+encodeTensorData :: TensorType a => Shape -> Vector a -> TensorData a
+
+-- | Shape (dimensions) of a tensor.
+newtype Shape
+Shape :: [Int64] -> Shape
+
+-- | A <a>Constraint</a> specifying the possible choices of a
+--   <a>TensorType</a>.
+--   
+--   We implement a <a>Constraint</a> like <tt>OneOf '[Double, Float]
+--   a</tt> by turning the natural representation as a conjunction, i.e.,
+--   
+--   <pre>
+--   a == Double || a == Float
+--   </pre>
+--   
+--   into a disjunction like
+--   
+--   <pre>
+--   a /= Int32 &amp;&amp; a /= Int64 &amp;&amp; a /= ByteString &amp;&amp; ...
+--   </pre>
+--   
+--   using an enumeration of all the possible <a>TensorType</a>s.
+type OneOf ts a = (TensorType a, TensorTypes ts, NoneOf (AllTensorTypes \\ ts) a)
+
+-- | A constraint checking that two types are different.
+
+-- | Places all nodes rendered in the given <a>Build</a> action on the same
+--   device as the given Tensor (see also <a>withDevice</a>). Make sure
+--   that the action has side effects of rendering the desired tensors. A
+--   pure return would not have the desired effect.
+colocateWith :: Tensor v b -> Build a -> Build a
+
+-- | A device that a node can be assigned to. There's a naming convention
+--   where the device names are constructed from job and replica names.
+newtype Device
+Device :: Text -> Device
+[deviceName] :: Device -> Text
+
+-- | Set a device for all nodes rendered in the given <a>Build</a> action
+--   (unless further overridden by another use of withDevice).
+withDevice :: Maybe Device -> Build a -> Build a
+
+-- | Prepend a scope to all nodes rendered in the given <a>Build</a>
+--   action.
+withNameScope :: Text -> Build a -> Build a
+
+-- | Returns a <a>Tensor</a> with a given name and the same shape and
+--   contents as the input.
+--   
+--   TODO(judahjacobson): This breaks when used with uninitialize
+--   <tt>Tensor Ref</tt>s, since <tt>RefIdentity</tt> doesn't have
+--   SetAllowsUninitializedInput(). Look into whether we can change that
+--   op.
+named :: TensorType a => Text -> Tensor v a -> Tensor v a
+
+-- | Modify a <a>Build</a> action, such that all new ops rendered in it
+--   will depend on the nodes in the first argument.
+withControlDependencies :: Nodes t => t -> Build a -> Build a
+
+-- | Create an op that groups multiple operations.
+--   
+--   When this op finishes, all ops in the input <tt>n</tt> have finished.
+--   This op has no output.
+group :: Nodes t => t -> Build ControlNode
+
+-- | Returns a <a>Tensor</a> with the same shape and contents as the input.
+identity :: TensorType a => Tensor v a -> Tensor v a
+
+-- | Does nothing. Only useful as a placeholder for control edges.
+noOp :: ControlNode
