@@ -11,6 +11,8 @@ MAINTAINER TensorFlow authors <tensorflow-haskell@googlegroups.com>
 ADD . /tfhs
 WORKDIR /tfhs
 
+ARG STACK_RESOLVER
+
 RUN \
     apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 575159689BEFB442 && \
     echo 'deb http://download.fpcomplete.com/ubuntu trusty main'| tee /etc/apt/sources.list.d/fpco.list && \
@@ -30,5 +32,5 @@ RUN \
       bazel build -c opt '//tensorflow:libtensorflow_c.so' && \
       install bazel-bin/tensorflow/libtensorflow_c.so /usr/local/lib && \
       ldconfig ) && \
-    stack setup && \
-    stack test --only-dependencies
+    stack setup --resolver=${STACK_RESOLVER} && \
+    stack test --resolver=${STACK_RESOLVER} --only-dependencies
