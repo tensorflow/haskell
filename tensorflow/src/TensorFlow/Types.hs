@@ -16,6 +16,7 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -330,11 +331,11 @@ instance Attribute [Int64] where
 type OneOf ts a
     = (TensorType a, TensorTypes ts, NoneOf (AllTensorTypes \\ ts) a)
 
--- | A 'Constraint' checking that the input is a list of 'TensorType's.
+-- | A check that the input is a list of 'TensorType's.
 -- Helps improve error messages when using 'OneOf'.
-type family TensorTypes ts :: Constraint where
-    TensorTypes '[] = ()
-    TensorTypes (t ': ts) = (TensorType t, TensorTypes ts)
+class TensorTypes (ts :: [*]) where
+instance TensorTypes '[]
+instance (TensorType t, TensorTypes ts) => TensorTypes (t ': ts)
 
 -- | A constraint checking that two types are different.
 type family a /= b :: Constraint where
@@ -378,5 +379,12 @@ type family as \\ bs where
 -- | A constraint that the type @a@ doesn't appear in the type list @ts@.
 -- Assumes that @a@ and each of the elements of @ts@ are 'TensorType's.
 type family NoneOf ts a :: Constraint where
+    -- Specialize this type family when `ts` is a long list, to avoid deeply
+    -- nested tuples of constraints.  Works around a bug in ghc-8:
+    -- https://ghc.haskell.org/trac/ghc/ticket/12175
+    NoneOf (t1 ': t2 ': t3 ': t4 ': ts) a
+        = (a /= t1, a /= t2, a /= t3, a /= t4, NoneOf ts a)
+    NoneOf (t1 ': t2 ': t3 ': ts) a = (a /= t1, a /= t2, a /= t3, NoneOf ts a)
+    NoneOf (t1 ': t2 ': ts) a = (a /= t1, a /= t2, NoneOf ts a)
+    NoneOf (t1 ': ts) a = (a /= t1, NoneOf ts a)
     NoneOf '[] a = ()
-    NoneOf (t ': ts) a = (a /= t, NoneOf ts a)

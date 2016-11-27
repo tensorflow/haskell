@@ -13,6 +13,7 @@
 -- limitations under the License.
 
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module TensorFlow.NN
