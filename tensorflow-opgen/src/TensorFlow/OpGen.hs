@@ -117,6 +117,7 @@ docOpList :: OpGenFlags -> OpList -> Doc
 docOpList flags opList =
   stack [ "{-# LANGUAGE ConstraintKinds #-}"
         , "{-# LANGUAGE DataKinds #-}"
+        , "{-# LANGUAGE FlexibleContexts #-}"
         , "{-# LANGUAGE FlexibleInstances #-}"
         , "{-# LANGUAGE OverloadedStrings #-}"
         , "{-# LANGUAGE ScopedTypeVariables #-}"
