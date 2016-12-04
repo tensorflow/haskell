@@ -15,6 +15,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
+import Data.Int (Int32)
 import Data.List (sort)
 import Data.ProtoLens.TextFormat (showMessage)
 import Google.Test (googleTest)
@@ -22,14 +23,12 @@ import Lens.Family2 ((^..))
 import Test.Framework (Test)
 import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit ((@=?))
+import qualified Data.Vector as V
 
-import qualified TensorFlow.Build as TF
+import qualified TensorFlow.Core as TF
+import qualified TensorFlow.GenOps.Core as TF (max)
 import qualified TensorFlow.Gradient as TF
-import qualified TensorFlow.Nodes as TF
 import qualified TensorFlow.Ops as TF
-import qualified TensorFlow.Session as TF
-import qualified TensorFlow.Tensor as TF
-import qualified TensorFlow.Types as TF
 
 import Proto.Tensorflow.Core.Framework.Graph (node)
 import Proto.Tensorflow.Core.Framework.NodeDef (op)
@@ -149,10 +148,20 @@ testDiamond = testCase "testDiamond" $ do
     (4 :: Float) @=? TF.unScalar dx
 
 
+testMaxGradient :: Test
+testMaxGradient = testCase "testMaxGradient" $ do
+    [dx] <- TF.runSession $ TF.buildAnd TF.run $ do
+        let x = TF.vector [1, 2, 3, 0, 1 :: Float]
+            y = TF.max x (0 :: TF.Tensor TF.Value Int32)
+        TF.gradients y [x]
+    V.fromList [0, 0, 1, 0, 0 :: Float] @=? dx
+
+
 main :: IO ()
 main = googleTest [ testGradientSimple
                   , testGradientDisconnected
                   , testCreateGraphStateful
                   , testCreateGraphNameScopes
                   , testDiamond
+                  , testMaxGradient
                   ]

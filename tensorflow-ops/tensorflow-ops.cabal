@@ -144,10 +144,12 @@ Test-Suite GradientTest
                , lens-family
                , google-shim
                , tensorflow
+               , tensorflow-core-ops
                , tensorflow-ops
                , tensorflow-proto
                , test-framework
                , test-framework-hunit
+               , vector
 
 Test-Suite MiscTest
   default-language: Haskell2010

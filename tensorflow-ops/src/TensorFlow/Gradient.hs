@@ -459,9 +459,10 @@ opGrad "Max" _ [toT -> x, toT -> indices] [dz] =
   where
     sx = shape (x :: Tensor Value a)
     outputShapeKeptDims = reducedShape sx (indices :: Tensor Value Int32)
-    x' = reshape x outputShapeKeptDims
+    y = CoreOps.max x indices
+    y' = reshape y outputShapeKeptDims
     dz' = reshape dz outputShapeKeptDims
-    indicators = CoreOps.cast $ CoreOps.equal x' x
+    indicators = CoreOps.cast $ CoreOps.equal y' x
     numSelected = reshape (sum indicators indices) outputShapeKeptDims
 
 -- Min and Max have identical gradient implementations.
