@@ -5,7 +5,7 @@ import Control.Exception (evaluate)
 import Control.Monad.IO.Class (liftIO)
 import Criterion.Main (defaultMain, bgroup, bench)
 import Criterion.Types (Benchmarkable(..))
-import qualified Data.Vector as V
+import qualified Data.Vector.Storable as S
 import qualified TensorFlow.Core as TF
 import qualified TensorFlow.Ops as TF
 
@@ -23,12 +23,12 @@ nfSession init x = Benchmarkable $ \m -> TF.runSession $ do
     go m
 
 -- | Benchmark feeding and fetching a vector.
-feedFetchBenchmark :: TF.Session (V.Vector Float -> TF.Session (V.Vector Float))
+feedFetchBenchmark :: TF.Session (S.Vector Float -> TF.Session (S.Vector Float))
 feedFetchBenchmark = do
     input <- TF.build (TF.placeholder (TF.Shape [-1]))
     output <- TF.build (TF.render (TF.identity input))
     return $ \v -> do
-        let shape = TF.Shape [fromIntegral (V.length v)]
+        let shape = TF.Shape [fromIntegral (S.length v)]
             inputData = TF.encodeTensorData shape v
             feeds = [TF.feed input inputData]
         TF.runWithFeeds feeds output
@@ -36,8 +36,8 @@ feedFetchBenchmark = do
 main :: IO ()
 main = defaultMain
     [ bgroup "feedFetch"
-        [ bench "4 byte" $ nfSession feedFetchBenchmark (V.replicate 1 0)
-        , bench "4 KiB" $ nfSession feedFetchBenchmark (V.replicate 1024 0)
-        , bench "4 MiB" $ nfSession feedFetchBenchmark (V.replicate (1024^2) 0)
+        [ bench "4 byte" $ nfSession feedFetchBenchmark (S.replicate 1 0)
+        , bench "4 KiB" $ nfSession feedFetchBenchmark (S.replicate 1024 0)
+        , bench "4 MiB" $ nfSession feedFetchBenchmark (S.replicate (1024^2) 0)
         ]
     ]

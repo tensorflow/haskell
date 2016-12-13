@@ -36,7 +36,6 @@ module TensorFlow.Core
     , buildWithSummary
       -- ** Running graphs
     , Fetchable
-    , Scalar(..)
     , Nodes
     , run
     , run_
@@ -64,8 +63,10 @@ module TensorFlow.Core
     , value
     , tensorFromName
       -- ** Element types
+    , TensorType
     , TensorData
-    , TensorType(decodeTensorData, encodeTensorData)
+    , TensorDataType(decodeTensorData, encodeTensorData)
+    , Scalar(..)
     , Shape(..)
     , OneOf
     , type (/=)

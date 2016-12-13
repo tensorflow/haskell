@@ -12,8 +12,8 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -24,7 +24,6 @@ import Control.Applicative (liftA2, liftA3)
 import Data.Map.Strict (Map)
 import Data.Monoid ((<>))
 import Data.Set (Set)
-import Data.String (IsString)
 import Data.Text (Text)
 import Lens.Family2 ((^.))
 import qualified Data.Map.Strict as Map
@@ -101,18 +100,12 @@ instance a ~ () => Fetchable ControlNode a where
 instance Nodes (Tensor v a) where
     getNodes t = Set.singleton <$> getOrAddOp (t ^. tensorOutput . outputOp)
 
-fetchTensorList :: TensorType a => Tensor v a -> Build (Fetch (Shape, [a]))
-fetchTensorList t = fmap (fmap V.toList) <$> fetchTensorVector t
-
 fetchTensorVector :: forall a v . TensorType a
-                  => Tensor v a -> Build (Fetch (Shape, V.Vector a))
+                  => Tensor v a -> Build (Fetch (TensorData a))
 fetchTensorVector (Tensor _ o) = do
     outputName <- renderOutput o
     return $ Fetch (Set.singleton outputName) $ \tensors ->
         let tensorData = tensors Map.! outputName
-            shape = Shape $ FFI.tensorDataDimensions tensorData
-            vec = decodeTensorData $ TensorData tensorData
-
             expectedType = tensorType (undefined :: a)
             actualType = FFI.tensorDataType tensorData
             badTypeError = error $ "Bad tensor type: expected "
@@ -121,21 +114,12 @@ fetchTensorVector (Tensor _ o) = do
                                    ++ show actualType
         in if expectedType /= actualType
                then badTypeError
-               else (shape, vec)
+               else TensorData tensorData
 
 -- The constraint "a ~ a'" means that the input/output of fetch can constrain
 -- the TensorType of each other.
-instance (TensorType a, a ~ a') => Fetchable (Tensor v a) (V.Vector a') where
-    getFetch t = fmap snd <$> fetchTensorVector t
+instance (TensorType a, a ~ a') => Fetchable (Tensor v a) (TensorData a') where
+    getFetch = fetchTensorVector
 
-newtype Scalar a = Scalar {unScalar :: a}
-    deriving (Show, Eq, Ord, Num, Fractional, Floating, Real, RealFloat,
-              RealFrac, IsString)
-
-instance (TensorType a, a ~ a') => Fetchable (Tensor v a) (Scalar a') where
-    getFetch t = fmap (Scalar . headFromSingleton . snd) <$> fetchTensorList t
-      where
-        headFromSingleton [x] = x
-        headFromSingleton xs
-            = error $ "Unable to extract singleton from tensor of length "
-                          ++ show (length xs)
+instance (TensorType a, TensorDataType s a, a ~ a') => Fetchable (Tensor v a) (s a') where
+    getFetch t = fmap decodeTensorData <$> fetchTensorVector t

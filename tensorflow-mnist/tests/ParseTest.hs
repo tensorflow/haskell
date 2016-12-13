@@ -48,10 +48,9 @@ import TensorFlow.Tensor
     , tensorFromName
     )
 import TensorFlow.Ops
-import TensorFlow.Nodes (unScalar)
 import TensorFlow.Session
     (runSession, run, run_, runWithFeeds, build, buildAnd)
-import TensorFlow.Types (TensorType(..), Shape(..))
+import TensorFlow.Types (TensorDataType(..), Shape(..), unScalar)
 import Test.Framework (Test)
 import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit ((@=?), Assertion)
