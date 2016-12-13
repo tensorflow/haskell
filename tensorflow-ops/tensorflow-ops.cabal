@@ -197,6 +197,7 @@ Test-Suite TypesTest
                , lens-family
                , google-shim
                , tensorflow
+               , tensorflow-core-ops
                , tensorflow-ops
                , tensorflow-proto
                , transformers

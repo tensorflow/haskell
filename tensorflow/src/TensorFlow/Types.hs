@@ -241,13 +241,18 @@ instance TensorType ByteString where
         -- Convert to Vector Word8.
         byteVector = S.fromList $ L.unpack $ Builder.toLazyByteString bytes
 
-
+-- TODO: Haskell and tensorflow use different byte sizes for bools, which makes
+-- encoding more expensive. It may make sense to define a custom boolean type.
 instance TensorType Bool where
     tensorType _ = DT_BOOL
     tensorRefType _ = DT_BOOL_REF
     tensorVal = boolVal
-    decodeTensorData = simpleDecode
-    encodeTensorData = simpleEncode
+    decodeTensorData =
+        S.convert . S.map (/= 0) . FFI.tensorDataBytes . unTensorData
+    encodeTensorData (Shape xs) =
+        TensorData . FFI.TensorData xs DT_BOOL . S.map fromBool . S.convert
+      where
+        fromBool x = if x then 1 else 0 :: Word8
 
 instance TensorType (Complex Float) where
     tensorType _ = DT_COMPLEX64
