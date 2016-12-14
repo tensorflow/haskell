@@ -101,7 +101,7 @@ import TensorFlow.Internal.VarInt (getVarInt, putVarInt)
 import qualified TensorFlow.Internal.FFI as FFI
 
 -- | The class of scalar types supported by tensorflow.
-class TensorDataType V.Vector a => TensorType a where
+class TensorType a where
     tensorType :: a -> DataType
     tensorRefType :: a -> DataType
     tensorVal :: Lens' TensorProto [a]
@@ -173,10 +173,10 @@ instance TensorType (Complex Double) where
 -- | Tensor data with the correct memory layout for tensorflow.
 newtype TensorData a = TensorData { unTensorData :: FFI.TensorData }
 
--- | Types that can be converted to and from 'TensorData'
+-- | Types that can be converted to and from 'TensorData'.
 --
--- 'S.Vector' is the most effecient to encode/decode for most element types.
-class TensorDataType s a where
+-- 'S.Vector' is the most efficient to encode/decode for most element types.
+class TensorType a => TensorDataType s a where
     -- | Decode the bytes of a 'TensorData' into an 's'.
     decodeTensorData :: TensorData a -> s a
     -- | Encode an 's' into a 'TensorData'.

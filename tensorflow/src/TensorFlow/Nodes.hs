@@ -28,7 +28,6 @@ import Data.Text (Text)
 import Lens.Family2 ((^.))
 import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
-import qualified Data.Vector as V
 
 import TensorFlow.Build
 import TensorFlow.Output

@@ -12,6 +12,7 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
@@ -129,8 +130,9 @@ testEmbeddingLookupGradients = testCase "testEmbeddingLookupGradients" $ do
 
 -- Verifies that direct gather is the same as dynamic split into
 -- partitions, followed by embedding lookup.
-testEmbeddingLookupUndoesSplit :: forall a. (TF.TensorType a, Show a, Eq a)
-                               => LookupExample a -> Property
+testEmbeddingLookupUndoesSplit ::
+    forall a. (TF.TensorDataType V.Vector a, Show a, Eq a)
+    => LookupExample a -> Property
 testEmbeddingLookupUndoesSplit
     (LookupExample numParts
                    shape@(TF.Shape (firstDim : restDims))

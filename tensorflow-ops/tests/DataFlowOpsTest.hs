@@ -12,6 +12,7 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 import Data.Int (Int32, Int64)
@@ -32,7 +33,7 @@ import qualified TensorFlow.Types as TF
 -- DynamicSplit is undone with DynamicStitch to get the original input
 -- back.
 testDynamicPartitionStitchInverse :: forall a.
-    (TF.TensorType a, Show a, Eq a) => StitchExample a -> Property
+    (TF.TensorDataType V.Vector a, Show a, Eq a) => StitchExample a -> Property
 testDynamicPartitionStitchInverse (StitchExample numParts values partitions) =
    let splitParts :: [TF.Tensor TF.Value a] =
            CoreOps.dynamicPartition numParts (TF.vector values) partTensor

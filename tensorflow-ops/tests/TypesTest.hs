@@ -85,7 +85,7 @@ instance Arbitrary a => Arbitrary (TensorDataInputs a) where
         return $ TensorDataInputs sizes (V.fromList elems)
 
 -- Test that a vector is unchanged after being encoded and decoded.
-encodeDecodeProp :: (TF.TensorType a, Eq a) => TensorDataInputs a -> Bool
+encodeDecodeProp :: (TF.TensorDataType V.Vector a, Eq a) => TensorDataInputs a -> Bool
 encodeDecodeProp (TensorDataInputs shape vec) =
     TF.decodeTensorData (TF.encodeTensorData (TF.Shape shape) vec) == vec
 
