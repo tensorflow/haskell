@@ -83,10 +83,6 @@ blackList =
     , "Print"
     , "QueueEnqueue"
     , "QueueEnqueueMany"
-      -- These have type ambiguities because one of the type arguments
-      -- doesn't appear in the signature.
-    , "ConditionalAccumulator"
-    , "SparseConditionalAccumulator"
       -- Need list of types support.
     , "DecodeCSV"
     , "ParseExample"
