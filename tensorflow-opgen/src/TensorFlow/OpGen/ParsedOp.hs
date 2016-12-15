@@ -216,15 +216,23 @@ parseOp o = ParsedOp
                 (o ^. inputArg) tensorKindParams
     tensorKindParams = ["v" <> Text.pack (show x) | x <- [1::Integer ..]]
     parsedOutputs = map (\a -> parseArg a (outputTensorKind a)) (o ^. outputArg)
-    explicitInputAttrs = sortBy (comparing (tfName . attrName))
-                        $ mapMaybeAttrs (getExplicitInputAttr implicitAttrs)
-                        $ o ^. attr
-    inferredTypeAttrs = mapMaybeAttrs getInferredTypeAttr $ o ^. attr
+    -- Type attributes that can be inferred from at least one input or output.
+    argTypeAttrs = Set.fromList $ mapMaybe parsedArgTypeAttr
+                       $ parsedInputs ++ parsedOutputs
+    inferredTypeAttrs = filter ((`Set.member` argTypeAttrs) . tfName . attrName)
+                            $ mapMaybeAttrs getInferredTypeAttr $ o ^. attr
+    -- Integer attributes that can be inferred from the size of at least one
+    -- input list.
     inferredListSizeAttrs = mapMaybeAttrs (getInferredListSizeAttr parsedInputs)
                                 $ o ^. attr
     implicitAttrs = Set.fromList $ map tfName $
                         map attrName inferredTypeAttrs
                             ++ map attrName inferredListSizeAttrs
+    -- Attributes that can't be inferred and don't have defaults, so must be passed
+    -- as separate arguments to the op.
+    explicitInputAttrs = sortBy (comparing (tfName . attrName))
+                        $ mapMaybeAttrs (getExplicitInputAttr implicitAttrs)
+                        $ o ^. attr
 
 -- TODO(judahjacobson): Some arguments should be refs.
 inputTensorKind :: OpDef'ArgDef -> Text -> ArgKind
@@ -246,6 +254,16 @@ getExplicitInputAttr implicitAttrs a
     , t <- parseAttrType (a ^. type')
     , t `elem` map AttrSingle [AttrBool, AttrInt64, AttrFloat, AttrShape] = Just t
     | otherwise = Nothing
+
+-- | The type attribute used by this input or output (if any).
+parsedArgTypeAttr :: ParsedArg -> Maybe TFName
+parsedArgTypeAttr p = case parsedArgCase p of
+    SimpleArg {argType = t} -> fromArgType t
+    ListArg {argType = t} -> fromArgType t
+    MixedListArg {argTypeAttr = n} -> Just $ tfName n
+  where
+    fromArgType (ArgTypeAttr n) = Just $ tfName n
+    fromArgType _ = Nothing
 
 getInferredTypeAttr :: OpDef'AttrDef -> Maybe [DataType]
 getInferredTypeAttr a
