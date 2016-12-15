@@ -22,14 +22,9 @@ import Data.List (genericLength)
 import qualified Data.Text.IO as T
 import qualified Data.Vector as V
 
-import qualified TensorFlow.Build as TF
-import qualified TensorFlow.ControlFlow as TF
+import qualified TensorFlow.Core as TF
 import qualified TensorFlow.Gradient as TF
-import qualified TensorFlow.Nodes as TF
 import qualified TensorFlow.Ops as TF
-import qualified TensorFlow.Session as TF
-import qualified TensorFlow.Tensor as TF
-import qualified TensorFlow.Types as TF
 
 import TensorFlow.Examples.MNIST.InputData
 import TensorFlow.Examples.MNIST.Parse

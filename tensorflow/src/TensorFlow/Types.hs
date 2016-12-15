@@ -16,6 +16,7 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RankNTypes #-}
@@ -30,6 +31,8 @@
 module TensorFlow.Types
     ( TensorType(..)
     , TensorData(..)
+    , TensorDataType(..)
+    , Scalar(..)
     , Shape(..)
     , protoShape
     , Attribute(..)
@@ -50,11 +53,13 @@ import Data.Complex (Complex)
 import Data.Default (def)
 import Data.Int (Int8, Int16, Int32, Int64)
 import Data.Monoid ((<>))
+import Data.String (IsString)
 import Data.Word (Word8, Word16, Word64)
 import Foreign.Storable (Storable)
 import GHC.Exts (Constraint, IsList(..))
 import Lens.Family2 (Lens', view, (&), (.~))
 import Lens.Family2.Unchecked (iso)
+import Text.Printf (printf)
 import qualified Data.Attoparsec.ByteString as Atto
 import Data.ByteString (ByteString)
 import qualified Data.ByteString as B
@@ -95,66 +100,31 @@ import Proto.Tensorflow.Core.Framework.Types (DataType(..))
 import TensorFlow.Internal.VarInt (getVarInt, putVarInt)
 import qualified TensorFlow.Internal.FFI as FFI
 
--- | Data about a tensor that is encoded for the TensorFlow APIs.
-newtype TensorData a = TensorData { unTensorData :: FFI.TensorData }
-
 -- | The class of scalar types supported by tensorflow.
 class TensorType a where
     tensorType :: a -> DataType
     tensorRefType :: a -> DataType
     tensorVal :: Lens' TensorProto [a]
-    -- | Decode the bytes of a TensorData into a Vector.
-    decodeTensorData :: TensorData a -> V.Vector a
-    -- | Encode a Vector into a TensorData.
-    --
-    -- The values should be in row major order, e.g.,
-    --
-    --   element 0:   index (0, ..., 0)
-    --   element 1:   index (0, ..., 1)
-    --   ...
-    encodeTensorData :: Shape -> V.Vector a -> TensorData a
-
--- All types, besides ByteString, are encoded as simple arrays and we can use
--- Vector.Storable to encode/decode by type casting pointers.
-
--- TODO(fmayle): Assert that the data type matches the return type.
-simpleDecode :: Storable a => TensorData a -> V.Vector a
-simpleDecode = S.convert . S.unsafeCast . FFI.tensorDataBytes . unTensorData
-
-simpleEncode :: forall a . (TensorType a, Storable a)
-             => Shape -> V.Vector a -> TensorData a
-simpleEncode (Shape xs)
-    = TensorData . FFI.TensorData xs dt . S.unsafeCast . S.convert
-  where
-    dt = tensorType (undefined :: a)
 
 instance TensorType Float where
     tensorType _ = DT_FLOAT
     tensorRefType _ = DT_FLOAT_REF
     tensorVal = floatVal
-    decodeTensorData = simpleDecode
-    encodeTensorData = simpleEncode
 
 instance TensorType Double where
     tensorType _ = DT_DOUBLE
     tensorRefType _ = DT_DOUBLE_REF
     tensorVal = doubleVal
-    decodeTensorData = simpleDecode
-    encodeTensorData = simpleEncode
 
 instance TensorType Int32 where
     tensorType _ = DT_INT32
     tensorRefType _ = DT_INT32_REF
     tensorVal = intVal
-    decodeTensorData = simpleDecode
-    encodeTensorData = simpleEncode
 
 instance TensorType Int64 where
     tensorType _ = DT_INT64
     tensorRefType _ = DT_INT64_REF
     tensorVal = int64Val
-    decodeTensorData = simpleDecode
-    encodeTensorData = simpleEncode
 
 integral :: Integral a => Lens' [Int32] [a]
 integral = iso (fmap fromIntegral) (fmap fromIntegral)
@@ -163,40 +133,140 @@ instance TensorType Word8 where
     tensorType _ = DT_UINT8
     tensorRefType _ = DT_UINT8_REF
     tensorVal = intVal . integral
-    decodeTensorData = simpleDecode
-    encodeTensorData = simpleEncode
 
 instance TensorType Word16 where
     tensorType _ = DT_UINT16
     tensorRefType _ = DT_UINT16_REF
     tensorVal = intVal . integral
-    decodeTensorData = simpleDecode
-    encodeTensorData = simpleEncode
 
 instance TensorType Int16 where
     tensorType _ = DT_INT16
     tensorRefType _ = DT_INT16_REF
     tensorVal = intVal . integral
-    decodeTensorData = simpleDecode
-    encodeTensorData = simpleEncode
 
 instance TensorType Int8 where
     tensorType _ = DT_INT8
     tensorRefType _ = DT_INT8_REF
     tensorVal = intVal . integral
-    decodeTensorData = simpleDecode
-    encodeTensorData = simpleEncode
 
 instance TensorType ByteString where
     tensorType _ = DT_STRING
     tensorRefType _ = DT_STRING_REF
     tensorVal = stringVal
+
+instance TensorType Bool where
+    tensorType _ = DT_BOOL
+    tensorRefType _ = DT_BOOL_REF
+    tensorVal = boolVal
+
+instance TensorType (Complex Float) where
+    tensorType _ = DT_COMPLEX64
+    tensorRefType _ = DT_COMPLEX64
+    tensorVal = error "TODO (Complex Float)"
+
+instance TensorType (Complex Double) where
+    tensorType _ = DT_COMPLEX128
+    tensorRefType _ = DT_COMPLEX128
+    tensorVal = error "TODO (Complex Double)"
+
+
+-- | Tensor data with the correct memory layout for tensorflow.
+newtype TensorData a = TensorData { unTensorData :: FFI.TensorData }
+
+-- | Types that can be converted to and from 'TensorData'.
+--
+-- 'S.Vector' is the most efficient to encode/decode for most element types.
+class TensorType a => TensorDataType s a where
+    -- | Decode the bytes of a 'TensorData' into an 's'.
+    decodeTensorData :: TensorData a -> s a
+    -- | Encode an 's' into a 'TensorData'.
+    --
+    -- The values should be in row major order, e.g.,
+    --
+    --   element 0:   index (0, ..., 0)
+    --   element 1:   index (0, ..., 1)
+    --   ...
+    encodeTensorData :: Shape -> s a -> TensorData a
+
+-- All types, besides ByteString and Bool, are encoded as simple arrays and we
+-- can use Vector.Storable to encode/decode by type casting pointers.
+
+-- TODO(fmayle): Assert that the data type matches the return type.
+simpleDecode :: Storable a => TensorData a -> S.Vector a
+simpleDecode = S.unsafeCast . FFI.tensorDataBytes . unTensorData
+
+simpleEncode :: forall a . (TensorType a, Storable a)
+             => Shape -> S.Vector a -> TensorData a
+simpleEncode (Shape xs) v =
+    if product xs /= fromIntegral (S.length v)
+        then error $ printf
+            "simpleEncode: bad vector length for shape %v: expected=%d got=%d"
+            (show xs) (product xs) (S.length v)
+        else TensorData (FFI.TensorData xs dt (S.unsafeCast v))
+  where
+    dt = tensorType (undefined :: a)
+
+instance TensorDataType S.Vector Float where
+    decodeTensorData = simpleDecode
+    encodeTensorData = simpleEncode
+
+instance TensorDataType S.Vector Double where
+    decodeTensorData = simpleDecode
+    encodeTensorData = simpleEncode
+
+instance TensorDataType S.Vector Int8 where
+    decodeTensorData = simpleDecode
+    encodeTensorData = simpleEncode
+
+instance TensorDataType S.Vector Int16 where
+    decodeTensorData = simpleDecode
+    encodeTensorData = simpleEncode
+
+instance TensorDataType S.Vector Int32 where
+    decodeTensorData = simpleDecode
+    encodeTensorData = simpleEncode
+
+instance TensorDataType S.Vector Int64 where
+    decodeTensorData = simpleDecode
+    encodeTensorData = simpleEncode
+
+instance TensorDataType S.Vector Word8 where
+    decodeTensorData = simpleDecode
+    encodeTensorData = simpleEncode
+
+instance TensorDataType S.Vector Word16 where
+    decodeTensorData = simpleDecode
+    encodeTensorData = simpleEncode
+
+-- TODO: Haskell and tensorflow use different byte sizes for bools, which makes
+-- encoding more expensive. It may make sense to define a custom boolean type.
+instance TensorDataType S.Vector Bool where
+    decodeTensorData =
+        S.convert . S.map (/= 0) . FFI.tensorDataBytes . unTensorData
+    encodeTensorData (Shape xs) =
+        TensorData . FFI.TensorData xs DT_BOOL . S.map fromBool . S.convert
+      where
+        fromBool x = if x then 1 else 0 :: Word8
+
+instance {-# OVERLAPPABLE #-} (Storable a, TensorDataType S.Vector a)
+    => TensorDataType V.Vector a where
+    decodeTensorData = (S.convert :: S.Vector a -> V.Vector a) . decodeTensorData
+    encodeTensorData x = encodeTensorData x . (S.convert :: V.Vector a -> S.Vector a)
+
+instance {-# OVERLAPPING #-} TensorDataType V.Vector (Complex Float) where
+    decodeTensorData = error "TODO (Complex Float)"
+    encodeTensorData = error "TODO (Complex Float)"
+
+instance {-# OVERLAPPING #-} TensorDataType V.Vector (Complex Double) where
+    decodeTensorData = error "TODO (Complex Double)"
+    encodeTensorData = error "TODO (Complex Double)"
+
+instance {-# OVERLAPPING #-} TensorDataType V.Vector ByteString where
     -- Encoded data layout (described in third_party/tensorflow/c/c_api.h):
     --   table offsets for each element :: [Word64]
     --   at each element offset:
     --     string length :: VarInt64
     --     string data   :: [Word8]
-    -- TODO(fmayle): Benchmark these functions.
     decodeTensorData tensorData =
         either (\err -> error $ "Malformed TF_STRING tensor; " ++ err) id $
             if expected /= count
@@ -241,32 +311,21 @@ instance TensorType ByteString where
         -- Convert to Vector Word8.
         byteVector = S.fromList $ L.unpack $ Builder.toLazyByteString bytes
 
--- TODO: Haskell and tensorflow use different byte sizes for bools, which makes
--- encoding more expensive. It may make sense to define a custom boolean type.
-instance TensorType Bool where
-    tensorType _ = DT_BOOL
-    tensorRefType _ = DT_BOOL_REF
-    tensorVal = boolVal
-    decodeTensorData =
-        S.convert . S.map (/= 0) . FFI.tensorDataBytes . unTensorData
-    encodeTensorData (Shape xs) =
-        TensorData . FFI.TensorData xs DT_BOOL . S.map fromBool . S.convert
-      where
-        fromBool x = if x then 1 else 0 :: Word8
+newtype Scalar a = Scalar {unScalar :: a}
+    deriving (Show, Eq, Ord, Num, Fractional, Floating, Real, RealFloat,
+              RealFrac, IsString)
 
-instance TensorType (Complex Float) where
-    tensorType _ = DT_COMPLEX64
-    tensorRefType _ = DT_COMPLEX64
-    tensorVal = error "TODO (Complex Float)"
-    decodeTensorData = error "TODO (Complex Float)"
-    encodeTensorData = error "TODO (Complex Float)"
+instance TensorDataType V.Vector a => TensorDataType Scalar a where
+    decodeTensorData = Scalar . headFromSingleton . decodeTensorData
+    encodeTensorData x (Scalar y) = encodeTensorData x (V.fromList [y])
 
-instance TensorType (Complex Double) where
-    tensorType _ = DT_COMPLEX128
-    tensorRefType _ = DT_COMPLEX128
-    tensorVal = error "TODO (Complex Double)"
-    decodeTensorData = error "TODO (Complex Double)"
-    encodeTensorData = error "TODO (Complex Double)"
+headFromSingleton :: V.Vector a -> a
+headFromSingleton x
+    | V.length x == 1 = V.head x
+    | otherwise = error $
+                  "Unable to extract singleton from tensor of length "
+                  ++ show (V.length x)
+
 
 -- | Shape (dimensions) of a tensor.
 newtype Shape = Shape [Int64] deriving Show

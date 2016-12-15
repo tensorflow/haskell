@@ -42,7 +42,7 @@ import TensorFlow.Build
     , withNameScope
     )
 import TensorFlow.ControlFlow (named)
-import TensorFlow.Nodes (unScalar)
+import TensorFlow.Types (unScalar)
 import TensorFlow.Ops
     ( add
     , assign

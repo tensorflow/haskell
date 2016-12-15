@@ -20,7 +20,7 @@ module Main where
 import Control.Monad.IO.Class (liftIO)
 import Data.Int (Int64)
 import Google.Test (googleTest)
-import TensorFlow.Nodes (Scalar(..))
+import TensorFlow.Types (Scalar(..))
 import TensorFlow.Ops (scalar)
 import TensorFlow.Queue
 import TensorFlow.Session
