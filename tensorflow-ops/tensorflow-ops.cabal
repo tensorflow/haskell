@@ -42,6 +42,7 @@ Test-Suite BuildTest
                , google-shim
                , tensorflow
                , tensorflow-ops
+               , tensorflow-core-ops
                , tensorflow-proto
                , test-framework
                , test-framework-hunit

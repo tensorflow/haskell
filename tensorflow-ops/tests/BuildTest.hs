@@ -43,10 +43,12 @@ import TensorFlow.Build
     )
 import TensorFlow.ControlFlow (named)
 import TensorFlow.Types (unScalar)
+import TensorFlow.GenOps.Core (identity)
 import TensorFlow.Ops
     ( add
     , assign
     , constant
+    , initializedValue
     , initializedVariable
     , variable
     )
@@ -109,7 +111,10 @@ testInitializedVariable =
 testInitializedVariableShape :: Test
 testInitializedVariableShape =
     testCase "testInitializedVariableShape" $ runSession $ do
-        vector <- build $ initializedVariable (constant [1] [42 :: Float])
+        vector <- build $ do
+                  a <- initializedVariable (constant [1] [42 :: Float])
+                  b <- initializedValue a
+                  return b
         result <- run vector
         liftIO $ [42] @=? (result :: V.Vector Float)
 
