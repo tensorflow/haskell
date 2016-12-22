@@ -113,7 +113,7 @@ testInitializedVariableShape =
     testCase "testInitializedVariableShape" $ runSession $ do
         vector <- build $ do
                   a <- initializedVariable (constant [1] [42 :: Float])
-                  b <- initializedValue a
+                  b <- initializedValue (identity a)
                   return b
         result <- run vector
         liftIO $ [42] @=? (result :: V.Vector Float)

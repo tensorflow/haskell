@@ -167,9 +167,9 @@ placeholder shape' =
 
 -- | Construct a tensor whose value is the initialized value of the given
 -- tensor.
-initializedValue :: forall a.  TensorType a 
-    => Tensor Ref a 
-    -> Build (Tensor Ref a)
+initializedValue :: forall a v.  TensorType a 
+    => Tensor v a 
+    -> Build (Tensor v a)
 initializedValue t = do
     ns <- use initializationNodes
     -- Make this tensor depend on the initializers of the other.
