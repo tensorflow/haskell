@@ -114,7 +114,8 @@ testInitializedVariableShape =
         vector <- build $ do
                   a <- initializedVariable (constant [1] [42 :: Float])
                   b <- initializedValue (identity a)
-                  return b
+                  c <- initializedVariable b
+                  return c
         result <- run vector
         liftIO $ [42] @=? (result :: V.Vector Float)
 
