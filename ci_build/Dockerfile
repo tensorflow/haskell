@@ -3,7 +3,7 @@
 # stack to be installed on the host.  This comes at the expense of
 # flexibility.
 
-FROM tensorflow/tensorflow:0.12.1-devel
+FROM tensorflow/tensorflow:nightly-devel
 MAINTAINER TensorFlow authors <tensorflow-haskell@googlegroups.com>
 
 # The build context directory is the top of the tensorflow-haskell
