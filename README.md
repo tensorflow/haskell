@@ -5,7 +5,47 @@ The tensorflow-haskell package provides Haskell bindings to
 
 This is not an official Google product.
 
-# Instructions
+# Documentation
+
+https://tensorflow.github.io/haskell/haddock/
+
+# Examples
+
+Neural network model for the MNIST dataset: [code](tensorflow-mnist/app/Main.hs)
+
+Toy example of a linear regression model
+([full code](tensorflow-ops/examples/Regression.hs)):
+
+```haskell
+main :: IO ()
+main = do
+    -- Generate data where `y = x*3 + 8`.
+    xData <- replicateM 100 randomIO
+    let yData = [x*3 + 8 | x <- xData]
+    -- Fit linear regression model.
+    (w, b) <- fit xData yData
+    printf "w=%v b=%v\n" w b  -- w=3.0001216 b=7.999931
+
+fit :: [Float] -> [Float] -> IO (Float, Float)
+fit xData yData = TF.runSession $ do
+    -- Create tensorflow constants for x and y.
+    let x = TF.vector xData
+        y = TF.vector yData
+    -- Create scalar variables for slope and intercept.
+    w <- TF.build (TF.initializedVariable 0)
+    b <- TF.build (TF.initializedVariable 0)
+    -- Define the loss function.
+    let yHat = (x `TF.mul` w) `TF.add` b
+        loss = TF.square (yHat `TF.sub` y)
+    -- Optimize with gradient descent.
+    trainStep <- TF.build (gradientDescent 0.001 loss [w, b])
+    replicateM_ 1000 (TF.run trainStep)
+    -- Return the learned parameters.
+    (TF.Scalar w', TF.Scalar b') <- TF.run (w, b)
+    return (w', b')
+```
+
+# Installation Instructions
 
 ## Build with Docker on Linux
 
