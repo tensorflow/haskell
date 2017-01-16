@@ -9,14 +9,26 @@ This is not an official Google product.
 
 https://tensorflow.github.io/haskell/haddock/
 
+[TensorFlow.Core](https://tensorflow.github.io/haskell/haddock/tensorflow-0.1.0.0/TensorFlow-Core.html)
+is a good place to start.
+
 # Examples
 
 Neural network model for the MNIST dataset: [code](tensorflow-mnist/app/Main.hs)
 
 Toy example of a linear regression model
-([full code](tensorflow-ops/examples/Regression.hs)):
+([full code](tensorflow-ops/tests/RegressionTest.hs)):
 
 ```haskell
+import Control.Monad (replicateM, replicateM_, zipWithM)
+import System.Random (randomIO)
+import Test.HUnit (assertBool)
+
+import qualified TensorFlow.Core as TF
+import qualified TensorFlow.GenOps.Core as TF
+import qualified TensorFlow.Gradient as TF
+import qualified TensorFlow.Ops as TF
+
 main :: IO ()
 main = do
     -- Generate data where `y = x*3 + 8`.
@@ -24,7 +36,8 @@ main = do
     let yData = [x*3 + 8 | x <- xData]
     -- Fit linear regression model.
     (w, b) <- fit xData yData
-    printf "w=%v b=%v\n" w b  -- w=3.0001216 b=7.999931
+    assertBool "w == 3" (abs (3 - w) < 0.001)
+    assertBool "b == 8" (abs (8 - b) < 0.001)
 
 fit :: [Float] -> [Float] -> IO (Float, Float)
 fit xData yData = TF.runSession $ do
@@ -43,6 +56,15 @@ fit xData yData = TF.runSession $ do
     -- Return the learned parameters.
     (TF.Scalar w', TF.Scalar b') <- TF.run (w, b)
     return (w', b')
+
+gradientDescent :: Float
+                -> TF.Tensor TF.Value Float
+                -> [TF.Tensor TF.Ref Float]
+                -> TF.Build TF.ControlNode
+gradientDescent alpha loss params = do
+    let applyGrad param grad =
+            TF.assign param (param `TF.sub` (TF.scalar alpha `TF.mul` grad))
+    TF.group =<< zipWithM applyGrad params =<< TF.gradients loss params
 ```
 
 # Installation Instructions

@@ -30,17 +30,17 @@ library
                 , text
   default-language:    Haskell2010
 
-
-executable Regression
+Test-Suite RegressionTest
   default-language: Haskell2010
-  main-is: Regression.hs
-  hs-source-dirs: examples
+  type: exitcode-stdio-1.0
+  main-is: RegressionTest.hs
+  hs-source-dirs: tests
   build-depends: base
-               , tensorflow
-               , tensorflow-ops
-               , tensorflow-core-ops
+               , HUnit
                , random
-
+               , tensorflow
+               , tensorflow-core-ops
+               , tensorflow-ops
 
 Test-Suite BuildTest
   default-language: Haskell2010

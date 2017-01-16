@@ -2,7 +2,7 @@
 
 import Control.Monad (replicateM, replicateM_, zipWithM)
 import System.Random (randomIO)
-import Text.Printf (printf)
+import Test.HUnit (assertBool)
 
 import qualified TensorFlow.Core as TF
 import qualified TensorFlow.GenOps.Core as TF
@@ -16,7 +16,8 @@ main = do
     let yData = [x*3 + 8 | x <- xData]
     -- Fit linear regression model.
     (w, b) <- fit xData yData
-    printf "w=%v b=%v\n" w b  -- w=3.0001216 b=7.999931
+    assertBool "w == 3" (abs (3 - w) < 0.001)
+    assertBool "b == 8" (abs (8 - b) < 0.001)
 
 fit :: [Float] -> [Float] -> IO (Float, Float)
 fit xData yData = TF.runSession $ do
