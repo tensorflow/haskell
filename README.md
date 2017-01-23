@@ -91,6 +91,11 @@ There is also a demo application:
 
 The following instructions were verified with Mac OS X El Capitan.
 
+- Install the "protoc" binary somewhere in your PATH. You can get it by
+  downloading the corresponding file for your system from
+  https://github.com/google/protobuf/releases. (The corresponding file will be
+  named something like `protoc-*-.zip`.)
+
 - Install dependencies via [Homebrew](http://brew.sh):
 
         brew install swig
