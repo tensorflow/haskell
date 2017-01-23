@@ -5,9 +5,9 @@ MAINTAINER TensorFlow authors <tensorflow-haskell@googlegroups.com>
 # Installs protoc and the libraries.
 RUN \
     cd /tensorflow && \
-    bazel --batch build -c opt '@protobuf//:protoc' && \
+    bazel --batch build --jobs=7 -c opt '@protobuf//:protoc' && \
     install -s bazel-bin/external/protobuf/protoc /usr/local/bin && \
-    bazel --batch build -c opt '//tensorflow:libtensorflow_c.so' && \
+    bazel --batch build --jobs=7 -c opt '//tensorflow:libtensorflow_c.so' && \
     install bazel-bin/tensorflow/libtensorflow_c.so /usr/local/lib && \
     ldconfig && \
     bazel --batch clean

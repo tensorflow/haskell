@@ -87,6 +87,24 @@ There is also a demo application:
     cd tensorflow-mnist
     stack --docker --docker-image=$IMAGE_NAME build --exec Main
 
+
+If you see:
+
+```
+Downloading Docker-compatible stack executable
+stack-1.2.1 executable not found for linux64
+Use the 'stack-exe' option to specify a location
+```
+
+or similar during the `stack --docker --docker-image=$IMAGE_NAME setup` step, then
+you need to upgrade your stack version.
+
+```
+$ stack upgrade
+```
+
+will fix it.
+
 ## Build on Mac OS X
 
 The following instructions were verified with Mac OS X El Capitan.
