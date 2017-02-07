@@ -87,6 +87,37 @@ There is also a demo application:
     cd tensorflow-mnist
     stack --docker --docker-image=$IMAGE_NAME build --exec Main
 
+## Build without Docker on Linux
+
+The following instructions were verified with Ubuntu 16.04 Xenial Xerus.
+It needs Python numpy and GHC and the user is prompted during the installation
+process.
+
+- Install the "protoc" binary somewhere in your PATH. You can get it by
+  downloading the corresponding file for your system from
+  https://github.com/google/protobuf/releases. (The corresponding file will be
+  named something like `protoc-*-.zip`.)
+  
+- Install dependencies
+
+    sudo apt-get install swig
+
+- Follow instructions in section "Using Bazel custom APT repository (recommended)"
+from [Bazel](https://bazel.build/versions/master/docs/install.html) to install Bazel
+
+
+- Build the TensorFlow library and install it on your machine:
+
+        cd third_party/tensorflow
+        ./configure  # Choose the defaults when prompted
+        bazel build -c opt tensorflow:libtensorflow_c.so
+        install bazel-bin/tensorflow/libtensorflow_c.so /usr/local/lib/libtensorflow_c.so
+
+- Update 'ldconfig'
+
+        Add /usr/local/lib/libtensorflow_c.so to /etc/ld.so.conf
+	Execute 'ldconfig' in the terminal
+
 ## Build on Mac OS X
 
 The following instructions were verified with Mac OS X El Capitan.
