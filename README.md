@@ -118,6 +118,10 @@ from [Bazel](https://bazel.build/versions/master/docs/install.html) to install B
         Add /usr/local/lib/libtensorflow_c.so to /etc/ld.so.conf
 	Execute 'ldconfig' in the terminal
 
+- Run stack:
+
+        stack test
+
 ## Build on Mac OS X
 
 The following instructions were verified with Mac OS X El Capitan.
