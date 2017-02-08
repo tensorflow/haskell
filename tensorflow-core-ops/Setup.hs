@@ -12,7 +12,7 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
--- | Generates the wrappers for Ops shipped with tensorflow_c.
+-- | Generates the wrappers for Ops shipped with tensorflow.
 module Main where
 
 import Distribution.Simple.BuildPaths (autogenModulesDir)

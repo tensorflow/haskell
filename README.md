@@ -106,8 +106,8 @@ The following instructions were verified with Mac OS X El Capitan.
         cd third_party/tensorflow
         ./configure  # Choose the defaults when prompted
         bazel build -c opt tensorflow:libtensorflow_c.so
-        install bazel-bin/tensorflow/libtensorflow_c.so /usr/local/lib/libtensorflow_c.dylib
-        install_name_tool -id libtensorflow_c.dylib /usr/local/lib/libtensorflow_c.dylib
+        install bazel-bin/tensorflow/libtensorflow_c.so /usr/local/lib/libtensorflow.dylib
+        install_name_tool -id libtensorflow.dylib /usr/local/lib/libtensorflow.dylib
         cd ../..
 
 - Run stack:
