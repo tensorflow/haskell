@@ -23,13 +23,14 @@ module TensorFlow.CRC32C
 import Data.Bits (rotateL, rotateR)
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as BL
+import Data.Digest.CRC32C (crc32c_update)
 import Data.List (foldl')
 import Data.Word (Word32)
 
 -- | Compute the CRC32C checksum of the concatenation of the bytes checksummed
 -- by the given CRC32C value and the bytes in the given ByteString.
 extend :: Word32 -> B.ByteString -> Word32
-extend = _crcExtend
+extend = crc32c_update
 
 -- | Compute the CRC32C checksum of the given bytes.
 value :: BL.ByteString -> Word32
