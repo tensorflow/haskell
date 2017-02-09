@@ -32,6 +32,7 @@ module TensorFlow.Records
   , putTFRecordData
   ) where
 
+import Control.Exception (evaluate)
 import Control.Monad (when)
 import Data.ByteString.Unsafe (unsafePackCStringLen)
 import qualified Data.ByteString.Builder as B (Builder)
@@ -58,7 +59,7 @@ import Foreign.Marshal.Alloc (allocaBytes)
 import Foreign.Ptr (Ptr, castPtr)
 import System.IO.Unsafe (unsafePerformIO)
 
-import qualified TensorFlow.CRC32C as CRC
+import TensorFlow.CRC32C (crc32cLBSMasked, crc32cUpdate, crc32cMask)
 
 -- | Parse one TFRecord.
 getTFRecord :: Get BL.ByteString
@@ -74,7 +75,7 @@ getTFRecords = do
 getCheckMaskedCRC32C :: BL.ByteString -> Get ()
 getCheckMaskedCRC32C bs = do
   wireCRC <- getWord32le
-  let maskedCRC = CRC.valueMasked bs
+  let maskedCRC = crc32cLBSMasked bs
   when (maskedCRC /= wireCRC) $ fail $
       "getCheckMaskedCRC32C: CRC mismatch, computed: " ++ show maskedCRC ++
       ", expected: " ++ show wireCRC
@@ -95,12 +96,12 @@ getTFRecordData len = if len > 0x7fffffffffffffff
     return bs
 
 putMaskedCRC32C :: BL.ByteString -> Put
-putMaskedCRC32C = putWord32le . CRC.valueMasked
+putMaskedCRC32C = putWord32le . crc32cLBSMasked
 
--- Runs a Builder that's known to write a fixed number of bytes on a
--- stack-allocated buffer, and runs the given IO action on the result.  Raises
--- exceptions if the Builder yields ByteString chunks or attempts to write more
--- bytes than expected.
+-- Runs a Builder that's known to write a fixed number of bytes on an 'alloca'
+-- buffer, and runs the given IO action on the result.  Raises exceptions if
+-- the Builder yields ByteString chunks or attempts to write more bytes than
+-- expected.
 unsafeWithFixedWidthBuilder :: Int -> B.Builder -> (Ptr Word8 -> IO r) -> IO r
 unsafeWithFixedWidthBuilder n b act = allocaBytes n $ \ptr -> do
   (_, signal) <- runBuilder b ptr n
@@ -114,11 +115,13 @@ putTFRecordLength :: Word64 -> Put
 putTFRecordLength x =
   let put = putWord64le x
       len = 8
-      crc = CRC.mask $ unsafePerformIO $
+      crc = crc32cMask $ unsafePerformIO $
           -- Serialized Word64 is always 8 bytes, so we can go fast by using
           -- alloca.
-          unsafeWithFixedWidthBuilder len (execPut put) $
-              \ptr -> CRC.extend 0 <$> unsafePackCStringLen (castPtr ptr, len)
+          unsafeWithFixedWidthBuilder len (execPut put) $ \ptr -> do
+              str <- unsafePackCStringLen (castPtr ptr, len)
+              -- Force the result to ensure it's evaluated before freeing ptr.
+              evaluate $ crc32cUpdate 0 str
   in  put *> putWord32le crc
 
 -- | Put a record payload and its checksum.

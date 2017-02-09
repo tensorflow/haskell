@@ -19,7 +19,7 @@ library
                , cereal
                -- TODO: Split Data.Digest.CRC32C out of snappy-framing for a
                -- lighter dependency?
-               , snappy-framing
+               , snappy-framing >= 0.1.1
   default-language:    Haskell2010
 
 Test-Suite RecordsTest

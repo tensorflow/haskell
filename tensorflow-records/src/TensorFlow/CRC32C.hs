@@ -12,44 +12,50 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
--- | FFI wrappers of CRC32C digest.  Import qualified.
-
 module TensorFlow.CRC32C
-  ( value, extend
-  , mask, unmask
-  , valueMasked
+  ( crc32c
+  , crc32cLBS
+  , crc32cUpdate
+  , crc32cMasked
+  , crc32cLBSMasked
+  , crc32cMask
+  , crc32cUnmask
   ) where
 
 import Data.Bits (rotateL, rotateR)
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as BL
-import Data.Digest.CRC32C (crc32c_update)
+import Data.Digest.CRC32C (crc32c, crc32c_update)
 import Data.List (foldl')
 import Data.Word (Word32)
 
 -- | Compute the CRC32C checksum of the concatenation of the bytes checksummed
 -- by the given CRC32C value and the bytes in the given ByteString.
-extend :: Word32 -> B.ByteString -> Word32
-extend = crc32c_update
+crc32cUpdate :: Word32 -> B.ByteString -> Word32
+crc32cUpdate = crc32c_update
 
 -- | Compute the CRC32C checksum of the given bytes.
-value :: BL.ByteString -> Word32
-value = foldl' extend 0 . BL.toChunks
+crc32cLBS :: BL.ByteString -> Word32
+crc32cLBS = foldl' crc32cUpdate 0 . BL.toChunks
 
 -- | Scramble a CRC32C value so that the result can be safely stored in a
 -- bytestream that may itself be CRC'd.
 --
 -- This masking is the algorithm specified by TensorFlow's TFRecords format.
-mask :: Word32 -> Word32
-mask x = rotateR x 15 + maskDelta
+crc32cMask :: Word32 -> Word32
+crc32cMask x = rotateR x 15 + maskDelta
 
--- | Inverse of 'mask'.
-unmask :: Word32 -> Word32
-unmask x = rotateL (x - maskDelta) 15
+-- | Inverse of 'crc32cMask'.
+crc32cUnmask :: Word32 -> Word32
+crc32cUnmask x = rotateL (x - maskDelta) 15
 
--- | Convenience function combining 'value' and 'mask'.
-valueMasked :: BL.ByteString -> Word32
-valueMasked = mask . value
+-- | Convenience function combining 'crc32c' and 'crc32cMask'.
+crc32cMasked :: B.ByteString -> Word32
+crc32cMasked = crc32cMask . crc32c
+
+-- | Convenience function combining 'crc32cLBS' and 'crc32cMask'.
+crc32cLBSMasked :: BL.ByteString -> Word32
+crc32cLBSMasked = crc32cMask . crc32cLBS
 
 maskDelta :: Word32
 maskDelta = 0xa282ead8
