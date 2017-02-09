@@ -11,12 +11,16 @@ packages:
 - tensorflow-mnist-input-data
 - tensorflow-queue
 - tensorflow-nn
+- tensorflow-records
+- tensorflow-records-conduit
 - tensorflow-test
 
 extra-deps:
 # proto-lens is not yet in Stackage.
 - proto-lens-0.1.0.4
 - proto-lens-protoc-0.1.0.4
+- snappy-framing-0.1.1
+- snappy-0.2.0.2
 
 # Allow our custom Setup.hs scripts to import Data.ProtoLens.Setup from the version of
 # `proto-lens-protoc` in stack's local DB.  See:

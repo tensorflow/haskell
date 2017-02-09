@@ -1,0 +1,28 @@
+name:                tensorflow-records-conduit
+version:             0.1.0.0
+synopsis:            Conduit wrappers for TensorFlow.Records.
+homepage:            https://github.com/tensorflow/haskell#readme
+license:             Apache
+author:              TensorFlow authors
+maintainer:          tensorflow-haskell@googlegroups.com
+copyright:           Google Inc.
+category:            Machine Learning
+build-type:          Simple
+cabal-version:       >=1.22
+
+library
+  hs-source-dirs:   src
+  exposed-modules:  TensorFlow.Records.Conduit
+  build-depends: base >= 4.7 && < 5
+               , bytestring
+               , cereal-conduit
+               , conduit
+               , conduit-extra
+               , exceptions
+               , resourcet
+               , tensorflow-records
+  default-language:    Haskell2010
+
+source-repository head
+  type:     git
+  location: https://github.com/tensorflow/haskell
