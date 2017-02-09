@@ -47,7 +47,7 @@ library
                 , temporary
                 , transformers
                 , vector
-  extra-libraries:     tensorflow_c
+  extra-libraries:     tensorflow
   default-language:    Haskell2010
   include-dirs: .
 
