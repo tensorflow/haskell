@@ -18,6 +18,8 @@ RUN \
     echo 'deb http://download.fpcomplete.com/ubuntu trusty main'| tee /etc/apt/sources.list.d/fpco.list && \
     apt-get update && \
     apt-get install -y \
+        # Required by snappy-frames dependency.
+        libsnappy-dev \
         # Avoids /usr/bin/ld: cannot find -ltinfo
         libncurses5-dev \
         # Makes stack viable in the container
