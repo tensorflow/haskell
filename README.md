@@ -91,32 +91,19 @@ There is also a demo application:
 
 The following instructions were verified with Mac OS X El Capitan.
 
-- Install the "protoc" binary somewhere in your PATH. You can get it by
-  downloading the corresponding file for your system from
-  https://github.com/google/protobuf/releases. (The corresponding file will be
-  named something like `protoc-*-.zip`.)
-
 - Install dependencies via [Homebrew](http://brew.sh):
 
-        brew install swig
-        brew install bazel
+        brew install protobuf
+        brew install snappy
 
-- Build the TensorFlow library and install it on your machine:
+- Install the TensorFlow library on your machine:
 
-        cd third_party/tensorflow
-        ./configure  # Choose the defaults when prompted
-        bazel build -c opt tensorflow:libtensorflow_c.so
-        install bazel-bin/tensorflow/libtensorflow_c.so /usr/local/lib/libtensorflow.dylib
+        curl https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-cpu-darwin-x86_64-1.0.0-rc0.tar.gz > libtensorflow.tar.gz
+        tar zxf libtensorflow.tar.gz -C /usr/local
+        mv /usr/local/lib/libtensorflow.so /usr/local/lib/libtensorflow.dylib
         install_name_tool -id libtensorflow.dylib /usr/local/lib/libtensorflow.dylib
-        cd ../..
+        rm libtensorflow.tar.gz
 
 - Run stack:
 
         stack test
-
-Note: you may need to upgrade your version of Clang if you get an error like the following:
-
-    tensorflow/core/ops/ctc_ops.cc:60:7: error: return type 'tensorflow::Status' must match previous return type 'const ::tensorflow::Status' when lambda expression has unspecified explicit return type
-        return Status::OK();
-
-In that case you can just upgrade XCode and then run `gcc --version` to get the new version of the compiler.

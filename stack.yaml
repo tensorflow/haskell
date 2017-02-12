@@ -31,3 +31,5 @@ explicit-setup-deps:
 # For Mac OS X, whose linker doesn't use this path by default:
 extra-lib-dirs:
     - /usr/local/lib
+extra-include-dirs:
+    - /usr/local/include
