@@ -28,7 +28,6 @@ module TensorFlow.Session (
     runSessionWithOptions,
     build,
     buildAnd,
-    buildWithSummary,
     extend,
     addGraphDef,
     run,
@@ -39,6 +38,7 @@ module TensorFlow.Session (
     ) where
 
 import Control.Monad (forever, unless, void)
+import Control.Monad.Catch (MonadThrow, MonadCatch, MonadMask)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.Trans.Class (lift)
 import Control.Monad.Trans.Reader (ReaderT(..), ask, asks)
@@ -77,7 +77,8 @@ data SessionState
 
 newtype Session a
     = Session (ReaderT SessionState (BuildT IO) a)
-    deriving (Functor, Applicative, Monad, MonadIO)
+    deriving (Functor, Applicative, Monad, MonadIO, MonadThrow, MonadCatch,
+              MonadMask)
 
 -- | Run 'Session' actions in a new TensorFlow session.
 runSession :: Session a -> IO a
@@ -127,14 +128,6 @@ runSessionWithOptions options (Session m) =
 -- renderings.
 build :: Build a -> Session a
 build = Session . lift . hoistBuildT (return . runIdentity)
-
--- | Lift a 'Build' action into a 'Session', including any explicit op
--- renderings. Returns the merged summary ops which can be used for
--- logging, see 'TensorFlow.Logging.build' for a convenient wrapper.
-buildWithSummary :: forall a . Build a -> Session (a, [SummaryTensor])
-buildWithSummary b = Session $ lift $ (,) <$> v <*> collectAllSummaries
-  where v :: BuildT IO a
-        v = hoistBuildT (return . runIdentity) b
 
 -- | Add all pending rendered nodes to the TensorFlow graph and runs
 -- any pending initializers.

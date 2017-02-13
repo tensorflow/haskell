@@ -14,8 +14,8 @@
 
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE Rank2Types #-}
 module TensorFlow.Build
     ( -- * Graph node types
       ControlNode(..)
@@ -61,6 +61,7 @@ module TensorFlow.Build
     , collectAllSummaries
     ) where
 
+import Control.Monad.Catch (MonadThrow, MonadCatch, MonadMask)
 import Control.Monad.IO.Class (MonadIO(..))
 import Control.Monad.Trans.Class (MonadTrans(..))
 import Control.Monad.Trans.State.Strict(StateT(..), mapStateT, evalStateT)
@@ -196,7 +197,7 @@ summaries = lens _summaries (\g x -> g { _summaries = x })
 -- Used to manage build state internally as part of the @Session@ monad.
 newtype BuildT m a = BuildT (StateT GraphState m a)
     deriving (Functor, Applicative, Monad, MonadIO, MonadTrans,
-              MonadState GraphState)
+              MonadState GraphState, MonadThrow, MonadCatch, MonadMask)
 
 -- | An action for building nodes in a TensorFlow graph.
 type Build = BuildT Identity

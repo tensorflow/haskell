@@ -16,18 +16,31 @@ library
   exposed-modules: TensorFlow.Gradient
                  , TensorFlow.Ops
                  , TensorFlow.EmbeddingOps
+                 , TensorFlow.Logging
   build-depends:  proto-lens == 0.1.*
                 , base >= 4.7 && < 5
                 , bytestring
-                , fgl
-                , mtl
-                , data-default
-                , lens-family
+                , conduit
                 , containers
+                , data-default
+                , directory
+                , exceptions
+                , fgl
+                , filepath
+                , hostname
+                , lens-family
+                , mtl
+                , resourcet
+                , stm
+                , stm-chans
+                , stm-conduit
                 , tensorflow == 0.1.*
-                , tensorflow-proto == 0.1.*
                 , tensorflow-core-ops == 0.1.*
+                , tensorflow-proto == 0.1.*
+                , tensorflow-records-conduit
                 , text
+                , time
+                , transformers
   default-language:    Haskell2010
 
 Test-Suite RegressionTest
@@ -217,6 +230,29 @@ Test-Suite TypesTest
                , test-framework-hunit
                , test-framework-quickcheck2
                , vector
+
+Test-Suite LoggingTest
+  default-language: Haskell2010
+  type: exitcode-stdio-1.0
+  main-is: LoggingTest.hs
+  hs-source-dirs: tests
+  build-depends: HUnit
+               , base
+               , bytestring
+               , conduit
+               , data-default
+               , directory
+               , filepath
+               , lens-family
+               , proto-lens
+               , resourcet
+               , temporary
+               , tensorflow-ops
+               , tensorflow-proto
+               , tensorflow-records-conduit
+               , test-framework
+               , test-framework-hunit
+               , text
 
 Benchmark FeedFetchBench
   default-language: Haskell2010
