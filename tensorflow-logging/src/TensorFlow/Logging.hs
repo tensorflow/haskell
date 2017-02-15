@@ -89,18 +89,19 @@ withEventWriter ::
     -- ^ logdir. Directory where event file will be written.
     -> (EventWriter -> m a)
     -> m a
-withEventWriter filePrefix =
-    bracket (liftIO (newEventWriter filePrefix)) (liftIO . closeEventWriter)
+withEventWriter logdir =
+    bracket (liftIO (newEventWriter logdir)) (liftIO . closeEventWriter)
 
 newEventWriter :: FilePath -> IO EventWriter
 newEventWriter logdir = do
     createDirectoryIfMissing True logdir
-    -- Create unique filename from prefix.
     t <- doubleWallTime
     hostname <- getHostName
     let filename = printf (logdir </> "events.out.tfevents.%010d.%s")
                           (truncate t :: Integer) hostname
     -- Asynchronously consume events from a queue.
+    -- We use a bounded queue to ensure the producer doesn't get too far ahead
+    -- of the consumer. The buffer size was picked arbitrarily.
     q <- newTBMQueueIO 1024
     -- Use an MVar to signal that the worker thread has completed.
     done <- newEmptyMVar

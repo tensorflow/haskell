@@ -50,9 +50,10 @@ testEventWriter = testCase "EventWriter" $
         withEventWriter dir $ \eventWriter ->
             mapM_ (logEvent eventWriter) expected
         files <- listDirectory dir
-        assertBool "One file exists after" (length files == 1)
+        assertEqual "One file exists after" 1 (length files)
         records <- runResourceT $ Conduit.runConduit $
             sourceTFRecords (dir </> head files) =$= Conduit.consume
+        assertBool "File is not empty" (not (null records))
         let (header:body) = decodeMessageOrDie . BL.toStrict <$> records
         assertEqual "Header has expected version"
                     (T.pack "brain.Event:2") (header ^. fileVersion)
