@@ -37,6 +37,7 @@ library
                 , bytestring
                 , containers
                 , data-default
+                , exceptions
                 , fgl
                 , lens-family
                 , mainland-pretty

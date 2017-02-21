@@ -33,7 +33,6 @@ module TensorFlow.Core
       -- ** Building graphs
     , build
     , buildAnd
-    , buildWithSummary
       -- ** Running graphs
     , Fetchable
     , Nodes

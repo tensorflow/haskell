@@ -13,6 +13,7 @@ cabal-version:       >=1.22
 extra-source-files:  ../third_party/tensorflow/tensorflow/core/framework/*.proto
                    , ../third_party/tensorflow/tensorflow/core/protobuf/config.proto
                    , ../third_party/tensorflow/tensorflow/core/protobuf/debug.proto
+                   , ../third_party/tensorflow/tensorflow/core/util/event.proto
 
 library
   exposed-modules:     Proto.Tensorflow.Core.Framework.AttrValue
@@ -20,10 +21,12 @@ library
                      , Proto.Tensorflow.Core.Framework.NodeDef
                      , Proto.Tensorflow.Core.Framework.OpDef
                      , Proto.Tensorflow.Core.Framework.ResourceHandle
+                     , Proto.Tensorflow.Core.Framework.Summary
                      , Proto.Tensorflow.Core.Framework.Tensor
                      , Proto.Tensorflow.Core.Framework.TensorShape
                      , Proto.Tensorflow.Core.Framework.Types
                      , Proto.Tensorflow.Core.Protobuf.Config
+                     , Proto.Tensorflow.Core.Util.Event
   other-modules:       Proto.Tensorflow.Core.Framework.AllocationDescription
                      , Proto.Tensorflow.Core.Framework.CostGraph
                      , Proto.Tensorflow.Core.Framework.Function

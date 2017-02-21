@@ -1,0 +1,66 @@
+name:                tensorflow-logging
+version:             0.1.0.0
+synopsis:            TensorBoard related functionality.
+description:         Please see README.md
+homepage:            https://github.com/tensorflow/haskell#readme
+license:             Apache
+author:              TensorFlow authors
+maintainer:          tensorflow-haskell@googlegroups.com
+copyright:           Google Inc.
+category:            Machine Learning
+build-type:          Simple
+cabal-version:       >=1.22
+
+library
+  hs-source-dirs:   src
+  exposed-modules: TensorFlow.Logging
+  build-depends:  base >= 4.7 && < 5
+                , bytestring
+                , conduit
+                , data-default
+                , directory
+                , exceptions
+                , filepath
+                , hostname
+                , lens-family
+                , proto-lens == 0.1.*
+                , resourcet
+                , stm
+                , stm-chans
+                , stm-conduit
+                , tensorflow == 0.1.*
+                , tensorflow-core-ops == 0.1.*
+                , tensorflow-ops == 0.1.*
+                , tensorflow-proto == 0.1.*
+                , tensorflow-records-conduit
+                , text
+                , time
+                , transformers
+  default-language:    Haskell2010
+
+Test-Suite LoggingTest
+  default-language: Haskell2010
+  type: exitcode-stdio-1.0
+  main-is: LoggingTest.hs
+  hs-source-dirs: tests
+  build-depends: HUnit
+               , base
+               , bytestring
+               , conduit
+               , data-default
+               , directory
+               , filepath
+               , lens-family
+               , proto-lens
+               , resourcet
+               , temporary
+               , tensorflow-logging
+               , tensorflow-proto
+               , tensorflow-records-conduit
+               , test-framework
+               , test-framework-hunit
+               , text
+
+source-repository head
+  type:     git
+  location: https://github.com/tensorflow/haskell
