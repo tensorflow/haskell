@@ -86,7 +86,7 @@ recordResult = do
     put $! ResultState (i+1) ns
     return $! output i o
 
-instance OpResult (ResourceHandle a) where
+instance OpResult ResourceHandle where
     toResult = ResourceHandle <$> recordResult
 
 instance OpResult (Tensor Value a) where
@@ -150,7 +150,7 @@ buildListOp counts o = buildOp' counts o []
 instance BuildOp ControlNode where
     buildOp' _ o ts = ControlNode $ Unrendered $ addReversedInputs o ts
 
-instance BuildOp (ResourceHandle a) where
+instance BuildOp ResourceHandle where
     buildOp' = pureResult
 
 instance BuildOp (Tensor Value a) where
@@ -189,7 +189,7 @@ instance ( OpResult t1
 instance OpResult a => BuildOp (Build a) where
     buildOp' = buildResult
 
-instance BuildOp f => BuildOp (ResourceHandle a -> f) where
+instance BuildOp f => BuildOp (ResourceHandle -> f) where
     buildOp' rf o ts (ResourceHandle t) = buildOp' rf o (t : ts)
 
 instance BuildOp f => BuildOp (Tensor v a -> f) where
