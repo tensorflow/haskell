@@ -86,7 +86,7 @@ data EventWriter = EventWriter (TBMQueue Event) (MVar ())
 withEventWriter ::
     (MonadIO m, MonadMask m)
     => FilePath
-    -- ^ logdir. Directory where event file will be written.
+    -- ^ logdir. Local filesystem directory where event file will be written.
     -> (EventWriter -> m a)
     -> m a
 withEventWriter logdir =
