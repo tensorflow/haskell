@@ -98,7 +98,7 @@ The following instructions were verified with Mac OS X El Capitan.
 
 - Install the TensorFlow library on your machine:
 
-        curl https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-cpu-darwin-x86_64-1.0.0-rc0.tar.gz > libtensorflow.tar.gz
+        curl https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-cpu-darwin-x86_64-1.0.0.tar.gz > libtensorflow.tar.gz
         tar zxf libtensorflow.tar.gz -C /usr/local
         mv /usr/local/lib/libtensorflow.so /usr/local/lib/libtensorflow.dylib
         install_name_tool -id libtensorflow.dylib /usr/local/lib/libtensorflow.dylib

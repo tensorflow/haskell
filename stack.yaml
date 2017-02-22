@@ -18,8 +18,9 @@ packages:
 
 extra-deps:
 # proto-lens is not yet in Stackage.
-- proto-lens-0.1.0.4
-- proto-lens-protoc-0.1.0.4
+- proto-lens-0.1.0.5
+- proto-lens-protoc-0.1.0.5
+- proto-lens-descriptors-0.1.0.5
 - snappy-framing-0.1.1
 - snappy-0.2.0.2
 
