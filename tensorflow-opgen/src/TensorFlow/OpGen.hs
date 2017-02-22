@@ -32,7 +32,7 @@ where:
  (for example: 'TensorType' or 'OneOf').
 
 * @{input tensors}@ is of the form @T_1 -> ... -> T_N@, where each @T@ is of
-the form @Tensor Ref a@, @Tensor v a@ or @ResourceHandle a@ (or a list of one
+the form @Tensor Ref a@, @Tensor v a@ or @ResourceHandle@ (or a list of one
 of those types), and @a@ is either a concrete type or a (constrained) type
 variable.
 
@@ -271,7 +271,7 @@ typeSig pOp = constraints
         | null (inferredTypeAttrs pOp) = empty
         | otherwise = "forall" <+> sep typeParams <+> "." <+> classConstraints <+> "=>"
     typeParams = [strictText v | k <- parsedInputs pOp ++ parsedOutputs pOp,
-                  ArgTensorEither v <- [parsedArgKind k]]
+                  Just (ArgTensorEither v) <- [argKind $ parsedArgCase k]]
                 ++ [renderHaskellName $ attrName n | n <- inferredTypeAttrs pOp]
     classConstraints = tuple $ concatMap tensorArgConstraint
                     $ inferredTypeAttrs pOp
@@ -299,19 +299,19 @@ typeSig pOp = constraints
         | otherwise = o
         
 -- | Render an op input or output.
--- For example: "Tensor Ref Int64", "Tensor v t", "ResourceHandle dtype"
+-- For example: "Tensor Ref Int64", "Tensor v t", "ResourceHandle"
 tensorArg :: ParsedArg -> Doc
 tensorArg p = case parsedArgCase p of
-    SimpleArg { argType = t } -> tensorType t
-    ListArg { argType = t } -> brackets $ tensorType t
+    ResourceArg -> "ResourceHandle"
+    SimpleArg { argType = t, argCaseKind = k } -> tensorType t k
+    ListArg { argType = t, argCaseKind = k } -> brackets $ tensorType t k
     MixedListArg {} -> "{{{tensorArg: can't handle heterogeneous lists}}}"
   where
-    tensorType t = let
-        v = case parsedArgKind p of
+    tensorType t k = let
+        v = case k of
                 ArgTensorRef -> "Tensor Ref"
                 ArgTensorValue -> "Tensor Value"
                 ArgTensorEither v' -> "Tensor" <+> strictText v'
-                ArgResource -> "ResourceHandle"
         a = case t of
                 ArgTypeFixed dt -> strictText $ dtTypeToHaskell dt
                 ArgTypeAttr n -> renderHaskellName n
