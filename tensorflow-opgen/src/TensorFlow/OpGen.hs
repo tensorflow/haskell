@@ -147,6 +147,7 @@ imports = stack [
       "import Data.ByteString (ByteString)"
     , "import Data.Complex (Complex)"
     , "import Data.Int (Int8, Int16, Int32, Int64)"
+    , "import Data.Proxy (Proxy(Proxy))"
     , "import Data.Word (Word8, Word16)"
     , "import Lens.Family2 ((.~), (&))"
     , "import TensorFlow.Build"
@@ -229,9 +230,8 @@ functionBody pOp = buildFunction <+> parens (hang 0 (stack buildOpParts))
                             <- parsedOutputs pOp]
     buildOpParts =
         "opDef" <+> renderQuotedTFName (parsedOpName pOp) :
-        -- Renders tensor arguments.
-        [ "& opAttr" <+> renderQuotedTFName n <+>
-          ".~ tensorType (undefined ::" <+> renderHaskellName n <> ")"
+        -- Renders type parameter arguments.
+        [ "& opAttr" <+> renderQuotedTFName n <+> ".~" <+> inferredTypeExpr a
         | a <- inferredTypeAttrs pOp, let n = attrName a
         ] ++
         -- Renders mandatory attributes as function parameters.
@@ -244,6 +244,12 @@ functionBody pOp = buildFunction <+> parens (hang 0 (stack buildOpParts))
         ]
 
     tensorArgs = renderHaskellName . parsedArgName <$> parsedInputs pOp
+    inferredTypeExpr a
+        | typeParamIsList $ attrInfo a
+            = "fromTensorTypes (Proxy :: Proxy" <+> renderHaskellName (attrName a)
+                    <> ")"
+        | otherwise = "tensorType (undefined ::" <+> renderHaskellName (attrName a)
+                            <> ")"
 
 -- | Write a comment with the inputs/outputs/attributes in proto format, for
 -- debugging.
@@ -273,7 +279,7 @@ typeSig pOp = constraints
     typeParams = [strictText v | k <- parsedInputs pOp ++ parsedOutputs pOp,
                   Just (ArgTensorEither v) <- [argKind $ parsedArgCase k]]
                 ++ [renderHaskellName $ attrName n | n <- inferredTypeAttrs pOp]
-    classConstraints = tuple $ concatMap tensorArgConstraint
+    classConstraints = tuple $ map tensorArgConstraint
                     $ inferredTypeAttrs pOp
     signatureFold = folddoc (\x y -> x </> "->" <+> y)
     attrInput a = renderAttrType (attrInfo a) <+> hang 0 ("-- ^" <+> attrComment a)
@@ -305,7 +311,7 @@ tensorArg p = case parsedArgCase p of
     ResourceArg -> "ResourceHandle"
     SimpleArg { argType = t, argCaseKind = k } -> tensorType t k
     ListArg { argType = t, argCaseKind = k } -> brackets $ tensorType t k
-    MixedListArg {} -> "{{{tensorArg: can't handle heterogeneous lists}}}"
+    MixedListArg {argTypeAttr = t} -> "TensorList Value" <+> renderHaskellName t
   where
     tensorType t k = let
         v = case k of
@@ -347,18 +353,20 @@ resultComment os = stack $ flatten commentSummary : map commentDetails os
               ]
 
 -- | Constraints for a given type parameter.
--- E.g.: ["TensorType t"] or ["TensorType t", "OneOf [Int64, Float] t"]
-tensorArgConstraint :: Attr [DataType] -> [Doc]
-tensorArgConstraint a
-    = ("TensorType" <+> n
-        : if null typeList
-            then []
-            else ["OneOf" <+> "'" <> brackets (commasep typeList) <+> n])
+-- E.g.: "TensorType t" or "OneOf [Int64, Float] t"
+-- or "TensorTypes ts" or "OneOfs [..] ts".
+tensorArgConstraint :: Attr TypeParam -> Doc
+tensorArgConstraint a = case attrInfo a of
+    TypeParam False Nothing -> "TensorType" <+> n
+    TypeParam False (Just as) -> "OneOf" <+> typeList as <+> n
+    TypeParam True Nothing -> "TensorTypes" <+> n
+    TypeParam True (Just as) -> "OneOfs" <+> typeList as <+> n
   where
     n = renderHaskellName $ attrName a
-    typeList = map strictText $
-                    Set.toList $ Set.fromList $
-                    map dtTypeToHaskell $ attrInfo a
+    -- Produces a type-level list, e.g.: '[Int32,Int64,Float]
+    typeList = ("'" <>) . brackets . commasep . map strictText .
+                    Set.toList . Set.fromList .
+                    map dtTypeToHaskell
 
 -- NOTE: The cases of this function should be kept in sync with
 -- TensorFlow.Types.AllTensorTypes.

@@ -12,20 +12,31 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE Rank2Types #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module TensorFlow.Tensor where
 
 import Data.String (IsString(..))
 import qualified Data.Text as Text
-import Lens.Family2 (Lens', Traversal')
+import Lens.Family2 (Lens', Traversal', (^.))
 import Lens.Family2.Unchecked (lens)
 
 import TensorFlow.Output (Output, outputOp, opUnrendered, opAttr)
-import TensorFlow.Types (TensorData(..), Attribute)
+import TensorFlow.Types
+    ( TensorData(..)
+    , Attribute
+    , ListOf(..)
+    )
 import qualified TensorFlow.Internal.FFI as FFI
 
 -- | A named output of a TensorFlow operation.
@@ -83,3 +94,9 @@ feed (Tensor _ o) (TensorData td) = Feed o td
 -- TODO(judahjacobson): add more safety checks here.
 tensorFromName :: TensorKind v -> Text.Text -> Tensor v a
 tensorFromName v = Tensor v . fromString . Text.unpack
+
+type TensorList v = ListOf (Tensor v)
+
+tensorListOutputs :: TensorList v as -> [Output]
+tensorListOutputs Nil = []
+tensorListOutputs (t :| ts) = (t ^. tensorOutput) : tensorListOutputs ts

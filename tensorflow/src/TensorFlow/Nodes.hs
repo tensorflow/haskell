@@ -12,15 +12,18 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeOperators #-}
 module TensorFlow.Nodes where
 
 import Control.Applicative (liftA2, liftA3)
+import Data.Functor.Identity (Identity(..))
 import Data.Map.Strict (Map)
 import Data.Monoid ((<>))
 import Data.Set (Set)
@@ -95,6 +98,21 @@ instance Nodes ControlNode where
 -- expression would be ambiguous without explicitly specifying the return type.
 instance a ~ () => Fetchable ControlNode a where
     getFetch _ = return $ pure ()
+
+-- hm, annoying but doable.
+-- unfortunately, pulling out requires a "Identity" everywhere...bleh
+instance Nodes (ListOf f '[]) where
+    getNodes _ = return Set.empty
+
+instance (Nodes (f a), Nodes (ListOf f as)) => Nodes (ListOf f (a ': as)) where
+    getNodes (x :| xs) = liftA2 Set.union (getNodes x) (getNodes xs)
+
+instance l ~ List '[] => Fetchable (ListOf f '[]) l where
+    getFetch _ = return $ pure Nil
+
+instance (Fetchable (f t) a, Fetchable (ListOf f ts) (List as), i ~ Identity)
+    => Fetchable (ListOf f (t ': ts)) (ListOf i (a ': as)) where
+    getFetch (x :| xs) = liftA2 (\y ys -> Identity y :| ys) <$> getFetch x <*> getFetch xs
 
 instance Nodes (Tensor v a) where
     getNodes t = Set.singleton <$> getOrAddOp (t ^. tensorOutput . outputOp)

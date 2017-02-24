@@ -16,6 +16,7 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE GADTs #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings #-}
@@ -36,23 +37,34 @@ module TensorFlow.Types
     , Shape(..)
     , protoShape
     , Attribute(..)
+    , DataType(..)
+    -- * Lists
+    , ListOf(..)
+    , List
+    , TensorTypeProxy(..)
+    , TensorTypes(..)
+    , TensorTypeList
+    , fromTensorTypeList
+    , fromTensorTypes
     -- * Type constraints
     , OneOf
     , type (/=)
+    , OneOfs
     -- ** Implementation of constraints
     , TypeError
     , ExcludedCase
-    , TensorTypes
     , NoneOf
     , type (\\)
     , Delete
     , AllTensorTypes
     ) where
 
+import Data.Functor.Identity (Identity)
 import Data.Complex (Complex)
 import Data.Default (def)
 import Data.Int (Int8, Int16, Int32, Int64)
 import Data.Monoid ((<>))
+import Data.Proxy (Proxy(..))
 import Data.String (IsString)
 import Data.Word (Word8, Word16, Word64)
 import Foreign.Storable (Storable)
@@ -376,6 +388,33 @@ instance Attribute [DataType] where
 instance Attribute [Int64] where
     attrLens = list . i
 
+-- | A heterogeneous list type.
+data ListOf f as where
+    Nil :: ListOf f '[]
+    (:|) :: f a -> ListOf f as -> ListOf f (a ': as)
+
+infixr 5 :|
+
+type family All f as :: Constraint where
+    All f '[] = ()
+    All f (a ': as) = (f a, All f as)
+
+type family Map f as where
+    Map f '[] = '[]
+    Map f (a ': as) = f a ': Map f as
+
+instance All Eq (Map f as) => Eq (ListOf f as) where
+    Nil == Nil = True
+    (x :| xs) == (y :| ys) = x == y && xs == ys
+
+instance All Show (Map f as) => Show (ListOf f as) where
+    showsPrec _ Nil = showString "Nil"
+    showsPrec d (x :| xs) = showParen (d > 10)
+                                $ showsPrec 6 x . showString " :| "
+                                    . showsPrec 6 xs
+
+type List = ListOf Identity
+
 -- | A 'Constraint' specifying the possible choices of a 'TensorType'.
 --
 -- We implement a 'Constraint' like @OneOf '[Double, Float] a@ by turning the
@@ -393,13 +432,38 @@ instance Attribute [Int64] where
 --
 -- using an enumeration of all the possible 'TensorType's.
 type OneOf ts a
+    -- Assert `TensorTypes ts` to make error messages a little better.
     = (TensorType a, TensorTypes ts, NoneOf (AllTensorTypes \\ ts) a)
 
--- | A check that the input is a list of 'TensorType's.
--- Helps improve error messages when using 'OneOf'.
+type OneOfs ts as = (TensorTypes as, TensorTypes ts,
+                        NoneOfs (AllTensorTypes \\ ts) as)
+
+type family NoneOfs ts as :: Constraint where
+    NoneOfs ts '[] = ()
+    NoneOfs ts (a ': as) = (NoneOf ts a, NoneOfs ts as)
+
+data TensorTypeProxy a where
+    TensorTypeProxy :: TensorType a => TensorTypeProxy a
+
+type TensorTypeList = ListOf TensorTypeProxy
+
+fromTensorTypeList :: TensorTypeList ts -> [DataType]
+fromTensorTypeList Nil = []
+fromTensorTypeList ((TensorTypeProxy :: TensorTypeProxy t) :| ts)
+    = tensorType (undefined :: t) : fromTensorTypeList ts
+
+fromTensorTypes :: forall as . TensorTypes as => Proxy as -> [DataType]
+fromTensorTypes _ = fromTensorTypeList (tensorTypes :: TensorTypeList as)
+
 class TensorTypes (ts :: [*]) where
-instance TensorTypes '[]
-instance (TensorType t, TensorTypes ts) => TensorTypes (t ': ts)
+    tensorTypes :: TensorTypeList ts
+
+instance TensorTypes '[] where
+    tensorTypes = Nil
+
+-- | A constraint that the input is a list of 'TensorTypes'.
+instance (TensorType t, TensorTypes ts) => TensorTypes (t ': ts) where
+    tensorTypes = TensorTypeProxy :| tensorTypes
 
 -- | A constraint checking that two types are different.
 type family a /= b :: Constraint where
