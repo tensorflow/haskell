@@ -105,7 +105,7 @@ data AttrBaseType = AttrBytes | AttrInt64 | AttrFloat | AttrBool
 
 data TypeParam = TypeParam
     { typeParamIsList :: Bool
-    , typeParamRestrictions :: Maybe [DataType]
+    , typeParamRestrictions :: Maybe (NonEmpty DataType)
         -- ^ The list of allowed types (see: TensorFlow.Types.OneOf).
         -- If 'Nothing', then any type is acceptable.
     }
@@ -273,9 +273,7 @@ getInferredTypeAttr argTypeParams a
     | a ^. type' == "list(type)" = Just $ TypeParam True allowed
     | otherwise = Nothing
   where
-    allowed = case a ^. allowedValues . list . type' of
-                [] -> Nothing
-                as -> Just as
+    allowed = nonEmpty (a ^. allowedValues . list . type')
 
 getArgTypeParam :: ParsedArgCase -> Maybe Name
 getArgTypeParam SimpleArg { argType = ArgTypeAttr n} = Just n

@@ -211,10 +211,13 @@ whereClause :: [Attr (NonEmpty Name)] -> [Doc]
 whereClause [] = []
 whereClause as = [indent 2 $ "where" </> indent 2 (stack $ map defineLengthAttr as)]
   where
-    defineLengthAttr a = renderHaskellName (attrName a) <+> "="
+    defineLengthAttr a = renderHaskellAttrName a <+> "="
                             <+> "fromIntegral (length"
                             <+> renderHaskellName (NE.head $ attrInfo a)
                             <> ") :: Int64"
+
+renderHaskellAttrName :: Attr a -> Doc
+renderHaskellAttrName = renderHaskellName . attrName
 
 functionBody :: ParsedOp -> Doc
 functionBody pOp = buildFunction <+> parens (hang 0 (stack buildOpParts))
@@ -246,9 +249,9 @@ functionBody pOp = buildFunction <+> parens (hang 0 (stack buildOpParts))
     tensorArgs = renderHaskellName . parsedArgName <$> parsedInputs pOp
     inferredTypeExpr a
         | typeParamIsList $ attrInfo a
-            = "fromTensorTypes (Proxy :: Proxy" <+> renderHaskellName (attrName a)
+            = "fromTensorTypes (Proxy :: Proxy" <+> renderHaskellAttrName a
                     <> ")"
-        | otherwise = "tensorType (undefined ::" <+> renderHaskellName (attrName a)
+        | otherwise = "tensorType (undefined ::" <+> renderHaskellAttrName a
                             <> ")"
 
 -- | Write a comment with the inputs/outputs/attributes in proto format, for
@@ -278,7 +281,7 @@ typeSig pOp = constraints
         | otherwise = "forall" <+> sep typeParams <+> "." <+> classConstraints <+> "=>"
     typeParams = [strictText v | k <- parsedInputs pOp ++ parsedOutputs pOp,
                   Just (ArgTensorEither v) <- [argKind $ parsedArgCase k]]
-                ++ [renderHaskellName $ attrName n | n <- inferredTypeAttrs pOp]
+                ++ [renderHaskellAttrName n | n <- inferredTypeAttrs pOp]
     classConstraints = tuple $ map tensorArgConstraint
                     $ inferredTypeAttrs pOp
     signatureFold = folddoc (\x y -> x </> "->" <+> y)
@@ -362,11 +365,11 @@ tensorArgConstraint a = case attrInfo a of
     TypeParam True Nothing -> "TensorTypes" <+> n
     TypeParam True (Just as) -> "OneOfs" <+> typeList as <+> n
   where
-    n = renderHaskellName $ attrName a
+    n = renderHaskellAttrName a
     -- Produces a type-level list, e.g.: '[Int32,Int64,Float]
     typeList = ("'" <>) . brackets . commasep . map strictText .
                     Set.toList . Set.fromList .
-                    map dtTypeToHaskell
+                    map dtTypeToHaskell . toList
 
 -- NOTE: The cases of this function should be kept in sync with
 -- TensorFlow.Types.AllTensorTypes.

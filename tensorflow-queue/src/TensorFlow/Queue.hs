@@ -49,7 +49,7 @@ enqueue q =
 dequeue :: forall as . TensorTypes as
            => Queue as
            -> Build (TensorList Ref as)
-           -- ^ Dequeued tensors. They are paired in a sense
+           -- ^ Dequeued tensors. They are coupled in a sense
            -- that values appear together, even if they are
            -- not consumed together.
 dequeue q =

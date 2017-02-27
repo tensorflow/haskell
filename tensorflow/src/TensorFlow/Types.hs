@@ -13,6 +13,7 @@
 -- limitations under the License.
 
 {-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
@@ -406,6 +407,11 @@ type family Map f as where
 instance All Eq (Map f as) => Eq (ListOf f as) where
     Nil == Nil = True
     (x :| xs) == (y :| ys) = x == y && xs == ys
+    -- Newer versions of GHC use the GADT to tell that the previous cases are
+    -- exhaustive.
+#if _GLASGOW_HASKELL__ < 800
+    _ == _ = False
+#endif
 
 instance All Show (Map f as) => Show (ListOf f as) where
     showsPrec _ Nil = showString "Nil"
