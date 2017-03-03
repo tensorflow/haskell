@@ -30,7 +30,6 @@ import Control.Monad (replicateM)
 import Control.Monad.Reader (ReaderT, runReaderT, ask)
 import Control.Monad.State.Strict (State, runState, get, put)
 import Data.Int (Int64)
-import Data.Proxy (Proxy(..))
 import Lens.Family2 ((&), (<>~), (^.))
 
 import TensorFlow.Build

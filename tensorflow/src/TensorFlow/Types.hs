@@ -42,6 +42,7 @@ module TensorFlow.Types
     -- * Lists
     , ListOf(..)
     , List
+    , (|:|)
     , TensorTypeProxy(..)
     , TensorTypes(..)
     , TensorTypeList
@@ -60,7 +61,7 @@ module TensorFlow.Types
     , AllTensorTypes
     ) where
 
-import Data.Functor.Identity (Identity)
+import Data.Functor.Identity (Identity(..))
 import Data.Complex (Complex)
 import Data.Default (def)
 import Data.Int (Int8, Int16, Int32, Int64)
@@ -420,6 +421,12 @@ instance All Show (Map f as) => Show (ListOf f as) where
                                     . showsPrec 6 xs
 
 type List = ListOf Identity
+
+-- | Equivalent of ':|' for lists.
+(|:|) :: a -> List as -> List (a ': as)
+(|:|) = (:|) . Identity
+
+infixr 5 |:|
 
 -- | A 'Constraint' specifying the possible choices of a 'TensorType'.
 --
