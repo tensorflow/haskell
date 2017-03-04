@@ -28,7 +28,7 @@ import TensorFlow.Build (ControlNode, Build, addInitializer, opAttr, opDef)
 import TensorFlow.BuildOp (buildOp)
 import TensorFlow.ControlFlow (group)
 import TensorFlow.Tensor (Ref, Tensor, TensorList)
-import TensorFlow.Types (TensorType, tensorType, TensorTypes, fromTensorTypes)
+import TensorFlow.Types (TensorTypes, fromTensorTypes)
 
 -- | A queue carrying tuples.
 data Queue (as :: [*]) = Queue { handle :: Handle }

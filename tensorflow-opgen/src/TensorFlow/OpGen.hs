@@ -314,17 +314,18 @@ tensorArg p = case parsedArgCase p of
     ResourceArg -> "ResourceHandle"
     SimpleArg { argType = t, argCaseKind = k } -> tensorType t k
     ListArg { argType = t, argCaseKind = k } -> brackets $ tensorType t k
-    MixedListArg {argTypeAttr = t} -> "TensorList Value" <+> renderHaskellName t
+    MixedListArg {argTypeAttr = t, argCaseKind = k}
+        -> "TensorList" <+> kind k <+> renderHaskellName t
   where
+    kind k = case k of
+                ArgTensorRef -> "Ref"
+                ArgTensorValue -> "Value"
+                ArgTensorEither v' -> strictText v'
     tensorType t k = let
-        v = case k of
-                ArgTensorRef -> "Tensor Ref"
-                ArgTensorValue -> "Tensor Value"
-                ArgTensorEither v' -> "Tensor" <+> strictText v'
         a = case t of
                 ArgTypeFixed dt -> strictText $ dtTypeToHaskell dt
                 ArgTypeAttr n -> renderHaskellName n
-        in v <+> a
+        in "Tensor" <+> kind k <+> a
 
 attrComment :: Attr a -> Doc
 attrComment a = argComment' (attrName a) (attrDescription a)
