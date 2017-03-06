@@ -23,7 +23,7 @@
 module TensorFlow.Nodes where
 
 import Control.Applicative (liftA2, liftA3)
-import Data.Functor.Identity (Identity(..))
+import Data.Functor.Identity (Identity)
 import Data.Map.Strict (Map)
 import Data.Monoid ((<>))
 import Data.Set (Set)
@@ -99,8 +99,6 @@ instance Nodes ControlNode where
 instance a ~ () => Fetchable ControlNode a where
     getFetch _ = return $ pure ()
 
--- hm, annoying but doable.
--- unfortunately, pulling out requires a "Identity" everywhere...bleh
 instance Nodes (ListOf f '[]) where
     getNodes _ = return Set.empty
 
@@ -112,7 +110,7 @@ instance l ~ List '[] => Fetchable (ListOf f '[]) l where
 
 instance (Fetchable (f t) a, Fetchable (ListOf f ts) (List as), i ~ Identity)
     => Fetchable (ListOf f (t ': ts)) (ListOf i (a ': as)) where
-    getFetch (x :| xs) = liftA2 (\y ys -> Identity y :| ys) <$> getFetch x <*> getFetch xs
+    getFetch (x :| xs) = liftA2 (\y ys -> y |:| ys) <$> getFetch x <*> getFetch xs
 
 instance Nodes (Tensor v a) where
     getNodes t = Set.singleton <$> getOrAddOp (t ^. tensorOutput . outputOp)
