@@ -105,6 +105,10 @@ script in the `tools/` directory.
         mv /usr/local/lib/libtensorflow.so /usr/local/lib/libtensorflow.dylib
         install_name_tool -id libtensorflow.dylib /usr/local/lib/libtensorflow.dylib
         rm libtensorflow.tar.gz
+        
+- Install submodule dependencies:
+
+        git submodule update --init --recursive
 
 - Run stack:
 

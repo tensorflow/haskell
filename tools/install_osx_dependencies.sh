@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -eu
+
 echo "Installing OSX System Dependencies"
 echo "=================================="
 
@@ -28,13 +30,13 @@ curl https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-cpu-d
 
 echo "Extracting and copying libtensorflow..."
 tar zxf libtensorflow.tar.gz -C /usr/local
+rm libtensorflow.tar.gz
 mv /usr/local/lib/libtensorflow.so /usr/local/lib/libtensorflow.dylib
 
-echo -n "sudo password (required by install_name_tool) : "
-read -s spss
-echo ""
-echo $spss | sudo -S install_name_tool -id libtensorflow.dylib /usr/local/lib/libtensorflow.dylib
-rm libtensorflow.tar.gz
+sudo install_name_tool -id libtensorflow.dylib /usr/local/lib/libtensorflow.dylib
+
+echo "Installing submodule dependencies"
+git submodule update --init --recursive
 
 echo ""
 echo "Finished"
