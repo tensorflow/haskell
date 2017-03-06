@@ -89,7 +89,9 @@ There is also a demo application:
 
 ## Build on Mac OS X
 
-The following instructions were verified with Mac OS X El Capitan.
+The following instructions were verified with Mac OS X El Capitan. Alternatively
+run the [install_osx_dependencies.sh](./tools/install_osx_dependencies.sh)
+script in the `tools/` directory.
 
 - Install dependencies via [Homebrew](http://brew.sh):
 
