@@ -96,4 +96,4 @@ library on your machine under `/usr/local`.
 
 After running the script to install system dependencies, build the project with stack: 
 
-        stack test
+    stack test
