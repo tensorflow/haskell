@@ -93,3 +93,7 @@ Run the [install_osx_dependencies.sh](./tools/install_osx_dependencies.sh)
 script in the `tools/` directory. The script installs dependencies
 via [Homebrew](http://brew.sh) and then downloads and installs the TensorFlow
 library on your machine under `/usr/local`.
+
+After running the script to install system dependencies, build the project with stack: 
+
+        stack test
