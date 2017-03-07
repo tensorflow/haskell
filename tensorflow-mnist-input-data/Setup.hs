@@ -33,6 +33,8 @@ import System.FilePath ((</>))
 import System.Directory (doesFileExist)
 import qualified Crypto.Hash as Hash
 import qualified Data.ByteString.Lazy as B
+import qualified Network.Browser as Browser
+import qualified Network.HTTP.Base as Base
 import qualified Network.HTTP as HTTP
 import qualified Network.URI as URI
 
@@ -65,12 +67,15 @@ httpDownload url outFile = do
     let uri = fromMaybe
               (error ("Can't be: invalid URI " ++ url))
               (URI.parseURI url)
-    result <- HTTP.simpleHTTP (HTTP.defaultGETRequest_ uri)
-    HTTP.getResponseCode result >>= \case
-        (2, 0, 0) -> HTTP.getResponseBody result >>= B.writeFile outFile
+    (_, result) <- Browser.browse $ do
+        Browser.setAllowRedirects True
+        Browser.setMaxErrorRetries $ Just 10
+        Browser.request $ Browser.defaultGETRequest_ uri
+    case (HTTP.rspCode result) of
+        (2, 0, 0) -> B.writeFile outFile (HTTP.rspBody result)
         s -> error ( "Failed to download " ++ url ++ " error code " ++ show s
                      ++ helpfulMessage
-                    )
+                   )
 
 verify :: FilePath -> String -> IO ()
 verify filePath hash = do
@@ -83,24 +88,28 @@ verify filePath hash = do
                  ++ helpfulMessage
               )
 
+-- Primary Download Location:
 urlPrefix = "http://yann.lecun.com/exdb/mnist/"
+
+-- Backup Location:
+-- urlPrefix = "http://web.archive.org/web/20170303140123/http://yann.lecun.com/exdb/mnist/"
 
 -- | File names relative to 'urlPrefix' and their sha256.
 fileInfos = [
-    ( "train-images-idx3-ubyte.gz"
-    , "440fcabf73cc546fa21475e81ea370265605f56be210a4024d2ca8f203523609"
-    )
-    ,
     ( "train-labels-idx1-ubyte.gz"
     , "3552534a0a558bbed6aed32b30c495cca23d567ec52cac8be1a0730e8010255c"
     )
     ,
-    ( "t10k-images-idx3-ubyte.gz"
-    , "8d422c7b0a1c1c79245a5bcf07fe86e33eeafee792b84584aec276f5a2dbc4e6"
+    ( "train-images-idx3-ubyte.gz"
+    , "440fcabf73cc546fa21475e81ea370265605f56be210a4024d2ca8f203523609"
     )
     ,
     ( "t10k-labels-idx1-ubyte.gz"
     , "f7ae60f92e00ec6debd23a6088c31dbd2371eca3ffa0defaefb259924204aec6"
+    )
+    ,
+    ( "t10k-images-idx3-ubyte.gz"
+    , "8d422c7b0a1c1c79245a5bcf07fe86e33eeafee792b84584aec276f5a2dbc4e6"
     )
     ]
 
