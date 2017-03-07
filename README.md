@@ -89,27 +89,7 @@ There is also a demo application:
 
 ## Build on Mac OS X
 
-The following instructions were verified with Mac OS X El Capitan. Alternatively
-run the [install_osx_dependencies.sh](./tools/install_osx_dependencies.sh)
-script in the `tools/` directory.
-
-- Install dependencies via [Homebrew](http://brew.sh):
-
-        brew install protobuf
-        brew install snappy
-
-- Install the TensorFlow library on your machine:
-
-        curl https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-cpu-darwin-x86_64-1.0.0.tar.gz > libtensorflow.tar.gz
-        tar zxf libtensorflow.tar.gz -C /usr/local
-        mv /usr/local/lib/libtensorflow.so /usr/local/lib/libtensorflow.dylib
-        install_name_tool -id libtensorflow.dylib /usr/local/lib/libtensorflow.dylib
-        rm libtensorflow.tar.gz
-        
-- Install submodule dependencies:
-
-        git submodule update --init --recursive
-
-- Run stack:
-
-        stack test
+Run the [install_osx_dependencies.sh](./tools/install_osx_dependencies.sh)
+script in the `tools/` directory. The script installs dependencies
+via [Homebrew](http://brew.sh) and then downloads and installs the TensorFlow
+library on your machine under `/usr/local`.
