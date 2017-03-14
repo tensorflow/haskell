@@ -103,14 +103,14 @@ instance Nodes (ListOf f '[]) where
     getNodes _ = return Set.empty
 
 instance (Nodes (f a), Nodes (ListOf f as)) => Nodes (ListOf f (a ': as)) where
-    getNodes (x :| xs) = liftA2 Set.union (getNodes x) (getNodes xs)
+    getNodes (x :/ xs) = liftA2 Set.union (getNodes x) (getNodes xs)
 
 instance l ~ List '[] => Fetchable (ListOf f '[]) l where
     getFetch _ = return $ pure Nil
 
 instance (Fetchable (f t) a, Fetchable (ListOf f ts) (List as), i ~ Identity)
     => Fetchable (ListOf f (t ': ts)) (ListOf i (a ': as)) where
-    getFetch (x :| xs) = liftA2 (\y ys -> y |:| ys) <$> getFetch x <*> getFetch xs
+    getFetch (x :/ xs) = liftA2 (\y ys -> y /:/ ys) <$> getFetch x <*> getFetch xs
 
 instance Nodes (Tensor v a) where
     getNodes t = Set.singleton <$> getOrAddOp (t ^. tensorOutput . outputOp)

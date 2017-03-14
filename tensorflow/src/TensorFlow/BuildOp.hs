@@ -106,10 +106,10 @@ tensorListResult v = loop (tensorTypes :: TensorTypeList as)
   where
     loop :: TensorTypeList bs -> Result (TensorList v bs)
     loop Nil = return Nil
-    loop (TensorTypeProxy :| ls) = do
+    loop (TensorTypeProxy :/ ls) = do
         t <- tensorResult v
         ts <- loop ls
-        return (t :| ts)
+        return (t :/ ts)
 
 instance TensorTypes as => OpResult (TensorList Value as) where
     toResult = tensorListResult ValueKind

@@ -98,4 +98,4 @@ type TensorList v = ListOf (Tensor v)
 
 tensorListOutputs :: TensorList v as -> [Output]
 tensorListOutputs Nil = []
-tensorListOutputs (t :| ts) = (t ^. tensorOutput) : tensorListOutputs ts
+tensorListOutputs (t :/ ts) = (t ^. tensorOutput) : tensorListOutputs ts

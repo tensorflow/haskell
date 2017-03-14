@@ -42,7 +42,7 @@ module TensorFlow.Types
     -- * Lists
     , ListOf(..)
     , List
-    , (|:|)
+    , (/:/)
     , TensorTypeProxy(..)
     , TensorTypes(..)
     , TensorTypeList
@@ -393,9 +393,9 @@ instance Attribute [Int64] where
 -- | A heterogeneous list type.
 data ListOf f as where
     Nil :: ListOf f '[]
-    (:|) :: f a -> ListOf f as -> ListOf f (a ': as)
+    (:/) :: f a -> ListOf f as -> ListOf f (a ': as)
 
-infixr 5 :|
+infixr 5 :/
 
 type family All f as :: Constraint where
     All f '[] = ()
@@ -407,7 +407,7 @@ type family Map f as where
 
 instance All Eq (Map f as) => Eq (ListOf f as) where
     Nil == Nil = True
-    (x :| xs) == (y :| ys) = x == y && xs == ys
+    (x :/ xs) == (y :/ ys) = x == y && xs == ys
     -- Newer versions of GHC use the GADT to tell that the previous cases are
     -- exhaustive.
 #if _GLASGOW_HASKELL__ < 800
@@ -416,17 +416,17 @@ instance All Eq (Map f as) => Eq (ListOf f as) where
 
 instance All Show (Map f as) => Show (ListOf f as) where
     showsPrec _ Nil = showString "Nil"
-    showsPrec d (x :| xs) = showParen (d > 10)
-                                $ showsPrec 6 x . showString " :| "
+    showsPrec d (x :/ xs) = showParen (d > 10)
+                                $ showsPrec 6 x . showString " :/ "
                                     . showsPrec 6 xs
 
 type List = ListOf Identity
 
--- | Equivalent of ':|' for lists.
-(|:|) :: a -> List as -> List (a ': as)
-(|:|) = (:|) . Identity
+-- | Equivalent of ':/' for lists.
+(/:/) :: a -> List as -> List (a ': as)
+(/:/) = (:/) . Identity
 
-infixr 5 |:|
+infixr 5 /:/
 
 -- | A 'Constraint' specifying the possible choices of a 'TensorType'.
 --
@@ -462,7 +462,7 @@ type TensorTypeList = ListOf TensorTypeProxy
 
 fromTensorTypeList :: TensorTypeList ts -> [DataType]
 fromTensorTypeList Nil = []
-fromTensorTypeList ((TensorTypeProxy :: TensorTypeProxy t) :| ts)
+fromTensorTypeList ((TensorTypeProxy :: TensorTypeProxy t) :/ ts)
     = tensorType (undefined :: t) : fromTensorTypeList ts
 
 fromTensorTypes :: forall as . TensorTypes as => Proxy as -> [DataType]
@@ -476,7 +476,7 @@ instance TensorTypes '[] where
 
 -- | A constraint that the input is a list of 'TensorTypes'.
 instance (TensorType t, TensorTypes ts) => TensorTypes (t ': ts) where
-    tensorTypes = TensorTypeProxy :| tensorTypes
+    tensorTypes = TensorTypeProxy :/ tensorTypes
 
 -- | A constraint checking that two types are different.
 type family a /= b :: Constraint where

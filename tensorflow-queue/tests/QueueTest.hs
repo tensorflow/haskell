@@ -21,7 +21,7 @@ module Main where
 import Control.Monad.IO.Class (liftIO)
 import Data.Int (Int64)
 import Google.Test (googleTest)
-import TensorFlow.Types (ListOf(..), Scalar(..), (|:|))
+import TensorFlow.Types (ListOf(..), Scalar(..), (/:/))
 import TensorFlow.Ops (scalar)
 import TensorFlow.Queue
 import TensorFlow.Session
@@ -41,18 +41,18 @@ import qualified Data.ByteString as BS
 testBasic :: Test
 testBasic = testCase "testBasic" $ runSession $ do
     q :: Queue [Int64, BS.ByteString] <- build $ makeQueue 1 ""
-    buildAnd run_ $ enqueue q $ 42 :| scalar "Hi" :| Nil
+    buildAnd run_ $ enqueue q $ 42 :/ scalar "Hi" :/ Nil
     x <- buildAnd run (dequeue q)
-    liftIO $ (Scalar 42 |:| Scalar "Hi" |:| Nil) @=? x
+    liftIO $ (Scalar 42 /:/ Scalar "Hi" /:/ Nil) @=? x
 
-    buildAnd run_ $ enqueue q $ 56 :| scalar "Bar" :| Nil
+    buildAnd run_ $ enqueue q $ 56 :/ scalar "Bar" :/ Nil
     y <- buildAnd run (dequeue q)
     -- Note: we use explicit "Scalar" here to specify the type that was
     -- fetched.  Equivalently we could write
-    -- 56 |:| "Bar" |:| Nil :: List [Scalar Int64, Scalar BS.ByteString]
+    -- 56 /:/ "Bar" /:/ Nil :: List [Scalar Int64, Scalar BS.ByteString]
     -- or else allow the types to be determined by future use of the fetched
     -- value.
-    let expected = Scalar 56 |:| Scalar "Bar" |:| Nil
+    let expected = Scalar 56 /:/ Scalar "Bar" /:/ Nil
     liftIO $ expected @=? y
 
 -- | Test queue pumping.
@@ -61,14 +61,14 @@ testPump = testCase "testPump" $ runSession $ do
     (deq, pump) <- build $ do
         q :: Queue [Int64, BS.ByteString] <- makeQueue 2 "ThePumpQueue"
         (,) <$> dequeue q
-            <*> enqueue q (31 :| scalar "Baz" :| Nil)
+            <*> enqueue q (31 :/ scalar "Baz" :/ Nil)
     -- This is a realistic use. The pump inputs are pre-bound to some
     -- nodes that produce values when pumped (e.g. read from a
     -- file).
     run_ (pump, pump)
 
     (x, y) <- run (deq, deq)
-    let expected = Scalar 31 |:| Scalar "Baz" |:| Nil
+    let expected = Scalar 31 /:/ Scalar "Baz" /:/ Nil
     liftIO $ expected @=? x
     liftIO $ expected @=? y
 
@@ -77,11 +77,11 @@ testAsync = testCase "testAsync" $ runSession $ do
     (deq, pump) <- build $ do
         q :: Queue [Int64, BS.ByteString] <- makeQueue 2 ""
         (,) <$> dequeue q
-            <*> enqueue q (10 :| scalar "Async" :| Nil)
+            <*> enqueue q (10 :/ scalar "Async" :/ Nil)
     -- Pumps the queue until canceled by runSession exiting.
     asyncProdNodes pump
     -- Picks up a couple values and verifies they are as expected.
-    let expected = Scalar 10 |:| Scalar "Async" |:| Nil
+    let expected = Scalar 10 /:/ Scalar "Async" /:/ Nil
     run deq >>= liftIO . (expected @=?)
     run deq >>= liftIO . (expected @=?)
 
