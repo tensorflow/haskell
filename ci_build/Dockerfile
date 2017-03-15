@@ -33,5 +33,5 @@ RUN \
     curl -O https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-cpu-linux-x86_64-1.0.0-rc0.tar.gz && \
     tar zxf libtensorflow-cpu-linux-x86_64-1.0.0-rc0.tar.gz -C /usr/local && \
     ldconfig && \
-    stack setup --resolver=${STACK_RESOLVER} && \
-    stack test --resolver=${STACK_RESOLVER} --only-dependencies
+    stack setup --resolver=${STACK_RESOLVER}
+    #stack test --resolver=${STACK_RESOLVER} --only-dependencies
