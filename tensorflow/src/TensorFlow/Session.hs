@@ -26,8 +26,7 @@ module TensorFlow.Session (
     sessionTracer,
     runSession,
     runSessionWithOptions,
-    build,
-    buildAnd,
+    MonadBuild(..),
     extend,
     addGraphDef,
     run,
@@ -44,7 +43,6 @@ import Control.Monad.Trans.Class (lift)
 import Control.Monad.Trans.Reader (ReaderT(..), ask, asks)
 import Data.ByteString (ByteString)
 import Data.Default (Default, def)
-import Data.Functor.Identity (runIdentity)
 import Data.Monoid ((<>))
 import Data.ProtoLens (showMessage)
 import Data.Set (Set)
@@ -124,10 +122,8 @@ runSessionWithOptions options (Session m) =
             FFI.setSessionTarget (options ^. sessionTarget) opt
             FFI.setSessionConfig (options ^. sessionConfig) opt
 
--- | Lift a 'Build' action into a 'Session', including any explicit op
--- renderings.
-build :: Build a -> Session a
-build = Session . lift . hoistBuildT (return . runIdentity)
+instance MonadBuild Session where
+    build = Session . lift . build
 
 -- | Add all pending rendered nodes to the TensorFlow graph and runs
 -- any pending initializers.
@@ -146,13 +142,6 @@ extend = do
     initializers <- build flushInitializers
     unless (null initializers) $
         void $ liftIO $ FFI.run session [] [] (toNodeNames initializers)
-
--- | Helper combinator for doing something with the result of a 'Build' action.
--- Example usage:
---
--- > buildAnd run :: Fetchable t a => Build t -> Session a
-buildAnd :: (a -> Session b) -> Build a -> Session b
-buildAnd f m = build m >>= f
 
 -- | Run a subgraph 't', rendering any dependent nodes that aren't already
 -- rendered, and fetch the corresponding values for 'a'.

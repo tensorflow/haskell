@@ -19,7 +19,6 @@
 module Main where
 
 import Control.Monad.IO.Class (liftIO)
-import Data.Functor.Identity (runIdentity)
 import Lens.Family2 ((^.))
 import Data.List (sort)
 import Proto.Tensorflow.Core.Framework.Graph
@@ -35,7 +34,6 @@ import TensorFlow.Build
     , asGraphDef
     , evalBuildT
     , flushNodeBuffer
-    , hoistBuildT
     , render
     , withDevice
     , colocateWith
@@ -53,9 +51,7 @@ import TensorFlow.Ops
 import TensorFlow.Output (Device(..))
 import TensorFlow.Tensor (Tensor, Value, Ref)
 import TensorFlow.Session
-    ( build
-    , buildAnd
-    , run
+    ( run
     , runSession
     , run_
     )
@@ -82,7 +78,7 @@ testNamedDeRef = testCase "testNamedDeRef" $ do
                     assign v 5
     -- TODO: Implement TensorFlow get_variable and test it.
     runSession $ do
-      out <- buildAnd run graph
+      out <- graph >>= run
       liftIO $ 5 @=? (unScalar out :: Float)
 
 -- | Test that "run" will render and extend any pure ops that haven't already
@@ -96,7 +92,7 @@ testPureRender = testCase "testPureRender" $ runSession $ do
 testInitializedVariable :: Test
 testInitializedVariable =
     testCase "testInitializedVariable" $ runSession $ do
-        (formula, reset) <- build $ do
+        (formula, reset) <- do
             v <- initializedVariable 42
             r <- assign v 24
             return (1 `add` v, r)
@@ -109,7 +105,7 @@ testInitializedVariable =
 testInitializedVariableShape :: Test
 testInitializedVariableShape =
     testCase "testInitializedVariableShape" $ runSession $ do
-        vector <- build $ initializedVariable (constant [1] [42 :: Float])
+        vector <- initializedVariable (constant [1] [42 :: Float])
         result <- run vector
         liftIO $ [42] @=? (result :: V.Vector Float)
 
@@ -132,23 +128,19 @@ testNamedAndScoped = testCase "testNamedAndScoped" $ do
     "RefIdentity" @=? (nodeDef ^. op)
     "foo1/bar1" @=? (nodeDef ^. name)
 
--- | Lift a Build action into a context for HUnit to run.
-liftBuild :: Build a -> BuildT IO a
-liftBuild = hoistBuildT (return . runIdentity)
-
 -- | Flush the node buffer and sort the nodes by name (for more stable tests).
 flushed :: Ord a => (NodeDef -> a) -> BuildT IO [a]
-flushed field = sort . map field <$> liftBuild flushNodeBuffer
+flushed field = sort . map field <$> flushNodeBuffer
 
 -- | Test the interaction of rendering, CSE and scoping.
 testRenderDedup :: Test
 testRenderDedup = testCase "testRenderDedup" $ evalBuildT $ do
-   liftBuild renderNodes
+   renderNodes
    names <- flushed (^. name)
    liftIO $ ["Const_1", "Variable_0", "Variable_2"] @=? names
    -- Render the nodes in a different scope, which should cause them
    -- to be distinct from the previous ones.
-   liftBuild $ withNameScope "foo" renderNodes
+   withNameScope "foo" renderNodes
    scopedNames <- flushed (^. name)
    liftIO $ ["foo/Const_4", "foo/Variable_3", "foo/Variable_5"] @=? scopedNames
   where
@@ -165,7 +157,7 @@ testRenderDedup = testCase "testRenderDedup" $ evalBuildT $ do
 -- | Test the interaction of rendering, CSE and scoping.
 testDeviceColocation :: Test
 testDeviceColocation = testCase "testDeviceColocation" $ evalBuildT $ do
-   liftBuild renderNodes
+   renderNodes
    devices <- flushed (\x -> (x ^. name, x ^. device))
    liftIO $ [ ("Add_2","dev0")
             , ("Const_1","dev0")

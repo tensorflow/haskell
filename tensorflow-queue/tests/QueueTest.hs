@@ -27,7 +27,6 @@ import TensorFlow.Queue
 import TensorFlow.Session
     ( asyncProdNodes
     , build
-    , buildAnd
     , run
     , runSession
     , run_
@@ -41,12 +40,12 @@ import qualified Data.ByteString as BS
 testBasic :: Test
 testBasic = testCase "testBasic" $ runSession $ do
     q :: Queue [Int64, BS.ByteString] <- build $ makeQueue 1 ""
-    buildAnd run_ $ enqueue q $ 42 :/ scalar "Hi" :/ Nil
-    x <- buildAnd run (dequeue q)
+    run_ =<< enqueue q (42 :/ scalar "Hi" :/ Nil)
+    x <- run =<< dequeue q
     liftIO $ (Scalar 42 /:/ Scalar "Hi" /:/ Nil) @=? x
 
-    buildAnd run_ $ enqueue q $ 56 :/ scalar "Bar" :/ Nil
-    y <- buildAnd run (dequeue q)
+    run_ =<< enqueue q (56 :/ scalar "Bar" :/ Nil)
+    y <- run =<< dequeue q
     -- Note: we use explicit "Scalar" here to specify the type that was
     -- fetched.  Equivalently we could write
     -- 56 /:/ "Bar" /:/ Nil :: List [Scalar Int64, Scalar BS.ByteString]
@@ -74,7 +73,7 @@ testPump = testCase "testPump" $ runSession $ do
 
 testAsync :: Test
 testAsync = testCase "testAsync" $ runSession $ do
-    (deq, pump) <- build $ do
+    (deq, pump) <- do
         q :: Queue [Int64, BS.ByteString] <- makeQueue 2 ""
         (,) <$> dequeue q
             <*> enqueue q (10 :/ scalar "Async" :/ Nil)

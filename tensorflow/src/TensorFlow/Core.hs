@@ -31,8 +31,7 @@ module TensorFlow.Core
     , runSession
     , runSessionWithOptions
       -- ** Building graphs
-    , build
-    , buildAnd
+    , MonadBuild(..)
       -- ** Running graphs
     , Fetchable
     , Nodes

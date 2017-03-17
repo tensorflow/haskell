@@ -56,7 +56,9 @@ import qualified Data.Text as Text
 
 import qualified TensorFlow.GenOps.Core as CoreOps
 import TensorFlow.Build
-    ( Build
+    ( MonadBuild
+    , Build
+    , build
     , render
     , renderNodeName
     , renderedNodeDefs
@@ -111,16 +113,17 @@ type GradientCompatible a =
 
 
 -- | Gradient of @y@ w.r.t. each element of @xs@.
-gradients :: forall a v1 v2 . ( Num (Tensor v1 a)
+gradients :: forall a v1 v2 m . (MonadBuild m
+                              , Num (Tensor v1 a)
                                 -- TODO(gnezdo): remove indirect constraint.
-                               -- It's a wart inherited from Num instance.
+                                -- It's a wart inherited from Num instance.
                               , v1 ~ Value
                               , GradientCompatible a
                               )
           => Tensor v1 a  -- ^ The output of the graph.
           -> [Tensor v2 a]  -- ^ Tensors for which gradients are computed.
-          -> Build [Tensor Value a]
-gradients y xs = do
+          -> m [Tensor Value a]
+gradients y xs = build $ do
     -- The gradients are computed using "reverse accumulation", similarly to
     -- what is described here:
     -- https://en.wikipedia.org/wiki/Automatic_differentiation#The_chain_rule.2C_forward_and_reverse_accumulation

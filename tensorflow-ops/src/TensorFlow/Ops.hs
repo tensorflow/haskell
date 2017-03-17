@@ -155,20 +155,20 @@ matTranspose :: forall a v . TensorType a
              => Tensor v a -> Tensor Value a
 matTranspose = flip CoreOps.transpose (vector [1, 0 :: Int32])
 
-placeholder :: forall a . TensorType a => Shape -> Build (Tensor Value a)
+placeholder :: forall a m . (MonadBuild m, TensorType a) => Shape -> m (Tensor Value a)
 placeholder shape' =
-    buildOp $ opDef "Placeholder"
+    build $ buildOp $ opDef "Placeholder"
             & opAttr "dtype" .~ tensorType (undefined :: a)
             & opAttr "shape" .~ shape'
 
 -- | Creates a variable initialized to the given value.
 -- Initialization happens next time session runs.
-initializedVariable :: forall a . TensorType a
-                    => Tensor Value a -> Build (Tensor Ref a)
+initializedVariable :: forall a m . (MonadBuild m, TensorType a)
+                    => Tensor Value a -> m (Tensor Ref a)
 initializedVariable initializer = do
     v <- CoreOps.variable []  -- The shape is not known initially.
     (i :: Tensor Ref a) <-
-        buildOp (opDef "Assign"
+        build $ buildOp (opDef "Assign"
                  & opAttr "T" .~ tensorType (undefined :: a)
                  & opAttr "use_locking" .~ True
                  & opAttr "validate_shape" .~ False
@@ -179,32 +179,32 @@ initializedVariable initializer = do
 
 -- | Creates a zero-initialized variable with the given shape.
 zeroInitializedVariable
-  :: (TensorType a, Num a) =>
-     TensorFlow.Types.Shape -> Build (Tensor TensorFlow.Tensor.Ref a)
+  :: (MonadBuild m, TensorType a, Num a) =>
+     TensorFlow.Types.Shape -> m (Tensor TensorFlow.Tensor.Ref a)
 zeroInitializedVariable = initializedVariable . zeros
 
 -- TODO: Support heterogeneous list of tensors.
-save :: forall a v . TensorType a
+save :: forall a m v . (MonadBuild m, TensorType a)
         => ByteString     -- ^ File path.
         -> [Tensor v a]  -- ^ Tensors to save.
-        -> Build ControlNode
+        -> m ControlNode
 save path xs = do
     let toByteStringTensor = scalar . encodeUtf8 . unNodeName
-    names <- mapM (fmap toByteStringTensor . renderNodeName) xs
+    names <- mapM (fmap toByteStringTensor . build . renderNodeName) xs
     let types = replicate (length xs) (tensorType (undefined :: a))
     let saveOp = buildOp $ opDef "Save"
                          & opAttr "T" .~ types
-    saveOp (scalar path) (CoreOps.pack names) xs
+    build $ saveOp (scalar path) (CoreOps.pack names) xs
 
 -- | Restore a tensor's value from a checkpoint file.
 --
 -- This version allows restoring from a checkpoint file that uses a different
 -- tensor name than the variable.
-restoreFromName :: forall a . TensorType a
+restoreFromName :: forall a m . (MonadBuild m, TensorType a)
                 => ByteString    -- ^ File path.
                 -> ByteString    -- ^ Tensor name override.
                 -> Tensor Ref a  -- ^ Tensor to restore.
-                -> Build ControlNode
+                -> m ControlNode
 restoreFromName path name x = do
     let restoreOp = buildOp $ opDef "Restore"
                             & opAttr "dt" .~ tensorType (undefined :: a)
@@ -212,12 +212,12 @@ restoreFromName path name x = do
                 (restoreOp (scalar path) (scalar name) :: Tensor Value a)
 
 -- | Restore a tensor's value from a checkpoint file.
-restore :: forall a . TensorType a
+restore :: forall a m . (MonadBuild m, TensorType a)
         => ByteString    -- ^ File path.
         -> Tensor Ref a  -- ^ Tensor to restore.
-        -> Build ControlNode
+        -> m ControlNode
 restore path x = do
-    name <- encodeUtf8 . unNodeName <$> renderNodeName x
+    name <- encodeUtf8 . unNodeName <$> build (renderNodeName x)
     restoreFromName path name x
 
 -- | Create a constant tensor.
@@ -264,12 +264,13 @@ scalar :: forall a . TensorType a => a -> Tensor Value a
 scalar x = constant [] [x]
 
 -- Random tensor from the unit normal distribution with bounded values.
-truncatedNormal :: forall a v . TensorType a
+truncatedNormal :: forall a m v . (MonadBuild m, TensorType a)
                 => Tensor v Int64  -- ^ Shape.
-                -> Build (Tensor Value a)
-truncatedNormal = buildOp $ opDef "TruncatedNormal"
-                          & opAttr "dtype" .~ tensorType (undefined :: a)
-                          & opAttr "T" .~ tensorType (undefined :: Int64)
+                -> m (Tensor Value a)
+truncatedNormal
+    = build . buildOp (opDef "TruncatedNormal"
+                        & opAttr "dtype" .~ tensorType (undefined :: a)
+                        & opAttr "T" .~ tensorType (undefined :: Int64))
 
 zeros :: forall a . (Num a, TensorType a) => Shape -> Tensor Value a
 zeros (Shape shape') = CoreOps.fill (vector $ map fromIntegral shape') (scalar 0)

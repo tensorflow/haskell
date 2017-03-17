@@ -39,6 +39,7 @@ Test-Suite QueueTest
                , lens-family
                , google-shim
                , tensorflow
+               , tensorflow-core-ops
                , tensorflow-ops
                , tensorflow-queue
                , test-framework

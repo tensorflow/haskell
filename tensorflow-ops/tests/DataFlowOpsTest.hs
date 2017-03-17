@@ -45,7 +45,7 @@ testDynamicPartitionStitchInverse (StitchExample numParts values partitions) =
        restitch = CoreOps.dynamicStitch restitchIndices splitParts
     in monadicIO $ run $ do
        fromIntegral numParts @=? length splitParts
-       valuesOut <- TF.runSession $ TF.buildAnd TF.run $ return restitch
+       valuesOut <- TF.runSession $ TF.run restitch
        V.fromList values @=? valuesOut
 
 data StitchExample a = StitchExample Int64 [a] [Int32]
