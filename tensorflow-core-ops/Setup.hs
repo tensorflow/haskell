@@ -64,43 +64,9 @@ generatingOpsWrappers = hooks
                                       (prettyLazyText 80 $ docOpList flags x)
 
 blackList =
-    -- A few data flow ops take a list of heterogeneous
-    -- parameters which we don't support in general form.
-    [ "HashTable"
-    , "MutableDenseHashTable"
-    , "MutableHashTable"
-    , "MutableHashTableOfTensors"
-    , "QueueDequeue"
-    , "QueueDequeueMany"
-    , "QueueDequeueUpTo"
-    , "Stack"
-    , "TensorArray"
-    , "TensorArrayV2"
-    , "QueueEnqueueManyV2"
-    , "QueueDequeueV2"
-    , "QueueDequeueUpToV2"
-    , "QueueEnqueueV2"
-    , "QueueDequeueManyV2"
-    , "Stage"
-    , "Unstage"
-      -- These should be possible to support by adding a bunch of
-      -- overloads with a variable number of tuple arguments.
-    , "Assert"
-    , "BarrierTakeMany"
-    , "Print"
-    , "QueueEnqueue"
-    , "QueueEnqueueMany"
-      -- Need list of types support.
-    , "DecodeCSV"
-    , "ParseExample"
-    , "ParseSingleSequenceExample"
-    , "RestoreV2"
-    , "Save"
-    , "SaveV2"
-    , "SaveSlices"
-    , "SymbolicGradient"
-    , "_ArrayToList"
-    , "_ListToArray"
+    [ -- Requires the "func" type:
+      "SymbolicGradient"
       -- Easy: support larger result tuples.
+    , "ParseSingleSequenceExample"
     , "Skipgram"
     ]
