@@ -27,13 +27,12 @@ module TensorFlow.Tensor where
 
 import Data.String (IsString(..))
 import qualified Data.Text as Text
-import Lens.Family2 (Lens', Traversal', (^.))
+import Lens.Family2 (Lens', (^.))
 import Lens.Family2.Unchecked (lens)
 
-import TensorFlow.Output (Output, outputOp, opUnrendered, opAttr)
+import TensorFlow.Output (Output)
 import TensorFlow.Types
     ( TensorData(..)
-    , Attribute
     , ListOf(..)
     )
 import qualified TensorFlow.Internal.FFI as FFI
@@ -61,15 +60,6 @@ tensorKind = lens (\(Tensor v _) -> v) (\(Tensor _ o) v -> Tensor v o)
 
 tensorOutput :: Lens' (Tensor v a) Output
 tensorOutput = lens (\(Tensor _ o) -> o) (\(Tensor v _) o -> Tensor v o)
-
--- TODO: Come up with a better API for handling attributes.
--- | Lens for the attributes of a tensor.
---
--- Only valid if the tensor has not yet been rendered. If the tensor has been
--- rendered, the traversal will be over nothing (nothing can be read or
--- written).
-tensorAttr :: Attribute attr => Text.Text -> Traversal' (Tensor v a) attr
-tensorAttr x = tensorOutput . outputOp . opUnrendered . opAttr x
 
 -- | Cast a 'Tensor *' into a 'Tensor Value'. Common usage is to cast a
 -- Ref into Value. This behaves like a no-op.

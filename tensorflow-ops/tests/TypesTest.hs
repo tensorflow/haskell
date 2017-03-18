@@ -36,7 +36,6 @@ import qualified Data.ByteString as B
 import qualified Data.ByteString.Char8 as B8
 import qualified Data.Vector as V
 
-import qualified TensorFlow.ControlFlow as TF
 import qualified TensorFlow.GenOps.Core as TF (select)
 import qualified TensorFlow.Ops as TF
 import qualified TensorFlow.Session as TF

@@ -12,6 +12,7 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
@@ -172,18 +173,28 @@ renderQuotedTFName = dquotes . renderTFName
 renderOp :: ParsedOp -> Doc
 renderOp pOp = stack $
     [ haddocks
-    , n <+> "::" <+> hang 0 (typeSig pOp)
-    , n <+> hang 0 args <+> "|" <+> funcGuard listSizeAttrs
+    -- Prevent unreasonably long compilation times on ghc-7.10, due
+    -- to stack calling "-dump-hi" which (unnecessarily) includes the
+    -- inlining information, and is large for ops with many arguments.
+#if __GLASGOW_HASKELL__ < 800
+    , "{-# NOINLINE " <> n <> "#-}"
+#endif
+    , n <+> "::" <+> hang 0 (typeSig empty pOp)
+    , n <+> "=" <+> n <> "' id"
+    , n' <+> "::" <+> hang 0 (typeSig "OpParams ->" pOp)
+    , n' <+> hang 0 args <+> "|" <+> funcGuard listSizeAttrs
                 <+> "=" </>  -- args are indented
                     -- the body needs to be indented wrt the name
                     indent indentation (functionBody pOp)
     ] ++ whereClause listSizeAttrs
   where
     n = renderHaskellName $ parsedOpName pOp
+    n' = n <> "'"
     listSizeAttrs = inferredListSizeAttrs pOp
-    args = sep $ map renderHaskellName
-               $ map attrName (explicitInputAttrs pOp)
-                ++ map parsedArgName (parsedInputs pOp)
+    args = sep $ "op'options"
+               : (map renderHaskellName
+                    $ map attrName (explicitInputAttrs pOp)
+                    ++ map parsedArgName (parsedInputs pOp))
     haddocks = "-- |" <+> multilineComment (parsedOpSummary pOp) (parsedOpDescription pOp)
 
 -- | A check that all lists of the given size have the given length.
@@ -247,7 +258,9 @@ functionBody pOp = maybeLift <+> buildFunction <+> parens (hang 0 (stack buildOp
         -- Renders sizes of tensor list types having number_attr.
         [ "& opAttr" <+> renderQuotedTFName n <+> ".~" <+> renderHaskellName n
         | a <- inferredListSizeAttrs pOp, let n = attrName a
-        ]
+        ] ++
+        ["& op'options"]
+
 
     tensorArgs = renderHaskellName . parsedArgName <$> parsedInputs pOp
     inferredTypeExpr a
@@ -270,12 +283,12 @@ extras d = enclose "{-\n" "\n-}" $
 -- | The type signature for an op.
 -- Of the form:
 -- forall t1 t2 v1 v2 . (TensorType t1, TensorType t2)
---      => Float -> Tensor t1 v1 -> Tensor t2 v2
+--      => {pre} Float -> Tensor t1 v1 -> Tensor t2 v2
 -- where "Float" is an explicit input attribute, "Tensor t1 v1" is an input, and
 -- "Tensor t2 v2" is an output.
-typeSig :: ParsedOp -> Doc
-typeSig pOp = constraints
-            <+/> signatureFold (map attrInput (explicitInputAttrs pOp)
+typeSig :: Doc -> ParsedOp -> Doc
+typeSig pre pOp = constraints
+            <+/> pre </> signatureFold (map attrInput (explicitInputAttrs pOp)
                                 ++ map tensorArgAndComment (parsedInputs pOp)
                                 ++ [outputs])
   where

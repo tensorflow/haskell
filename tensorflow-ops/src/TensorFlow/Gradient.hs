@@ -72,6 +72,7 @@ import TensorFlow.Ops
     , expandDims
     , fill
     , matMul
+    , matMul'
     , reducedShape
     , reluGrad
     , reshape
@@ -95,7 +96,6 @@ import TensorFlow.Tensor
     , TensorKind (ValueKind)
     , Value
     , tensorOutput
-    , tensorAttr
     )
 import TensorFlow.Types (Attribute, OneOf, TensorType, attrLens)
 import Proto.Tensorflow.Core.Framework.NodeDef
@@ -532,20 +532,20 @@ opGrad "MatMul" nodeDef [toT -> x, toT -> y] [dz] =
     let transposeA = lookupAttr nodeDef "transpose_a"
         transposeB = lookupAttr nodeDef "transpose_b"
         transAttrs a b =
-            (tensorAttr "transpose_a" .~ a) . (tensorAttr "transpose_b" .~ b)
+            (opAttr "transpose_a" .~ a) . (opAttr "transpose_b" .~ b)
     in case (transposeA, transposeB) of
        (False, False) ->
-           [ Just $ (dz `matMul` y) & transAttrs False True
-           , Just $ (x `matMul` dz) & transAttrs True False ]
+           [ Just $ matMul' (transAttrs False True) dz y
+           , Just $ matMul' (transAttrs True False) x dz]
        (False, True) ->
-           [ Just $ dz `matMul` y
-           , Just $ (x `matMul` dz) & transAttrs True False ]
+           [ Just $ matMul dz y
+           , Just $ matMul' (transAttrs True False) x dz]
        (True, False) ->
-           [ Just $ (dz `matMul` y) & transAttrs False True
-           , Just $ x `matMul` dz ]
+           [ Just $ matMul' (transAttrs False True) dz y
+           , Just $ matMul x dz]
        (True, True) ->
-           [ Just $ (dz `matMul` y) & transAttrs True True
-           , Just $ (x `matMul` dz) & transAttrs True True ]
+           [ Just $ matMul' (transAttrs True True) dz y
+           , Just $ matMul' (transAttrs True True) x dz]
 
 opGrad "Transpose" _ [_, toT -> p] [dz] =
     [ Just $ CoreOps.transpose dz
@@ -554,16 +554,18 @@ opGrad "Transpose" _ [_, toT -> p] [dz] =
     ]
 
 opGrad "Conv2D" nodeDef [toT -> x, toT -> y] [dz] =
-    [ Just $ CoreOps.conv2DBackpropInput (shape x) y dz
-          & tensorAttr "strides" .~ strides
-          & tensorAttr "padding" .~ padding
-          & tensorAttr "use_cudnn_on_gpu" .~ useCudnnOnGpu
-          & tensorAttr "data_format" .~ dataFormat
-    , Just $ CoreOps.conv2DBackpropFilter x (shape y) dz
-          & tensorAttr "strides" .~ strides
-          & tensorAttr "padding" .~ padding
-          & tensorAttr "use_cudnn_on_gpu" .~ useCudnnOnGpu
-          & tensorAttr "data_format" .~ dataFormat
+    [ Just $ CoreOps.conv2DBackpropInput'
+                ((opAttr "strides" .~ strides)
+                    . (opAttr "padding" .~ padding)
+                    . (opAttr "use_cudnn_on_gpu" .~ useCudnnOnGpu)
+                    . (opAttr "data_format" .~ dataFormat))
+                (shape x) y dz
+    , Just $ CoreOps.conv2DBackpropFilter'
+                ((opAttr "strides" .~ strides)
+                    . (opAttr "padding" .~ padding)
+                    . (opAttr "use_cudnn_on_gpu" .~ useCudnnOnGpu)
+                    . (opAttr "data_format" .~ dataFormat))
+                x (shape y) dz
     ]
   where
     strides = lookupAttr nodeDef "strides" :: [Int64]
@@ -572,11 +574,12 @@ opGrad "Conv2D" nodeDef [toT -> x, toT -> y] [dz] =
     dataFormat = lookupAttr nodeDef "data_format" :: ByteString
 
 opGrad "MaxPool" nodeDef [toT -> x] [dz] =
-    [ Just $ CoreOps.maxPoolGrad x output dz
-          & tensorAttr "ksize" .~ ksize
-          & tensorAttr "strides" .~ strides
-          & tensorAttr "padding" .~ padding
-          & tensorAttr "data_format" .~ dataFormat
+    [ Just $ CoreOps.maxPoolGrad'
+                ((opAttr "ksize" .~ ksize)
+                    . (opAttr "strides" .~ strides)
+                    . (opAttr "padding" .~ padding)
+                    . (opAttr "data_format" .~ dataFormat))
+                x output dz
     ]
   where
     output :: Tensor Value a
