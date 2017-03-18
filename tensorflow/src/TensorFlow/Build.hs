@@ -59,6 +59,7 @@ module TensorFlow.Build
     , addSummary
     , SummaryTensor
     , collectAllSummaries
+    , initializationNodes
     ) where
 
 import Control.Monad.Catch (MonadThrow, MonadCatch, MonadMask)

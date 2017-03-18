@@ -68,6 +68,7 @@ module TensorFlow.Ops
     , constant
     , CoreOps.equal
     , expandDims
+    , initializedValue
     , initializedVariable
     , zeroInitializedVariable
     , CoreOps.fill
@@ -111,7 +112,9 @@ import Data.Int (Int32, Int64)
 import Prelude hiding (abs, sum, concat)
 import Data.ProtoLens (def)
 import Data.Text.Encoding (encodeUtf8)
+import Data.Set (fromList)
 import Lens.Family2 ((.~), (&))
+import Lens.Family2.State.Strict (use)
 import Text.Printf (printf)
 import Proto.Tensorflow.Core.Framework.Tensor
     ( TensorProto
@@ -160,6 +163,18 @@ placeholder shape' =
     buildOp $ opDef "Placeholder"
             & opAttr "dtype" .~ tensorType (undefined :: a)
             & opAttr "shape" .~ shape'
+
+
+-- | Construct a tensor whose value is the initialized value of the given
+-- tensor.
+initializedValue :: forall a v.  TensorType a 
+    => Tensor v a 
+    -> Build (Tensor v a)
+initializedValue t = do
+    ns <- use initializationNodes
+    -- Make this tensor depend on the initializers of the other.
+    withNodeDependencies (fromList ns) (render t)
+
 
 -- | Creates a variable initialized to the given value.
 -- Initialization happens next time session runs.
