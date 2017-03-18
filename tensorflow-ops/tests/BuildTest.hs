@@ -34,9 +34,7 @@ import TensorFlow.Build
     , asGraphDef
     , evalBuildT
     , flushNodeBuffer
-    , render
     , withDevice
-    , colocateWith
     , withNameScope
     , opName
     )
@@ -50,7 +48,13 @@ import TensorFlow.Ops
     , variable'
     )
 import TensorFlow.Output (Device(..))
-import TensorFlow.Tensor (Tensor, Value, Ref)
+import TensorFlow.Tensor
+    ( colocateWith
+    , render
+    , Tensor
+    , Value
+    , Ref
+    )
 import TensorFlow.Session
     ( run
     , runSession
@@ -65,8 +69,7 @@ import qualified Data.Vector as V
 -- | Test 'opName' behavior.
 testOpName :: Test
 testOpName = testCase "testOpName" $ do
-    let graph = variable' (opName .~ "foo") []
-                    >>= render :: Build (Tensor Ref Float)
+    let graph = variable' (opName .~ "foo") [] :: Build (Tensor Ref Float)
         nodeDef :: NodeDef
         nodeDef = head $ asGraphDef graph ^. node
     "Variable" @=? (nodeDef ^. op)
@@ -114,7 +117,6 @@ testNamedAndScoped :: Test
 testNamedAndScoped = testCase "testNamedAndScoped" $ do
     let graph :: Build (Tensor Ref Float)
         graph = withNameScope "foo1" (variable' (opName .~ "bar1") [])
-                    >>= render
         nodeDef :: NodeDef
         nodeDef = head $ asGraphDef graph ^. node
     "Variable" @=? (nodeDef ^. op)

@@ -36,10 +36,11 @@ import Proto.Tensorflow.Core.Framework.NodeDef (op)
 
 testGradientSimple :: Test
 testGradientSimple = testCase "testGradientSimple" $ do
-    let x = TF.scalar (3 :: Float)
-        b = TF.scalar (4 :: Float)
-        y = x*x + b
-        grads = TF.gradients y [x, b]
+    let grads = do
+                x <- TF.render $ TF.scalar (3 :: Float)
+                b <- TF.render $ TF.scalar (4 :: Float)
+                let y = x `TF.mul` x `TF.add` b
+                TF.gradients y [x, b]
     -- Assert that the gradients are right.
     [dx, db] <- TF.runSession $ grads >>= TF.run
     6 @=? TF.unScalar dx
@@ -88,9 +89,10 @@ testGradientSimple = testCase "testGradientSimple" $ do
 
 testGradientDisconnected :: Test
 testGradientDisconnected = testCase "testGradientDisconnected" $ do
-    let x = TF.scalar (3 :: Float)
-        b = TF.scalar (4 :: Float)
-        grads = TF.gradients x [x, b]
+    let grads = do
+            x <- TF.render $ TF.scalar (3 :: Float)
+            b <- TF.render $ TF.scalar (4 :: Float)
+            TF.gradients x [x, b]
     -- Assert that the gradients are right.
     [dx, db] <- TF.runSession $ grads >>= TF.run
     1 @=? TF.unScalar dx
@@ -118,7 +120,7 @@ testCreateGraphStateful = testCase "testCreateGraphStateful" $ do
         let shape = TF.constant (TF.Shape [1]) [1]
         x :: TF.Tensor TF.Value Float <- TF.truncatedNormal shape
         y :: TF.Tensor TF.Value Float <- TF.truncatedNormal shape
-        TF.gradients (x + y*3) [x, y] >>= TF.run
+        TF.gradients (TF.expr x + TF.expr y * 3) [x, y] >>= TF.run
     -- If this test fails, it will likely be caused by an exception within
     -- `TF.gradients`. These asserts are extra.
     1 @=? TF.unScalar dx
@@ -142,8 +144,8 @@ testCreateGraphNameScopes = testCase "testCreateGraphNameScopes" $ do
 testDiamond :: Test
 testDiamond = testCase "testDiamond" $ do
     [dx] <- TF.runSession $ do
-        let x = TF.vector [1]
-            y = x*x
+        x <- TF.render $ TF.vector [1]
+        let y = x `TF.mul` x
             z = y*y
         TF.gradients z [x] >>= TF.run
     (4 :: Float) @=? TF.unScalar dx
@@ -152,8 +154,8 @@ testDiamond = testCase "testDiamond" $ do
 testMaxGradient :: Test
 testMaxGradient = testCase "testMaxGradient" $ do
     [dx] <- TF.runSession $ do
-        let x = TF.vector [1, 2, 3, 0, 1 :: Float]
-            y = TF.max x (0 :: TF.Tensor TF.Value Int32)
+        x <- TF.render $ TF.vector [1, 2, 3, 0, 1 :: Float]
+        let y = TF.max x (0 :: TF.Tensor TF.Build Int32)
         TF.gradients y [x] >>= TF.run
     V.fromList [0, 0, 1, 0, 0 :: Float] @=? dx
 

@@ -34,13 +34,13 @@ numPixels = 28*28 :: Int64
 numLabels = 10 :: Int64
 
 -- | Create tensor with random values where the stddev depends on the width.
-randomParam :: Int64 -> TF.Shape -> TF.Build (TF.Tensor TF.Value Float)
+randomParam :: Int64 -> TF.Shape -> TF.Build (TF.Tensor TF.Build Float)
 randomParam width (TF.Shape shape) =
-    (* stddev) <$> TF.truncatedNormal (TF.vector shape)
+    (`TF.mul` stddev) <$> TF.truncatedNormal (TF.vector shape)
   where
     stddev = TF.scalar (1 / sqrt (fromIntegral width))
 
-reduceMean :: TF.Tensor TF.Value Float -> TF.Tensor TF.Value Float
+reduceMean :: TF.Tensor TF.Build Float -> TF.Tensor TF.Build Float
 reduceMean xs = TF.mean xs (TF.scalar (0 :: Int32))
 
 -- Types must match due to model structure.
@@ -87,7 +87,7 @@ createModel = do
     grads <- TF.gradients loss params
 
     let lr = TF.scalar 0.00001
-        applyGrad param grad = TF.assign param $ param `TF.sub` (lr * grad)
+        applyGrad param grad = TF.assign param $ param `TF.sub` (lr `TF.mul` grad)
     trainStep <- TF.group =<< zipWithM applyGrad params grads
 
     let correctPredictions = TF.equal predict labels

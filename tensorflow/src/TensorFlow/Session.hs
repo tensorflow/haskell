@@ -163,7 +163,7 @@ runWithFeeds feeds t = do
 runFetchWithFeeds :: [Feed] -> Set NodeName -> Fetch a -> Session a
 runFetchWithFeeds feeds target (Fetch fetch restore) = do
     extend
-    feeds' <- build $ fixFeeds feeds
+    let feeds' = fixFeeds feeds
     let fetchNames = encodeUtf8 <$> Set.toList fetch
         targetNames = toNodeNames $ Set.toList target
     session <- Session (asks rawSession)
@@ -192,8 +192,8 @@ runWithFeeds_ feeds t = do
     ns <- build $ getNodes t
     runFetchWithFeeds feeds ns (pure ())
 
-fixFeeds :: [Feed] -> Build [(ByteString, FFI.TensorData)]
-fixFeeds = mapM $ \(Feed o d) -> (,d) . encodeUtf8 <$> renderOutput o
+fixFeeds :: [Feed] -> [(ByteString, FFI.TensorData)]
+fixFeeds = map $ \(Feed o d) -> (encodeUtf8 $ encodeOutput o, d)
 
 -- | Starts a concurrent thread which evaluates the given Nodes
 -- forever until runSession exits or an exception occurs. Graph

@@ -24,9 +24,9 @@ module TensorFlow.EmbeddingOps where
 
 import Control.Monad (zipWithM)
 import Data.Int (Int32, Int64)
-import TensorFlow.Build (MonadBuild, colocateWith, render)
+import TensorFlow.Build (MonadBuild)
 import TensorFlow.Ops (shape, vector)  -- Also Num instance for Tensor
-import TensorFlow.Tensor (Tensor, Value)
+import TensorFlow.Tensor (Tensor, Value, Rendered, colocateWith, render)
 import TensorFlow.Types (OneOf, TensorType)
 import qualified TensorFlow.GenOps.Core as CoreOps
 
@@ -44,17 +44,18 @@ import qualified TensorFlow.GenOps.Core as CoreOps
 --
 -- The results of the lookup are concatenated into a dense
 -- tensor. The returned tensor has shape `shape(ids) + shape(params)[1:]`.
-embeddingLookup :: forall a b v m .
+embeddingLookup :: forall a b v1 v2 m .
                    ( MonadBuild m
+                   , Rendered v1, Rendered v2
                    , TensorType a
                    , OneOf '[Int64, Int32] b
                    , Num b
                    )
-                => [Tensor v a]
+                => [Tensor v1 a]
                 -- ^ A list of tensors which can be concatenated along
                 -- dimension 0. Each `Tensor` must be appropriately
                 -- sized for `mod` partition strategy.
-                -> Tensor Value b
+                -> Tensor v2 b
                 -- ^ A `Tensor` with type `int32` or `int64`
                 -- containing the ids to be looked up in `params`.
                 -- The ids are required to have fewer than 2^31

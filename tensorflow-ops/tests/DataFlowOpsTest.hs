@@ -26,16 +26,14 @@ import Test.QuickCheck.Monadic (monadicIO, run)
 import qualified Data.Vector as V
 import qualified TensorFlow.GenOps.Core as CoreOps
 import qualified TensorFlow.Ops as TF
-import qualified TensorFlow.Session as TF
-import qualified TensorFlow.Tensor as TF
-import qualified TensorFlow.Types as TF
+import qualified TensorFlow.Core as TF
 
 -- DynamicSplit is undone with DynamicStitch to get the original input
 -- back.
 testDynamicPartitionStitchInverse :: forall a.
     (TF.TensorDataType V.Vector a, Show a, Eq a) => StitchExample a -> Property
 testDynamicPartitionStitchInverse (StitchExample numParts values partitions) =
-   let splitParts :: [TF.Tensor TF.Value a] =
+   let splitParts :: [TF.Tensor TF.Build a] =
            CoreOps.dynamicPartition numParts (TF.vector values) partTensor
        partTensor = TF.vector partitions
        restitchIndices = CoreOps.dynamicPartition numParts
