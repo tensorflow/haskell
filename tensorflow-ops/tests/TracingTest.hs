@@ -35,7 +35,7 @@ testTracing = do
     loggedValue <- newEmptyMVar
     TF.runSessionWithOptions
         (def & TF.sessionTracer .~ putMVar loggedValue)
-        (TF.buildAnd TF.run_ (pure (TF.scalar (0 :: Float))))
+        (TF.run_ (TF.scalar (0 :: Float)))
     tryReadMVar loggedValue >>=
         maybe (assertFailure "Logging never happened") expectedFormat
   where expectedFormat x =

@@ -41,7 +41,7 @@ testSize = testCase "testSize" $ do
     TF.Scalar (2 * 3 :: Int32) @=? x
 
 eval :: TF.Fetchable t a => t -> IO a
-eval = TF.runSession . TF.buildAnd TF.run . return
+eval = TF.runSession . TF.run
 
 -- | Confirms that the original example from Python code works.
 testReducedShape :: Test
@@ -54,16 +54,16 @@ testSaveRestore :: Test
 testSaveRestore = testCase "testSaveRestore" $
     withSystemTempDirectory "" $ \dirPath -> do
         let path = B8.pack $ dirPath ++ "/checkpoint"
-            var :: TF.Build (TF.Tensor TF.Ref Float)
+            var :: TF.MonadBuild m => m (TF.Tensor TF.Ref Float)
             var = TF.render =<<
                   TF.named "a" <$> TF.zeroInitializedVariable (TF.Shape [])
         TF.runSession $ do
-            v <- TF.build var
-            TF.buildAnd TF.run_ $ TF.assign v 134
-            TF.buildAnd TF.run_ $ TF.save path [v]
+            v <- var
+            TF.assign v 134 >>= TF.run_
+            TF.save path [v] >>= TF.run_
         result <- TF.runSession $ do
-            v <- TF.build var
-            TF.buildAnd TF.run_ $ TF.restore path v
+            v <- var
+            TF.restore path v >>= TF.run_
             TF.run v
         liftIO $ TF.Scalar 134 @=? result
 

@@ -24,7 +24,7 @@ module TensorFlow.EmbeddingOps where
 
 import Control.Monad (zipWithM)
 import Data.Int (Int32, Int64)
-import TensorFlow.Build (Build, colocateWith, render)
+import TensorFlow.Build (MonadBuild, colocateWith, render)
 import TensorFlow.Ops (shape, vector)  -- Also Num instance for Tensor
 import TensorFlow.Tensor (Tensor, Value)
 import TensorFlow.Types (OneOf, TensorType)
@@ -44,8 +44,9 @@ import qualified TensorFlow.GenOps.Core as CoreOps
 --
 -- The results of the lookup are concatenated into a dense
 -- tensor. The returned tensor has shape `shape(ids) + shape(params)[1:]`.
-embeddingLookup :: forall a b v .
-                   ( TensorType a
+embeddingLookup :: forall a b v m .
+                   ( MonadBuild m
+                   , TensorType a
                    , OneOf '[Int64, Int32] b
                    , Num b
                    )
@@ -58,7 +59,7 @@ embeddingLookup :: forall a b v .
                 -- containing the ids to be looked up in `params`.
                 -- The ids are required to have fewer than 2^31
                 -- entries.
-                -> Build (Tensor Value a)
+                -> m (Tensor Value a)
                 -- ^ A dense tensor with shape `shape(ids) + shape(params)[1:]`.
 embeddingLookup [p0] ids = colocateWith p0 (render $ CoreOps.gather p0 ids)
 embeddingLookup params@(p0 : _) ids = do

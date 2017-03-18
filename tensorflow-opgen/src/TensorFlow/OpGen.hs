@@ -220,9 +220,12 @@ renderHaskellAttrName :: Attr a -> Doc
 renderHaskellAttrName = renderHaskellName . attrName
 
 functionBody :: ParsedOp -> Doc
-functionBody pOp = buildFunction <+> parens (hang 0 (stack buildOpParts))
+functionBody pOp = maybeLift <+> buildFunction <+> parens (hang 0 (stack buildOpParts))
                         </> indent indentation (sep tensorArgs)
   where
+    maybeLift
+        | parsedOpIsMonadic pOp = "build $"
+        | otherwise = ""
     buildFunction
         | null outputListsSizes = "buildOp"
         | otherwise = "buildListOp" <+>
@@ -277,13 +280,18 @@ typeSig pOp = constraints
                                 ++ [outputs])
   where
     constraints
-        | null (inferredTypeAttrs pOp) = empty
-        | otherwise = "forall" <+> sep typeParams <+> "." <+> classConstraints <+> "=>"
+        | null classConstraints = empty
+        | otherwise = "forall" <+> sep typeParams <+> "." <+> tuple classConstraints <+> "=>"
     typeParams = [strictText v | k <- parsedInputs pOp ++ parsedOutputs pOp,
                   Just (ArgTensorEither v) <- [argKind $ parsedArgCase k]]
                 ++ [renderHaskellAttrName n | n <- inferredTypeAttrs pOp]
-    classConstraints = tuple $ map tensorArgConstraint
-                    $ inferredTypeAttrs pOp
+                ++ if parsedOpIsMonadic pOp then ["m'"] else []
+    -- Use m' as the type parameter to avoid clashing with an attribute name.
+    monadConstraint
+        | parsedOpIsMonadic pOp = ["MonadBuild m'"]
+        | otherwise = []
+    classConstraints = monadConstraint ++ map tensorArgConstraint
+                                                    (inferredTypeAttrs pOp)
     signatureFold = folddoc (\x y -> x </> "->" <+> y)
     attrInput a = renderAttrType (attrInfo a) <+> hang 0 ("-- ^" <+> attrComment a)
     renderAttrType (AttrSingle a) = renderAttrBaseType a
@@ -304,7 +312,7 @@ typeSig pOp = constraints
         [a] -> wrapOutput (tensorArg a) <+> "-- ^" <+> argComment a
         as -> wrapOutput (tuple (map tensorArg as)) <+/> resultComment as
     wrapOutput o
-        | parsedOpIsMonadic pOp = "Build" <+> parens o
+        | parsedOpIsMonadic pOp = "m'" <+> parens o
         | otherwise = o
         
 -- | Render an op input or output.

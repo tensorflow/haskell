@@ -49,7 +49,7 @@ import TensorFlow.Tensor
     )
 import TensorFlow.Ops
 import TensorFlow.Session
-    (runSession, run, run_, runWithFeeds, build, buildAnd)
+    (runSession, run, run_, runWithFeeds, build)
 import TensorFlow.Types (TensorDataType(..), Shape(..), unScalar)
 import Test.Framework (Test)
 import Test.Framework.Providers.HUnit (testCase)
@@ -108,7 +108,7 @@ testGraphDefExec :: Test
 testGraphDefExec = testCase "testGraphDefExec" $ do
     let graphDef = asGraphDef $ render $ scalar (5 :: Float) * 10
     runSession $ do
-        build $ addGraphDef graphDef
+        addGraphDef graphDef
         x <- run $ tensorFromName ValueKind "Mul_2"
         liftIO $ (50 :: Float) @=? unScalar x
 
@@ -147,7 +147,7 @@ testMNISTExec = testCase "testMNISTExec" $ do
         wtsCkptPath <- liftIO wtsCkpt
         biasCkptPath <- liftIO biasCkpt
         -- Run those restoring nodes on the graph in the current session.
-        buildAnd run_ $ (sequence :: Monad m => [m a] -> m [a])
+        run_ =<< (sequence :: Monad m => [m a] -> m [a])
                         [ restore wtsCkptPath wts
                         , restoreFromName biasCkptPath "bias" bias
                         ]

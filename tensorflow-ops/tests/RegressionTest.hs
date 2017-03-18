@@ -25,13 +25,13 @@ fit xData yData = TF.runSession $ do
     let x = TF.vector xData
         y = TF.vector yData
     -- Create scalar variables for slope and intercept.
-    w <- TF.build (TF.initializedVariable 0)
-    b <- TF.build (TF.initializedVariable 0)
+    w <- TF.initializedVariable 0
+    b <- TF.initializedVariable 0
     -- Define the loss function.
     let yHat = (x `TF.mul` w) `TF.add` b
         loss = TF.square (yHat `TF.sub` y)
     -- Optimize with gradient descent.
-    trainStep <- TF.build (gradientDescent 0.001 loss [w, b])
+    trainStep <- gradientDescent 0.001 loss [w, b]
     replicateM_ 1000 (TF.run trainStep)
     -- Return the learned parameters.
     (TF.Scalar w', TF.Scalar b') <- TF.run (w, b)
@@ -40,7 +40,7 @@ fit xData yData = TF.runSession $ do
 gradientDescent :: Float
                 -> TF.Tensor TF.Value Float
                 -> [TF.Tensor TF.Ref Float]
-                -> TF.Build TF.ControlNode
+                -> TF.Session TF.ControlNode
 gradientDescent alpha loss params = do
     let applyGrad param grad =
             TF.assign param (param `TF.sub` (TF.scalar alpha `TF.mul` grad))

@@ -40,9 +40,9 @@ import TensorFlow.Types
 
 -- | Modify a 'Build' action, such that all new ops rendered in it will depend
 -- on the nodes in the first argument.
-withControlDependencies :: Nodes t => t -> Build a -> Build a
+withControlDependencies :: (MonadBuild m, Nodes t) => t -> m a -> m a
 withControlDependencies deps act = do
-    nodes <- getNodes deps
+    nodes <- build $ getNodes deps
     withNodeDependencies nodes act
 
 -- TODO(judahjacobson): Reimplement withDependencies.
@@ -51,9 +51,9 @@ withControlDependencies deps act = do
 --
 -- When this op finishes, all ops in the input @n@ have finished.  This op has
 -- no output.
-group :: Nodes t => t -> Build ControlNode
+group :: (MonadBuild m, Nodes t) => t -> m ControlNode
 group deps = do
-    nodes <- Set.toList <$> getNodes deps
+    nodes <- build $ Set.toList <$> getNodes deps
     -- TODO: slicker way
     return $ buildOp $ opDef "NoOp" & opControlInputs .~ nodes
 

@@ -22,7 +22,6 @@ import           TensorFlow.Test                    (assertAllClose)
 import           Test.Framework (Test)
 import           Test.Framework.Providers.HUnit     (testCase)
 import qualified Data.Vector                        as V
-import qualified TensorFlow.Build                   as TF
 import qualified TensorFlow.Gradient                as TF
 import qualified TensorFlow.Nodes                   as TF
 import qualified TensorFlow.NN                      as TF
@@ -97,8 +96,8 @@ testGradientAtZero = testCase "testGradientAtZero" $ do
 
     assertAllClose (head r) (V.fromList [0.5, -0.5])
 
-run :: TF.Fetchable t a => TF.Build t -> IO a
-run = TF.runSession . TF.buildAnd TF.run
+run :: TF.Fetchable t a => TF.Session t -> IO a
+run = TF.runSession . (>>= TF.run)
 
 main :: IO ()
 main = googleTest [ testGradientAtZero

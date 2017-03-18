@@ -24,10 +24,11 @@ import Data.ByteString (ByteString)
 import Data.Int (Int64)
 import Data.Proxy (Proxy(..))
 import Lens.Family2 ((.~), (&))
-import TensorFlow.Build (ControlNode, Build, addInitializer, opAttr, opDef)
+import TensorFlow.Build (ControlNode, MonadBuild, build, addInitializer, opAttr, opDef)
 import TensorFlow.BuildOp (buildOp)
 import TensorFlow.ControlFlow (group)
-import TensorFlow.Tensor (Ref, Tensor, TensorList)
+import qualified TensorFlow.GenOps.Core as CoreOps
+import TensorFlow.Tensor (Ref, Value, Tensor, TensorList)
 import TensorFlow.Types (TensorTypes, fromTensorTypes)
 
 -- | A queue carrying tuples.
@@ -36,36 +37,30 @@ data Queue (as :: [*]) = Queue { handle :: Handle }
 type Handle = Tensor Ref ByteString
 
 -- | Adds the given values to the queue.
-enqueue :: forall as v . TensorTypes as
+enqueue :: forall as v m . (MonadBuild m, TensorTypes as)
            => Queue as
            -> TensorList v as
-           -> Build ControlNode
-enqueue q =
-    buildOp (opDef "QueueEnqueue"
-             & opAttr "Tcomponents" .~ fromTensorTypes (Proxy :: Proxy as))
-    (handle q)
+           -> m ControlNode
+enqueue = CoreOps.queueEnqueue . handle
 
 -- | Retrieves the values from the queue.
-dequeue :: forall as . TensorTypes as
+dequeue :: forall as m . (MonadBuild m, TensorTypes as)
            => Queue as
-           -> Build (TensorList Ref as)
+           -> m (TensorList Value as)
            -- ^ Dequeued tensors. They are coupled in a sense
            -- that values appear together, even if they are
            -- not consumed together.
-dequeue q =
-    buildOp (opDef "QueueDequeue"
-             & opAttr "component_types" .~ fromTensorTypes (Proxy :: Proxy as))
-    (handle q)
+dequeue = CoreOps.queueDequeue . handle
 
 -- | Creates a new queue with the given capacity and shared name.
-makeQueue :: forall as . TensorTypes as
+makeQueue :: forall as m . (MonadBuild m, TensorTypes as)
               => Int64  -- ^ The upper bound on the number of elements in
                         --  this queue. Negative numbers mean no limit.
               -> ByteString -- ^ If non-empty, this queue will be shared
                             -- under the given name across multiple sessions.
-              -> Build (Queue as)
+              -> m (Queue as)
 makeQueue capacity sharedName = do
-    q <- buildOp (opDef "FIFOQueue"
+    q <- build $ buildOp (opDef "FIFOQueue"
                      & opAttr "component_types" .~ fromTensorTypes (Proxy :: Proxy as)
                      & opAttr "shared_name" .~ sharedName
                      & opAttr "capacity" .~ capacity
