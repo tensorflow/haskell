@@ -19,7 +19,7 @@
 module Main where
 
 import Control.Monad.IO.Class (liftIO)
-import Lens.Family2 ((^.))
+import Lens.Family2 ((^.), (.~))
 import Data.List (sort)
 import Proto.Tensorflow.Core.Framework.Graph
     ( node )
@@ -38,8 +38,8 @@ import TensorFlow.Build
     , withDevice
     , colocateWith
     , withNameScope
+    , opName
     )
-import TensorFlow.ControlFlow (named)
 import TensorFlow.Types (unScalar)
 import TensorFlow.Ops
     ( add
@@ -47,6 +47,7 @@ import TensorFlow.Ops
     , constant
     , initializedVariable
     , variable
+    , variable'
     )
 import TensorFlow.Output (Device(..))
 import TensorFlow.Tensor (Tensor, Value, Ref)
@@ -61,25 +62,15 @@ import Test.HUnit ((@=?))
 import Google.Test (googleTest)
 import qualified Data.Vector as V
 
--- | Test named behavior.
-testNamed :: Test
-testNamed = testCase "testNamed" $ do
-    let graph = named "foo" <$> variable [] >>= render :: Build (Tensor Ref Float)
+-- | Test 'opName' behavior.
+testOpName :: Test
+testOpName = testCase "testOpName" $ do
+    let graph = variable' (opName .~ "foo") []
+                    >>= render :: Build (Tensor Ref Float)
         nodeDef :: NodeDef
         nodeDef = head $ asGraphDef graph ^. node
-    "RefIdentity" @=? (nodeDef ^. op)
+    "Variable" @=? (nodeDef ^. op)
     "foo" @=? (nodeDef ^. name)
-
--- | Test named deRef behavior.
-testNamedDeRef :: Test
-testNamedDeRef = testCase "testNamedDeRef" $ do
-    let graph = named "foo" <$> do
-                    v :: Tensor Ref Float <- variable []
-                    assign v 5
-    -- TODO: Implement TensorFlow get_variable and test it.
-    runSession $ do
-      out <- graph >>= run
-      liftIO $ 5 @=? (unScalar out :: Float)
 
 -- | Test that "run" will render and extend any pure ops that haven't already
 -- been rendered.
@@ -118,14 +109,15 @@ testNameScoped = testCase "testNameScoped" $ do
     "foo/Variable_0" @=? (nodeDef ^. name)  -- TODO: Check prefix.
     "Variable" @=? (nodeDef ^. op)
 
--- | Test combined named and nameScoped behavior.
+-- | Test combined opName and nameScoped behavior.
 testNamedAndScoped :: Test
 testNamedAndScoped = testCase "testNamedAndScoped" $ do
     let graph :: Build (Tensor Ref Float)
-        graph = withNameScope "foo1" ((named "bar1" <$> variable []) >>= render)
+        graph = withNameScope "foo1" (variable' (opName .~ "bar1") [])
+                    >>= render
         nodeDef :: NodeDef
         nodeDef = head $ asGraphDef graph ^. node
-    "RefIdentity" @=? (nodeDef ^. op)
+    "Variable" @=? (nodeDef ^. op)
     "foo1/bar1" @=? (nodeDef ^. name)
 
 -- | Flush the node buffer and sort the nodes by name (for more stable tests).
@@ -174,8 +166,7 @@ main :: IO ()
 main = googleTest [ testInitializedVariable
                   , testInitializedVariableShape
                   , testDeviceColocation
-                  , testNamed
-                  , testNamedDeRef
+                  , testOpName
                   , testNameScoped
                   , testNamedAndScoped
                   , testPureRender

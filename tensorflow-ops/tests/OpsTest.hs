@@ -19,6 +19,7 @@ module Main where
 import Control.Monad.IO.Class (liftIO)
 import Data.Int (Int32, Int64)
 import Google.Test (googleTest)
+import Lens.Family2 ((.~))
 import System.IO.Temp (withSystemTempDirectory)
 import Test.Framework (Test)
 import Test.Framework.Providers.HUnit (testCase)
@@ -27,7 +28,6 @@ import qualified Data.ByteString.Char8 as B8
 
 import qualified Data.Vector as V
 import qualified TensorFlow.Build as TF
-import qualified TensorFlow.ControlFlow as TF
 import qualified TensorFlow.Nodes as TF
 import qualified TensorFlow.Ops as TF
 import qualified TensorFlow.Session as TF
@@ -56,7 +56,8 @@ testSaveRestore = testCase "testSaveRestore" $
         let path = B8.pack $ dirPath ++ "/checkpoint"
             var :: TF.MonadBuild m => m (TF.Tensor TF.Ref Float)
             var = TF.render =<<
-                  TF.named "a" <$> TF.zeroInitializedVariable (TF.Shape [])
+                  TF.zeroInitializedVariable' (TF.opName .~ "a")
+                                        (TF.Shape [])
         TF.runSession $ do
             v <- var
             TF.assign v 134 >>= TF.run_

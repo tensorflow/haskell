@@ -22,21 +22,15 @@ module TensorFlow.ControlFlow
       withControlDependencies
     , group
       -- * Operations
-    , identity
     , noOp
-    , named
     ) where
 
 import qualified Data.Set as Set
-import Data.Text (Text)
-import Lens.Family2 ((&), (^.), (.~))
+import Lens.Family2 ((&), (.~))
 
 import TensorFlow.BuildOp
 import TensorFlow.Build
 import TensorFlow.Nodes
-import TensorFlow.Output
-import TensorFlow.Tensor
-import TensorFlow.Types
 
 -- | Modify a 'Build' action, such that all new ops rendered in it will depend
 -- on the nodes in the first argument.
@@ -56,31 +50,6 @@ group deps = do
     nodes <- build $ Set.toList <$> getNodes deps
     -- TODO: slicker way
     return $ buildOp $ opDef "NoOp" & opControlInputs .~ nodes
-
-
--- | Returns a 'Tensor' with the same shape and contents as the input.
-identity :: TensorType a => Tensor v a -> Tensor v a
-identity = namedIdentity implicitName
-
--- | Returns a 'Tensor' with a given name and the same shape and contents as
--- the input.
---
--- TODO(judahjacobson): This breaks when used with uninitialize @Tensor Ref@s,
--- since @RefIdentity@ doesn't have SetAllowsUninitializedInput().  Look into
--- whether we can change that op.
-named :: TensorType a => Text -> Tensor v a -> Tensor v a
-named = namedIdentity . explicitName
-
--- | An internal version of "identity" that allows setting the name
--- of the output Tensor.
-namedIdentity :: forall a v . TensorType a
-              => PendingNodeName -> Tensor v a -> Tensor v a
-namedIdentity n t = case t ^. tensorKind of
-                      ValueKind -> buildOp (opDefWithName n "Identity" & setTypeAttr) t
-                      RefKind -> buildOp (opDefWithName n "RefIdentity" & setTypeAttr) t
-  where
-    setTypeAttr = opAttr "T" .~ tensorType (undefined :: a)
-
 
 -- | Does nothing.  Only useful as a placeholder for control edges.
 noOp :: ControlNode

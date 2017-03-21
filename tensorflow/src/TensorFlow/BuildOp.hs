@@ -23,6 +23,7 @@ module TensorFlow.BuildOp
     , buildOp
     , buildListOp
     , eqLengthGuard
+    , OpParams
     )
   where
 
@@ -238,3 +239,7 @@ eqLengthGuard = all eachOk
     eachOk (numberAttrName, pairs@((_, x) : zs)) = all (\z -> snd z == x) zs ||
         error ("number_attr " ++ numberAttrName ++
                " contains tensors with different length " ++ show pairs)
+
+-- | Parameters to build an op (for example, the node name or optional attributes).
+-- TODO: be more type safe.
+type OpParams = OpDef -> OpDef
