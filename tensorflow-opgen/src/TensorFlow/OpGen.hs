@@ -177,7 +177,7 @@ renderOp pOp = stack $
     -- to stack calling "-dump-hi" which (unnecessarily) includes the
     -- inlining information, and is large for ops with many arguments.
 #if __GLASGOW_HASKELL__ < 800
-    , "{-# NOINLINE " <> n <> "#-}"
+    , "{-# NOINLINE" <+> n <+> "#-}"
 #endif
     , n <+> "::" <+> hang 0 (typeSig empty pOp)
     , n <+> "=" <+> n <> "' id"
