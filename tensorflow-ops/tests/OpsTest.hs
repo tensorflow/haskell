@@ -12,6 +12,7 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
+{-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Main where
@@ -68,9 +69,20 @@ testSaveRestore = testCase "testSaveRestore" $
             TF.run v
         liftIO $ TF.Scalar 134 @=? result
 
+-- | Test that 'placeholder' is not CSE'd.
+testPlaceholderCse :: Test
+testPlaceholderCse = testCase "testPlaceholderCse" $ TF.runSession $ do
+    p1 <- TF.placeholder []
+    p2 <- TF.placeholder []
+    let enc :: Float -> TF.TensorData Float
+        enc n = TF.encodeTensorData [] (V.fromList [n])
+    result <- TF.runWithFeeds [TF.feed p1 (enc 2), TF.feed p2 (enc 3)] $ p1 + p2
+    liftIO $ result @=? TF.Scalar 5
+
 
 main :: IO ()
 main = googleTest [ testSaveRestore
                   , testSize
                   , testReducedShape
+                  , testPlaceholderCse
                   ]

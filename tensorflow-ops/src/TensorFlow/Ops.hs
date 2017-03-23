@@ -203,9 +203,15 @@ matTranspose' params = flip (CoreOps.transpose' params) (vector [1, 0 :: Int32])
 placeholder :: (MonadBuild m, TensorType a) => Shape -> m (Tensor Value a)
 placeholder = placeholder' id
 
-placeholder' :: (MonadBuild m, TensorType a) => OpParams -> Shape -> m (Tensor Value a)
+placeholder' :: forall m a . (MonadBuild m, TensorType a)
+             => OpParams -> Shape -> m (Tensor Value a)
 placeholder' params pShape
-    = render $ CoreOps.placeholder' (params . (opAttr "shape" .~ pShape))
+    -- Note: we don't use CoreOps.placeholder' since that op isn't stateful,
+    -- and thus would be CSE'd.
+    = build $ buildOp $ opDef "Placeholder"
+                & opAttr "dtype" .~ tensorType (undefined :: a)
+                & opAttr "shape" .~ pShape
+                & params
 
 -- | Creates a variable initialized to the given value.
 -- Initialization happens next time session runs.
