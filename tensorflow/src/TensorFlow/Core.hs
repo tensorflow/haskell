@@ -31,8 +31,7 @@ module TensorFlow.Core
     , runSession
     , runSessionWithOptions
       -- ** Building graphs
-    , build
-    , buildAnd
+    , MonadBuild(..)
       -- ** Running graphs
     , Fetchable
     , Nodes
@@ -51,14 +50,14 @@ module TensorFlow.Core
     , render
     , asGraphDef
     , addGraphDef
-
+    , opName
+    , opAttr
       -- * Tensor
     , ControlNode
     , Tensor
     , Value
     , Ref
     , TensorKind(..)
-    , tensorAttr
     , value
     , tensorFromName
       -- ** Element types
@@ -75,12 +74,10 @@ module TensorFlow.Core
     , Device(..)
     , withDevice
     , withNameScope
-    , named
       -- ** Dependencies
     , withControlDependencies
     , group
       -- ** Misc
-    , identity
     , noOp
     ) where
 

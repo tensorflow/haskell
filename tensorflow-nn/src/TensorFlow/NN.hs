@@ -23,7 +23,7 @@ module TensorFlow.NN
 import Prelude hiding           ( log
                                 , exp
                                 )
-import TensorFlow.Build         ( Build
+import TensorFlow.Build         ( MonadBuild
                                 , render
                                 , withNameScope
                                 )
@@ -71,10 +71,10 @@ import TensorFlow.Ops           ( zerosLike
 --
 --  `logits` and `targets` must have the same type and shape.
 sigmoidCrossEntropyWithLogits
-  :: (OneOf '[Float, Double] a, TensorType a, Num a)
+  :: (MonadBuild m, OneOf '[Float, Double] a, TensorType a, Num a)
      => Tensor Value a          -- ^ __logits__
      -> Tensor Value a          -- ^ __targets__
-     -> Build (Tensor Value a)
+     -> m (Tensor Value a)
 sigmoidCrossEntropyWithLogits logits targets = do
     logits' <- render logits
     targets' <- render targets

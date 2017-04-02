@@ -12,6 +12,7 @@ module TensorFlow.OpGen.ParsedOp
     , Attr(..)
     , AttrType(..)
     , AttrBaseType(..)
+    , TypeParam(..)
     , ParsedArg(..)
     , ParsedArgCase(..)
     , ArgType(..)
@@ -62,10 +63,8 @@ data ParsedOp = ParsedOp
     , explicitInputAttrs :: [Attr AttrType]
         -- ^ Attributes that must be set explicitly when creating the op.
         -- Associated with the type of the attribute.
-    , inferredTypeAttrs :: [Attr [DataType]]
+    , inferredTypeAttrs :: [Attr TypeParam]
         -- ^ Attributes that are type parameters.
-        -- Associated with the list of allowed types (see: TensorFlow.Types.OneOf).
-        -- If this list is empty, then any type is acceptable.
     , inferredListSizeAttrs :: [Attr (NonEmpty Name)]
         -- Attributes which are list sizes (ints) that are inferred automatically
         -- from one or more of the input tensors.
@@ -104,6 +103,13 @@ data AttrBaseType = AttrBytes | AttrInt64 | AttrFloat | AttrBool
                 | AttrType | AttrShape | AttrTensor
                 deriving Eq
 
+data TypeParam = TypeParam
+    { typeParamIsList :: Bool
+    , typeParamRestrictions :: Maybe (NonEmpty DataType)
+        -- ^ The list of allowed types (see: TensorFlow.Types.OneOf).
+        -- If 'Nothing', then any type is acceptable.
+    }
+
 -- | An input or output argument (Tensor) for an op.
 data ParsedArg = ParsedArg
     { parsedArgName :: Name
@@ -120,7 +126,6 @@ data ParsedArgCase
         }
     | MixedListArg { argTypeAttr :: Name, argCaseKind :: ArgKind }
         -- ^ A heterogeneous list.
-        -- TODO(judahjacobson): Implement this.
     | ResourceArg
 
 argKind :: ParsedArgCase -> Maybe ArgKind
@@ -223,11 +228,6 @@ parseOp o = ParsedOp
                 (o ^. inputArg) tensorKindParams
     tensorKindParams = ["v" <> Text.pack (show x) | x <- [1::Integer ..]]
     parsedOutputs = map (\a -> parseArg a (outputTensorKind a)) (o ^. outputArg)
-    -- Type attributes that can be inferred from at least one input or output.
-    argTypeAttrs = Set.fromList $ mapMaybe parsedArgTypeAttr
-                       $ parsedInputs ++ parsedOutputs
-    inferredTypeAttrs = filter ((`Set.member` argTypeAttrs) . tfName . attrName)
-                            $ mapMaybeAttrs getInferredTypeAttr $ o ^. attr
     -- Integer attributes that can be inferred from the size of at least one
     -- input list.
     inferredListSizeAttrs = mapMaybeAttrs (getInferredListSizeAttr parsedInputs)
@@ -235,10 +235,14 @@ parseOp o = ParsedOp
     implicitAttrs = Set.fromList $ map tfName $
                         map attrName inferredTypeAttrs
                             ++ map attrName inferredListSizeAttrs
-    -- Attributes that can't be inferred and don't have defaults, so must be passed
-    -- as separate arguments to the op.
+    inferredTypeAttrs = mapMaybeAttrs (getInferredTypeAttr argTypeParams) $ o ^. attr
+    argTypeParams = Set.fromList $ map tfName $
+                        mapMaybe (getArgTypeParam . parsedArgCase) $
+                            parsedInputs ++ parsedOutputs
+    -- Attributes that can't be inferred and don't have defaults, so must be
+    -- passed as separate arguments to the op.
     explicitInputAttrs = sortBy (comparing (tfName . attrName))
-                        $ mapMaybeAttrs (getExplicitInputAttr implicitAttrs)
+                        $ mapMaybeAttrs (getExplicitInputAttr o implicitAttrs)
                         $ o ^. attr
 
 -- TODO(judahjacobson): Some arguments should be refs.
@@ -252,29 +256,30 @@ outputTensorKind a
     | a ^. isRef = ArgTensorRef
     | otherwise = ArgTensorValue
 
-getExplicitInputAttr :: Set.Set TFName -> OpDef'AttrDef -> Maybe AttrType
-getExplicitInputAttr implicitAttrs a
+getExplicitInputAttr :: OpDef -> Set.Set TFName -> OpDef'AttrDef -> Maybe AttrType
+getExplicitInputAttr o implicitAttrs a
     | TFName (a ^. name) `Set.notMember` implicitAttrs
     , a ^. maybe'defaultValue == Nothing
-    , t <- parseAttrType (a ^. type')
-    , t `elem` map AttrSingle [AttrBool, AttrInt64, AttrFloat, AttrShape] = Just t
+    , t <- parseAttrType o (a ^. type')
+    , t `elem` map AttrSingle
+                    [AttrBool, AttrInt64, AttrFloat, AttrType, AttrShape]
+                ++ [AttrList AttrType] = Just t
     | otherwise = Nothing
 
--- | The type attribute used by this input or output (if any).
-parsedArgTypeAttr :: ParsedArg -> Maybe TFName
-parsedArgTypeAttr p = case parsedArgCase p of
-    ResourceArg -> Nothing
-    SimpleArg {argType = t} -> fromArgType t
-    ListArg {argType = t} -> fromArgType t
-    MixedListArg {argTypeAttr = n} -> Just $ tfName n
+getInferredTypeAttr :: Set.Set TFName -> OpDef'AttrDef -> Maybe TypeParam
+getInferredTypeAttr argTypeParams a
+    | TFName (a ^. name) `notElem` argTypeParams = Nothing
+    | a ^. type' == "type" = Just $ TypeParam False allowed
+    | a ^. type' == "list(type)" = Just $ TypeParam True allowed
+    | otherwise = Nothing
   where
-    fromArgType (ArgTypeAttr n) = Just $ tfName n
-    fromArgType _ = Nothing
+    allowed = nonEmpty (a ^. allowedValues . list . type')
 
-getInferredTypeAttr :: OpDef'AttrDef -> Maybe [DataType]
-getInferredTypeAttr a
-    | a ^. type' == "type" = Just $ a ^. allowedValues . list . type'
-    | otherwise = Nothing
+getArgTypeParam :: ParsedArgCase -> Maybe Name
+getArgTypeParam SimpleArg { argType = ArgTypeAttr n} = Just n
+getArgTypeParam ListArg { argType = ArgTypeAttr n} = Just n
+getArgTypeParam MixedListArg { argTypeAttr = n } = Just n
+getArgTypeParam _ = Nothing
 
 getInferredListSizeAttr :: [ParsedArg] -> OpDef'AttrDef -> Maybe (NonEmpty Name)
 getInferredListSizeAttr inputs a
@@ -285,7 +290,7 @@ getInferredListSizeAttr inputs a
                                   } <- inputs
                       , TFName (a ^. name) == tfName n]
     | otherwise = Nothing
-    
+
 -- | Like mapMaybe, but associates the attribute name/description with the given info.
 mapMaybeAttrs :: (OpDef'AttrDef -> Maybe a) -> [OpDef'AttrDef] -> [Attr a]
 mapMaybeAttrs f = mapMaybe $ \a -> do
@@ -295,7 +300,7 @@ mapMaybeAttrs f = mapMaybe $ \a -> do
                                 , attrDescription = a ^. description
                                 , attrInfo = x
                                 }
-  
+
 parseArg :: OpDef'ArgDef -> ArgKind -> ParsedArg
 parseArg a tKind = ParsedArg
     { parsedArgName = makeName (a ^. name)
@@ -317,15 +322,15 @@ parseArgCase a tKind
     maybeAttr "" = Nothing
     maybeAttr t = Just $ makeName t
 
-parseAttrType :: Text -> AttrType
-parseAttrType = \case
+parseAttrType :: OpDef -> Text -> AttrType
+parseAttrType o = \case
     "string" -> AttrSingle AttrBytes
-    "int" -> AttrSingle AttrInt64 
-    "float" -> AttrSingle AttrFloat 
-    "bool" -> AttrSingle AttrBool 
-    "type" -> AttrSingle AttrType 
-    "shape" -> AttrSingle AttrShape 
-    "tensor" -> AttrSingle AttrTensor 
+    "int" -> AttrSingle AttrInt64
+    "float" -> AttrSingle AttrFloat
+    "bool" -> AttrSingle AttrBool
+    "type" -> AttrSingle AttrType
+    "shape" -> AttrSingle AttrShape
+    "tensor" -> AttrSingle AttrTensor
     "list(string)" -> AttrList AttrBytes
     "list(int)" -> AttrList AttrInt64
     "list(float)" -> AttrList AttrFloat
@@ -334,3 +339,4 @@ parseAttrType = \case
     "list(shape)" -> AttrList AttrShape
     "list(tensor)" -> AttrList AttrTensor
     t -> error $ "parseAttrType: unrecognized type " ++ show t
+              ++ " for op " ++ show (o ^. name)

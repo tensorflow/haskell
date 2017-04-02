@@ -12,6 +12,7 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
@@ -20,13 +21,12 @@ module Main where
 import Control.Monad.IO.Class (liftIO)
 import Data.Int (Int64)
 import Google.Test (googleTest)
-import TensorFlow.Types (Scalar(..))
+import TensorFlow.Types (ListOf(..), Scalar(..), (/:/))
 import TensorFlow.Ops (scalar)
 import TensorFlow.Queue
 import TensorFlow.Session
     ( asyncProdNodes
     , build
-    , buildAnd
     , run
     , runSession
     , run_
@@ -39,42 +39,50 @@ import qualified Data.ByteString as BS
 -- | Test basic queue behaviors.
 testBasic :: Test
 testBasic = testCase "testBasic" $ runSession $ do
-    (q :: Queue2 Int64 BS.ByteString) <- build $ makeQueue2 1 ""
-    buildAnd run_ (enqueue q 42 (scalar "Hi"))
-    x <- buildAnd run (dequeue q)
-    liftIO $ (Scalar 42, Scalar "Hi") @=? x
+    q :: Queue [Int64, BS.ByteString] <- build $ makeQueue 1 ""
+    run_ =<< enqueue q (42 :/ scalar "Hi" :/ Nil)
+    x <- run =<< dequeue q
+    liftIO $ (Scalar 42 /:/ Scalar "Hi" /:/ Nil) @=? x
 
-    buildAnd run_ (enqueue q 56 (scalar "Bar"))
-    y <- buildAnd run (dequeue q)
-    liftIO $ (Scalar 56, Scalar "Bar") @=? y
+    run_ =<< enqueue q (56 :/ scalar "Bar" :/ Nil)
+    y <- run =<< dequeue q
+    -- Note: we use explicit "Scalar" here to specify the type that was
+    -- fetched.  Equivalently we could write
+    -- 56 /:/ "Bar" /:/ Nil :: List [Scalar Int64, Scalar BS.ByteString]
+    -- or else allow the types to be determined by future use of the fetched
+    -- value.
+    let expected = Scalar 56 /:/ Scalar "Bar" /:/ Nil
+    liftIO $ expected @=? y
 
 -- | Test queue pumping.
 testPump :: Test
 testPump = testCase "testPump" $ runSession $ do
     (deq, pump) <- build $ do
-        q :: Queue2 Int64 BS.ByteString <- makeQueue2 2 "ThePumpQueue"
+        q :: Queue [Int64, BS.ByteString] <- makeQueue 2 "ThePumpQueue"
         (,) <$> dequeue q
-            <*> enqueue q 31 (scalar "Baz")
+            <*> enqueue q (31 :/ scalar "Baz" :/ Nil)
     -- This is a realistic use. The pump inputs are pre-bound to some
     -- nodes that produce values when pumped (e.g. read from a
     -- file).
     run_ (pump, pump)
 
     (x, y) <- run (deq, deq)
-    liftIO $ (Scalar 31, Scalar "Baz") @=? x
-    liftIO $ (Scalar 31, Scalar "Baz") @=? y
+    let expected = Scalar 31 /:/ Scalar "Baz" /:/ Nil
+    liftIO $ expected @=? x
+    liftIO $ expected @=? y
 
 testAsync :: Test
 testAsync = testCase "testAsync" $ runSession $ do
-    (deq, pump) <- build $ do
-        q :: Queue2 Int64 BS.ByteString <- makeQueue2 2 ""
+    (deq, pump) <- do
+        q :: Queue [Int64, BS.ByteString] <- makeQueue 2 ""
         (,) <$> dequeue q
-            <*> enqueue q 10 (scalar "Async")
+            <*> enqueue q (10 :/ scalar "Async" :/ Nil)
     -- Pumps the queue until canceled by runSession exiting.
     asyncProdNodes pump
     -- Picks up a couple values and verifies they are as expected.
-    run deq >>= liftIO . ((Scalar 10, Scalar "Async") @=?)
-    run deq >>= liftIO . ((Scalar 10, Scalar "Async") @=?)
+    let expected = Scalar 10 /:/ Scalar "Async" /:/ Nil
+    run deq >>= liftIO . (expected @=?)
+    run deq >>= liftIO . (expected @=?)
 
 main :: IO ()
 main = googleTest [ testBasic

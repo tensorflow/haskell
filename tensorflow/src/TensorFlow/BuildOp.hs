@@ -13,6 +13,8 @@
 -- limitations under the License.
 
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TupleSections #-}
 
 module TensorFlow.BuildOp
@@ -21,6 +23,7 @@ module TensorFlow.BuildOp
     , buildOp
     , buildListOp
     , eqLengthGuard
+    , OpParams
     )
   where
 
@@ -33,6 +36,7 @@ import Lens.Family2 ((&), (<>~), (^.))
 import TensorFlow.Build
 import TensorFlow.Output
 import TensorFlow.Tensor
+import TensorFlow.Types
 
 data ResultState = ResultState !OutputIx [Int64] deriving Show
 
@@ -98,6 +102,22 @@ instance OpResult (Tensor Ref a) where
 instance OpResult ControlNode where
     toResult = ControlNode <$> ask
 
+tensorListResult :: forall as v . TensorTypes as => TensorKind v -> Result (TensorList v as)
+tensorListResult v = loop (tensorTypes :: TensorTypeList as)
+  where
+    loop :: TensorTypeList bs -> Result (TensorList v bs)
+    loop Nil = return Nil
+    loop (TensorTypeProxy :/ ls) = do
+        t <- tensorResult v
+        ts <- loop ls
+        return (t :/ ts)
+
+instance TensorTypes as => OpResult (TensorList Value as) where
+    toResult = tensorListResult ValueKind
+
+instance TensorTypes as => OpResult (TensorList Ref as) where
+    toResult = tensorListResult RefKind
+
 instance OpResult a => OpResult [a] where
     toResult = do
         ResultState i ns <- get
@@ -159,6 +179,12 @@ instance BuildOp (Tensor Value a) where
 instance BuildOp (Tensor Ref a) where
     buildOp' = pureResult
 
+instance TensorTypes as => BuildOp (TensorList Value as) where
+    buildOp' = pureResult
+
+instance TensorTypes as => BuildOp (TensorList Ref as) where
+    buildOp' = pureResult
+
 instance BuildOp [Tensor Value a] where
     buildOp' = pureResult
 
@@ -199,6 +225,10 @@ instance BuildOp f => BuildOp ([Tensor v a] -> f) where
     buildOp' rf o accum ts
         = buildOp' rf o (reverse (fmap (^. tensorOutput) ts) ++ accum)
 
+instance BuildOp f => BuildOp (TensorList v as -> f) where
+    buildOp' rf o accum ts
+        = buildOp' rf o (reverse (tensorListOutputs ts) ++ accum)
+
 -- | Returns true if all the integers in each tuple are identical.
 -- Throws an error with a descriptive message if not.
 eqLengthGuard :: [(String, [(String, Int)])] -> Bool
@@ -209,3 +239,7 @@ eqLengthGuard = all eachOk
     eachOk (numberAttrName, pairs@((_, x) : zs)) = all (\z -> snd z == x) zs ||
         error ("number_attr " ++ numberAttrName ++
                " contains tensors with different length " ++ show pairs)
+
+-- | Parameters to build an op (for example, the node name or optional attributes).
+-- TODO: be more type safe.
+type OpParams = OpDef -> OpDef

@@ -12,6 +12,7 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
+{-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Main where
@@ -19,6 +20,7 @@ module Main where
 import Control.Monad.IO.Class (liftIO)
 import Data.Int (Int32, Int64)
 import Google.Test (googleTest)
+import Lens.Family2 ((.~))
 import System.IO.Temp (withSystemTempDirectory)
 import Test.Framework (Test)
 import Test.Framework.Providers.HUnit (testCase)
@@ -27,7 +29,6 @@ import qualified Data.ByteString.Char8 as B8
 
 import qualified Data.Vector as V
 import qualified TensorFlow.Build as TF
-import qualified TensorFlow.ControlFlow as TF
 import qualified TensorFlow.Nodes as TF
 import qualified TensorFlow.Ops as TF
 import qualified TensorFlow.Session as TF
@@ -41,7 +42,7 @@ testSize = testCase "testSize" $ do
     TF.Scalar (2 * 3 :: Int32) @=? x
 
 eval :: TF.Fetchable t a => t -> IO a
-eval = TF.runSession . TF.buildAnd TF.run . return
+eval = TF.runSession . TF.run
 
 -- | Confirms that the original example from Python code works.
 testReducedShape :: Test
@@ -54,22 +55,48 @@ testSaveRestore :: Test
 testSaveRestore = testCase "testSaveRestore" $
     withSystemTempDirectory "" $ \dirPath -> do
         let path = B8.pack $ dirPath ++ "/checkpoint"
-            var :: TF.Build (TF.Tensor TF.Ref Float)
+            var :: TF.MonadBuild m => m (TF.Tensor TF.Ref Float)
             var = TF.render =<<
-                  TF.named "a" <$> TF.zeroInitializedVariable (TF.Shape [])
+                  TF.zeroInitializedVariable' (TF.opName .~ "a")
+                                        (TF.Shape [])
         TF.runSession $ do
-            v <- TF.build var
-            TF.buildAnd TF.run_ $ TF.assign v 134
-            TF.buildAnd TF.run_ $ TF.save path [v]
+            v <- var
+            TF.assign v 134 >>= TF.run_
+            TF.save path [v] >>= TF.run_
         result <- TF.runSession $ do
-            v <- TF.build var
-            TF.buildAnd TF.run_ $ TF.restore path v
+            v <- var
+            TF.restore path v >>= TF.run_
             TF.run v
         liftIO $ TF.Scalar 134 @=? result
 
+-- | Test that 'placeholder' is not CSE'd.
+testPlaceholderCse :: Test
+testPlaceholderCse = testCase "testPlaceholderCse" $ TF.runSession $ do
+    p1 <- TF.placeholder []
+    p2 <- TF.placeholder []
+    let enc :: Float -> TF.TensorData Float
+        enc n = TF.encodeTensorData [] (V.fromList [n])
+    result <- TF.runWithFeeds [TF.feed p1 (enc 2), TF.feed p2 (enc 3)] $ p1 + p2
+    liftIO $ result @=? TF.Scalar 5
+
+-- | Test that regular tensors can also be used for feeds, as long as they each
+-- have a different name.
+testScalarFeedCse :: Test
+testScalarFeedCse = testCase "testScalarFeedCse" $ TF.runSession $ do
+    p1 <- TF.render $ TF.scalar' (TF.opName .~ "A") 0
+    -- The second op is identical to the first other than its name; make sure
+    -- we don't aggressively CSE them together and prevent feeding them
+    -- separately.
+    p2 <- TF.render $ TF.scalar' (TF.opName .~ "B") 0
+    let enc :: Float -> TF.TensorData Float
+        enc n = TF.encodeTensorData [] (V.fromList [n])
+    result <- TF.runWithFeeds [TF.feed p1 (enc 2), TF.feed p2 (enc 3)] $ p1 + p2
+    liftIO $ result @=? TF.Scalar 5
 
 main :: IO ()
 main = googleTest [ testSaveRestore
                   , testSize
                   , testReducedShape
+                  , testPlaceholderCse
+                  , testScalarFeedCse
                   ]

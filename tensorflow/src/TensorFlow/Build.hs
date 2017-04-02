@@ -37,6 +37,7 @@ module TensorFlow.Build
     , renderedNodeDefs
     , BuildT
     , Build
+    , MonadBuild(..)
     , addInitializer
     , hoistBuildT
     , evalBuildT
@@ -212,9 +213,16 @@ runBuildT (BuildT f) = runStateT f initGraphState
 evalBuildT :: Monad m => BuildT m a -> m a
 evalBuildT (BuildT f) = evalStateT f initGraphState
 
+-- | Lift a 'Build' action into a monad, including any explicit op renderings.
+class Monad m => MonadBuild m where
+    build :: Build a -> m a
+
+instance Monad m => MonadBuild (BuildT m) where
+    build = hoistBuildT $ return . runIdentity
+
 -- | Get all the NodeDefs that have accumulated so far, and clear that buffer.
-flushNodeBuffer :: Monad m => BuildT m [NodeDef]
-flushNodeBuffer = do
+flushNodeBuffer :: MonadBuild m => m [NodeDef]
+flushNodeBuffer = build $ do
     ns <- use nodeBuffer
     nodeBuffer .= []
     return ns
@@ -229,8 +237,8 @@ flushInitializers = do
 
 -- | Registers the given node to be executed before the next
 -- 'TensorFlow.Session.run'.
-addInitializer :: ControlNode -> Build ()
-addInitializer (ControlNode o) = do
+addInitializer :: MonadBuild m => ControlNode -> m ()
+addInitializer (ControlNode o) = build $ do
     i <- getOrAddOp o
     initializationNodes %= (i:)
 
@@ -242,8 +250,8 @@ asGraphDef b = def & node .~ gs ^. nodeBuffer
     gs = snd $ runIdentity $ runBuildT b
 
 -- TODO: check against existing nodes for conflicts?
-addGraphDef :: GraphDef -> Build ()
-addGraphDef g = nodeBuffer <>= g ^. node
+addGraphDef :: MonadBuild m => GraphDef -> m ()
+addGraphDef g = build $ nodeBuffer <>= g ^. node
 
 -- | Render the given op if it hasn't been rendered already, and return its
 -- name.
@@ -318,34 +326,34 @@ renderOutput (Output (OutputIx i) o) = do
 
 -- | Modify some part of the state, run an action, and restore the state
 -- after that action is done.
-withStateLens :: MonadState s m => Lens' s a -> (a -> a) -> m b -> m b
+withStateLens :: MonadBuild m => Lens' GraphState a -> (a -> a) -> m b -> m b
 withStateLens accessor f act = do
-    old <- use accessor
-    accessor %= f
+    old <- build $ use accessor
+    build $ accessor %= f
     result <- act
-    accessor .= old
+    build $ accessor .= old
     return result
 
 -- | Set a device for all nodes rendered in the given 'Build' action
 -- (unless further overridden by another use of withDevice).
-withDevice :: Maybe Device -> Build a -> Build a
+withDevice :: MonadBuild m => Maybe Device -> m a -> m a
 withDevice d = withStateLens defaultDevice (const d)
 
 -- | Places all nodes rendered in the given 'Build' action on the same
 -- device as the given Tensor (see also 'withDevice'). Make sure that
 -- the action has side effects of rendering the desired tensors. A pure
 -- return would not have the desired effect.
-colocateWith :: forall a v b . Tensor v b -> Build a -> Build a
+colocateWith :: MonadBuild m => forall a v b . Tensor v b -> m a -> m a
 colocateWith t x = do
-    d <- Device . (^. device) <$> resolveOp (t ^. tensorOutput . outputOp)
+    d <- build $ Device . (^. device) <$> resolveOp (t ^. tensorOutput . outputOp)
     withDevice (Just d) x
 
 -- | Prepend a scope to all nodes rendered in the given 'Build' action.
-withNameScope :: Text -> Build a -> Build a
+withNameScope :: MonadBuild m => Text -> m a -> m a
 withNameScope s = withStateLens currentScope (Scope s :)
 
 -- | Add control inputs to all nodes rendered in the given 'Build' action.
-withNodeDependencies :: Set NodeName -> Build a -> Build a
+withNodeDependencies :: MonadBuild m => Set NodeName -> m a -> m a
 withNodeDependencies nodes = withStateLens defaultControlInputs (<> nodes)
 
 -- | Render a 'Tensor', fixing its name, scope, device and control inputs from
@@ -355,8 +363,8 @@ withNodeDependencies nodes = withStateLens defaultControlInputs (<> nodes)
 -- This operation is idempotent; @render >=> render === render@.  However,
 -- rendering a (previously un-rendered) 'Tensor' in two different contexts
 -- may result in two different 'Tensor's.
-render :: Tensor v a -> Build (Tensor v a)
-render = tensorOutput $ outputOp $ fmap Rendered . resolveOp
+render :: MonadBuild m => Tensor v a -> m (Tensor v a)
+render = build . tensorOutput (outputOp $ fmap Rendered . resolveOp)
 
 -- | Render a 'Tensor' and get its node's name.
 renderNodeName :: Tensor v a -> Build NodeName

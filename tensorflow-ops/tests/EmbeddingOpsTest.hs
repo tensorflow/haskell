@@ -39,11 +39,6 @@ import qualified TensorFlow.Tensor as TF
 import qualified TensorFlow.Types as TF
 import qualified TensorFlow.Gradient as TF
 import qualified TensorFlow.Build as TF
-import qualified TensorFlow.Nodes as TF
-
-
-buildAndRun :: TF.Fetchable t a => TF.Build t -> IO a
-buildAndRun = TF.runSession . TF.buildAnd TF.run
 
 
 -- | Tries to perform a simple embedding lookup, with two partitions.
@@ -61,9 +56,9 @@ testEmbeddingLookupHasRightShapeWithPartition =
     let ids       = TF.constant (TF.Shape [1, 2]) idValues
     let op        = embeddingLookup embedding ids
 
-    (values, shape) <- buildAndRun $ do
+    (values, shape) <- TF.runSession $ do
         vs <- op
-        return (vs, TF.shape vs)
+        TF.run (vs, TF.shape vs)
 
     -- This is the shape that is returned in the equiv. Python.
     shape  @=? V.fromList [1, 2, 3]
@@ -87,9 +82,9 @@ testEmbeddingLookupHasRightShape =
     let ids       = TF.constant (TF.Shape [1, 2]) idValues
     let op        = embeddingLookup [embedding] ids
 
-    (values, shape) <- buildAndRun $ do
+    (values, shape) <- TF.runSession $ do
         vs <- op
-        return (vs, TF.shape vs)
+        TF.run (vs, TF.shape vs)
 
     -- This is the shape that is returned in the equiv. Python.
     shape  @=? V.fromList [1, 2, 3]
@@ -106,7 +101,6 @@ testEmbeddingLookupGradients = testCase "testEmbeddingLookupGradients" $ do
     let shape = TF.Shape [2]
 
     gs <- TF.runSession $ do
-        grads <- TF.build $ do
             let embShape      = TF.Shape [2, 1]
             let embeddingInit = [1, 20 ::Float]
             let idValues      = [1, 1 :: Int32]
@@ -121,9 +115,9 @@ testEmbeddingLookupGradients = testCase "testEmbeddingLookupGradients" $ do
                 loss    = TF.mean twoNorm (TF.scalar (0 :: Int32))
 
             grad <- fmap head (TF.gradients loss [embedding])
-            return $ \xs -> TF.runWithFeeds [TF.feed x xs] grad
-
-        grads (TF.encodeTensorData shape xVals :: TF.TensorData Float)
+            TF.runWithFeeds
+                [TF.feed x $ TF.encodeTensorData shape xVals]
+                grad
     -- Gradients should be zero (or close)
     assertAllClose gs (V.fromList ([0, 0 :: Float]))
 
@@ -148,7 +142,7 @@ testEmbeddingLookupUndoesSplit
         shapedValues = TF.constant shape values
     in monadicIO $ run $ do
        (shapeOut, got, want :: V.Vector a) <-
-           TF.runSession $ TF.buildAnd TF.run $ do
+           TF.runSession $ TF.run =<< do
                embeddings <- embeddingLookup modShardedValues indicesVector
                return (TF.cast (TF.shape embeddings), embeddings, directs)
        -- Checks the explicitly documented invariant of embeddingLookup.

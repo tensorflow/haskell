@@ -124,6 +124,9 @@ data OpDef = OpDef
 data PendingNodeName = ExplicitName !Text | ImplicitName
     deriving (Eq, Ord, Show)
 
+instance IsString PendingNodeName where
+    fromString = ExplicitName . fromString
+
 -- | The name of a node in the graph.  This corresponds to the proto field
 -- NodeDef.name.  Includes the scope prefix (if any) and a unique identifier
 -- (if the node was implicitly named).
