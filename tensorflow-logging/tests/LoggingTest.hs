@@ -21,7 +21,7 @@ import Data.Default (def)
 import Data.List ((\\))
 import Data.ProtoLens (decodeMessageOrDie)
 import Lens.Family2 ((^.), (.~), (&))
-import Proto.Tensorflow.Core.Util.Event (fileVersion, step)
+import Proto.Tensorflow.Core.Util.Event (Event, fileVersion, step)
 import System.Directory (getDirectoryContents)
 import System.FilePath ((</>))
 import System.IO.Temp (withSystemTempDirectory)
@@ -43,7 +43,7 @@ testEventWriter :: Test
 testEventWriter = testCase "EventWriter" $
     withSystemTempDirectory "event_writer_logs" $ \dir -> do
         assertEqual "No file before" [] =<< listDirectory dir
-        let expected = [ def & step .~ 10
+        let expected = [ (def :: Event) & step .~ 10
                        , def & step .~ 222
                        , def & step .~ 8
                        ]

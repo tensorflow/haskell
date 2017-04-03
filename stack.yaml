@@ -1,4 +1,4 @@
-resolver: lts-6.2
+resolver: lts-8.6
 
 packages:
 - google-shim
@@ -18,11 +18,12 @@ packages:
 
 extra-deps:
 # proto-lens is not yet in Stackage.
-- proto-lens-0.1.0.5
-- proto-lens-protoc-0.1.0.5
-- proto-lens-descriptors-0.1.0.5
+- proto-lens-0.2.0.0
+- proto-lens-protoc-0.2.0.0
+- proto-lens-descriptors-0.2.0.0
 - snappy-framing-0.1.1
 - snappy-0.2.0.2
+- lens-labels-0.1.0.0
 
 # Allow our custom Setup.hs scripts to import Data.ProtoLens.Setup from the version of
 # `proto-lens-protoc` in stack's local DB.  See:
