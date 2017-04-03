@@ -34,8 +34,8 @@ library
                      , Proto.Tensorflow.Core.Framework.TensorDescription
                      , Proto.Tensorflow.Core.Framework.Versions
                      , Proto.Tensorflow.Core.Protobuf.Debug
-  build-depends:  proto-lens == 0.1.*
-                , proto-lens-protoc == 0.1.*
+  build-depends:  proto-lens == 0.2.*
+                , proto-lens-protoc == 0.2.*
                 , base >= 4.7 && < 5
   default-language:    Haskell2010
   include-dirs: .

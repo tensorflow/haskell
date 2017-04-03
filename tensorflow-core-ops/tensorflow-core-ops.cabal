@@ -16,7 +16,7 @@ library
   build-depends:  Cabal >= 1.22 && < 1.25
                 , bytestring
                 , directory
-                , proto-lens == 0.1.*
+                , proto-lens == 0.2.*
                 , tensorflow-opgen == 0.1.*
                 , tensorflow == 0.1.*
                 , base >= 4.7 && < 5
