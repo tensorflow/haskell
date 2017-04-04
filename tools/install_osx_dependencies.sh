@@ -28,9 +28,9 @@ echo "Downloading libtensorflow..."
 curl https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-cpu-darwin-x86_64-1.0.0.tar.gz > libtensorflow.tar.gz
 
 echo "Extracting and copying libtensorflow..."
-tar zxf libtensorflow.tar.gz -C /usr/local
+sudo tar zxf libtensorflow.tar.gz -C /usr/local
 rm libtensorflow.tar.gz
-mv /usr/local/lib/libtensorflow.so /usr/local/lib/libtensorflow.dylib
+sudo mv /usr/local/lib/libtensorflow.so /usr/local/lib/libtensorflow.dylib
 
 sudo install_name_tool -id libtensorflow.dylib /usr/local/lib/libtensorflow.dylib
 
