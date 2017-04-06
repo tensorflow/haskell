@@ -67,10 +67,10 @@ import Proto.Tensorflow.Core.Framework.Summary (Summary)
 import Proto.Tensorflow.Core.Util.Event (Event, fileVersion, step, summary, wallTime)
 import System.Directory (createDirectoryIfMissing)
 import System.FilePath ((</>))
-import TensorFlow.Build (Build, render, SummaryTensor, addSummary, collectAllSummaries)
+import TensorFlow.Build (MonadBuild)
 import TensorFlow.Ops (scalar)
 import TensorFlow.Records.Conduit (sinkTFRecords)
-import TensorFlow.Tensor (Tensor)
+import TensorFlow.Tensor (Tensor, render, SummaryTensor, addSummary, collectAllSummaries)
 import TensorFlow.Types (TensorType, type(/=))
 import Text.Printf (printf)
 import qualified Data.ByteString.Lazy as L
@@ -141,19 +141,19 @@ doubleWallTime = asDouble <$> getCurrentTime
 -- | Adds a 'CoreOps.histogramSummary' node. The tag argument is intentionally
 -- limited to a single value for simplicity.
 histogramSummary ::
-    (TensorType t, t /= ByteString, t /= Bool)
+    (MonadBuild m, TensorType t, t /= ByteString, t /= Bool)
      -- OneOf '[Int16, Int32, Int64, Int8, Word16, Word8, Double, Float] t)
-    => ByteString -> Tensor v t -> Build ()
+    => ByteString -> Tensor v t -> m ()
 histogramSummary tag = addSummary . CoreOps.histogramSummary (scalar tag)
 
 -- | Adds a 'CoreOps.scalarSummary' node.
 scalarSummary ::
-    (TensorType t, t /= ByteString, t /= Bool)
+    (TensorType t, t /= ByteString, t /= Bool, MonadBuild m)
     -- (TensorType t,
     --  OneOf '[Int16, Int32, Int64, Int8, Word16, Word8, Double, Float] t)
-    => ByteString -> Tensor v t -> Build ()
+    => ByteString -> Tensor v t -> m ()
 scalarSummary tag = addSummary . CoreOps.scalarSummary (scalar tag)
 
 -- | Merge all summaries accumulated in the 'Build' into one summary.
-mergeAllSummaries :: Build SummaryTensor
+mergeAllSummaries :: MonadBuild m => m SummaryTensor
 mergeAllSummaries = collectAllSummaries >>= render . CoreOps.mergeSummary

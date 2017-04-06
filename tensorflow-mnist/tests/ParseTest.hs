@@ -37,15 +37,15 @@ import TensorFlow.Examples.MNIST.TrainedGraph
 import TensorFlow.Build
     ( asGraphDef
     , addGraphDef
-    , render
+    , Build
     )
 import TensorFlow.Tensor
     ( Tensor(..)
     , Ref
-    , Value
     , feed
-    , TensorKind(..)
+    , render
     , tensorFromName
+    , tensorValueFromName
     )
 import TensorFlow.Ops
 import TensorFlow.Session
@@ -80,7 +80,7 @@ testReadMNIST = testCase "testReadMNIST" $ do
     labelData <- readMNISTLabels =<< testLabelData
     10000 @=? length labelData
 
-testNodeName :: Text -> Tensor v a -> Assertion
+testNodeName :: Text -> Tensor Build a -> Assertion
 testNodeName n g = n @=? opName
   where
     opName = head (gDef^.node)^.op
@@ -89,7 +89,7 @@ testNodeName n g = n @=? opName
 testGraphDefGen :: Test
 testGraphDefGen = testCase "testGraphDefGen" $ do
     -- Test the inferred operation type.
-    let f0 :: Tensor Value Float
+    let f0 :: Tensor Build Float
         f0 = 0
     testNodeName "Const" f0
     testNodeName "Add"  $ 1 + f0
@@ -109,7 +109,7 @@ testGraphDefExec = testCase "testGraphDefExec" $ do
     let graphDef = asGraphDef $ render $ scalar (5 :: Float) * 10
     runSession $ do
         addGraphDef graphDef
-        x <- run $ tensorFromName ValueKind "Mul_2"
+        x <- run $ tensorValueFromName "Mul_2"
         liftIO $ (50 :: Float) @=? unScalar x
 
 -- | Load MNIST from a GraphDef and the weights from a checkpoint and run on
@@ -142,8 +142,8 @@ testMNISTExec = testCase "testMNISTExec" $ do
         build $ addGraphDef $ mnist & version .~ 0
         -- Define nodes that restore saved weights and biases.
         let bias, wts :: Tensor Ref Float
-            bias = tensorFromName RefKind "Variable"
-            wts = tensorFromName RefKind "weights"
+            bias = tensorFromName "Variable"
+            wts = tensorFromName "weights"
         wtsCkptPath <- liftIO wtsCkpt
         biasCkptPath <- liftIO biasCkpt
         -- Run those restoring nodes on the graph in the current session.
@@ -155,12 +155,12 @@ testMNISTExec = testCase "testMNISTExec" $ do
         let ty = encodeTensorData [10] oneHotLabels
               where oneHotLabels = V.replicate 10 (0 :: Float) V.// updates
                     updates = [(fromIntegral label, 1)]
-        let feeds = [ feed (tensorFromName ValueKind "x-input") tensorSample
-                    , feed (tensorFromName ValueKind "y-input") ty
+        let feeds = [ feed (tensorValueFromName "x-input") tensorSample
+                    , feed (tensorValueFromName "y-input") ty
                     ]
         -- Run the graph with the input feeds and read the ArgMax'd result from
         -- the test (not training) side of the evaluation.
-        x <- runWithFeeds feeds $ tensorFromName ValueKind "test/ArgMax"
+        x <- runWithFeeds feeds $ tensorValueFromName "test/ArgMax"
         -- Print the trained model's predicted outcome.
         liftIO $ putStrLn $ "Expectation: " ++ show label ++ "\n"
                          ++ "Prediction:  " ++ show (unScalar x :: Int64)

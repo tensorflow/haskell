@@ -53,9 +53,9 @@ testFFIRoundTrip = testCase "testFFIRoundTrip" $
         let floatData = V.fromList [1..6 :: Float]
             stringData = V.fromList [B8.pack (show x) | x <- [1..6::Integer]]
             boolData = V.fromList [True, True, False, True, False, False]
-        f <- TF.build $ TF.placeholder [2,3]
-        s <- TF.build $ TF.placeholder [2,3]
-        b <- TF.build $ TF.placeholder [2,3]
+        f <- TF.placeholder [2,3]
+        s <- TF.placeholder [2,3]
+        b <- TF.placeholder [2,3]
         let feeds = [ TF.feed f (TF.encodeTensorData [2,3] floatData)
                     , TF.feed s (TF.encodeTensorData [2,3] stringData)
                     , TF.feed b (TF.encodeTensorData [2,3] boolData)
@@ -63,7 +63,8 @@ testFFIRoundTrip = testCase "testFFIRoundTrip" $
         -- Do something idempotent to the tensors to verify that tensorflow can
         -- handle the encoding. Originally this used `TF.identity`, but that
         -- wasn't enough to catch a bug in the encoding of Bool.
-        (f', s', b') <- TF.runWithFeeds feeds (f+0, TF.identity s, TF.select b b b)
+        (f', s', b') <- TF.runWithFeeds feeds
+                            (f `TF.add` 0, TF.identity s, TF.select b b b)
         liftIO $ do
             floatData @=? f'
             stringData @=? s'

@@ -20,6 +20,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE UndecidableInstances #-}  -- For Fetchable (TensorExpr a)
 module TensorFlow.Nodes where
 
 import Control.Applicative (liftA2, liftA3)
@@ -28,7 +29,6 @@ import Data.Map.Strict (Map)
 import Data.Monoid ((<>))
 import Data.Set (Set)
 import Data.Text (Text)
-import Lens.Family2 ((^.))
 import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
 
@@ -90,7 +90,7 @@ instance Fetchable t a => Fetchable [t] [a] where
     getFetch ts  = sequenceA <$> mapM getFetch ts
 
 instance Nodes ControlNode where
-    getNodes (ControlNode o) = Set.singleton <$> getOrAddOp o
+    getNodes (ControlNode o) = pure $ Set.singleton o
 
 -- We use the constraint @(a ~ ())@ to help with type inference.  For example,
 -- if @t :: ControlNode@, then this constraint ensures that @run t :: Session
@@ -113,13 +113,13 @@ instance (Fetchable (f t) a, Fetchable (ListOf f ts) (List as), i ~ Identity)
     getFetch (x :/ xs) = liftA2 (\y ys -> y /:/ ys) <$> getFetch x <*> getFetch xs
 
 instance Nodes (Tensor v a) where
-    getNodes t = Set.singleton <$> getOrAddOp (t ^. tensorOutput . outputOp)
+    getNodes (Tensor o) = Set.singleton . outputNodeName <$> toBuild o
 
-fetchTensorVector :: forall a v . TensorType a
+fetchTensorVector :: forall a v . (TensorType a)
                   => Tensor v a -> Build (Fetch (TensorData a))
-fetchTensorVector (Tensor _ o) = do
-    outputName <- renderOutput o
-    return $ Fetch (Set.singleton outputName) $ \tensors ->
+fetchTensorVector (Tensor o) = do
+    outputName <- encodeOutput <$> toBuild o
+    pure $ Fetch (Set.singleton outputName) $ \tensors ->
         let tensorData = tensors Map.! outputName
             expectedType = tensorType (undefined :: a)
             actualType = FFI.tensorDataType tensorData

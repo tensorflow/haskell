@@ -38,7 +38,7 @@ fit xData yData = TF.runSession $ do
     return (w', b')
 
 gradientDescent :: Float
-                -> TF.Tensor TF.Value Float
+                -> TF.Tensor TF.Build Float
                 -> [TF.Tensor TF.Ref Float]
                 -> TF.Session TF.ControlNode
 gradientDescent alpha loss params = do

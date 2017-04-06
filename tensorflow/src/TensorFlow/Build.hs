@@ -13,9 +13,13 @@
 -- limitations under the License.
 
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE Rank2Types #-}
+{-# LANGUAGE TypeFamilies #-}
 module TensorFlow.Build
     ( -- * Graph node types
       ControlNode(..)
@@ -32,8 +36,6 @@ module TensorFlow.Build
     , opControlInputs
     -- * The Build monad
     , GraphState
-    , render
-    , renderNodeName
     , renderedNodeDefs
     , BuildT
     , Build
@@ -46,27 +48,23 @@ module TensorFlow.Build
     , addGraphDef
     , flushInitializers
     , flushNodeBuffer
+    , summaries
     -- * Creating and looking up Ops
     , getOrAddOp
     , addNewOp
-    , renderOutput
+    , encodeOutput
+    , lookupNode
     -- * Modifying all nodes in a Build action
-    , colocateWith
     , withStateLens
     , withDevice
     , withNameScope
     , withNodeDependencies
-    -- * Internal Summary related bits.
-    , addSummary
-    , SummaryTensor
-    , collectAllSummaries
     ) where
 
 import Control.Monad.Catch (MonadThrow, MonadCatch, MonadMask)
 import Control.Monad.IO.Class (MonadIO(..))
 import Control.Monad.Trans.Class (MonadTrans(..))
 import Control.Monad.Trans.State.Strict(StateT(..), mapStateT, evalStateT)
-import Data.ByteString (ByteString)
 import Data.Default (def)
 import Data.Functor.Identity (Identity(..))
 import qualified Data.Map.Strict as Map
@@ -94,7 +92,6 @@ import Proto.Tensorflow.Core.Framework.NodeDef
 
 import TensorFlow.Orphans ()
 import TensorFlow.Output
-import TensorFlow.Tensor
 
 newtype Unique = Unique Int
     deriving (Eq, Ord, Enum)
@@ -125,9 +122,6 @@ opDefWithName n t = OpDef
     , _opControlInputs = []
     }
 
--- | Synonym for the tensors that return serialized Summary proto.
-type SummaryTensor = Tensor Value ByteString
-
 data GraphState = GraphState
     { _renderedNodes :: !(Map.Map PendingNode NodeDef)
         -- ^ Nodes which have been rendered.  Keeps track of the unique ID we
@@ -148,8 +142,8 @@ data GraphState = GraphState
     , _initializationNodes  :: [NodeName]
       -- ^ The nodes to run next time a TF.run is issued, typically
       -- variable initializers.
-    , _summaries :: [SummaryTensor]
-      -- ^ The tensors for summary
+    , _summaries :: [Output]
+      -- ^ The tensors for summary (ByteString type)
     }
 
 -- | A node definition without its final name.  Used as a key in the
@@ -191,7 +185,7 @@ defaultControlInputs = lens _defaultControlInputs
 initializationNodes :: Lens' GraphState [NodeName]
 initializationNodes = lens _initializationNodes (\g x -> g { _initializationNodes = x })
 
-summaries :: Lens' GraphState [SummaryTensor]
+summaries :: Lens' GraphState [Output]
 summaries = lens _summaries (\g x -> g { _summaries = x })
 
 -- | An action for building nodes in a TensorFlow graph.
@@ -238,9 +232,7 @@ flushInitializers = do
 -- | Registers the given node to be executed before the next
 -- 'TensorFlow.Session.run'.
 addInitializer :: MonadBuild m => ControlNode -> m ()
-addInitializer (ControlNode o) = build $ do
-    i <- getOrAddOp o
-    initializationNodes %= (i:)
+addInitializer (ControlNode i) = build $ initializationNodes %= (i:)
 
 -- | Produce a GraphDef proto representation of the nodes that are rendered in
 -- the given 'Build' action.
@@ -255,30 +247,31 @@ addGraphDef g = build $ nodeBuffer <>= g ^. node
 
 -- | Render the given op if it hasn't been rendered already, and return its
 -- name.
-getOrAddOp :: Op -> Build NodeName
-getOrAddOp o = NodeName . (^. name) <$> resolveOp o
-
-resolveOp :: Op -> Build NodeDef
-resolveOp (Rendered n) = return n
-resolveOp (Unrendered o) = do
+getOrAddOp :: OpDef -> Build NodeName
+getOrAddOp o = do
     pending <- getPendingNode o
     uses renderedNodes (Map.lookup pending) >>= \case
-        Just n -> return n
+        Just n -> return $ NodeName $ n ^. name
         Nothing -> addNewOpFromPending pending
+
+lookupNode :: NodeName -> Build NodeDef
+lookupNode n = uses renderedNodeDefs (Map.lookup n) >>= \case
+    Just n' -> return n'
+    Nothing -> error $ "lookupNode: unknown node name " ++ show n
 
 -- | Add a new node for a given 'OpDef'.  This is used for making "stateful" ops
 -- which are not safe to dedup (e.g, "variable" and "assign").
-addNewOp :: OpDef -> Build NodeDef
+addNewOp :: OpDef -> Build NodeName
 addNewOp o = getPendingNode o >>= addNewOpFromPending
 
-addNewOpFromPending :: PendingNode -> Build NodeDef
+addNewOpFromPending :: PendingNode -> Build NodeName
 addNewOpFromPending pending = do
     nodeName <- renderPendingNode pending
     let nodeDef = pendingNodeDef pending & name .~ unNodeName nodeName
     nodeBuffer %= (nodeDef :)
     renderedNodes %= Map.insert pending nodeDef
     renderedNodeDefs %= Map.insert nodeName nodeDef
-    return nodeDef
+    return nodeName
 
 -- | Get the pending node corresponding to an OpDef, which may or may not have
 -- been rendered before.  Implicitly renders all of this node's inputs.
@@ -287,20 +280,18 @@ getPendingNode o = do
     -- An empty string in the proto field means that no specific
     -- device is specified.
     dev <- maybe "" deviceName <$> use defaultDevice
-    inputs <- mapM getInput (o ^. opInputs)
     scope <- use currentScope
     controls <- use defaultControlInputs
+    let inputs = map encodeOutput (o ^. opInputs)
     let controlInputs
-            = map getDep (o ^. opControlInputs ++ Set.toList controls)
+            = map makeDep (o ^. opControlInputs ++ Set.toList controls)
     return $ PendingNode scope (o ^. opName)
             $ def & op .~ (unOpType (o ^. opType) :: Text)
                   & attr .~ _opAttrs o
                   & input .~ (inputs ++ controlInputs)
                   & device .~ dev
   where
-    getInput (Output (OutputIx k) subOp)
-        = (<> ":" <> Text.pack (show k)) . unNodeName <$> getOrAddOp subOp
-    getDep = ("^" <>) . unNodeName
+    makeDep = ("^" <>) . unNodeName
 
 -- | Pick a name for a pending node.  If it has an explicit name, just use that;
 -- if the name is implicit, assign a new unique name based on the op type.
@@ -317,12 +308,11 @@ renderPendingNode (PendingNode scope pendingName nodeDef)
             return $ nodeDef ^. op <> "_" <> Text.pack (show k)
 
 
--- | Render an 'Output' and return a string representation for the TensorFlow
+-- | Turn an 'Output' into a string representation for the TensorFlow
 -- foreign APIs.
-renderOutput :: Output -> Build Text
-renderOutput (Output (OutputIx i) o) = do
-    n <- getOrAddOp o
-    return $ unNodeName n <> Text.pack (":" ++ show i)
+encodeOutput :: Output -> Text
+encodeOutput (Output (OutputIx 0) n) = unNodeName n
+encodeOutput (Output (OutputIx i) n) = unNodeName n <> Text.pack (':' : show i)
 
 -- | Modify some part of the state, run an action, and restore the state
 -- after that action is done.
@@ -339,15 +329,6 @@ withStateLens accessor f act = do
 withDevice :: MonadBuild m => Maybe Device -> m a -> m a
 withDevice d = withStateLens defaultDevice (const d)
 
--- | Places all nodes rendered in the given 'Build' action on the same
--- device as the given Tensor (see also 'withDevice'). Make sure that
--- the action has side effects of rendering the desired tensors. A pure
--- return would not have the desired effect.
-colocateWith :: MonadBuild m => forall a v b . Tensor v b -> m a -> m a
-colocateWith t x = do
-    d <- build $ Device . (^. device) <$> resolveOp (t ^. tensorOutput . outputOp)
-    withDevice (Just d) x
-
 -- | Prepend a scope to all nodes rendered in the given 'Build' action.
 withNameScope :: MonadBuild m => Text -> m a -> m a
 withNameScope s = withStateLens currentScope (Scope s :)
@@ -355,31 +336,3 @@ withNameScope s = withStateLens currentScope (Scope s :)
 -- | Add control inputs to all nodes rendered in the given 'Build' action.
 withNodeDependencies :: MonadBuild m => Set NodeName -> m a -> m a
 withNodeDependencies nodes = withStateLens defaultControlInputs (<> nodes)
-
--- | Render a 'Tensor', fixing its name, scope, device and control inputs from
--- the 'Build' context.  Also renders any dependencies of the 'Tensor' that
--- weren't already rendered.
---
--- This operation is idempotent; @render >=> render === render@.  However,
--- rendering a (previously un-rendered) 'Tensor' in two different contexts
--- may result in two different 'Tensor's.
-render :: MonadBuild m => Tensor v a -> m (Tensor v a)
-render = build . tensorOutput (outputOp $ fmap Rendered . resolveOp)
-
--- | Render a 'Tensor' and get its node's name.
-renderNodeName :: Tensor v a -> Build NodeName
-renderNodeName t = getOrAddOp (t ^. tensorOutput . outputOp)
-
--- | Records the given summary action in Build for retrieval with
--- 'collectAllSummaries'. The summary op is required to produce a
--- Summary protocol buffer in string form. For safety, use the
--- pre-composed functions: Logging.scalarSummary and
--- Logging.histogramSummary.
-addSummary :: SummaryTensor -> Build ()
-addSummary t = summaries %= (t :)
-
--- | Retrieves the summary ops collected thus far. Typically this only
--- happens once, but if 'TensorFlow.Session.buildWithSummary' is used
--- repeatedly, the values accumulate.
-collectAllSummaries :: Monad m => BuildT m [SummaryTensor]
-collectAllSummaries = use summaries
