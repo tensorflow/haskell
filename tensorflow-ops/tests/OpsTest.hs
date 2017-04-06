@@ -56,8 +56,7 @@ testSaveRestore = testCase "testSaveRestore" $
     withSystemTempDirectory "" $ \dirPath -> do
         let path = B8.pack $ dirPath ++ "/checkpoint"
             var :: TF.MonadBuild m => m (TF.Tensor TF.Ref Float)
-            var = TF.render =<<
-                  TF.zeroInitializedVariable' (TF.opName .~ "a")
+            var = TF.zeroInitializedVariable' (TF.opName .~ "a")
                                         (TF.Shape [])
         TF.runSession $ do
             v <- var
@@ -76,7 +75,8 @@ testPlaceholderCse = testCase "testPlaceholderCse" $ TF.runSession $ do
     p2 <- TF.placeholder []
     let enc :: Float -> TF.TensorData Float
         enc n = TF.encodeTensorData [] (V.fromList [n])
-    result <- TF.runWithFeeds [TF.feed p1 (enc 2), TF.feed p2 (enc 3)] $ p1 + p2
+    result <- TF.runWithFeeds [TF.feed p1 (enc 2), TF.feed p2 (enc 3)]
+                $ p1 `TF.add` p2
     liftIO $ result @=? TF.Scalar 5
 
 -- | Test that regular tensors can also be used for feeds, as long as they each
@@ -90,7 +90,8 @@ testScalarFeedCse = testCase "testScalarFeedCse" $ TF.runSession $ do
     p2 <- TF.render $ TF.scalar' (TF.opName .~ "B") 0
     let enc :: Float -> TF.TensorData Float
         enc n = TF.encodeTensorData [] (V.fromList [n])
-    result <- TF.runWithFeeds [TF.feed p1 (enc 2), TF.feed p2 (enc 3)] $ p1 + p2
+    result <- TF.runWithFeeds [TF.feed p1 (enc 2), TF.feed p2 (enc 3)]
+                $ p1 `TF.add` p2
     liftIO $ result @=? TF.Scalar 5
 
 main :: IO ()

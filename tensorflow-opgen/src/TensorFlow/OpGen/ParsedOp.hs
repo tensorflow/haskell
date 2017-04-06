@@ -141,7 +141,8 @@ data ArgType
 data ArgKind
     = ArgTensorRef -- Tensor Ref a
     | ArgTensorValue -- Tensor Value a
-    | ArgTensorEither Text -- Tensor v a; the Text is the variable `v`
+    | ArgTensorBuild -- Tensor Build a
+    | ArgSomeTensor Text -- Tensor v a; the Text is the variable 'v'.
     deriving (Eq)
 
 isRefCase :: ParsedArgCase -> Bool
@@ -219,15 +220,17 @@ parseOp o = ParsedOp
     { parsedOpName = makeName $ o ^. name
     , parsedOpSummary = o ^. summary
     , parsedOpDescription = o ^. description
-    , parsedOpIsMonadic = o ^. isStateful
-                            || any (isRefCase . parsedArgCase) parsedInputs
     , ..
     }
   where
-    parsedInputs = zipWith (\a v -> parseArg a (inputTensorKind a v))
-                (o ^. inputArg) tensorKindParams
-    tensorKindParams = ["v" <> Text.pack (show x) | x <- [1::Integer ..]]
-    parsedOutputs = map (\a -> parseArg a (outputTensorKind a)) (o ^. outputArg)
+    parsedOpIsMonadic = o ^. isStateful
+                    || any (isRefCase . parsedArgCase) parsedInputs
+                    || null (o ^. outputArg)
+    parsedInputs = zipWith (\t a -> parseArg a (inputTensorKind t a))
+                                        tensorKindParams (o ^. inputArg) 
+    tensorKindParams = ["v'" <> Text.pack (show x) | x <- [1::Integer ..]]
+    parsedOutputs = map (\a -> parseArg a (outputTensorKind parsedOpIsMonadic a))
+                        (o ^. outputArg)
     -- Integer attributes that can be inferred from the size of at least one
     -- input list.
     inferredListSizeAttrs = mapMaybeAttrs (getInferredListSizeAttr parsedInputs)
@@ -246,15 +249,16 @@ parseOp o = ParsedOp
                         $ o ^. attr
 
 -- TODO(judahjacobson): Some arguments should be refs.
-inputTensorKind :: OpDef'ArgDef -> Text -> ArgKind
-inputTensorKind a v
+inputTensorKind :: Text -> OpDef'ArgDef -> ArgKind
+inputTensorKind v a
     | a ^. isRef = ArgTensorRef
-    | otherwise = ArgTensorEither v
+    | otherwise = ArgSomeTensor v
 
-outputTensorKind :: OpDef'ArgDef -> ArgKind
-outputTensorKind a
+outputTensorKind :: Bool -> OpDef'ArgDef -> ArgKind
+outputTensorKind isMonadic a
     | a ^. isRef = ArgTensorRef
-    | otherwise = ArgTensorValue
+    | isMonadic = ArgTensorValue
+    | otherwise = ArgTensorBuild
 
 getExplicitInputAttr :: OpDef -> Set.Set TFName -> OpDef'AttrDef -> Maybe AttrType
 getExplicitInputAttr o implicitAttrs a

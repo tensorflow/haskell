@@ -23,10 +23,9 @@ import           Test.Framework (Test)
 import           Test.Framework.Providers.HUnit     (testCase)
 import qualified Data.Vector                        as V
 import qualified TensorFlow.Gradient                as TF
-import qualified TensorFlow.Nodes                   as TF
 import qualified TensorFlow.NN                      as TF
 import qualified TensorFlow.Ops                     as TF
-import qualified TensorFlow.Session                 as TF
+import qualified TensorFlow.Core                    as TF
 
 -- | These tests are ported from:
 --
@@ -60,12 +59,11 @@ defInputs = Inputs {
 testLogisticOutput :: Test
 testLogisticOutput = testCase "testLogisticOutput" $ do
     let inputs     = defInputs
-        vLogits    = TF.vector $ logits  inputs
-        vTargets   = TF.vector $ targets inputs
-        tfLoss     = TF.sigmoidCrossEntropyWithLogits vLogits vTargets
-        ourLoss    = V.fromList $ sigmoidXentWithLogits (logits inputs) (targets inputs)
-
-    r <- run tfLoss
+    r <- run $ do
+        vLogits    <- TF.render $ TF.vector $ logits  inputs
+        vTargets   <- TF.render $ TF.vector $ targets inputs
+        TF.sigmoidCrossEntropyWithLogits vLogits vTargets
+    let ourLoss    = V.fromList $ sigmoidXentWithLogits (logits inputs) (targets inputs)
     assertAllClose r ourLoss
 
 
@@ -74,23 +72,22 @@ testLogisticOutputMultipleDim =
         testCase "testLogisticOutputMultipleDim" $ do
     let inputs   = defInputs
         shape    = [2, 2, 2]
-        vLogits  = TF.constant shape (logits  inputs)
-        vTargets = TF.constant shape (targets inputs)
-        tfLoss   = TF.sigmoidCrossEntropyWithLogits vLogits vTargets
-        ourLoss  = V.fromList $ sigmoidXentWithLogits (logits inputs) (targets inputs)
-
-    r <- run tfLoss
+    r <- run $ do
+        vLogits  <- TF.render $ TF.constant shape (logits  inputs)
+        vTargets <- TF.render $ TF.constant shape (targets inputs)
+        TF.sigmoidCrossEntropyWithLogits vLogits vTargets
+    let ourLoss  = V.fromList $ sigmoidXentWithLogits (logits inputs) (targets inputs)
     assertAllClose r ourLoss
 
 
 testGradientAtZero :: Test
 testGradientAtZero = testCase "testGradientAtZero" $ do
-    let inputs   = defInputs { logits = [0, 0], targets = [0, 1] }
-        vLogits  = TF.vector $ logits  inputs
-        vTargets = TF.vector $ targets inputs
-        tfLoss   = TF.sigmoidCrossEntropyWithLogits vLogits vTargets
-
     r <- run $ do
+        let inputs   = defInputs { logits = [0, 0], targets = [0, 1] }
+        vTargets <- TF.render $ TF.vector $ targets inputs
+        vLogits  <- TF.render $ TF.vector $ logits  inputs
+        let tfLoss   = TF.sigmoidCrossEntropyWithLogits vLogits vTargets
+
         l <- tfLoss
         TF.gradients l [vLogits]
 

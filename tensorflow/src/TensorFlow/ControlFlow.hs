@@ -25,9 +25,6 @@ module TensorFlow.ControlFlow
     , noOp
     ) where
 
-import qualified Data.Set as Set
-import Lens.Family2 ((&), (.~))
-
 import TensorFlow.BuildOp
 import TensorFlow.Build
 import TensorFlow.Nodes
@@ -46,11 +43,8 @@ withControlDependencies deps act = do
 -- When this op finishes, all ops in the input @n@ have finished.  This op has
 -- no output.
 group :: (MonadBuild m, Nodes t) => t -> m ControlNode
-group deps = do
-    nodes <- build $ Set.toList <$> getNodes deps
-    -- TODO: slicker way
-    return $ buildOp $ opDef "NoOp" & opControlInputs .~ nodes
+group deps = withControlDependencies deps noOp
 
 -- | Does nothing.  Only useful as a placeholder for control edges.
-noOp :: ControlNode
-noOp = buildOp $ opDef "NoOp"
+noOp :: MonadBuild m => m ControlNode
+noOp = build $ buildOp [] $ opDef "NoOp"

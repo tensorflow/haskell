@@ -79,6 +79,7 @@ Test-Suite EmbeddingOpsTest
                , test-framework
                , test-framework-hunit
                , test-framework-quickcheck2
+               , transformers
                , vector
 
 Test-Suite ArrayOpsTest

@@ -24,7 +24,6 @@ import Prelude hiding           ( log
                                 , exp
                                 )
 import TensorFlow.Build         ( MonadBuild
-                                , render
                                 , withNameScope
                                 )
 import TensorFlow.GenOps.Core   ( greaterEqual
@@ -33,6 +32,7 @@ import TensorFlow.GenOps.Core   ( greaterEqual
                                 , exp
                                 )
 import TensorFlow.Tensor        ( Tensor(..)
+                                , render
                                 , Value
                                 )
 import TensorFlow.Types         ( TensorType(..)
@@ -40,6 +40,8 @@ import TensorFlow.Types         ( TensorType(..)
                                 )
 import TensorFlow.Ops           ( zerosLike
                                 , add
+                                , mul
+                                , neg
                                 )
 
 -- | Computes sigmoid cross entropy given `logits`.
@@ -76,13 +78,11 @@ sigmoidCrossEntropyWithLogits
      -> Tensor Value a          -- ^ __targets__
      -> m (Tensor Value a)
 sigmoidCrossEntropyWithLogits logits targets = do
-    logits' <- render logits
-    targets' <- render targets
-    let zeros = zerosLike logits'
-        cond = logits' `greaterEqual` zeros
-        relu_logits = select cond logits' zeros
-        neg_abs_logits = select cond (-logits') logits'
+    let zeros = zerosLike logits
+        cond = logits `greaterEqual` zeros
+        relu_logits = select cond logits zeros
+        neg_abs_logits = select cond (neg logits) logits
     withNameScope "logistic_loss" $ do
-        left  <- render $ relu_logits - logits' * targets'
+        left <- render $ relu_logits - logits `mul` targets
         right <- render $ log (1 + exp neg_abs_logits)
         withNameScope "sigmoid_add" $ render $ left `add` right
