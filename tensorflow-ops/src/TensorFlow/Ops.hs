@@ -278,7 +278,6 @@ restore :: forall a m . (MonadBuild m, TensorType a)
         -> m ControlNode
 restore path x = restoreFromName path name x
   where
-    -- TODO: renderTensor?
     name = encodeUtf8 $ encodeOutput $ renderedOutput x
 
 -- | Create a constant tensor.
@@ -373,8 +372,3 @@ reducedShape inputShape axes =
            axesMod]                               -- [1, 2]
          [inputShape32,                           -- [2, 3, 5, 7]
            CoreOps.fill axesShape 1]              -- [1, 1]
-
--- OK: this doesn't work: passing integer literal into op makes it fail...sigh...
--- options:
--- - move back to explicit "expr"
--- - use defaulting

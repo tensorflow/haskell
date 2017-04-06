@@ -262,7 +262,7 @@ functionBody pOp
         [ "& opAttr" <+> renderQuotedTFName n <+> ".~" <+> renderHaskellName n
         | a <- inferredListSizeAttrs pOp, let n = attrName a
         ] ++
-        ["& op'options & opInputs .~ op'inputs"]
+        ["& op'options & opInputs .~" <+> opInputsVar]
     tensorArgs = renderTensorArg <$> parsedInputs pOp
     renderTensorArg = renderHaskellName . parsedArgName
     inferredTypeExpr a

@@ -56,8 +56,8 @@ testEmbeddingLookupHasRightShapeWithPartition =
         embedding   <- mapM TF.render [ TF.constant embShape embedding1
                         , TF.constant embShape embedding2
                         ]
-        ids       <- TF.render $ TF.constant (TF.Shape [1, 2]) idValues
-        vs        <- embeddingLookup embedding ids
+        let ids     = TF.constant (TF.Shape [1, 2]) idValues
+        vs          <- embeddingLookup embedding ids
         TF.run (vs, TF.shape vs)
 
     -- This is the shape that is returned in the equiv. Python.
@@ -81,7 +81,7 @@ testEmbeddingLookupHasRightShape =
 
     (values, shape) <- TF.runSession $ do
         embedding <- TF.render $ TF.constant embShape embeddingInit
-        ids <- TF.render $ TF.constant (TF.Shape [1, 2]) idValues
+        let ids = TF.constant (TF.Shape [1, 2]) idValues
         vs <- embeddingLookup [embedding] ids
         TF.run (vs, TF.shape vs)
 
@@ -102,7 +102,7 @@ testEmbeddingLookupGradients = testCase "testEmbeddingLookupGradients" $ do
             let embShape      = TF.Shape [2, 1]
             let embeddingInit = [1, 20 ::Float]
             let idValues      = [1, 1 :: Int32]
-            ids           <- TF.render $ TF.constant (TF.Shape [1, 2]) idValues
+            let ids           = TF.constant (TF.Shape [1, 2]) idValues
 
             x <- TF.placeholder (TF.Shape [2])
             embedding <- TF.initializedVariable

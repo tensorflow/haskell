@@ -312,7 +312,7 @@ renderPendingNode (PendingNode scope pendingName nodeDef)
 -- foreign APIs.
 encodeOutput :: Output -> Text
 encodeOutput (Output (OutputIx 0) n) = unNodeName n
-encodeOutput (Output (OutputIx i) n) = unNodeName n <> Text.pack (":" ++ show i)
+encodeOutput (Output (OutputIx i) n) = unNodeName n <> Text.pack (':' : show i)
 
 -- | Modify some part of the state, run an action, and restore the state
 -- after that action is done.

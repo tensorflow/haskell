@@ -83,6 +83,6 @@ sigmoidCrossEntropyWithLogits logits targets = do
         relu_logits = select cond logits zeros
         neg_abs_logits = select cond (neg logits) logits
     withNameScope "logistic_loss" $ do
-        let left = relu_logits - logits `mul` targets
-        let right = log (1 + exp neg_abs_logits)
+        left <- render $ relu_logits - logits `mul` targets
+        right <- render $ log (1 + exp neg_abs_logits)
         withNameScope "sigmoid_add" $ render $ left `add` right

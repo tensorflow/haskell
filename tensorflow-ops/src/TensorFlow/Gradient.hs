@@ -104,7 +104,6 @@ import TensorFlow.Types (Attribute, OneOf, TensorType, attrLens)
 import Proto.Tensorflow.Core.Framework.NodeDef
     (NodeDef, attr, input, op, name)
 
--- TODO: cache *rendered* gradients.
 type GradientCompatible a =
     -- TODO(fmayle): MaxPoolGrad doesn't support Double for some reason.
     (Num a, OneOf '[ Float, Complex Float, Complex Double ] a)
@@ -530,8 +529,10 @@ opGrad "Mul" _ [toT -> x, toT -> y] [dz] =
 opGrad "Div" _ [toT -> x, toT -> y] [dz] =
     -- TODO(fmayle): Handle complex numbers.
     -- TODO(gnezdo): Provide Fractional instance and use '/' instead of div.
-    [ Just $ reshape (sum (expr dz `CoreOps.div` y) rx) sx
-    , Just $ reshape (sum (expr dz `CoreOps.mul` ((negate (expr x) :: Tensor Build a) `CoreOps.div` (expr y * expr y :: Tensor Build a) :: Tensor Build a)) ry) sy
+    [ Just $ reshape (sum (dz `CoreOps.div` y) rx) sx
+    , Just $ reshape (sum (dz `CoreOps.mul` (negate x `CoreOps.div` (y * y)))
+                         ry)
+                sy
     ]
   where
     sx = shape (x :: Tensor Build a)
@@ -652,7 +653,7 @@ opGrad "Select" _ [toT -> c, toT -> x, _] [dz] =
 opGrad "Log" _ [toT -> x] [dz] = [ Just $ dz `CoreOps.mul` CoreOps.inv x ]
 -- TODO(gnezdo): Reuse the output instead of doing another exp,
 -- though, it is probably CSE'd away anyway.
-opGrad "Exp" _ [toT -> x] [dz] = [ Just $ dz `CoreOps.mul` CoreOps.exp (expr x) ]
+opGrad "Exp" _ [toT -> x] [dz] = [ Just $ dz `CoreOps.mul` CoreOps.exp x ]
 opGrad "SparseSegmentSum" _ [toT -> x, toT -> y, toT -> t] [dz] =
     [ Just $ CoreOps.unsortedSegmentSum
              (CoreOps.gather dz (t :: Tensor Build Int32))
