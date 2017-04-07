@@ -66,7 +66,4 @@ generatingOpsWrappers = hooks
 blackList =
     [ -- Requires the "func" type:
       "SymbolicGradient"
-      -- Easy: support larger result tuples.
-    , "ParseSingleSequenceExample"
-    , "Skipgram"
     ]
