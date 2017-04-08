@@ -59,20 +59,29 @@ tensorType :: TensorType a => a -> DataType
 tensorRefType :: TensorType a => a -> DataType
 tensorVal :: TensorType a => Lens' TensorProto [a]
 
--- | Decode the bytes of a TensorData into a Vector.
-decodeTensorData :: TensorType a => TensorData a -> Vector a
+-- | Tensor data with the correct memory layout for tensorflow.
+newtype TensorData a
+TensorData :: TensorData -> TensorData a
+[unTensorData] :: TensorData a -> TensorData
 
--- | Encode a Vector into a TensorData.
+-- | Types that can be converted to and from <a>TensorData</a>.
+--   
+--   <a>Vector</a> is the most efficient to encode/decode for most element
+--   types.
+class TensorType a => TensorDataType s a
+
+-- | Decode the bytes of a <a>TensorData</a> into an <a>s</a>.
+decodeTensorData :: TensorDataType s a => TensorData a -> s a
+
+-- | Encode an <a>s</a> into a <a>TensorData</a>.
 --   
 --   The values should be in row major order, e.g.,
 --   
 --   element 0: index (0, ..., 0) element 1: index (0, ..., 1) ...
-encodeTensorData :: TensorType a => Shape -> Vector a -> TensorData a
-
--- | Data about a tensor that is encoded for the TensorFlow APIs.
-newtype TensorData a
-TensorData :: TensorData -> TensorData a
-[unTensorData] :: TensorData a -> TensorData
+encodeTensorData :: TensorDataType s a => Shape -> s a -> TensorData a
+newtype Scalar a
+Scalar :: a -> Scalar a
+[unScalar] :: Scalar a -> a
 
 -- | Shape (dimensions) of a tensor.
 newtype Shape
@@ -80,6 +89,64 @@ Shape :: [Int64] -> Shape
 protoShape :: Lens' TensorShapeProto Shape
 class Attribute a
 attrLens :: Attribute a => Lens' AttrValue a
+data DataType :: *
+DT_INVALID :: DataType
+DT_FLOAT :: DataType
+DT_DOUBLE :: DataType
+DT_INT32 :: DataType
+DT_UINT8 :: DataType
+DT_INT16 :: DataType
+DT_INT8 :: DataType
+DT_STRING :: DataType
+DT_COMPLEX64 :: DataType
+DT_INT64 :: DataType
+DT_BOOL :: DataType
+DT_QINT8 :: DataType
+DT_QUINT8 :: DataType
+DT_QINT32 :: DataType
+DT_BFLOAT16 :: DataType
+DT_QINT16 :: DataType
+DT_QUINT16 :: DataType
+DT_UINT16 :: DataType
+DT_COMPLEX128 :: DataType
+DT_HALF :: DataType
+DT_RESOURCE :: DataType
+DT_FLOAT_REF :: DataType
+DT_DOUBLE_REF :: DataType
+DT_INT32_REF :: DataType
+DT_UINT8_REF :: DataType
+DT_INT16_REF :: DataType
+DT_INT8_REF :: DataType
+DT_STRING_REF :: DataType
+DT_COMPLEX64_REF :: DataType
+DT_INT64_REF :: DataType
+DT_BOOL_REF :: DataType
+DT_QINT8_REF :: DataType
+DT_QUINT8_REF :: DataType
+DT_QINT32_REF :: DataType
+DT_BFLOAT16_REF :: DataType
+DT_QINT16_REF :: DataType
+DT_QUINT16_REF :: DataType
+DT_UINT16_REF :: DataType
+DT_COMPLEX128_REF :: DataType
+DT_HALF_REF :: DataType
+DT_RESOURCE_REF :: DataType
+
+-- | A heterogeneous list type.
+data ListOf f as
+Nil :: ListOf f '[]
+(:/) :: f a -> ListOf f as -> ListOf f (a : as)
+type List = ListOf Identity
+
+-- | Equivalent of <a>:/</a> for lists.
+(/:/) :: a -> List as -> List (a : as)
+data TensorTypeProxy a
+TensorTypeProxy :: TensorTypeProxy a
+class TensorTypes (ts :: [*])
+tensorTypes :: TensorTypes ts => TensorTypeList ts
+type TensorTypeList = ListOf TensorTypeProxy
+fromTensorTypeList :: TensorTypeList ts -> [DataType]
+fromTensorTypes :: TensorTypes as => Proxy as -> [DataType]
 
 -- | A <a>Constraint</a> specifying the possible choices of a
 --   <a>TensorType</a>.
@@ -101,16 +168,13 @@ attrLens :: Attribute a => Lens' AttrValue a
 type OneOf ts a = (TensorType a, TensorTypes ts, NoneOf (AllTensorTypes \\ ts) a)
 
 -- | A constraint checking that two types are different.
+type OneOfs ts as = (TensorTypes as, TensorTypes ts, NoneOfs (AllTensorTypes \\ ts) as)
 
 -- | Helper types to produce a reasonable type error message when the
 --   Constraint "a /= a" fails. TODO(judahjacobson): Use ghc-8's
 --   CustomTypeErrors for this.
 data TypeError a
 data ExcludedCase
-
--- | A <a>Constraint</a> checking that the input is a list of
---   <a>TensorType</a>s. Helps improve error messages when using
---   <a>OneOf</a>.
 
 -- | A constraint that the type <tt>a</tt> doesn't appear in the type list
 --   <tt>ts</tt>. Assumes that <tt>a</tt> and each of the elements of
@@ -123,6 +187,16 @@ data ExcludedCase
 -- | An enumeration of all valid <a>TensorType</a>s.
 type AllTensorTypes = '[Float, Double, Int8, Int16, Int32, Int64, Word8, Word16, ByteString, Bool]
 instance GHC.Show.Show TensorFlow.Types.Shape
+instance Data.String.IsString a => Data.String.IsString (TensorFlow.Types.Scalar a)
+instance GHC.Real.RealFrac a => GHC.Real.RealFrac (TensorFlow.Types.Scalar a)
+instance GHC.Float.RealFloat a => GHC.Float.RealFloat (TensorFlow.Types.Scalar a)
+instance GHC.Real.Real a => GHC.Real.Real (TensorFlow.Types.Scalar a)
+instance GHC.Float.Floating a => GHC.Float.Floating (TensorFlow.Types.Scalar a)
+instance GHC.Real.Fractional a => GHC.Real.Fractional (TensorFlow.Types.Scalar a)
+instance GHC.Num.Num a => GHC.Num.Num (TensorFlow.Types.Scalar a)
+instance GHC.Classes.Ord a => GHC.Classes.Ord (TensorFlow.Types.Scalar a)
+instance GHC.Classes.Eq a => GHC.Classes.Eq (TensorFlow.Types.Scalar a)
+instance GHC.Show.Show a => GHC.Show.Show (TensorFlow.Types.Scalar a)
 instance TensorFlow.Types.TensorType GHC.Types.Float
 instance TensorFlow.Types.TensorType GHC.Types.Double
 instance TensorFlow.Types.TensorType GHC.Int.Int32
@@ -135,6 +209,20 @@ instance TensorFlow.Types.TensorType Data.ByteString.Internal.ByteString
 instance TensorFlow.Types.TensorType GHC.Types.Bool
 instance TensorFlow.Types.TensorType (Data.Complex.Complex GHC.Types.Float)
 instance TensorFlow.Types.TensorType (Data.Complex.Complex GHC.Types.Double)
+instance TensorFlow.Types.TensorDataType Data.Vector.Storable.Vector GHC.Types.Float
+instance TensorFlow.Types.TensorDataType Data.Vector.Storable.Vector GHC.Types.Double
+instance TensorFlow.Types.TensorDataType Data.Vector.Storable.Vector GHC.Int.Int8
+instance TensorFlow.Types.TensorDataType Data.Vector.Storable.Vector GHC.Int.Int16
+instance TensorFlow.Types.TensorDataType Data.Vector.Storable.Vector GHC.Int.Int32
+instance TensorFlow.Types.TensorDataType Data.Vector.Storable.Vector GHC.Int.Int64
+instance TensorFlow.Types.TensorDataType Data.Vector.Storable.Vector GHC.Word.Word8
+instance TensorFlow.Types.TensorDataType Data.Vector.Storable.Vector GHC.Word.Word16
+instance TensorFlow.Types.TensorDataType Data.Vector.Storable.Vector GHC.Types.Bool
+instance (Foreign.Storable.Storable a, TensorFlow.Types.TensorDataType Data.Vector.Storable.Vector a) => TensorFlow.Types.TensorDataType Data.Vector.Vector a
+instance TensorFlow.Types.TensorDataType Data.Vector.Vector (Data.Complex.Complex GHC.Types.Float)
+instance TensorFlow.Types.TensorDataType Data.Vector.Vector (Data.Complex.Complex GHC.Types.Double)
+instance TensorFlow.Types.TensorDataType Data.Vector.Vector Data.ByteString.Internal.ByteString
+instance TensorFlow.Types.TensorDataType Data.Vector.Vector a => TensorFlow.Types.TensorDataType TensorFlow.Types.Scalar a
 instance GHC.Exts.IsList TensorFlow.Types.Shape
 instance TensorFlow.Types.Attribute GHC.Types.Float
 instance TensorFlow.Types.Attribute Data.ByteString.Internal.ByteString
@@ -146,14 +234,18 @@ instance TensorFlow.Types.Attribute TensorFlow.Types.Shape
 instance TensorFlow.Types.Attribute Proto.Tensorflow.Core.Framework.AttrValue.AttrValue'ListValue
 instance TensorFlow.Types.Attribute [Proto.Tensorflow.Core.Framework.Types.DataType]
 instance TensorFlow.Types.Attribute [GHC.Int.Int64]
+instance TensorFlow.Types.All GHC.Classes.Eq (TensorFlow.Types.Map f as) => GHC.Classes.Eq (TensorFlow.Types.ListOf f as)
+instance TensorFlow.Types.All GHC.Show.Show (TensorFlow.Types.Map f as) => GHC.Show.Show (TensorFlow.Types.ListOf f as)
+instance TensorFlow.Types.TensorTypes '[]
+instance (TensorFlow.Types.TensorType t, TensorFlow.Types.TensorTypes ts) => TensorFlow.Types.TensorTypes (t : ts)
 
 module TensorFlow.Output
 
 -- | A type of graph node which has no outputs. These nodes are valuable
 --   for causing side effects when they are run.
 newtype ControlNode
-ControlNode :: Op -> ControlNode
-[unControlNode] :: ControlNode -> Op
+ControlNode :: NodeName -> ControlNode
+[unControlNode] :: ControlNode -> NodeName
 
 -- | A device that a node can be assigned to. There's a naming convention
 --   where the device names are constructed from job and replica names.
@@ -168,22 +260,8 @@ newtype NodeName
 NodeName :: Text -> NodeName
 [unNodeName] :: NodeName -> Text
 
--- | The representation of a node in a TensorFlow graph.
-data Op
-
--- | Properties are fixed, including the device, name, and scope.
-Rendered :: !NodeDef -> Op
-
--- | Properties are not fixed, and may change depending on which context
---   this op is rendered in.
-Unrendered :: !OpDef -> Op
-
--- | Traverse on the <a>Unrendered</a> of an <a>Op</a>.
---   
---   Same implementation as _Left.
-opUnrendered :: Traversal' Op OpDef
-
--- | Op definition. This corresponds somewhat to the <a>NodeDef</a> proto.
+-- | Op definition. This corresponds somewhat to the <tt>NodeDef</tt>
+--   proto.
 data OpDef
 OpDef :: !PendingNodeName -> !OpType -> !(Map Text AttrValue) -> [Output] -> [NodeName] -> OpDef
 [_opName] :: OpDef -> !PendingNodeName
@@ -208,10 +286,10 @@ OutputIx :: Int -> OutputIx
 
 -- | An output of a TensorFlow node.
 data Output
-Output :: !OutputIx -> !Op -> Output
-output :: OutputIx -> Op -> Output
-outputIndex :: Lens' Output OutputIx
-outputOp :: Lens' Output Op
+Output :: !OutputIx -> !NodeName -> Output
+[outputIndex] :: Output -> !OutputIx
+[outputNodeName] :: Output -> !NodeName
+output :: OutputIx -> NodeName -> Output
 
 -- | The name specified for an unrendered Op. If an Op has an ImplicitName,
 --   it will be assigned based on the opType plus a unique identifier. Does
@@ -221,17 +299,14 @@ ExplicitName :: !Text -> PendingNodeName
 ImplicitName :: PendingNodeName
 
 -- | Opaque handle to a mutable resource in the graph. Typical such
---   resources are variables. The type parameter corresponds to the dtype
---   of the tensor held in the variable.
-newtype ResourceHandle a
-ResourceHandle :: Output -> ResourceHandle a
-instance GHC.Classes.Ord TensorFlow.Output.Op
-instance GHC.Classes.Eq TensorFlow.Output.Op
+--   resources are variables.
+newtype ResourceHandle
+ResourceHandle :: Output -> ResourceHandle
+instance GHC.Classes.Ord TensorFlow.Output.OpDef
+instance GHC.Classes.Eq TensorFlow.Output.OpDef
 instance GHC.Show.Show TensorFlow.Output.Output
 instance GHC.Classes.Ord TensorFlow.Output.Output
 instance GHC.Classes.Eq TensorFlow.Output.Output
-instance GHC.Classes.Ord TensorFlow.Output.OpDef
-instance GHC.Classes.Eq TensorFlow.Output.OpDef
 instance GHC.Show.Show TensorFlow.Output.NodeName
 instance GHC.Classes.Ord TensorFlow.Output.NodeName
 instance GHC.Classes.Eq TensorFlow.Output.NodeName
@@ -251,68 +326,16 @@ instance GHC.Classes.Ord TensorFlow.Output.OpType
 instance GHC.Classes.Eq TensorFlow.Output.OpType
 instance Data.String.IsString TensorFlow.Output.OpType
 instance GHC.Show.Show TensorFlow.Output.Device
-instance GHC.Show.Show TensorFlow.Output.Op
+instance Data.String.IsString TensorFlow.Output.PendingNodeName
 instance Data.String.IsString TensorFlow.Output.Output
-
-module TensorFlow.Tensor
-
--- | A named output of a TensorFlow operation.
---   
---   The type parameter <tt>a</tt> is the type of the elements in the
---   <a>Tensor</a>. The parameter <tt>v</tt> is either <a>Value</a> or
---   <a>Ref</a>, depending on whether the graph is treating this op output
---   as an immutable <a>Value</a> or a stateful <a>Ref</a> (e.g., a
---   variable). Note that a <tt>Tensor Ref</tt> can be casted into a
---   <tt>Tensor Value</tt> via <a>value</a>.
-data Tensor v a
-Tensor :: (TensorKind v) -> Output -> Tensor v a
-data Value
-data Ref
-
--- | This class provides a runtime switch on whether a <a>Tensor</a> should
---   be treated as a <a>Value</a> or as a <a>Ref</a>.
-data TensorKind v
-ValueKind :: TensorKind Value
-RefKind :: TensorKind Ref
-tensorKind :: Lens' (Tensor v a) (TensorKind v)
-tensorOutput :: Lens' (Tensor v a) Output
-
--- | Lens for the attributes of a tensor.
---   
---   Only valid if the tensor has not yet been rendered. If the tensor has
---   been rendered, the traversal will be over nothing (nothing can be read
---   or written).
-tensorAttr :: Attribute attr => Text -> Traversal' (Tensor v a) attr
-
--- | Cast a 'Tensor *' into a 'Tensor Value'. Common usage is to cast a Ref
---   into Value. This behaves like a no-op.
-value :: Tensor v a -> Tensor Value a
-
--- | A pair of a <a>Tensor</a> and some data that should be fed into that
---   <a>Tensor</a> when running the graph.
-data Feed
-Feed :: Output -> TensorData -> Feed
-
--- | Create a <a>Feed</a> for feeding the given data into a <a>Tensor</a>
---   when running the graph.
---   
---   Note that if a <a>Tensor</a> is rendered, its identity may change; so
---   feeding the rendered <a>Tensor</a> may be different than feeding the
---   original <a>Tensor</a>.
-feed :: Tensor v a -> TensorData a -> Feed
-
--- | Create a <a>Tensor</a> for a given name. This can be used to reference
---   nodes in a <tt>GraphDef</tt> that was loaded via <tt>addGraphDef</tt>.
---   TODO(judahjacobson): add more safety checks here.
-tensorFromName :: TensorKind v -> Text -> Tensor v a
 
 module TensorFlow.Build
 
 -- | A type of graph node which has no outputs. These nodes are valuable
 --   for causing side effects when they are run.
 newtype ControlNode
-ControlNode :: Op -> ControlNode
-[unControlNode] :: ControlNode -> Op
+ControlNode :: NodeName -> ControlNode
+[unControlNode] :: ControlNode -> NodeName
 data Unique
 explicitName :: Text -> PendingNodeName
 implicitName :: PendingNodeName
@@ -324,19 +347,6 @@ opAttr :: Attribute a => Text -> Lens' OpDef a
 opInputs :: Lens' OpDef [Output]
 opControlInputs :: Lens' OpDef [NodeName]
 data GraphState
-
--- | Render a <a>Tensor</a>, fixing its name, scope, device and control
---   inputs from the <a>Build</a> context. Also renders any dependencies of
---   the <a>Tensor</a> that weren't already rendered.
---   
---   This operation is idempotent; <tt>render &gt;=&gt; render ===
---   render</tt>. However, rendering a (previously un-rendered)
---   <a>Tensor</a> in two different contexts may result in two different
---   <a>Tensor</a>s.
-render :: Tensor v a -> Build (Tensor v a)
-
--- | Render a <a>Tensor</a> and get its node's name.
-renderNodeName :: Tensor v a -> Build NodeName
 renderedNodeDefs :: Lens' GraphState (Map NodeName NodeDef)
 
 -- | An action for building nodes in a TensorFlow graph. Used to manage
@@ -346,8 +356,13 @@ data BuildT m a
 -- | An action for building nodes in a TensorFlow graph.
 type Build = BuildT Identity
 
+-- | Lift a <a>Build</a> action into a monad, including any explicit op
+--   renderings.
+class Monad m => MonadBuild m
+build :: MonadBuild m => Build a -> m a
+
 -- | Registers the given node to be executed before the next <a>run</a>.
-addInitializer :: ControlNode -> Build ()
+addInitializer :: MonadBuild m => ControlNode -> m ()
 
 -- | This is Control.Monad.Morph.hoist sans the dependency.
 hoistBuildT :: (forall a. m a -> n a) -> BuildT m b -> BuildT n b
@@ -357,7 +372,7 @@ runBuildT :: BuildT m a -> m (a, GraphState)
 -- | Produce a GraphDef proto representation of the nodes that are rendered
 --   in the given <a>Build</a> action.
 asGraphDef :: Build a -> GraphDef
-addGraphDef :: GraphDef -> Build ()
+addGraphDef :: MonadBuild m => GraphDef -> m ()
 
 -- | Get all the initializers that have accumulated so far, and clear that
 --   buffer.
@@ -365,57 +380,41 @@ flushInitializers :: Monad m => BuildT m [NodeName]
 
 -- | Get all the NodeDefs that have accumulated so far, and clear that
 --   buffer.
-flushNodeBuffer :: Monad m => BuildT m [NodeDef]
+flushNodeBuffer :: MonadBuild m => m [NodeDef]
+summaries :: Lens' GraphState [Output]
 
 -- | Render the given op if it hasn't been rendered already, and return its
 --   name.
-getOrAddOp :: Op -> Build NodeName
+getOrAddOp :: OpDef -> Build NodeName
 
 -- | Add a new node for a given <a>OpDef</a>. This is used for making
 --   "stateful" ops which are not safe to dedup (e.g, "variable" and
 --   "assign").
-addNewOp :: OpDef -> Build NodeDef
+addNewOp :: OpDef -> Build NodeName
 
--- | Render an <a>Output</a> and return a string representation for the
---   TensorFlow foreign APIs.
-renderOutput :: Output -> Build Text
-
--- | Places all nodes rendered in the given <a>Build</a> action on the same
---   device as the given Tensor (see also <a>withDevice</a>). Make sure
---   that the action has side effects of rendering the desired tensors. A
---   pure return would not have the desired effect.
-colocateWith :: Tensor v b -> Build a -> Build a
+-- | Turn an <a>Output</a> into a string representation for the TensorFlow
+--   foreign APIs.
+encodeOutput :: Output -> Text
+lookupNode :: NodeName -> Build NodeDef
 
 -- | Modify some part of the state, run an action, and restore the state
 --   after that action is done.
-withStateLens :: MonadState s m => Lens' s a -> (a -> a) -> m b -> m b
+withStateLens :: MonadBuild m => Lens' GraphState a -> (a -> a) -> m b -> m b
 
 -- | Set a device for all nodes rendered in the given <a>Build</a> action
 --   (unless further overridden by another use of withDevice).
-withDevice :: Maybe Device -> Build a -> Build a
+withDevice :: MonadBuild m => Maybe Device -> m a -> m a
 
 -- | Prepend a scope to all nodes rendered in the given <a>Build</a>
 --   action.
-withNameScope :: Text -> Build a -> Build a
+withNameScope :: MonadBuild m => Text -> m a -> m a
 
 -- | Add control inputs to all nodes rendered in the given <a>Build</a>
 --   action.
-withNodeDependencies :: Set NodeName -> Build a -> Build a
-
--- | Records the given summary action in Build for retrieval with
---   <a>collectAllSummaries</a>. The summary op is required to produce a
---   Summary protocol buffer in string form. For safety, use the
---   pre-composed functions: Logging.scalarSummary and
---   Logging.histogramSummary.
-addSummary :: SummaryTensor -> Build ()
-
--- | Synonym for the tensors that return serialized Summary proto.
-type SummaryTensor = Tensor Value ByteString
-
--- | Retrieves the summary ops collected thus far. Typically this only
---   happens once, but if <a>buildWithSummary</a> is used repeatedly, the
---   values accumulate.
-collectAllSummaries :: Monad m => BuildT m [SummaryTensor]
+withNodeDependencies :: MonadBuild m => Set NodeName -> m a -> m a
+instance Control.Monad.Catch.MonadMask m => Control.Monad.Catch.MonadMask (TensorFlow.Build.BuildT m)
+instance Control.Monad.Catch.MonadCatch m => Control.Monad.Catch.MonadCatch (TensorFlow.Build.BuildT m)
+instance Control.Monad.Catch.MonadThrow m => Control.Monad.Catch.MonadThrow (TensorFlow.Build.BuildT m)
 instance GHC.Base.Monad m => Control.Monad.State.Class.MonadState TensorFlow.Build.GraphState (TensorFlow.Build.BuildT m)
 instance Control.Monad.Trans.Class.MonadTrans TensorFlow.Build.BuildT
 instance Control.Monad.IO.Class.MonadIO m => Control.Monad.IO.Class.MonadIO (TensorFlow.Build.BuildT m)
@@ -431,50 +430,164 @@ instance GHC.Enum.Enum TensorFlow.Build.Unique
 instance GHC.Classes.Ord TensorFlow.Build.Unique
 instance GHC.Classes.Eq TensorFlow.Build.Unique
 instance GHC.Show.Show TensorFlow.Build.Scope
+instance GHC.Base.Monad m => TensorFlow.Build.MonadBuild (TensorFlow.Build.BuildT m)
+
+module TensorFlow.Tensor
+
+-- | A named output of a TensorFlow operation.
+--   
+--   The type parameter <tt>a</tt> is the type of the elements in the
+--   <a>Tensor</a>. The parameter <tt>v</tt> is either:
+--   
+--   <ul>
+--   <li><a>Build</a>: An unrendered, immutable value.</li>
+--   <li><a>Value</a>: A rendered, immutable value.</li>
+--   <li><a>Ref</a>: A rendered stateful handle (e.g., a variable).</li>
+--   </ul>
+--   
+--   Note that <a>expr</a>, <a>value</a>, <a>render</a> and
+--   <a>renderValue</a> can help convert between the different types of
+--   <a>Tensor</a>.
+data Tensor v a
+Tensor :: v Output -> Tensor v a
+[tensorOutput] :: Tensor v a -> v Output
+newtype Value a
+Value :: a -> Value a
+[runValue] :: Value a -> a
+newtype Ref a
+Ref :: a -> Ref a
+[runRef] :: Ref a -> a
+
+-- | Cast a 'Tensor Ref' into a 'Tensor Value'. This behaves like a no-op.
+value :: Tensor Ref a -> Tensor Value a
+renderValue :: MonadBuild m => Tensor v a -> m (Tensor Value a)
+
+-- | A pair of a <a>Tensor</a> and some data that should be fed into that
+--   <a>Tensor</a> when running the graph.
+data Feed
+Feed :: Output -> TensorData -> Feed
+
+-- | A class ensuring that a given tensor is rendered, i.e., has a fixed
+--   name, device, etc.
+class TensorKind v => Rendered v
+rendered :: Rendered v => v a -> a
+renderedOutput :: Rendered v => Tensor v a -> Output
+tensorNodeName :: Rendered v => Tensor v a -> NodeName
+
+-- | Create a <a>Feed</a> for feeding the given data into a <a>Tensor</a>
+--   when running the graph.
+--   
+--   Note that if a <a>Tensor</a> is rendered, its identity may change; so
+--   feeding the rendered <a>Tensor</a> may be different than feeding the
+--   original <a>Tensor</a>.
+feed :: Rendered v => Tensor v a -> TensorData a -> Feed
+
+-- | Create a <a>Tensor</a> for a given name. This can be used to reference
+--   nodes in a <tt>GraphDef</tt> that was loaded via <a>addGraphDef</a>.
+--   TODO(judahjacobson): add more safety checks here.
+tensorFromName :: TensorKind v => Text -> Tensor v a
+
+-- | Like <a>tensorFromName</a>, but type-restricted to <a>Value</a>.
+tensorValueFromName :: Text -> Tensor Value a
+
+-- | Like <a>tensorFromName</a>, but type-restricted to <a>Ref</a>.
+tensorRefFromName :: Text -> Tensor Ref a
+type TensorList v = ListOf (Tensor v)
+tensorListOutputs :: Rendered v => TensorList v as -> [Output]
+
+-- | Places all nodes rendered in the given <a>Build</a> action on the same
+--   device as the given Tensor (see also <a>withDevice</a>). Make sure
+--   that the action has side effects of rendering the desired tensors. A
+--   pure return would not have the desired effect.
+colocateWith :: (MonadBuild m, Rendered v) => Tensor v b -> m a -> m a
+
+-- | Render a <a>Tensor</a>, fixing its name, scope, device and control
+--   inputs from the <a>MonadBuild</a> context. Also renders any
+--   dependencies of the <a>Tensor</a> that weren't already rendered.
+--   
+--   This operation is idempotent; calling <a>render</a> on the same input
+--   in the same context will produce the same result. However, rendering
+--   the same <tt>Tensor Build</tt> in two different contexts may result in
+--   two different <tt>Tensor Value</tt>s.
+render :: MonadBuild m => Tensor Build a -> m (Tensor Value a)
+expr :: TensorKind v => Tensor v a -> Tensor Build a
+
+-- | Records the given summary action in Build for retrieval with Summary
+--   protocol buffer in string form. For safety, use the pre-composed
+--   functions: Logging.scalarSummary and Logging.histogramSummary.
+addSummary :: (MonadBuild m, TensorKind v) => Tensor v ByteString -> m ()
+
+-- | Retrieves the summary ops collected thus far. Typically this only
+--   happens once, but if <a>buildWithSummary</a> is used repeatedly, the
+--   values accumulate.
+collectAllSummaries :: MonadBuild m => m [SummaryTensor]
+
+-- | Synonym for the tensors that return serialized Summary proto.
+type SummaryTensor = Tensor Value ByteString
+
+-- | An internal class for kinds of Tensors.
+class Monad v => TensorKind v
+toBuild :: TensorKind v => v a -> Build a
+instance GHC.Base.Functor TensorFlow.Tensor.Ref
+instance GHC.Base.Functor TensorFlow.Tensor.Value
+instance GHC.Base.Applicative TensorFlow.Tensor.Value
+instance GHC.Base.Monad TensorFlow.Tensor.Value
+instance GHC.Base.Applicative TensorFlow.Tensor.Ref
+instance GHC.Base.Monad TensorFlow.Tensor.Ref
+instance TensorFlow.Tensor.Rendered TensorFlow.Tensor.Value
+instance TensorFlow.Tensor.Rendered TensorFlow.Tensor.Ref
+instance TensorFlow.Tensor.TensorKind TensorFlow.Tensor.Value
+instance TensorFlow.Tensor.TensorKind TensorFlow.Tensor.Ref
+instance TensorFlow.Tensor.TensorKind TensorFlow.Build.Build
 
 module TensorFlow.BuildOp
 
 -- | Class of types that can be used as op outputs.
-class OpResult a
+class BuildResult a
+buildResult :: BuildResult a => Result a
+buildOp :: BuildResult a => [Int64] -> OpDef -> Build a
 
--- | Class of types that can be used as op functions.
-class BuildOp f
-
--- | Starts an operation that returns a structured set of tensors
---   (singletons or tuples).
-buildOp :: BuildOp f => OpDef -> f
-
--- | Starts an operation that returns a list of tensors.
-buildListOp :: BuildOp f => [Int64] -> OpDef -> f
+-- | Class of types that can be used as op outputs.
+class PureResult a
+pureResult :: PureResult a => ReaderT (Build OpDef) (State ResultState) a
+pureOp :: PureResult a => [Int64] -> Build OpDef -> a
 
 -- | Returns true if all the integers in each tuple are identical. Throws
 --   an error with a descriptive message if not.
 eqLengthGuard :: [(String, [(String, Int)])] -> Bool
+class BuildInputs a
+buildInputs :: BuildInputs a => a -> Build [Output]
+
+-- | Parameters to build an op (for example, the node name or optional
+--   attributes). TODO: be more type safe.
+type OpParams = OpDef -> OpDef
 instance GHC.Show.Show TensorFlow.BuildOp.ResultState
-instance (TensorFlow.BuildOp.OpResult a1, TensorFlow.BuildOp.OpResult a2) => TensorFlow.BuildOp.OpResult (a1, a2)
-instance (TensorFlow.BuildOp.OpResult a1, TensorFlow.BuildOp.OpResult a2, TensorFlow.BuildOp.OpResult a3) => TensorFlow.BuildOp.OpResult (a1, a2, a3)
-instance (TensorFlow.BuildOp.OpResult a1, TensorFlow.BuildOp.OpResult a2, TensorFlow.BuildOp.OpResult a3, TensorFlow.BuildOp.OpResult a4) => TensorFlow.BuildOp.OpResult (a1, a2, a3, a4)
-instance (TensorFlow.BuildOp.OpResult a1, TensorFlow.BuildOp.OpResult a2, TensorFlow.BuildOp.OpResult a3, TensorFlow.BuildOp.OpResult a4, TensorFlow.BuildOp.OpResult a5) => TensorFlow.BuildOp.OpResult (a1, a2, a3, a4, a5)
-instance (TensorFlow.BuildOp.OpResult a1, TensorFlow.BuildOp.OpResult a2, TensorFlow.BuildOp.OpResult a3, TensorFlow.BuildOp.OpResult a4, TensorFlow.BuildOp.OpResult a5, TensorFlow.BuildOp.OpResult a6) => TensorFlow.BuildOp.OpResult (a1, a2, a3, a4, a5, a6)
-instance TensorFlow.BuildOp.OpResult (TensorFlow.Output.ResourceHandle a)
-instance TensorFlow.BuildOp.OpResult (TensorFlow.Tensor.Tensor TensorFlow.Tensor.Value a)
-instance TensorFlow.BuildOp.OpResult (TensorFlow.Tensor.Tensor TensorFlow.Tensor.Ref a)
-instance TensorFlow.BuildOp.OpResult TensorFlow.Output.ControlNode
-instance TensorFlow.BuildOp.OpResult a => TensorFlow.BuildOp.OpResult [a]
-instance TensorFlow.BuildOp.BuildOp TensorFlow.Output.ControlNode
-instance TensorFlow.BuildOp.BuildOp (TensorFlow.Output.ResourceHandle a)
-instance TensorFlow.BuildOp.BuildOp (TensorFlow.Tensor.Tensor TensorFlow.Tensor.Value a)
-instance TensorFlow.BuildOp.BuildOp (TensorFlow.Tensor.Tensor TensorFlow.Tensor.Ref a)
-instance TensorFlow.BuildOp.BuildOp [TensorFlow.Tensor.Tensor TensorFlow.Tensor.Value a]
-instance (TensorFlow.BuildOp.OpResult t1, TensorFlow.BuildOp.OpResult t2) => TensorFlow.BuildOp.BuildOp (t1, t2)
-instance (TensorFlow.BuildOp.OpResult t1, TensorFlow.BuildOp.OpResult t2, TensorFlow.BuildOp.OpResult t3) => TensorFlow.BuildOp.BuildOp (t1, t2, t3)
-instance (TensorFlow.BuildOp.OpResult t1, TensorFlow.BuildOp.OpResult t2, TensorFlow.BuildOp.OpResult t3, TensorFlow.BuildOp.OpResult t4) => TensorFlow.BuildOp.BuildOp (t1, t2, t3, t4)
-instance (TensorFlow.BuildOp.OpResult t1, TensorFlow.BuildOp.OpResult t2, TensorFlow.BuildOp.OpResult t3, TensorFlow.BuildOp.OpResult t4, TensorFlow.BuildOp.OpResult t5) => TensorFlow.BuildOp.BuildOp (t1, t2, t3, t4, t5)
-instance (TensorFlow.BuildOp.OpResult t1, TensorFlow.BuildOp.OpResult t2, TensorFlow.BuildOp.OpResult t3, TensorFlow.BuildOp.OpResult t4, TensorFlow.BuildOp.OpResult t5, TensorFlow.BuildOp.OpResult t6) => TensorFlow.BuildOp.BuildOp (t1, t2, t3, t4, t5, t6)
-instance TensorFlow.BuildOp.OpResult a => TensorFlow.BuildOp.BuildOp (TensorFlow.Build.Build a)
-instance TensorFlow.BuildOp.BuildOp f => TensorFlow.BuildOp.BuildOp (TensorFlow.Output.ResourceHandle a -> f)
-instance TensorFlow.BuildOp.BuildOp f => TensorFlow.BuildOp.BuildOp (TensorFlow.Tensor.Tensor v a -> f)
-instance TensorFlow.BuildOp.BuildOp f => TensorFlow.BuildOp.BuildOp ([TensorFlow.Tensor.Tensor v a] -> f)
+instance (TensorFlow.BuildOp.BuildResult a1, TensorFlow.BuildOp.BuildResult a2) => TensorFlow.BuildOp.BuildResult (a1, a2)
+instance (TensorFlow.BuildOp.BuildResult a1, TensorFlow.BuildOp.BuildResult a2, TensorFlow.BuildOp.BuildResult a3) => TensorFlow.BuildOp.BuildResult (a1, a2, a3)
+instance (TensorFlow.BuildOp.BuildResult a1, TensorFlow.BuildOp.BuildResult a2, TensorFlow.BuildOp.BuildResult a3, TensorFlow.BuildOp.BuildResult a4) => TensorFlow.BuildOp.BuildResult (a1, a2, a3, a4)
+instance (TensorFlow.BuildOp.BuildResult a1, TensorFlow.BuildOp.BuildResult a2, TensorFlow.BuildOp.BuildResult a3, TensorFlow.BuildOp.BuildResult a4, TensorFlow.BuildOp.BuildResult a5) => TensorFlow.BuildOp.BuildResult (a1, a2, a3, a4, a5)
+instance (TensorFlow.BuildOp.BuildResult a1, TensorFlow.BuildOp.BuildResult a2, TensorFlow.BuildOp.BuildResult a3, TensorFlow.BuildOp.BuildResult a4, TensorFlow.BuildOp.BuildResult a5, TensorFlow.BuildOp.BuildResult a6) => TensorFlow.BuildOp.BuildResult (a1, a2, a3, a4, a5, a6)
+instance (TensorFlow.BuildOp.BuildResult a1, TensorFlow.BuildOp.BuildResult a2, TensorFlow.BuildOp.BuildResult a3, TensorFlow.BuildOp.BuildResult a4, TensorFlow.BuildOp.BuildResult a5, TensorFlow.BuildOp.BuildResult a6, TensorFlow.BuildOp.BuildResult a7) => TensorFlow.BuildOp.BuildResult (a1, a2, a3, a4, a5, a6, a7)
+instance (TensorFlow.BuildOp.BuildResult a1, TensorFlow.BuildOp.BuildResult a2, TensorFlow.BuildOp.BuildResult a3, TensorFlow.BuildOp.BuildResult a4, TensorFlow.BuildOp.BuildResult a5, TensorFlow.BuildOp.BuildResult a6, TensorFlow.BuildOp.BuildResult a7, TensorFlow.BuildOp.BuildResult a8) => TensorFlow.BuildOp.BuildResult (a1, a2, a3, a4, a5, a6, a7, a8)
+instance TensorFlow.BuildOp.BuildResult TensorFlow.Output.ResourceHandle
+instance TensorFlow.Tensor.Rendered v => TensorFlow.BuildOp.BuildResult (TensorFlow.Tensor.Tensor v a)
+instance TensorFlow.BuildOp.BuildResult TensorFlow.Output.ControlNode
+instance (TensorFlow.Tensor.Rendered v, TensorFlow.Types.TensorTypes as) => TensorFlow.BuildOp.BuildResult (TensorFlow.Tensor.TensorList v as)
+instance TensorFlow.BuildOp.BuildResult a => TensorFlow.BuildOp.BuildResult [a]
+instance TensorFlow.BuildOp.PureResult (TensorFlow.Tensor.Tensor TensorFlow.Build.Build a)
+instance (TensorFlow.BuildOp.PureResult a1, TensorFlow.BuildOp.PureResult a2) => TensorFlow.BuildOp.PureResult (a1, a2)
+instance (TensorFlow.BuildOp.PureResult a1, TensorFlow.BuildOp.PureResult a2, TensorFlow.BuildOp.PureResult a3) => TensorFlow.BuildOp.PureResult (a1, a2, a3)
+instance (TensorFlow.BuildOp.PureResult a1, TensorFlow.BuildOp.PureResult a2, TensorFlow.BuildOp.PureResult a3, TensorFlow.BuildOp.PureResult a4) => TensorFlow.BuildOp.PureResult (a1, a2, a3, a4)
+instance (TensorFlow.BuildOp.PureResult a1, TensorFlow.BuildOp.PureResult a2, TensorFlow.BuildOp.PureResult a3, TensorFlow.BuildOp.PureResult a4, TensorFlow.BuildOp.PureResult a5) => TensorFlow.BuildOp.PureResult (a1, a2, a3, a4, a5)
+instance (TensorFlow.BuildOp.PureResult a1, TensorFlow.BuildOp.PureResult a2, TensorFlow.BuildOp.PureResult a3, TensorFlow.BuildOp.PureResult a4, TensorFlow.BuildOp.PureResult a5, TensorFlow.BuildOp.PureResult a6) => TensorFlow.BuildOp.PureResult (a1, a2, a3, a4, a5, a6)
+instance (TensorFlow.BuildOp.PureResult a1, TensorFlow.BuildOp.PureResult a2, TensorFlow.BuildOp.PureResult a3, TensorFlow.BuildOp.PureResult a4, TensorFlow.BuildOp.PureResult a5, TensorFlow.BuildOp.PureResult a6, TensorFlow.BuildOp.PureResult a7) => TensorFlow.BuildOp.PureResult (a1, a2, a3, a4, a5, a6, a7)
+instance (TensorFlow.BuildOp.PureResult a1, TensorFlow.BuildOp.PureResult a2, TensorFlow.BuildOp.PureResult a3, TensorFlow.BuildOp.PureResult a4, TensorFlow.BuildOp.PureResult a5, TensorFlow.BuildOp.PureResult a6, TensorFlow.BuildOp.PureResult a7, TensorFlow.BuildOp.PureResult a8) => TensorFlow.BuildOp.PureResult (a1, a2, a3, a4, a5, a6, a7, a8)
+instance TensorFlow.BuildOp.PureResult a => TensorFlow.BuildOp.PureResult [a]
+instance TensorFlow.Types.TensorTypes as => TensorFlow.BuildOp.PureResult (TensorFlow.Tensor.TensorList TensorFlow.Build.Build as)
+instance TensorFlow.BuildOp.BuildInputs a => TensorFlow.BuildOp.BuildInputs [a]
+instance TensorFlow.BuildOp.BuildInputs (TensorFlow.Tensor.Tensor v a)
+instance TensorFlow.BuildOp.BuildInputs (TensorFlow.Types.ListOf (TensorFlow.Tensor.Tensor v) as)
+instance TensorFlow.BuildOp.BuildInputs TensorFlow.Output.ResourceHandle
 
 module TensorFlow.Nodes
 
@@ -500,21 +613,7 @@ Fetch :: Set Text -> (Map Text TensorData -> a) -> Fetch a
 -- | Function to create an <tt>a</tt> from the fetched data.
 [fetchRestore] :: Fetch a -> Map Text TensorData -> a
 nodesUnion :: (Monoid b, Traversable t, Applicative f) => t (f b) -> f b
-fetchTensorList :: TensorType a => Tensor v a -> Build (Fetch (Shape, [a]))
-fetchTensorVector :: TensorType a => Tensor v a -> Build (Fetch (Shape, Vector a))
-newtype Scalar a
-Scalar :: a -> Scalar a
-[unScalar] :: Scalar a -> a
-instance Data.String.IsString a => Data.String.IsString (TensorFlow.Nodes.Scalar a)
-instance GHC.Real.RealFrac a => GHC.Real.RealFrac (TensorFlow.Nodes.Scalar a)
-instance GHC.Float.RealFloat a => GHC.Float.RealFloat (TensorFlow.Nodes.Scalar a)
-instance GHC.Real.Real a => GHC.Real.Real (TensorFlow.Nodes.Scalar a)
-instance GHC.Float.Floating a => GHC.Float.Floating (TensorFlow.Nodes.Scalar a)
-instance GHC.Real.Fractional a => GHC.Real.Fractional (TensorFlow.Nodes.Scalar a)
-instance GHC.Num.Num a => GHC.Num.Num (TensorFlow.Nodes.Scalar a)
-instance GHC.Classes.Ord a => GHC.Classes.Ord (TensorFlow.Nodes.Scalar a)
-instance GHC.Classes.Eq a => GHC.Classes.Eq (TensorFlow.Nodes.Scalar a)
-instance GHC.Show.Show a => GHC.Show.Show (TensorFlow.Nodes.Scalar a)
+fetchTensorVector :: (TensorType a) => Tensor v a -> Build (Fetch (TensorData a))
 instance GHC.Base.Functor TensorFlow.Nodes.Fetch
 instance GHC.Base.Applicative TensorFlow.Nodes.Fetch
 instance (TensorFlow.Nodes.Nodes t1, TensorFlow.Nodes.Nodes t2) => TensorFlow.Nodes.Nodes (t1, t2)
@@ -525,36 +624,28 @@ instance TensorFlow.Nodes.Nodes t => TensorFlow.Nodes.Nodes [t]
 instance TensorFlow.Nodes.Fetchable t a => TensorFlow.Nodes.Fetchable [t] [a]
 instance TensorFlow.Nodes.Nodes TensorFlow.Output.ControlNode
 instance (a ~ ()) => TensorFlow.Nodes.Fetchable TensorFlow.Output.ControlNode a
+instance TensorFlow.Nodes.Nodes (TensorFlow.Types.ListOf f '[])
+instance (TensorFlow.Nodes.Nodes (f a), TensorFlow.Nodes.Nodes (TensorFlow.Types.ListOf f as)) => TensorFlow.Nodes.Nodes (TensorFlow.Types.ListOf f (a : as))
+instance (l ~ TensorFlow.Types.List '[]) => TensorFlow.Nodes.Fetchable (TensorFlow.Types.ListOf f '[]) l
+instance (TensorFlow.Nodes.Fetchable (f t) a, TensorFlow.Nodes.Fetchable (TensorFlow.Types.ListOf f ts) (TensorFlow.Types.List as), i ~ Data.Functor.Identity.Identity) => TensorFlow.Nodes.Fetchable (TensorFlow.Types.ListOf f (t : ts)) (TensorFlow.Types.ListOf i (a : as))
 instance TensorFlow.Nodes.Nodes (TensorFlow.Tensor.Tensor v a)
-instance (TensorFlow.Types.TensorType a, a ~ a') => TensorFlow.Nodes.Fetchable (TensorFlow.Tensor.Tensor v a) (Data.Vector.Vector a')
-instance (TensorFlow.Types.TensorType a, a ~ a') => TensorFlow.Nodes.Fetchable (TensorFlow.Tensor.Tensor v a) (TensorFlow.Nodes.Scalar a')
+instance (TensorFlow.Types.TensorType a, a ~ a') => TensorFlow.Nodes.Fetchable (TensorFlow.Tensor.Tensor v a) (TensorFlow.Types.TensorData a')
+instance (TensorFlow.Types.TensorType a, TensorFlow.Types.TensorDataType s a, a ~ a') => TensorFlow.Nodes.Fetchable (TensorFlow.Tensor.Tensor v a) (s a')
 
 module TensorFlow.ControlFlow
 
 -- | Modify a <a>Build</a> action, such that all new ops rendered in it
 --   will depend on the nodes in the first argument.
-withControlDependencies :: Nodes t => t -> Build a -> Build a
+withControlDependencies :: (MonadBuild m, Nodes t) => t -> m a -> m a
 
 -- | Create an op that groups multiple operations.
 --   
 --   When this op finishes, all ops in the input <tt>n</tt> have finished.
 --   This op has no output.
-group :: Nodes t => t -> Build ControlNode
-
--- | Returns a <a>Tensor</a> with the same shape and contents as the input.
-identity :: TensorType a => Tensor v a -> Tensor v a
+group :: (MonadBuild m, Nodes t) => t -> m ControlNode
 
 -- | Does nothing. Only useful as a placeholder for control edges.
-noOp :: ControlNode
-
--- | Returns a <a>Tensor</a> with a given name and the same shape and
---   contents as the input.
---   
---   TODO(judahjacobson): This breaks when used with uninitialize
---   <tt>Tensor Ref</tt>s, since <tt>RefIdentity</tt> doesn't have
---   SetAllowsUninitializedInput(). Look into whether we can change that
---   op.
-named :: TensorType a => Text -> Tensor v a -> Tensor v a
+noOp :: MonadBuild m => m ControlNode
 
 module TensorFlow.Session
 data Session a
@@ -581,22 +672,10 @@ runSession :: Session a -> IO a
 --   <a>sessionConfig</a>).
 runSessionWithOptions :: Options -> Session a -> IO a
 
--- | Lift a <a>Build</a> action into a <a>Session</a>, including any
---   explicit op renderings.
-build :: Build a -> Session a
-
--- | Helper combinator for doing something with the result of a
---   <a>Build</a> action. Example usage:
---   
---   <pre>
---   buildAnd run :: Fetchable t a =&gt; Build t -&gt; Session a
---   </pre>
-buildAnd :: (a -> Session b) -> Build a -> Session b
-
--- | Lift a <a>Build</a> action into a <a>Session</a>, including any
---   explicit op renderings. Returns the merged summary ops which can be
---   used for logging, see <a>build</a> for a convenient wrapper.
-buildWithSummary :: Build a -> Session (a, [SummaryTensor])
+-- | Lift a <a>Build</a> action into a monad, including any explicit op
+--   renderings.
+class Monad m => MonadBuild m
+build :: MonadBuild m => Build a -> m a
 
 -- | Add all pending rendered nodes to the TensorFlow graph and runs any
 --   pending initializers.
@@ -604,7 +683,7 @@ buildWithSummary :: Build a -> Session (a, [SummaryTensor])
 --   Note that run, runWithFeeds, etc. will all call this function
 --   implicitly.
 extend :: Session ()
-addGraphDef :: GraphDef -> Build ()
+addGraphDef :: MonadBuild m => GraphDef -> m ()
 
 -- | Run a subgraph <tt>t</tt>, rendering any dependent nodes that aren't
 --   already rendered, and fetch the corresponding values for <tt>a</tt>.
@@ -630,11 +709,15 @@ runWithFeeds_ :: Nodes t => [Feed] -> t -> Session ()
 --   until runSession exits or an exception occurs. Graph extension happens
 --   synchronously, but the resultant run proceeds as a separate thread.
 asyncProdNodes :: Nodes t => t -> Session ()
+instance Control.Monad.Catch.MonadMask TensorFlow.Session.Session
+instance Control.Monad.Catch.MonadCatch TensorFlow.Session.Session
+instance Control.Monad.Catch.MonadThrow TensorFlow.Session.Session
 instance Control.Monad.IO.Class.MonadIO TensorFlow.Session.Session
 instance GHC.Base.Monad TensorFlow.Session.Session
 instance GHC.Base.Applicative TensorFlow.Session.Session
 instance GHC.Base.Functor TensorFlow.Session.Session
 instance Data.Default.Class.Default TensorFlow.Session.Options
+instance TensorFlow.Build.MonadBuild TensorFlow.Session.Session
 
 
 -- | The core functionality of TensorFlow.
@@ -669,31 +752,16 @@ runSession :: Session a -> IO a
 --   <a>sessionConfig</a>).
 runSessionWithOptions :: Options -> Session a -> IO a
 
--- | Lift a <a>Build</a> action into a <a>Session</a>, including any
---   explicit op renderings.
-build :: Build a -> Session a
-
--- | Helper combinator for doing something with the result of a
---   <a>Build</a> action. Example usage:
---   
---   <pre>
---   buildAnd run :: Fetchable t a =&gt; Build t -&gt; Session a
---   </pre>
-buildAnd :: (a -> Session b) -> Build a -> Session b
-
--- | Lift a <a>Build</a> action into a <a>Session</a>, including any
---   explicit op renderings. Returns the merged summary ops which can be
---   used for logging, see <a>build</a> for a convenient wrapper.
-buildWithSummary :: Build a -> Session (a, [SummaryTensor])
+-- | Lift a <a>Build</a> action into a monad, including any explicit op
+--   renderings.
+class Monad m => MonadBuild m
+build :: MonadBuild m => Build a -> m a
 
 -- | Types that tensor representations (e.g. <a>Tensor</a>,
 --   <a>ControlNode</a>) can be fetched into.
 --   
 --   Includes collections of tensors (e.g. tuples).
 class Nodes t => Fetchable t a
-newtype Scalar a
-Scalar :: a -> Scalar a
-[unScalar] :: Scalar a -> a
 
 -- | Types that contain ops which can be run.
 class Nodes t
@@ -717,7 +785,7 @@ data Feed
 --   Note that if a <a>Tensor</a> is rendered, its identity may change; so
 --   feeding the rendered <a>Tensor</a> may be different than feeding the
 --   original <a>Tensor</a>.
-feed :: Tensor v a -> TensorData a -> Feed
+feed :: Rendered v => Tensor v a -> TensorData a -> Feed
 
 -- | Run a subgraph <tt>t</tt>, rendering any dependent nodes that aren't
 --   already rendered, feed the given input values, and fetch the
@@ -743,19 +811,21 @@ type Build = BuildT Identity
 data BuildT m a
 
 -- | Render a <a>Tensor</a>, fixing its name, scope, device and control
---   inputs from the <a>Build</a> context. Also renders any dependencies of
---   the <a>Tensor</a> that weren't already rendered.
+--   inputs from the <a>MonadBuild</a> context. Also renders any
+--   dependencies of the <a>Tensor</a> that weren't already rendered.
 --   
---   This operation is idempotent; <tt>render &gt;=&gt; render ===
---   render</tt>. However, rendering a (previously un-rendered)
---   <a>Tensor</a> in two different contexts may result in two different
---   <a>Tensor</a>s.
-render :: Tensor v a -> Build (Tensor v a)
+--   This operation is idempotent; calling <a>render</a> on the same input
+--   in the same context will produce the same result. However, rendering
+--   the same <tt>Tensor Build</tt> in two different contexts may result in
+--   two different <tt>Tensor Value</tt>s.
+render :: MonadBuild m => Tensor Build a -> m (Tensor Value a)
 
 -- | Produce a GraphDef proto representation of the nodes that are rendered
 --   in the given <a>Build</a> action.
 asGraphDef :: Build a -> GraphDef
-addGraphDef :: GraphDef -> Build ()
+addGraphDef :: MonadBuild m => GraphDef -> m ()
+opName :: Lens' OpDef PendingNodeName
+opAttr :: Attribute a => Text -> Lens' OpDef a
 
 -- | A type of graph node which has no outputs. These nodes are valuable
 --   for causing side effects when they are run.
@@ -764,52 +834,54 @@ data ControlNode
 -- | A named output of a TensorFlow operation.
 --   
 --   The type parameter <tt>a</tt> is the type of the elements in the
---   <a>Tensor</a>. The parameter <tt>v</tt> is either <a>Value</a> or
---   <a>Ref</a>, depending on whether the graph is treating this op output
---   as an immutable <a>Value</a> or a stateful <a>Ref</a> (e.g., a
---   variable). Note that a <tt>Tensor Ref</tt> can be casted into a
---   <tt>Tensor Value</tt> via <a>value</a>.
-data Tensor v a
-data Value
-data Ref
-
--- | This class provides a runtime switch on whether a <a>Tensor</a> should
---   be treated as a <a>Value</a> or as a <a>Ref</a>.
-data TensorKind v
-ValueKind :: TensorKind Value
-RefKind :: TensorKind Ref
-
--- | Lens for the attributes of a tensor.
+--   <a>Tensor</a>. The parameter <tt>v</tt> is either:
 --   
---   Only valid if the tensor has not yet been rendered. If the tensor has
---   been rendered, the traversal will be over nothing (nothing can be read
---   or written).
-tensorAttr :: Attribute attr => Text -> Traversal' (Tensor v a) attr
+--   <ul>
+--   <li><a>Build</a>: An unrendered, immutable value.</li>
+--   <li><a>Value</a>: A rendered, immutable value.</li>
+--   <li><a>Ref</a>: A rendered stateful handle (e.g., a variable).</li>
+--   </ul>
+--   
+--   Note that <a>expr</a>, <a>value</a>, <a>render</a> and
+--   <a>renderValue</a> can help convert between the different types of
+--   <a>Tensor</a>.
+data Tensor v a
+data Value a
+data Ref a
 
--- | Cast a 'Tensor *' into a 'Tensor Value'. Common usage is to cast a Ref
---   into Value. This behaves like a no-op.
-value :: Tensor v a -> Tensor Value a
+-- | Cast a 'Tensor Ref' into a 'Tensor Value'. This behaves like a no-op.
+value :: Tensor Ref a -> Tensor Value a
 
 -- | Create a <a>Tensor</a> for a given name. This can be used to reference
---   nodes in a <tt>GraphDef</tt> that was loaded via <tt>addGraphDef</tt>.
+--   nodes in a <tt>GraphDef</tt> that was loaded via <a>addGraphDef</a>.
 --   TODO(judahjacobson): add more safety checks here.
-tensorFromName :: TensorKind v -> Text -> Tensor v a
-
--- | Data about a tensor that is encoded for the TensorFlow APIs.
-data TensorData a
+tensorFromName :: TensorKind v => Text -> Tensor v a
+expr :: TensorKind v => Tensor v a -> Tensor Build a
 
 -- | The class of scalar types supported by tensorflow.
 class TensorType a
 
--- | Decode the bytes of a TensorData into a Vector.
-decodeTensorData :: TensorType a => TensorData a -> Vector a
+-- | Tensor data with the correct memory layout for tensorflow.
+data TensorData a
 
--- | Encode a Vector into a TensorData.
+-- | Types that can be converted to and from <a>TensorData</a>.
+--   
+--   <a>Vector</a> is the most efficient to encode/decode for most element
+--   types.
+class TensorType a => TensorDataType s a
+
+-- | Decode the bytes of a <a>TensorData</a> into an <a>s</a>.
+decodeTensorData :: TensorDataType s a => TensorData a -> s a
+
+-- | Encode an <a>s</a> into a <a>TensorData</a>.
 --   
 --   The values should be in row major order, e.g.,
 --   
 --   element 0: index (0, ..., 0) element 1: index (0, ..., 1) ...
-encodeTensorData :: TensorType a => Shape -> Vector a -> TensorData a
+encodeTensorData :: TensorDataType s a => Shape -> s a -> TensorData a
+newtype Scalar a
+Scalar :: a -> Scalar a
+[unScalar] :: Scalar a -> a
 
 -- | Shape (dimensions) of a tensor.
 newtype Shape
@@ -840,7 +912,7 @@ type OneOf ts a = (TensorType a, TensorTypes ts, NoneOf (AllTensorTypes \\ ts) a
 --   device as the given Tensor (see also <a>withDevice</a>). Make sure
 --   that the action has side effects of rendering the desired tensors. A
 --   pure return would not have the desired effect.
-colocateWith :: Tensor v b -> Build a -> Build a
+colocateWith :: (MonadBuild m, Rendered v) => Tensor v b -> m a -> m a
 
 -- | A device that a node can be assigned to. There's a naming convention
 --   where the device names are constructed from job and replica names.
@@ -850,33 +922,21 @@ Device :: Text -> Device
 
 -- | Set a device for all nodes rendered in the given <a>Build</a> action
 --   (unless further overridden by another use of withDevice).
-withDevice :: Maybe Device -> Build a -> Build a
+withDevice :: MonadBuild m => Maybe Device -> m a -> m a
 
 -- | Prepend a scope to all nodes rendered in the given <a>Build</a>
 --   action.
-withNameScope :: Text -> Build a -> Build a
-
--- | Returns a <a>Tensor</a> with a given name and the same shape and
---   contents as the input.
---   
---   TODO(judahjacobson): This breaks when used with uninitialize
---   <tt>Tensor Ref</tt>s, since <tt>RefIdentity</tt> doesn't have
---   SetAllowsUninitializedInput(). Look into whether we can change that
---   op.
-named :: TensorType a => Text -> Tensor v a -> Tensor v a
+withNameScope :: MonadBuild m => Text -> m a -> m a
 
 -- | Modify a <a>Build</a> action, such that all new ops rendered in it
 --   will depend on the nodes in the first argument.
-withControlDependencies :: Nodes t => t -> Build a -> Build a
+withControlDependencies :: (MonadBuild m, Nodes t) => t -> m a -> m a
 
 -- | Create an op that groups multiple operations.
 --   
 --   When this op finishes, all ops in the input <tt>n</tt> have finished.
 --   This op has no output.
-group :: Nodes t => t -> Build ControlNode
-
--- | Returns a <a>Tensor</a> with the same shape and contents as the input.
-identity :: TensorType a => Tensor v a -> Tensor v a
+group :: (MonadBuild m, Nodes t) => t -> m ControlNode
 
 -- | Does nothing. Only useful as a placeholder for control edges.
-noOp :: ControlNode
+noOp :: MonadBuild m => m ControlNode

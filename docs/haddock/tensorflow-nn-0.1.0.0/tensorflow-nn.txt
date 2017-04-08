@@ -37,4 +37,4 @@ module TensorFlow.NN
 --   
 --   <tt>logits</tt> and <tt>targets</tt> must have the same type and
 --   shape.
-sigmoidCrossEntropyWithLogits :: (OneOf '[Float, Double] a, TensorType a, Num a) => Tensor Value a -> Tensor Value a -> Build (Tensor Value a)
+sigmoidCrossEntropyWithLogits :: (MonadBuild m, OneOf '[Float, Double] a, TensorType a, Num a) => Tensor Value a -> Tensor Value a -> m (Tensor Value a)
