@@ -14,7 +14,7 @@
 --   the generated code.
 module TensorFlow.OpGen.ParsedOp
 data ParsedOp
-ParsedOp :: Name -> Text -> Text -> [ParsedArg] -> [ParsedArg] -> [Attr AttrType] -> [Attr [DataType]] -> [Attr (NonEmpty Name)] -> Bool -> ParsedOp
+ParsedOp :: Name -> Text -> Text -> [ParsedArg] -> [ParsedArg] -> [Attr AttrType] -> [Attr TypeParam] -> [Attr (NonEmpty Name)] -> Bool -> ParsedOp
 [parsedOpName] :: ParsedOp -> Name
 [parsedOpSummary] :: ParsedOp -> Text
 [parsedOpDescription] :: ParsedOp -> Text
@@ -25,10 +25,8 @@ ParsedOp :: Name -> Text -> Text -> [ParsedArg] -> [ParsedArg] -> [Attr AttrType
 --   Associated with the type of the attribute.
 [explicitInputAttrs] :: ParsedOp -> [Attr AttrType]
 
--- | Attributes that are type parameters. Associated with the list of
---   allowed types (see: TensorFlow.Types.OneOf). If this list is empty,
---   then any type is acceptable.
-[inferredTypeAttrs] :: ParsedOp -> [Attr [DataType]]
+-- | Attributes that are type parameters.
+[inferredTypeAttrs] :: ParsedOp -> [Attr TypeParam]
 [inferredListSizeAttrs] :: ParsedOp -> [Attr (NonEmpty Name)]
 
 -- | Whether this op is stateful or takes a stateful input. Such ops should
@@ -69,26 +67,36 @@ AttrBool :: AttrBaseType
 AttrType :: AttrBaseType
 AttrShape :: AttrBaseType
 AttrTensor :: AttrBaseType
+data TypeParam
+TypeParam :: Bool -> Maybe (NonEmpty DataType) -> TypeParam
+[typeParamIsList] :: TypeParam -> Bool
+
+-- | The list of allowed types (see: TensorFlow.Types.OneOf). If
+--   <a>Nothing</a>, then any type is acceptable.
+[typeParamRestrictions] :: TypeParam -> Maybe (NonEmpty DataType)
 
 -- | An input or output argument (Tensor) for an op.
 data ParsedArg
-ParsedArg :: Name -> Text -> ParsedArgCase -> ArgKind -> ParsedArg
+ParsedArg :: Name -> Text -> ParsedArgCase -> ParsedArg
 [parsedArgName] :: ParsedArg -> Name
 [parsedArgDescription] :: ParsedArg -> Text
 [parsedArgCase] :: ParsedArg -> ParsedArgCase
-[parsedArgKind] :: ParsedArg -> ArgKind
 data ParsedArgCase
-SimpleArg :: ArgType -> ParsedArgCase
+SimpleArg :: ArgType -> ArgKind -> ParsedArgCase
 [argType] :: ParsedArgCase -> ArgType
-ListArg :: Name -> ArgType -> ParsedArgCase
+[argCaseKind] :: ParsedArgCase -> ArgKind
+ListArg :: Name -> ArgType -> ArgKind -> ParsedArgCase
 
 -- | The attribute that specifies this list's length.
 [argLength] :: ParsedArgCase -> Name
 [argType] :: ParsedArgCase -> ArgType
+[argCaseKind] :: ParsedArgCase -> ArgKind
 
--- | A heterogeneous list. TODO(judahjacobson): Implement this.
-MixedListArg :: Name -> ParsedArgCase
+-- | A heterogeneous list.
+MixedListArg :: Name -> ArgKind -> ParsedArgCase
 [argTypeAttr] :: ParsedArgCase -> Name
+[argCaseKind] :: ParsedArgCase -> ArgKind
+ResourceArg :: ParsedArgCase
 
 -- | The type of an argument.
 data ArgType
@@ -101,10 +109,12 @@ ArgTypeAttr :: Name -> ArgType
 data ArgKind
 ArgTensorRef :: ArgKind
 ArgTensorValue :: ArgKind
-ArgTensorEither :: Text -> ArgKind
-ArgResource :: ArgKind
+ArgTensorBuild :: ArgKind
+ArgSomeTensor :: Text -> ArgKind
+argKind :: ParsedArgCase -> Maybe ArgKind
 parseOp :: OpDef -> ParsedOp
 camelCase :: Text -> Text
+instance GHC.Classes.Eq TensorFlow.OpGen.ParsedOp.ArgKind
 instance GHC.Classes.Eq TensorFlow.OpGen.ParsedOp.AttrType
 instance GHC.Classes.Eq TensorFlow.OpGen.ParsedOp.AttrBaseType
 instance GHC.Classes.Ord TensorFlow.OpGen.ParsedOp.TFName
@@ -130,7 +140,7 @@ instance GHC.Classes.Eq TensorFlow.OpGen.ParsedOp.TFName
 --   <tt>OneOf</tt>).</li>
 --   <li><tt>{input tensors}</tt> is of the form <tt>T_1 -&gt; ... -&gt;
 --   T_N</tt>, where each <tt>T</tt> is of the form <tt>Tensor Ref a</tt>,
---   <tt>Tensor v a</tt> or <tt>ResourceHandle a</tt> (or a list of one of
+--   <tt>Tensor v a</tt> or <tt>ResourceHandle</tt> (or a list of one of
 --   those types), and <tt>a</tt> is either a concrete type or a
 --   (constrained) type variable.</li>
 --   <li><tt>{output tensors}</tt> is of the form <tt>(T_1,...,T_N)</tt>
