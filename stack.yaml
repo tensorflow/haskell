@@ -1,4 +1,4 @@
-resolver: lts-6.2
+resolver: lts-8.5
 
 packages:
 - google-shim
@@ -18,6 +18,8 @@ packages:
 
 extra-deps:
 # proto-lens is not yet in Stackage.
+- haskell-src-exts-1.17.1
+- directory-1.2.7.1
 - proto-lens-0.1.0.5
 - proto-lens-protoc-0.1.0.5
 - proto-lens-descriptors-0.1.0.5
