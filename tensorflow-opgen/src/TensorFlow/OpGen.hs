@@ -53,6 +53,7 @@ module TensorFlow.OpGen
 import Data.Foldable (toList)
 import Data.Maybe (fromMaybe)
 import Data.ProtoLens (def, showMessage)
+import Data.List (sortOn)
 import Data.List.NonEmpty (NonEmpty)
 import qualified Data.List.NonEmpty as NE
 import Lens.Family2 ((^.), (.~), (&), view)
@@ -132,6 +133,7 @@ docOpList flags opList =
         , empty
         , folddoc (\x y -> x </> empty </> y)
                   (map renderOpAndExtras $
+                   sortOn (view name) $
                    filter (not . flip elem exclusions . view name) $
                    toList $ opList ^. op)
         ]
