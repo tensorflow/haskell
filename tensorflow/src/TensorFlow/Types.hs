@@ -262,7 +262,7 @@ instance TensorDataType S.Vector Bool where
       where
         fromBool x = if x then 1 else 0 :: Word8
 
-instance {-# OVERLAPPABLE #-} (Storable a, TensorDataType S.Vector a)
+instance {-# OVERLAPPABLE #-} (Storable a, TensorDataType S.Vector a, TensorType a)
     => TensorDataType V.Vector a where
     decodeTensorData = (S.convert :: S.Vector a -> V.Vector a) . decodeTensorData
     encodeTensorData x = encodeTensorData x . (S.convert :: V.Vector a -> S.Vector a)
@@ -329,7 +329,7 @@ newtype Scalar a = Scalar {unScalar :: a}
     deriving (Show, Eq, Ord, Num, Fractional, Floating, Real, RealFloat,
               RealFrac, IsString)
 
-instance TensorDataType V.Vector a => TensorDataType Scalar a where
+instance (TensorDataType V.Vector a, TensorType a) => TensorDataType Scalar a where
     decodeTensorData = Scalar . headFromSingleton . decodeTensorData
     encodeTensorData x (Scalar y) = encodeTensorData x (V.fromList [y])
 
@@ -353,7 +353,7 @@ protoShape :: Lens' TensorShapeProto Shape
 protoShape = iso protoToShape shapeToProto
   where
     protoToShape = Shape . fmap (view size) . view dim
-    shapeToProto (Shape ds) = def & dim .~ fmap (\d -> def & size .~ d) ds
+    shapeToProto (Shape ds) = (def :: TensorShapeProto) & dim .~ fmap (\d -> def & size .~ d) ds
 
 
 class Attribute a where
@@ -410,7 +410,7 @@ instance All Eq (Map f as) => Eq (ListOf f as) where
     (x :/ xs) == (y :/ ys) = x == y && xs == ys
     -- Newer versions of GHC use the GADT to tell that the previous cases are
     -- exhaustive.
-#if _GLASGOW_HASKELL__ < 800
+#if __GLASGOW_HASKELL__ < 800
     _ == _ = False
 #endif
 

@@ -49,7 +49,7 @@ import Data.Set (Set)
 import Data.Text.Encoding (encodeUtf8)
 import Lens.Family2 (Lens', (^.), (&), (.~))
 import Lens.Family2.Unchecked (lens)
-import Proto.Tensorflow.Core.Framework.Graph (node)
+import Proto.Tensorflow.Core.Framework.Graph (GraphDef, node)
 import Proto.Tensorflow.Core.Protobuf.Config (ConfigProto)
 import TensorFlow.Build
 import TensorFlow.Nodes
@@ -135,7 +135,7 @@ extend = do
     trace <- Session (asks tracer)
     nodesToExtend <- build flushNodeBuffer
     unless (null nodesToExtend) $ liftIO $ do
-        let graphDef = def & node .~ nodesToExtend
+        let graphDef = (def :: GraphDef) & node .~ nodesToExtend
         trace ("Session.extend " <> Builder.string8 (showMessage graphDef))
         FFI.extendGraph session graphDef
     -- Now that all the nodes are created, run the initializers.
