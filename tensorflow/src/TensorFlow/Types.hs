@@ -410,7 +410,7 @@ instance All Eq (Map f as) => Eq (ListOf f as) where
     (x :/ xs) == (y :/ ys) = x == y && xs == ys
     -- Newer versions of GHC use the GADT to tell that the previous cases are
     -- exhaustive.
-#if _GLASGOW_HASKELL__ < 800
+#if __GLASGOW_HASKELL__ < 800
     _ == _ = False
 #endif
 
