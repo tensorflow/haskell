@@ -39,6 +39,7 @@ module TensorFlow.Types
     , protoShape
     , Attribute(..)
     , DataType(..)
+    , ResourceHandle
     -- * Lists
     , ListOf(..)
     , List
@@ -94,15 +95,18 @@ import Proto.Tensorflow.Core.Framework.AttrValue
     , shape
     , tensor
     )
+import Proto.Tensorflow.Core.Framework.ResourceHandle
+    (ResourceHandle)
 import Proto.Tensorflow.Core.Framework.Tensor as Tensor
     ( TensorProto(..)
-    , floatVal
-    , doubleVal
-    , intVal
-    , stringVal
-    , int64Val
-    , stringVal
     , boolVal
+    , doubleVal
+    , floatVal
+    , intVal
+    , int64Val
+    , resourceHandleVal
+    , stringVal
+    , stringVal
     )
 import Proto.Tensorflow.Core.Framework.TensorShape
     ( TensorShapeProto(..)
@@ -183,6 +187,10 @@ instance TensorType (Complex Double) where
     tensorRefType _ = DT_COMPLEX128
     tensorVal = error "TODO (Complex Double)"
 
+instance TensorType ResourceHandle where
+    tensorType _ = DT_RESOURCE
+    tensorRefType _ = DT_RESOURCE_REF
+    tensorVal = resourceHandleVal
 
 -- | Tensor data with the correct memory layout for tensorflow.
 newtype TensorData a = TensorData { unTensorData :: FFI.TensorData }

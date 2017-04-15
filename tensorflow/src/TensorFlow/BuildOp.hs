@@ -126,9 +126,6 @@ recordResult = do
     put $! ResultState (i+1) ns
     return $! output i o
 
-instance BuildResult ResourceHandle where
-    buildResult = ResourceHandle <$> recordResult
-
 instance Rendered v => BuildResult (Tensor v a) where
     buildResult = Tensor . pure <$> recordResult
 
@@ -301,9 +298,6 @@ instance BuildInputs (Tensor v a) where
 instance BuildInputs (ListOf (Tensor v) as) where
     buildInputs Nil = return []
     buildInputs (t :/ ts) = liftM2 (++) (buildInputs t) (buildInputs ts)
-
-instance BuildInputs ResourceHandle where
-    buildInputs (ResourceHandle o) = return [o]
 
 ----
 
