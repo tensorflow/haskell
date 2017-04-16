@@ -77,6 +77,20 @@ zeroInitializedVariable'
 zeroInitializedVariable' params = initializedVariable' params . zeros
 
 -- | Gets the value stored in a variable.
+--
+-- Note that this op is stateful since it depends on the value of the variable;
+-- however, it may be CSE'd with other reads in the same context.  The context can
+-- be fixed by using 'render' along with (for example) 'withControlDependencies'.
+-- For example:
+--
+-- >   runSession $ do
+-- >     v <- variable []
+-- >     a <- assign v 24
+-- >     r <- withControlDependencies a $ render $ readValue v + 18
+-- >     result <- run r
+-- >     liftIO $ (42 :: Float) @=? unScalar result
+--
+--
 readValue :: TensorType a => Variable a -> Tensor Build a
 readValue = readValue' id
 

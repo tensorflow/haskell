@@ -4,13 +4,20 @@ module Main (main) where
 import Control.Monad.IO.Class (liftIO)
 import qualified Data.Vector.Storable as V
 import Google.Test (googleTest)
-import TensorFlow.Core (unScalar, run_, runSession, run)
+import TensorFlow.Core
+    ( unScalar
+    , render
+    , run_
+    , runSession
+    , run
+    , withControlDependencies)
 import qualified TensorFlow.Ops as Ops
 import TensorFlow.Variable
     ( readValue
     , initializedVariable
     , assign
     , assignAdd
+    , variable
     )
 import Test.Framework (Test)
 import Test.Framework.Providers.HUnit (testCase)
@@ -19,6 +26,7 @@ import Test.HUnit ((@=?))
 main :: IO ()
 main = googleTest [ testInitializedVariable
                   , testInitializedVariableShape
+                  , testDependency
                   , testRereadRef
                   , testAssignAdd
                   ]
@@ -42,6 +50,15 @@ testInitializedVariableShape =
         vector <- initializedVariable (Ops.constant [1] [42 :: Float])
         result <- run (readValue vector)
         liftIO $ [42] @=? (result :: V.Vector Float)
+
+testDependency :: Test
+testDependency =
+    testCase "testDependency" $ runSession $ do
+        v <- variable []
+        a <- assign v 24
+        r <- withControlDependencies a $ render (readValue v + 18)
+        result <- run r
+        liftIO $ (42 :: Float) @=? unScalar result
 
 -- | See https://github.com/tensorflow/haskell/issues/92.
 -- Even though we're not explicitly evaluating `f0` until the end,
