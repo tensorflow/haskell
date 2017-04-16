@@ -16,6 +16,7 @@ library
   exposed-modules: TensorFlow.Gradient
                  , TensorFlow.Ops
                  , TensorFlow.EmbeddingOps
+                 , TensorFlow.Variable
   build-depends:  proto-lens == 0.2.*
                 , base >= 4.7 && < 5
                 , bytestring
@@ -37,6 +38,8 @@ Test-Suite RegressionTest
   hs-source-dirs: tests
   build-depends: base
                , HUnit
+               , lens-family
+               , transformers
                , random
                , tensorflow
                , tensorflow-core-ops
@@ -125,6 +128,23 @@ Test-Suite OpsTest
                , test-framework-quickcheck2
                , transformers
                , vector
+
+Test-Suite VariableTest
+  default-language: Haskell2010
+  type: exitcode-stdio-1.0
+  main-is: VariableTest.hs
+  hs-source-dirs: tests
+  build-depends: HUnit
+               , base
+               , google-shim
+               , tensorflow
+               , tensorflow-core-ops
+               , tensorflow-ops
+               , test-framework
+               , test-framework-hunit
+               , transformers
+               , vector
+
 
 Test-Suite DataFlowOpsTest
   default-language: Haskell2010

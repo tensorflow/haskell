@@ -62,6 +62,7 @@ module TensorFlow.Build
     ) where
 
 import Control.Monad.Catch (MonadThrow, MonadCatch, MonadMask)
+import Control.Monad.Fix (MonadFix(..))
 import Control.Monad.IO.Class (MonadIO(..))
 import Control.Monad.Trans.Class (MonadTrans(..))
 import Control.Monad.Trans.State.Strict(StateT(..), mapStateT, evalStateT)
@@ -192,7 +193,8 @@ summaries = lens _summaries (\g x -> g { _summaries = x })
 -- Used to manage build state internally as part of the @Session@ monad.
 newtype BuildT m a = BuildT (StateT GraphState m a)
     deriving (Functor, Applicative, Monad, MonadIO, MonadTrans,
-              MonadState GraphState, MonadThrow, MonadCatch, MonadMask)
+              MonadState GraphState, MonadThrow, MonadCatch, MonadMask,
+              MonadFix)
 
 -- | An action for building nodes in a TensorFlow graph.
 type Build = BuildT Identity
@@ -306,7 +308,6 @@ renderPendingNode (PendingNode scope pendingName nodeDef)
             u@(Unique k) <- use nextUnique
             nextUnique .= succ u
             return $ nodeDef ^. op <> "_" <> Text.pack (show k)
-
 
 -- | Turn an 'Output' into a string representation for the TensorFlow
 -- foreign APIs.

@@ -17,7 +17,6 @@ module TensorFlow.OpGen.ParsedOp
     , ParsedArgCase(..)
     , ArgType(..)
     , ArgKind(..)
-    , argKind
     , parseOp
     , camelCase
     ) where
@@ -118,19 +117,18 @@ data ParsedArg = ParsedArg
     }
 
 data ParsedArgCase
-    = SimpleArg { argType :: ArgType, argCaseKind :: ArgKind }
+    = SimpleArg { argType :: ArgType, argKind :: ArgKind }
     | ListArg
         { argLength :: Name  -- ^ The attribute that specifies this list's length.
         , argType :: ArgType
-        , argCaseKind :: ArgKind
+        , argKind :: ArgKind
         }
-    | MixedListArg { argTypeAttr :: Name, argCaseKind :: ArgKind }
+    | MixedListArg { argTypeAttr :: Name, argKind :: ArgKind }
         -- ^ A heterogeneous list.
-    | ResourceArg
 
-argKind :: ParsedArgCase -> Maybe ArgKind
-argKind ResourceArg = Nothing
-argKind a = Just $ argCaseKind a
+maybeArgType :: ParsedArgCase -> Maybe ArgType
+maybeArgType MixedListArg{} = Nothing
+maybeArgType a = Just $ argType a
 
 -- | The type of an argument.
 data ArgType
@@ -146,10 +144,10 @@ data ArgKind
     deriving (Eq)
 
 isRefCase :: ParsedArgCase -> Bool
-isRefCase a = case argKind a of
-                Nothing -> True  -- Resource
-                Just ArgTensorRef -> True
-                _ -> False
+isRefCase a
+    | ArgTensorRef <- argKind a = True
+    | Just (ArgTypeFixed DT_RESOURCE) <- maybeArgType a = True
+    | otherwise = False
 
 makeName :: Text -> Name
 makeName n = Name
@@ -314,7 +312,6 @@ parseArg a tKind = ParsedArg
 
 parseArgCase :: OpDef'ArgDef -> ArgKind -> ParsedArgCase
 parseArgCase a tKind
-    | a ^. type' == DT_RESOURCE = ResourceArg
     | Just n <- maybeAttr (a ^. typeListAttr) = MixedListArg n tKind
     | Just n <- maybeAttr (a ^. numberAttr) = ListArg n thisArgType tKind
     | otherwise = SimpleArg thisArgType tKind

@@ -52,6 +52,7 @@ module TensorFlow.Core
     , addGraphDef
     , opName
     , opAttr
+    , addInitializer
       -- * Tensor
     , ControlNode
     , Tensor
@@ -64,6 +65,7 @@ module TensorFlow.Core
     , TensorType
     , TensorData
     , TensorDataType(decodeTensorData, encodeTensorData)
+    , ResourceHandle
     , Scalar(..)
     , Shape(..)
     , OneOf
