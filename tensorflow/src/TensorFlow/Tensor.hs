@@ -56,6 +56,7 @@ import qualified TensorFlow.Internal.FFI as FFI
 data Tensor v a where
     Tensor :: TensorKind v => {tensorOutput :: v Output} -> Tensor v a
 
+-- | See 'Tensor'
 newtype Value a = Value {runValue :: a}
     deriving Functor
 
@@ -66,6 +67,7 @@ instance Applicative Value where
 instance Monad Value where
     f >>= g = g $ runValue f
 
+-- | See 'Tensor'
 newtype Ref a = Ref {runRef :: a}
     deriving Functor
 
