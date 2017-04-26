@@ -1,12 +1,12 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedLists #-}
-{-# LANGUAGE ScopedTypeVariables #-}
+
 import Data.Int (Int32, Int64)
 
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad (replicateM_, zipWithM)
 
-import TensorFlow.GenOps.Core (square, rank)
+import qualified TensorFlow.GenOps.Core as TF (square, rank)
 import qualified TensorFlow.Core as TF
 import qualified TensorFlow.Gradient as TF
 import qualified TensorFlow.Ops as TF
@@ -17,11 +17,11 @@ import Test.Framework.Providers.HUnit (testCase)
 import TensorFlow.Test (assertAllClose)
 import Google.Test (googleTest)
 
-
+randomParam :: TF.Shape -> TF.Session (TF.Tensor TF.Value Float)
 randomParam (TF.Shape shape) = TF.truncatedNormal (TF.vector shape)
 
 reduceMean :: TF.Tensor v Float -> TF.Tensor TF.Build Float
-reduceMean xs = TF.mean xs (TF.range 0 (rank xs) 1)
+reduceMean xs = TF.mean xs (TF.range 0 (TF.rank xs) 1)
 
 fitMatrix :: Test
 fitMatrix = testCase "fitMatrix" $ TF.runSession $ do
@@ -30,7 +30,7 @@ fitMatrix = testCase "fitMatrix" $ TF.runSession $ do
   let ones = [1, 1, 1, 1] :: [Float]
       matx = TF.constant [2, 2] ones
       diff = matx `TF.sub` (u `TF.matMul` v)
-      loss = reduceMean . reduceMean $ square diff
+      loss = reduceMean $ TF.square diff
   trainStep <- gradientDescent 0.01 loss [u, v]
   replicateM_ 300 (TF.run trainStep)
   (u',v') <- TF.run (u, v)
