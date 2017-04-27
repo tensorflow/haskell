@@ -1,8 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedLists #-}
 
-import Data.Int (Int32, Int64)
-
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad (replicateM_, zipWithM)
 
