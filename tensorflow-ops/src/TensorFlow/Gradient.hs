@@ -667,6 +667,21 @@ opGrad "SparseSegmentSum" _ [toT -> x, toT -> y, toT -> t] [dz] =
 opGrad "LabelClasses" _ _ _ = [Nothing, Nothing]
 opGrad "LabelWeights" _ _ _ = [Nothing]
 opGrad "Size" _ _ _ = [Nothing]
+
+-- TODO (jcberentsen): Python implementation uses set_shape for
+-- static shape inference, which is unsupported.
+-- TODO: implement support for static shape inference
+opGrad "Tile" _ [toT -> x, toT -> multiples] [dz] =
+    [Just inputGrad, Nothing]
+  where
+    inputGrad = sum reshapedDz axes
+    inputShape = shape (x :: Tensor Build a)
+    packed = CoreOps.pack [multiples, inputShape]
+    perm = vector [1, 0 :: Int32]
+    splitShape = CoreOps.reshape (CoreOps.transpose packed perm) allDimensions
+    axes = CoreOps.range 0 (CoreOps.size splitShape) (2 :: Tensor Build Int32)
+    reshapedDz = CoreOps.reshape dz splitShape
+
 opGrad "ZerosLike" _ _ _ = [Nothing]
 opGrad "Fill" _ _ [dz] = [Nothing, Just $ sum dz rx]
   where
@@ -719,6 +734,7 @@ numOutputs o =
         "SparseSegmentSum" -> 1
         "Sub" -> 1
         "Sum" -> 1
+        "Tile" -> 1
         "Transpose" -> 1
         "TruncatedNormal" -> 1
         "Variable" -> 1

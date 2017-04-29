@@ -27,7 +27,7 @@ import Test.HUnit ((@=?))
 import qualified Data.Vector as V
 
 import qualified TensorFlow.Core as TF
-import qualified TensorFlow.GenOps.Core as TF (max)
+import qualified TensorFlow.GenOps.Core as TF (max, tile)
 import qualified TensorFlow.Gradient as TF
 import qualified TensorFlow.Ops as TF
 
@@ -187,6 +187,35 @@ testFillGrad = testCase "testFillGrad" $ do
         TF.gradients y [x] >>= TF.run
     V.fromList [6] @=? dx
 
+
+testTileGrad :: Test
+testTileGrad = testCase "testTileGrad" $ do
+    [dx] <- TF.runSession $ do
+        x <- TF.render $ TF.vector [5, 9 :: Float]
+        let multiples = TF.vector [2 :: Int32]
+        let y = TF.tile x multiples
+        TF.gradients y [x] >>= TF.run
+    V.fromList [2, 2] @=? dx
+
+
+testTile2DGrad :: Test
+testTile2DGrad = testCase "testTileGrad2D" $ do
+    (dx, shapeDX, shapeX) <- TF.runSession $ do
+        let shape = TF.vector [3, 2 :: Int32]
+        x <- TF.render $ TF.fill shape (TF.scalar (1::Float))
+        let multiples = TF.vector [2, 3 :: Int32]
+        let y = TF.tile x multiples
+
+        [dx] <- TF.gradients y [x]
+
+        shapeDX <- TF.run $ TF.shape dx
+        shapeX <- TF.run $ TF.shape x
+        dxv <- TF.run dx
+        return (dxv, shapeDX, shapeX)
+    shapeX @=? (shapeDX :: V.Vector Int32)
+    V.fromList [6, 6, 6, 6, 6, 6::Float] @=? (dx :: V.Vector Float)
+
+
 main :: IO ()
 main = googleTest [ testGradientSimple
                   , testGradientDisconnected
@@ -197,4 +226,6 @@ main = googleTest [ testGradientSimple
                   , testReluGrad
                   , testReluGradGrad
                   , testFillGrad
+                  , testTileGrad
+                  , testTile2DGrad
                   ]
