@@ -439,6 +439,7 @@ opGrad :: forall a . GradientCompatible a => Text -> GradientFunc a
 opGrad "Abs" _ [toT -> x] [dz] = [Just $ expr dz * signum x]
 opGrad "Neg" _ [_] [dz] = [Just $ negate $ expr dz]
 opGrad "Relu" _ [toT -> x] [dz] = [Just $ reluGrad dz x]
+opGrad "ReluGrad" _ [_, toT -> x ] [dz] = [Just $ reluGrad dz x, Just $ CoreOps.zerosLike x]
 
 opGrad "Square" _ [toT -> x] [dz] =
     -- TODO(fmayle): Handle complex numbers.
@@ -667,6 +668,9 @@ opGrad "LabelClasses" _ _ _ = [Nothing, Nothing]
 opGrad "LabelWeights" _ _ _ = [Nothing]
 opGrad "Size" _ _ _ = [Nothing]
 opGrad "ZerosLike" _ _ _ = [Nothing]
+opGrad "Fill" _ _ [dz] = [Nothing, Just $ sum dz rx]
+  where
+    rx = rangeOfRank dz
 
 -- TODO(fmayle): These can go away if we properly prune the graph.
 opGrad "Const" _ _ _ = [Nothing, Nothing]
@@ -706,6 +710,7 @@ numOutputs o =
         "OneHot" -> 1
         "RefIdentity" -> 1
         "Relu" -> 1
+        "ReluGrad" -> 1
         "Reshape" -> 1
         "Select" -> 1
         "Size" -> 1
@@ -718,6 +723,7 @@ numOutputs o =
         "TruncatedNormal" -> 1
         "Variable" -> 1
         "ZerosLike" -> 1
+        "Fill" -> 1
         _ -> error $ "numOuputs not implemented for " ++ show (o ^. op)
 
 -- Divides `x / y` assuming `x, y >= 0`, treating `0 / 0 = 0`

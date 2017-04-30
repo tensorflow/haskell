@@ -160,6 +160,33 @@ testMaxGradient = testCase "testMaxGradient" $ do
     V.fromList [0, 0, 1, 0, 0 :: Float] @=? dx
 
 
+testReluGrad :: Test
+testReluGrad = testCase "testReluGrad" $ do
+    [dx] <- TF.runSession $ do
+        x <- TF.render $ TF.vector [2 :: Float]
+        let y = TF.relu x
+        TF.gradients y [x] >>= TF.run
+    V.fromList [1] @=? dx
+
+testReluGradGrad :: Test
+testReluGradGrad = testCase "testReluGradGrad" $ do
+    [dx] <- TF.runSession $ do
+        x <- TF.render $ TF.vector [2 :: Float]
+        let y = TF.relu x
+        [y'] <- TF.gradients y [x]
+        TF.gradients y' [x] >>= TF.run
+    V.fromList [0] @=? dx
+
+
+testFillGrad :: Test
+testFillGrad = testCase "testFillGrad" $ do
+    [dx] <- TF.runSession $ do
+        x <- TF.render $ TF.scalar (9 :: Float)
+        let shape = TF.vector [2, 3 :: Int32]
+        let y = TF.fill shape x
+        TF.gradients y [x] >>= TF.run
+    V.fromList [6] @=? dx
+
 main :: IO ()
 main = googleTest [ testGradientSimple
                   , testGradientDisconnected
@@ -167,4 +194,7 @@ main = googleTest [ testGradientSimple
                   , testCreateGraphNameScopes
                   , testDiamond
                   , testMaxGradient
+                  , testReluGrad
+                  , testReluGradGrad
+                  , testFillGrad
                   ]
