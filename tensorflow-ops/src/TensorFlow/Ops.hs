@@ -318,21 +318,15 @@ scalarize t = CoreOps.reshape t (vector scalarShape)
 
 -- | Sum a tensor down to a scalar
 -- Seee `TensorFlow.GenOps.Core.sum`
-reduceSum
-  :: ( TensorType a
-     , OneOf '[ Double, Float, Int32, Int64
-            , Complex Float, Complex Double] a
-     )
-  => Tensor v a -> Tensor Build a
+reduceSum :: (OneOf '[ Double, Float, Int32, Int64
+                     , Complex Float, Complex Double] a) =>
+             Tensor v a -> Tensor Build a
 reduceSum x = CoreOps.sum x allAxes
   where allAxes = CoreOps.range 0 (CoreOps.rank x :: Tensor Build Int32) 1
 
-reduceSum'
-  :: ( TensorType a
-     , OneOf '[ Double, Float, Int32, Int64
-            , Complex Float, Complex Double] a
-     )
-  => OpParams -> Tensor v a -> Tensor Build a
+reduceSum' :: (OneOf '[ Double, Float, Int32, Int64
+                      , Complex Float, Complex Double] a) =>
+              OpParams -> Tensor v a -> Tensor Build a
 reduceSum' params x = CoreOps.sum' params x allAxes
   where allAxes = CoreOps.range 0 (CoreOps.rank x :: Tensor Build Int32) 1
 
