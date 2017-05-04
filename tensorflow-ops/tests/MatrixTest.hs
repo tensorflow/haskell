@@ -6,7 +6,7 @@ import Control.Monad (replicateM_)
 
 import qualified Data.Vector as V
 import qualified TensorFlow.Core as TF
-import qualified TensorFlow.GenOps.Core as TF (square, rank)
+import qualified TensorFlow.GenOps.Core as TF (square)
 import qualified TensorFlow.Minimize as TF
 import qualified TensorFlow.Ops as TF hiding (initializedVariable)
 import qualified TensorFlow.Variable as TF
@@ -18,9 +18,6 @@ import TensorFlow.Test (assertAllClose)
 randomParam :: TF.Shape -> TF.Session (TF.Tensor TF.Value Float)
 randomParam (TF.Shape shape) = TF.truncatedNormal (TF.vector shape)
 
-reduceMean :: TF.Tensor v Float -> TF.Tensor TF.Build Float
-reduceMean xs = TF.mean xs (TF.range 0 (TF.rank xs) 1)
-
 fitMatrix :: Test
 fitMatrix = testCase "fitMatrix" $ TF.runSession $ do
   u <- TF.initializedVariable =<< randomParam [2, 1]
@@ -28,7 +25,7 @@ fitMatrix = testCase "fitMatrix" $ TF.runSession $ do
   let ones = [1, 1, 1, 1] :: [Float]
       matx = TF.constant [2, 2] ones
       diff = matx `TF.sub` (TF.readValue u `TF.matMul` TF.readValue v)
-      loss = reduceMean $ TF.square diff
+      loss = TF.reduceMean $ TF.square diff
   trainStep <- TF.minimizeWith (TF.gradientDescent 0.01) loss [u, v]
   replicateM_ 1000 (TF.run trainStep)
   (u',v') <- TF.run (TF.readValue u, TF.readValue v)

@@ -41,9 +41,6 @@ randomParam width (TF.Shape shape) =
   where
     stddev = TF.scalar (1 / sqrt (fromIntegral width))
 
-reduceMean :: TF.Tensor TF.Build Float -> TF.Tensor TF.Build Float
-reduceMean xs = TF.mean xs (TF.scalar (0 :: Int32))
-
 -- Types must match due to model structure.
 type LabelType = Int32
 
@@ -85,12 +82,12 @@ createModel = do
     labels <- TF.placeholder [batchSize]
     let labelVecs = TF.oneHot labels (fromIntegral numLabels) 1 0
         loss =
-            reduceMean $ fst $ TF.softmaxCrossEntropyWithLogits logits labelVecs
+            TF.reduceMean $ fst $ TF.softmaxCrossEntropyWithLogits logits labelVecs
         params = [hiddenWeights, hiddenBiases, logitWeights, logitBiases]
     trainStep <- TF.minimizeWith TF.adam loss params
 
     let correctPredictions = TF.equal predict labels
-    errorRateTensor <- TF.render $ 1 - reduceMean (TF.cast correctPredictions)
+    errorRateTensor <- TF.render $ 1 - TF.reduceMean (TF.cast correctPredictions)
 
     return Model {
           train = \imFeed lFeed -> TF.runWithFeeds_ [

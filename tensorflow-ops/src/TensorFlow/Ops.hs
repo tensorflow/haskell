@@ -106,6 +106,8 @@ module TensorFlow.Ops
     , CoreOps.range
     , CoreOps.range'
     , reducedShape
+    , reduceMean
+    , reduceMean'
     , CoreOps.relu
     , CoreOps.relu'
     , CoreOps.reluGrad
@@ -328,6 +330,23 @@ reduceSum' :: (OneOf '[ Double, Float, Int32, Int64
                       , Complex Float, Complex Double] a) =>
               OpParams -> Tensor v a -> Tensor Build a
 reduceSum' params x = CoreOps.sum' params x allAxes
+  where allAxes = CoreOps.range 0 (CoreOps.rank x :: Tensor Build Int32) 1
+
+-- | Computes the mean of elements across dimensions of a tensor.
+-- See `TensorFlow.GenOps.Core.mean`
+reduceMean
+  :: ( TensorType a
+     , OneOf '[ Double, Float, Complex Float, Complex Double] a
+     )
+  => Tensor v a -> Tensor Build a
+reduceMean = reduceMean' id
+
+reduceMean'
+  :: ( TensorType a
+     , OneOf '[ Double, Float, Complex Float, Complex Double] a
+     )
+  => OpParams -> Tensor v a -> Tensor Build a
+reduceMean' params x = CoreOps.mean' params x allAxes
   where allAxes = CoreOps.range 0 (CoreOps.rank x :: Tensor Build Int32) 1
 
 -- | Create a constant vector.
