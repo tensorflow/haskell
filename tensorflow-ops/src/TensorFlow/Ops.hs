@@ -345,7 +345,7 @@ scalar' :: TensorType a => OpParams -> a -> Tensor Build a
 scalar' params x = constant' params [] [x]
 
 -- | Random tensor from the unit normal distribution with bounded values.
--- 
+--
 -- This is a type-restricted version of 'TensorFlow.GenOps.Core.truncatedNormal'.
 truncatedNormal :: (MonadBuild m, OneOf '[Word16, Double, Float] a)
                 => Tensor v Int64  -- ^ Shape.
