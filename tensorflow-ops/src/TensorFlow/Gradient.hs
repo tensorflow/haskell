@@ -551,13 +551,13 @@ opGrad "MatMul" nodeDef [toT -> x, toT -> y] [dz] =
            , Just $ matMul' (transAttrs True False) x dz]
        (False, True) ->
            [ Just $ matMul dz y
-           , Just $ matMul' (transAttrs True False) x dz]
+           , Just $ matMul' (transAttrs True False) dz x]
        (True, False) ->
-           [ Just $ matMul' (transAttrs False True) dz y
+           [ Just $ matMul' (transAttrs False True) y dz
            , Just $ matMul x dz]
        (True, True) ->
-           [ Just $ matMul' (transAttrs True True) dz y
-           , Just $ matMul' (transAttrs True True) x dz]
+           [ Just $ matMul' (transAttrs True True) y dz
+           , Just $ matMul' (transAttrs True True) dz x]
 
 opGrad "Transpose" _ [_, toT -> p] [dz] =
     [ Just $ CoreOps.transpose dz

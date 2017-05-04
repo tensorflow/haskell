@@ -200,6 +200,7 @@ Test-Suite GradientTest
                , tensorflow-proto
                , test-framework
                , test-framework-hunit
+               , transformers
                , vector
 
 Test-Suite MiscTest
