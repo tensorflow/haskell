@@ -30,7 +30,7 @@ fitMatrix = testCase "fitMatrix" $ TF.runSession $ do
       diff = matx `TF.sub` (u `TF.matMul` v)
       loss = reduceMean $ TF.square diff
   trainStep <- gradientDescent 0.01 loss [u, v]
-  replicateM_ 300 (TF.run trainStep)
+  replicateM_ 1000 (TF.run trainStep)
   (u',v') <- TF.run (u, v)
   -- ones = u * v
   liftIO $ assertAllClose (V.fromList ones) ((*) <$> u' <*> v')
