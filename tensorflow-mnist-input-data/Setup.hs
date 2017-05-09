@@ -65,6 +65,7 @@ httpDownload url outFile = do
     let uri = fromMaybe
               (error ("Can't be: invalid URI " ++ url))
               (URI.parseURI url)
+    hPutStrLn stderr $ show uri
     result <- HTTP.simpleHTTP (HTTP.defaultGETRequest_ uri)
     HTTP.getResponseCode result >>= \case
         (2, 0, 0) -> HTTP.getResponseBody result >>= B.writeFile outFile
