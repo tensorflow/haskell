@@ -15,8 +15,7 @@
 module Main where
 
 import Data.ByteString.Builder (toLazyByteString)
-import Google.Test (googleTest)
-import Test.Framework (Test)
+import Test.Framework (defaultMain, Test)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
 import qualified Data.Attoparsec.ByteString.Lazy as Atto
 
@@ -30,5 +29,5 @@ testEncodeDecode = testProperty "testEncodeDecode" $ \x ->
         Right y -> x == y
 
 main :: IO ()
-main = googleTest [ testEncodeDecode
-                  ]
+main = defaultMain [ testEncodeDecode
+                   ]

@@ -26,8 +26,7 @@
 import Control.Monad (replicateM)
 import Control.Monad.IO.Class (liftIO)
 import Data.Int (Int64)
-import Google.Test (googleTest)
-import Test.Framework (Test)
+import Test.Framework (defaultMain, Test)
 import Test.Framework.Providers.HUnit (testCase)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
 import Test.HUnit ((@=?))
@@ -126,9 +125,10 @@ typeConstraintTests = testCase "type constraints" $ do
 
 
 main :: IO ()
-main = googleTest [ testFFIRoundTrip
-                  , testEncodeDecodeQcFloat
-                  , testEncodeDecodeQcInt64
-                  , testEncodeDecodeQcString
-                  , typeConstraintTests
-                  ]
+main = defaultMain
+            [ testFFIRoundTrip
+            , testEncodeDecodeQcFloat
+            , testEncodeDecodeQcInt64
+            , testEncodeDecodeQcString
+            , typeConstraintTests
+            ]

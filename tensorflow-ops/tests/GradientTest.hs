@@ -20,10 +20,9 @@
 import Data.Int (Int32, Int64)
 import Data.List (sort)
 import Data.ProtoLens.TextFormat (showMessage)
-import Google.Test (googleTest)
+import Test.Framework (defaultMain, Test)
 import Lens.Family2 ((^..), (.~))
 
-import Test.Framework (Test)
 import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit ((@=?), assertEqual)
 import qualified Data.Vector as V
@@ -292,21 +291,22 @@ transAttrs a b =
   (TF.opAttr "transpose_a" .~ a) . (TF.opAttr "transpose_b" .~ b)
 
 main :: IO ()
-main = googleTest [ testGradientSimple
-                  , testGradientDisconnected
-                  , testCreateGraphStateful
-                  , testCreateGraphNameScopes
-                  , testDiamond
-                  , testMaxGradient
-                  , testReluGrad
-                  , testReluGradGrad
-                  , testFillGrad
-                  , testTileGrad
-                  , testTile2DGrad
-                  , matMulGradient
-                  , matMulGradGrad
-                  , matMulTransposeGradient (False, False)
-                  , matMulTransposeGradient (False, True)
-                  , matMulTransposeGradient (True, False)
-                  , matMulTransposeGradient (True, True)
-                  ]
+main = defaultMain
+            [ testGradientSimple
+            , testGradientDisconnected
+            , testCreateGraphStateful
+            , testCreateGraphNameScopes
+            , testDiamond
+            , testMaxGradient
+            , testReluGrad
+            , testReluGradGrad
+            , testFillGrad
+            , testTileGrad
+            , testTile2DGrad
+            , matMulGradient
+            , matMulGradGrad
+            , matMulTransposeGradient (False, False)
+            , matMulTransposeGradient (False, True)
+            , matMulTransposeGradient (True, False)
+            , matMulTransposeGradient (True, True)
+            ]
