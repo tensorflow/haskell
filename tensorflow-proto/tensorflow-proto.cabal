@@ -9,7 +9,7 @@ maintainer:          tensorflow-haskell@googlegroups.com
 copyright:           Google Inc.
 category:            Machine Learning
 build-type:          Custom
-cabal-version:       >=1.22
+cabal-version:       >=1.24
 extra-source-files:  ../third_party/tensorflow/tensorflow/core/framework/*.proto
                    , ../third_party/tensorflow/tensorflow/core/protobuf/config.proto
                    , ../third_party/tensorflow/tensorflow/core/protobuf/debug.proto
@@ -40,6 +40,10 @@ library
   default-language:    Haskell2010
   include-dirs: .
 
+custom-setup
+  setup-depends: Cabal
+                , proto-lens-protoc == 0.2.*
+                , base >= 4.7 && < 5
 source-repository head
   type:     git
   location: https://github.com/tensorflow/haskell

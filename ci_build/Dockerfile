@@ -11,8 +11,6 @@ MAINTAINER TensorFlow authors <tensorflow-haskell@googlegroups.com>
 ADD . /tfhs
 WORKDIR /tfhs
 
-ARG STACK_RESOLVER
-
 RUN \
     apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 575159689BEFB442 && \
     echo 'deb http://download.fpcomplete.com/ubuntu trusty main'| tee /etc/apt/sources.list.d/fpco.list && \
@@ -33,5 +31,5 @@ RUN \
     curl -O https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-cpu-linux-x86_64-1.0.0.tar.gz && \
     tar zxf libtensorflow-cpu-linux-x86_64-1.0.0.tar.gz -C /usr/local && \
     ldconfig && \
-    stack setup --resolver=${STACK_RESOLVER} && \
-    stack test --resolver=${STACK_RESOLVER} --only-dependencies
+    stack setup && \
+    stack test --only-dependencies
