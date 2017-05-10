@@ -15,6 +15,11 @@
 -- | Generates the wrappers for Ops shipped with tensorflow.
 module Main where
 
+import Distribution.PackageDescription
+    ( PackageDescription(..)
+    , libBuildInfo
+    , hsSourceDirs
+    )
 import Distribution.Simple.BuildPaths (autogenModulesDir)
 import Distribution.Simple.LocalBuildInfo (LocalBuildInfo)
 import Distribution.Simple
@@ -44,6 +49,11 @@ generatingOpsWrappers = hooks
     , haddockHook = \p l h f -> generateSources l >> haddockHook hooks p l h f
     , replHook = \p l h f args -> generateSources l
                                         >> replHook hooks p l h f args
+    , sDistHook = \p maybe_l h f -> case maybe_l of
+        Nothing -> error "Can't run sdist; run 'cabal configure first."
+        Just l -> do
+                    generateSources l
+                    sDistHook hooks (fudgePackageDesc l p) maybe_l h f
     }
   where
     flagsBuilder dir = OpGenFlags
@@ -62,6 +72,20 @@ generatingOpsWrappers = hooks
             Left e -> hPutStrLn stderr e >> exitFailure
             Right x -> Text.writeFile (outputFile flags)
                                       (prettyLazyText 80 $ docOpList flags x)
+
+-- | Add the autogen directory to the hs-source-dirs of all the targets in the
+-- .cabal file.  Used to fool 'sdist' by pointing it to the generated source
+-- files.
+fudgePackageDesc
+    :: LocalBuildInfo -> PackageDescription -> PackageDescription
+fudgePackageDesc lbi p = p
+    { library =
+        (\lib -> lib { libBuildInfo = fudgeBuildInfo (libBuildInfo lib) })
+            <$> library p
+    }
+  where
+    fudgeBuildInfo bi =
+        bi { hsSourceDirs = autogenModulesDir lbi : hsSourceDirs bi }
 
 blackList =
     [ -- Requires the "func" type:
