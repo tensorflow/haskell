@@ -22,9 +22,8 @@ module Main where
 import Control.Monad.IO.Class (liftIO)
 import Data.Int (Int32, Int64)
 import Data.List (genericLength)
-import Google.Test (googleTest)
 import TensorFlow.EmbeddingOps (embeddingLookup)
-import Test.Framework (Test)
+import Test.Framework (defaultMain, Test)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
 import Test.HUnit ((@=?))
 import Test.Framework.Providers.HUnit (testCase)
@@ -169,7 +168,7 @@ instance Arbitrary a => Arbitrary (LookupExample a) where
         return $ LookupExample numParts (TF.Shape shape) values indices
 
 main :: IO ()
-main = googleTest
+main = defaultMain
        [ testProperty "EmbeddingLookupUndoesSplit"
          (testEmbeddingLookupUndoesSplit :: LookupExample Double -> Property)
        , testEmbeddingLookupHasRightShape

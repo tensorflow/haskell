@@ -85,7 +85,6 @@ Test-Suite VarIntTest
   build-depends: base
                , attoparsec
                , bytestring
-               , google-shim
                , tensorflow
                , test-framework
                , test-framework-quickcheck2

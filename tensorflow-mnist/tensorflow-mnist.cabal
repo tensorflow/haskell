@@ -64,7 +64,6 @@ Test-Suite ParseTest
                , bytestring
                , proto-lens
                , lens-family
-               , google-shim
                , tensorflow
                , tensorflow-mnist
                , tensorflow-mnist-input-data
