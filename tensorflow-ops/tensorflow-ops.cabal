@@ -4,6 +4,7 @@ synopsis:            Friendly layer around TensorFlow bindings.
 description:         Please see README.md
 homepage:            https://github.com/tensorflow/haskell#readme
 license:             Apache
+license-file:        LICENSE
 author:              TensorFlow authors
 maintainer:          tensorflow-haskell@googlegroups.com
 copyright:           Google Inc.
