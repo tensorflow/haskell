@@ -1,8 +1,11 @@
 name:                tensorflow-test
 version:             0.1.0.0
 synopsis:            Some common functions for test suites.
+description:         This package provides common utility functions for the
+                     TensorFlow test suites.
 homepage:            https://github.com/tensorflow/haskell#readme
 license:             Apache
+license-file:        LICENSE
 author:              TensorFlow authors
 maintainer:          tensorflow-haskell@googlegroups.com
 copyright:           Google Inc.

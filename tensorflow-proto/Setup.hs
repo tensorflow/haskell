@@ -14,4 +14,4 @@
 
 import Data.ProtoLens.Setup
 
-main = defaultMainGeneratingProtos "../third_party/tensorflow"
+main = defaultMainGeneratingProtos "third_party/tensorflow"
