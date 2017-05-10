@@ -1,5 +1,5 @@
 name:                tensorflow
-version:             0.1.0.0
+version:             0.1.0.1
 synopsis:            TensorFlow bindings.
 description:
     This library provides an interface to the TensorFlow
@@ -19,6 +19,7 @@ copyright:           Google Inc.
 category:            Machine Learning
 build-type:          Simple
 cabal-version:       >=1.22
+extra-source-files: third_party/tensorflow/c/c_api.h
 
 library
   hs-source-dirs:   src
