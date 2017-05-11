@@ -24,7 +24,8 @@ import qualified Data.Vector as V
 
 import qualified TensorFlow.Core as TF
 import qualified TensorFlow.Gradient as TF
-import qualified TensorFlow.Ops as TF
+import qualified TensorFlow.Ops as TF hiding (initializedVariable, zeroInitializedVariable)
+import qualified TensorFlow.Variable as TF
 
 import TensorFlow.Examples.MNIST.InputData
 import TensorFlow.Examples.MNIST.Parse
@@ -68,13 +69,15 @@ createModel = do
     hiddenWeights <-
         TF.initializedVariable =<< randomParam numPixels [numPixels, numUnits]
     hiddenBiases <- TF.zeroInitializedVariable [numUnits]
-    let hiddenZ = (images `TF.matMul` hiddenWeights) `TF.add` hiddenBiases
+    let hiddenZ = (images `TF.matMul` TF.readValue hiddenWeights)
+                  `TF.add` TF.readValue hiddenBiases
     let hidden = TF.relu hiddenZ
     -- Logits.
     logitWeights <-
         TF.initializedVariable =<< randomParam numUnits [numUnits, numLabels]
     logitBiases <- TF.zeroInitializedVariable [numLabels]
-    let logits = (hidden `TF.matMul` logitWeights) `TF.add` logitBiases
+    let logits = (hidden `TF.matMul` TF.readValue logitWeights)
+                 `TF.add` TF.readValue logitBiases
     predict <- TF.render $ TF.cast $
                TF.argMax (TF.softmax logits) (TF.scalar (1 :: LabelType))
 
@@ -87,7 +90,7 @@ createModel = do
     grads <- TF.gradients loss params
 
     let lr = TF.scalar 0.00001
-        applyGrad param grad = TF.assign param $ param `TF.sub` (lr `TF.mul` grad)
+        applyGrad param grad = TF.assignAdd param (negate $ lr `TF.mul` grad)
     trainStep <- TF.group =<< zipWithM applyGrad params grads
 
     let correctPredictions = TF.equal predict labels
