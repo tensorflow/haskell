@@ -89,6 +89,12 @@ instance Nodes t => Nodes [t] where
 instance Fetchable t a => Fetchable [t] [a] where
     getFetch ts  = sequenceA <$> mapM getFetch ts
 
+instance Nodes t => Nodes (Maybe t) where
+    getNodes = nodesUnion . fmap getNodes
+
+instance Fetchable t a => Fetchable (Maybe t) (Maybe a) where
+    getFetch = fmap sequenceA . mapM getFetch
+
 instance Nodes ControlNode where
     getNodes (ControlNode o) = pure $ Set.singleton o
 

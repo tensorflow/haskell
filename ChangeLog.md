@@ -4,6 +4,7 @@
 - Expand the `Rendered` class and add a `ToTensor` class to let more functions
   (gradients, feed, colocateWith) support `ResourceHandle` wrappers like
   `Variables`.
+- Add `initializedValue` function for `Variable`.
 
 ## v0.1.0.2
 - Add extra-lib-dirs for OS X in the Hackage release (#122).
