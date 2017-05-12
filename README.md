@@ -20,14 +20,15 @@ Toy example of a linear regression model
 ([full code](tensorflow-ops/tests/RegressionTest.hs)):
 
 ```haskell
-import Control.Monad (replicateM, replicateM_, zipWithM)
+import Control.Monad (replicateM, replicateM_)
 import System.Random (randomIO)
 import Test.HUnit (assertBool)
 
 import qualified TensorFlow.Core as TF
 import qualified TensorFlow.GenOps.Core as TF
-import qualified TensorFlow.Gradient as TF
-import qualified TensorFlow.Ops as TF
+import qualified TensorFlow.Minimize as TF
+import qualified TensorFlow.Ops as TF hiding (initializedVariable)
+import qualified TensorFlow.Variable as TF
 
 main :: IO ()
 main = do
@@ -48,23 +49,14 @@ fit xData yData = TF.runSession $ do
     w <- TF.initializedVariable 0
     b <- TF.initializedVariable 0
     -- Define the loss function.
-    let yHat = (x `TF.mul` w) `TF.add` b
+    let yHat = (x `TF.mul` TF.readValue w) `TF.add` TF.readValue b
         loss = TF.square (yHat `TF.sub` y)
     -- Optimize with gradient descent.
-    trainStep <- gradientDescent 0.001 loss [w, b]
+    trainStep <- TF.minimizeWith (TF.gradientDescent 0.001) loss [w, b]
     replicateM_ 1000 (TF.run trainStep)
     -- Return the learned parameters.
-    (TF.Scalar w', TF.Scalar b') <- TF.run (w, b)
+    (TF.Scalar w', TF.Scalar b') <- TF.run (TF.readValue w, TF.readValue b)
     return (w', b')
-
-gradientDescent :: Float
-                -> TF.Tensor TF.Build Float
-                -> [TF.Tensor TF.Ref Float]
-                -> TF.Session TF.ControlNode
-gradientDescent alpha loss params = do
-    let applyGrad param grad =
-            TF.assign param (param `TF.sub` (TF.scalar alpha `TF.mul` grad))
-    TF.group =<< zipWithM applyGrad params =<< TF.gradients loss params
 ```
 
 # Installation Instructions

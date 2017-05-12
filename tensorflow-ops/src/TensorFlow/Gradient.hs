@@ -22,7 +22,8 @@
 {-# LANGUAGE ViewPatterns #-}
 
 module TensorFlow.Gradient
-    ( gradients
+    ( GradientCompatible
+    , gradients
     ) where
 
 import Control.Monad (forM, zipWithM)
