@@ -32,9 +32,10 @@ import Control.Monad.IO.Class (liftIO)
 import qualified TensorFlow.Core as TF
 import qualified TensorFlow.GenOps.Core as TF (max, tile)
 import qualified TensorFlow.Gradient as TF
-import qualified TensorFlow.Ops as TF
+import qualified TensorFlow.Ops as TF hiding (zeroInitializedVariable)
 import qualified TensorFlow.Output as TF
 import qualified TensorFlow.Types as TF
+import qualified TensorFlow.Variable as TF
 
 import Proto.Tensorflow.Core.Framework.Graph (node)
 import Proto.Tensorflow.Core.Framework.NodeDef (op)
@@ -223,7 +224,7 @@ matMulGradient = testCase "matMulGradients" $ do
   let dfBuild = do
         x <- TF.render $ TF.zeros $ TF.Shape [3, 1 :: Int64]
         w <- TF.zeroInitializedVariable $ TF.Shape [1, 2 :: Int64]
-        let f = x `TF.matMul` w :: TF.Tensor TF.Build Float
+        let f = x `TF.matMul` TF.readValue w :: TF.Tensor TF.Build Float
         dfs <- TF.gradients f [x]
         return (x, dfs)
 
@@ -243,11 +244,11 @@ matMulGradGrad = testCase "matMulGradGrad" $ do
   let tower = do
         x <- TF.render $ TF.zeros $ TF.Shape [batch, 1]
         w <- TF.zeroInitializedVariable $ TF.Shape [1, width]
-        let f = x `TF.matMul` w
+        let f = x `TF.matMul` TF.readValue w
         [dfdx] <- TF.gradients f [x]
         let f'x = TF.reduceSum dfdx
         [dfdw] <- TF.gradients f'x [w] -- take gradient again (this time over w)
-        return [TF.value w, dfdw]
+        return [TF.readValue w, TF.expr dfdw]
 
   TF.runSession $ do
     [w, dfdw] <- TF.build tower
@@ -256,12 +257,12 @@ matMulGradGrad = testCase "matMulGradGrad" $ do
 
     let step = w `TF.add` dfdw
     w0 <- TF.run step
-    liftIO $ ((V.fromList [4, 4 :: Float]) @=? w0)
+    liftIO $ V.fromList [4, 4 :: Float] @=? w0
 
 
 -- test that gradient of matMul deals correctly with transpose_a and transpose_b
 matMulTransposeGradient :: (Bool, Bool) -> Test
-matMulTransposeGradient txw = testCase ("matMulTransposeGradients " ++ (show txw)) $ do
+matMulTransposeGradient txw = testCase ("matMulTransposeGradients " ++ show txw) $ do
   let (transposeX, transposeW) = txw
 
   let dfBuild = do
@@ -269,7 +270,7 @@ matMulTransposeGradient txw = testCase ("matMulTransposeGradients " ++ (show txw
         let xZeros = TF.zeros xShape
         x <- TF.render $ if transposeX then TF.matTranspose xZeros else xZeros
         variable <- TF.zeroInitializedVariable $ TF.Shape [1, 2 :: Int64]
-        let wv = if transposeW then TF.matTranspose variable else TF.expr variable
+        let wv = if transposeW then TF.matTranspose (TF.readValue variable) else TF.readValue variable
         let f = TF.matMul' (transAttrs transposeX transposeW) x wv :: TF.Tensor TF.Build Float
         w <- TF.render wv
         ds <- TF.gradients f [x, w]

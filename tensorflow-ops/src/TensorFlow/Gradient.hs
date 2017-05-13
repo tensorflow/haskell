@@ -181,7 +181,7 @@ gradients y xs = build $ do
     gradientMap <- graphGrads gr initPending
     -- Lookup the gradients for each x.
     forM xs $ \x ->
-        let (Output i xName) = targetOutput x
+        let Output i xName = targetOutput x
         in maybe (render $ targetZeros x) return $ do
             n <- nodeMap ^. at xName
             gradientMap ^. at n . nonEmpty . outputIxAt i
@@ -696,6 +696,10 @@ opGrad "Fill" _ _ [dz] = [Nothing, Just $ sum dz rx]
   where
     rx = rangeOfRank dz
 
+-- Treat read ops as an identity function on the variable. This allows us to
+-- take gradients w.r.t. to the variable handle instead of the result of a read
+-- op. If a variable is read multiple times, the gradients will propagate back
+-- through each read.
 opGrad "ReadVariableOp" _ _ [dz] = [Just $ expr dz]
 
 -- TODO(fmayle): These can go away if we properly prune the graph.
