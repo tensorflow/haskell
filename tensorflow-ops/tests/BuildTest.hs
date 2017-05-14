@@ -60,10 +60,9 @@ import TensorFlow.Session
     , runSession
     , run_
     )
-import Test.Framework (Test)
+import Test.Framework (defaultMain, Test)
 import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit ((@=?))
-import Google.Test (googleTest)
 import qualified Data.Vector as V
 
 -- | Test 'opName' behavior.
@@ -165,12 +164,13 @@ testDeviceColocation = testCase "testDeviceColocation" $ evalBuildT $ do
         return ()
 
 main :: IO ()
-main = googleTest [ testInitializedVariable
-                  , testInitializedVariableShape
-                  , testDeviceColocation
-                  , testOpName
-                  , testNameScoped
-                  , testNamedAndScoped
-                  , testPureRender
-                  , testRenderDedup
-                  ]
+main = defaultMain
+            [ testInitializedVariable
+            , testInitializedVariableShape
+            , testDeviceColocation
+            , testOpName
+            , testNameScoped
+            , testNamedAndScoped
+            , testPureRender
+            , testRenderDedup
+            ]

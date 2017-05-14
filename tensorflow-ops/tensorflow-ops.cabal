@@ -4,6 +4,7 @@ synopsis:            Friendly layer around TensorFlow bindings.
 description:         Please see README.md
 homepage:            https://github.com/tensorflow/haskell#readme
 license:             Apache
+license-file:        LICENSE
 author:              TensorFlow authors
 maintainer:          tensorflow-haskell@googlegroups.com
 copyright:           Google Inc.
@@ -16,6 +17,8 @@ library
   exposed-modules: TensorFlow.Gradient
                  , TensorFlow.Ops
                  , TensorFlow.EmbeddingOps
+                 , TensorFlow.NN
+                 , TensorFlow.Queue
                  , TensorFlow.Variable
   build-depends:  proto-lens == 0.2.*
                 , base >= 4.7 && < 5
@@ -53,7 +56,6 @@ Test-Suite MatrixTest
   build-depends: base
                , HUnit
                , random
-               , google-shim
                , tensorflow
                , tensorflow-core-ops
                , tensorflow-ops
@@ -72,7 +74,6 @@ Test-Suite BuildTest
                , base
                , proto-lens
                , lens-family
-               , google-shim
                , tensorflow
                , tensorflow-ops
                , tensorflow-proto
@@ -91,7 +92,6 @@ Test-Suite EmbeddingOpsTest
                , base
                , proto-lens
                , lens-family
-               , google-shim
                , tensorflow
                , tensorflow-test
                , tensorflow-core-ops
@@ -113,7 +113,6 @@ Test-Suite ArrayOpsTest
                , base
                , proto-lens
                , lens-family
-               , google-shim
                , tensorflow
                , tensorflow-core-ops
                , tensorflow-ops
@@ -135,7 +134,6 @@ Test-Suite OpsTest
                , bytestring
                , proto-lens
                , lens-family
-               , google-shim
                , temporary
                , tensorflow
                , tensorflow-core-ops
@@ -154,7 +152,6 @@ Test-Suite VariableTest
   hs-source-dirs: tests
   build-depends: HUnit
                , base
-               , google-shim
                , tensorflow
                , tensorflow-core-ops
                , tensorflow-ops
@@ -174,7 +171,6 @@ Test-Suite DataFlowOpsTest
                , base
                , proto-lens
                , lens-family
-               , google-shim
                , tensorflow
                , tensorflow-core-ops
                , tensorflow-ops
@@ -193,7 +189,6 @@ Test-Suite GradientTest
                , base
                , proto-lens
                , lens-family
-               , google-shim
                , tensorflow
                , tensorflow-core-ops
                , tensorflow-ops
@@ -212,7 +207,6 @@ Test-Suite MiscTest
                , base
                , bytestring
                , vector
-               , google-shim
                , transformers
                , tensorflow
                , tensorflow-core-ops
@@ -220,6 +214,42 @@ Test-Suite MiscTest
                , tensorflow-proto
                , test-framework
                , test-framework-hunit
+
+Test-Suite NNTest
+  default-language: Haskell2010
+  type: exitcode-stdio-1.0
+  main-is: NNTest.hs
+  hs-source-dirs: tests
+  build-depends: HUnit
+               , QuickCheck
+               , base
+               , tensorflow
+               , tensorflow-test
+               , tensorflow-ops
+               , test-framework
+               , test-framework-hunit
+               , test-framework-quickcheck2
+               , vector
+
+Test-Suite QueueTest
+  default-language: Haskell2010
+  type: exitcode-stdio-1.0
+  main-is: QueueTest.hs
+  hs-source-dirs: tests
+  -- Uses multiple threads and blocks without this option.
+  ghc-options: -threaded
+  build-depends: HUnit
+               , base
+               , bytestring
+               , proto-lens
+               , lens-family
+               , tensorflow
+               , tensorflow-core-ops
+               , tensorflow-ops
+               , test-framework
+               , test-framework-hunit
+               , transformers
+               , vector
 
 Test-Suite TracingTest
   default-language: Haskell2010
@@ -247,7 +277,6 @@ Test-Suite TypesTest
                , bytestring
                , proto-lens
                , lens-family
-               , google-shim
                , tensorflow
                , tensorflow-core-ops
                , tensorflow-ops

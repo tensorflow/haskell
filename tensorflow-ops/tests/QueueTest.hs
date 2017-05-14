@@ -20,7 +20,7 @@ module Main where
 
 import Control.Monad.IO.Class (liftIO)
 import Data.Int (Int64)
-import Google.Test (googleTest)
+import Test.Framework (defaultMain, Test)
 import TensorFlow.Types (ListOf(..), Scalar(..), (/:/))
 import TensorFlow.Ops (scalar)
 import TensorFlow.Queue
@@ -31,7 +31,6 @@ import TensorFlow.Session
     , runSession
     , run_
     )
-import Test.Framework (Test)
 import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit ((@=?))
 import qualified Data.ByteString as BS
@@ -85,7 +84,8 @@ testAsync = testCase "testAsync" $ runSession $ do
     run deq >>= liftIO . (expected @=?)
 
 main :: IO ()
-main = googleTest [ testBasic
-                  , testPump
-                  , testAsync
-                  ]
+main = defaultMain
+            [ testBasic
+            , testPump
+            , testAsync
+            ]

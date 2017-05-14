@@ -4,6 +4,7 @@ synopsis:            Haskell wrappers for Core Tensorflow Ops.
 description:         Code generated signatures for the Ops in libtensorflow.
 homepage:            https://github.com/tensorflow/haskell#readme
 license:             Apache
+license-file:        LICENSE
 author:              TensorFlow authors
 maintainer:          tensorflow-haskell@googlegroups.com
 copyright:           Google Inc.

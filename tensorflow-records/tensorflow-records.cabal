@@ -1,8 +1,10 @@
 name:                tensorflow-records
 version:             0.1.0.0
 synopsis:            Encoder and decoder for the TensorFlow \"TFRecords\" format.
+description:         Encoder and decoder for the TensorFlow \"TFRecords\" format.
 homepage:            https://github.com/tensorflow/haskell#readme
 license:             Apache
+license-file:        LICENSE
 author:              TensorFlow authors
 maintainer:          tensorflow-haskell@googlegroups.com
 copyright:           Google Inc.

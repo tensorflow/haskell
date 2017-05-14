@@ -3,7 +3,6 @@ module Main (main) where
 
 import Control.Monad.IO.Class (liftIO)
 import qualified Data.Vector.Storable as V
-import Google.Test (googleTest)
 import TensorFlow.Core
     ( unScalar
     , render
@@ -22,18 +21,19 @@ import TensorFlow.Variable
     , assignAdd
     , variable
     )
-import Test.Framework (Test)
+import Test.Framework (defaultMain, Test)
 import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit ((@=?))
 
 main :: IO ()
-main = googleTest [ testInitializedVariable
-                  , testInitializedVariableShape
-                  , testDependency
-                  , testRereadRef
-                  , testAssignAdd
-                  , testTargetZeros
-                  ]
+main = defaultMain
+            [ testInitializedVariable
+            , testInitializedVariableShape
+            , testDependency
+            , testRereadRef
+            , testAssignAdd
+            , testTargetZeros
+            ]
 
 testInitializedVariable :: Test
 testInitializedVariable =

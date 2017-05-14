@@ -1,15 +1,25 @@
 name:                tensorflow
-version:             0.1.0.0
+version:             0.1.0.1
 synopsis:            TensorFlow bindings.
-description:         Please see README.md
+description:
+    This library provides an interface to the TensorFlow
+    bindings.  "TensorFlow.Core" contains the base API for
+    building and running computational graphs.  Other packages
+    such as @tensorflow-ops@ contain bindings to the actual
+    computational kernels.
+    .
+    For more documentation and examples, see
+    <https://github.com/tensorflow/haskell#readme>
 homepage:            https://github.com/tensorflow/haskell#readme
 license:             Apache
+license-file:        LICENSE
 author:              TensorFlow authors
 maintainer:          tensorflow-haskell@googlegroups.com
 copyright:           Google Inc.
 category:            Machine Learning
 build-type:          Simple
 cabal-version:       >=1.22
+extra-source-files: third_party/tensorflow/c/c_api.h
 
 library
   hs-source-dirs:   src
@@ -76,7 +86,6 @@ Test-Suite VarIntTest
   build-depends: base
                , attoparsec
                , bytestring
-               , google-shim
                , tensorflow
                , test-framework
                , test-framework-quickcheck2

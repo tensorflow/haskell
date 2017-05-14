@@ -1,7 +1,6 @@
 resolver: lts-8.13
 
 packages:
-- google-shim
 - tensorflow
 - tensorflow-core-ops
 - tensorflow-logging
@@ -10,8 +9,6 @@ packages:
 - tensorflow-proto
 - tensorflow-mnist
 - tensorflow-mnist-input-data
-- tensorflow-queue
-- tensorflow-nn
 - tensorflow-records
 - tensorflow-records-conduit
 - tensorflow-test

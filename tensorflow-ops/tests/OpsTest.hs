@@ -19,10 +19,9 @@ module Main where
 
 import Control.Monad.IO.Class (liftIO)
 import Data.Int (Int32, Int64)
-import Google.Test (googleTest)
+import Test.Framework (defaultMain, Test)
 import Lens.Family2 ((.~))
 import System.IO.Temp (withSystemTempDirectory)
-import Test.Framework (Test)
 import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit ((@=?))
 import qualified Data.ByteString.Char8 as B8
@@ -106,10 +105,11 @@ testRereadRef = testCase "testReRunAssign" $ TF.runSession $ do
     liftIO $ (0.0, 0.1) @=? (TF.unScalar f0, TF.unScalar f1)
 
 main :: IO ()
-main = googleTest [ testSaveRestore
-                  , testSize
-                  , testReducedShape
-                  , testPlaceholderCse
-                  , testScalarFeedCse
-                  , testRereadRef
-                  ]
+main = defaultMain
+            [ testSaveRestore
+            , testSize
+            , testReducedShape
+            , testPlaceholderCse
+            , testScalarFeedCse
+            , testRereadRef
+            ]

@@ -4,16 +4,17 @@ synopsis:            TensorFlow protocol buffers.
 description:         Please see README.md
 homepage:            https://github.com/tensorflow/haskell#readme
 license:             Apache
+license-file:        LICENSE
 author:              TensorFlow authors
 maintainer:          tensorflow-haskell@googlegroups.com
 copyright:           Google Inc.
 category:            Machine Learning
 build-type:          Custom
 cabal-version:       >=1.24
-extra-source-files:  ../third_party/tensorflow/tensorflow/core/framework/*.proto
-                   , ../third_party/tensorflow/tensorflow/core/protobuf/config.proto
-                   , ../third_party/tensorflow/tensorflow/core/protobuf/debug.proto
-                   , ../third_party/tensorflow/tensorflow/core/util/event.proto
+extra-source-files:  third_party/tensorflow/tensorflow/core/framework/*.proto
+                   , third_party/tensorflow/tensorflow/core/protobuf/config.proto
+                   , third_party/tensorflow/tensorflow/core/protobuf/debug.proto
+                   , third_party/tensorflow/tensorflow/core/util/event.proto
 
 library
   exposed-modules:     Proto.Tensorflow.Core.Framework.AttrValue

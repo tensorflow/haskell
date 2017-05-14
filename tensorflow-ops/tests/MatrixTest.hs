@@ -10,10 +10,9 @@ import qualified TensorFlow.Gradient as TF
 import qualified TensorFlow.Ops as TF
 import qualified Data.Vector as V
 
-import Test.Framework (Test)
+import Test.Framework (defaultMain, Test)
 import Test.Framework.Providers.HUnit (testCase)
 import TensorFlow.Test (assertAllClose)
-import Google.Test (googleTest)
 
 randomParam :: TF.Shape -> TF.Session (TF.Tensor TF.Value Float)
 randomParam (TF.Shape shape) = TF.truncatedNormal (TF.vector shape)
@@ -45,4 +44,4 @@ gradientDescent alpha loss params = do
     TF.group =<< zipWithM applyGrad params =<< TF.gradients loss params
 
 main :: IO ()
-main = googleTest [ fitMatrix ]
+main = defaultMain [ fitMatrix ]

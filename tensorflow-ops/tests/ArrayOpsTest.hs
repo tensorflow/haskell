@@ -17,8 +17,7 @@ module Main where
 
 import Control.Monad.IO.Class (liftIO)
 import Data.Int (Int64)
-import Google.Test (googleTest)
-import Test.Framework (Test)
+import Test.Framework (defaultMain, Test)
 import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit ((@=?))
 import qualified Data.Vector as V
@@ -47,6 +46,6 @@ testShapeN = testCase "testShapeN" $ TF.runSession $ do
     liftIO $ [V.fromList [1], V.fromList [2,3]] @=? (result :: [V.Vector Int64])
 
 main :: IO ()
-main = googleTest [ testSplit
-                  , testShapeN
-                  ]
+main = defaultMain [ testSplit
+                   , testShapeN
+                   ]

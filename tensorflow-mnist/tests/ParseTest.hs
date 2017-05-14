@@ -51,10 +51,9 @@ import TensorFlow.Ops
 import TensorFlow.Session
     (runSession, run, run_, runWithFeeds, build)
 import TensorFlow.Types (TensorDataType(..), Shape(..), unScalar)
-import Test.Framework (Test)
+import Test.Framework (defaultMain, Test)
 import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit ((@=?), Assertion)
-import Google.Test
 import qualified Data.Vector as V
 
 -- | Test that a file can be read and the GraphDef proto correctly parsed.
@@ -168,8 +167,9 @@ testMNISTExec = testCase "testMNISTExec" $ do
         liftIO $ (fromInteger . toInteger $ label :: Int64) @=? unScalar x
 
 main :: IO ()
-main = googleTest [ testReadMessageFromFileOrDie
-                  , testReadMNIST
-                  , testGraphDefGen
-                  , testGraphDefExec
-                  , testMNISTExec]
+main = defaultMain
+            [ testReadMessageFromFileOrDie
+            , testReadMNIST
+            , testGraphDefGen
+            , testGraphDefExec
+            , testMNISTExec ]

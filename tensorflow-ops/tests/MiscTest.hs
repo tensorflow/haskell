@@ -19,10 +19,9 @@ module Main where
 
 import Control.Monad.IO.Class (liftIO)
 import Data.Int (Int32)
-import Test.Framework (Test)
+import Test.Framework (defaultMain, Test)
 import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit ((@=?))
-import Google.Test
 import qualified Data.Vector as V
 import qualified TensorFlow.GenOps.Core as CoreOps
 
@@ -46,6 +45,6 @@ testVarargs = testCase "testVarargs" $
         liftIO $ [1..8] @=? V.toList (xs :: V.Vector Float)
 
 main :: IO ()
-main = googleTest [ testMultipleOutputs
-                  , testVarargs
-                  ]
+main = defaultMain [ testMultipleOutputs
+                   , testVarargs
+                   ]

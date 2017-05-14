@@ -17,7 +17,7 @@
 
 import Data.Int (Int32, Int64)
 import Data.List (genericLength)
-import Google.Test (googleTest)
+import Test.Framework (defaultMain)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
 import Test.HUnit ((@=?))
 import Test.QuickCheck (Arbitrary(..), Property, choose, vectorOf)
@@ -59,7 +59,7 @@ instance Arbitrary a => Arbitrary (StitchExample a) where
         return $ StitchExample numParts values partitions
 
 main :: IO ()
-main = googleTest
+main = defaultMain
        [ testProperty "DynamicPartitionStitchInverse"
          (testDynamicPartitionStitchInverse :: StitchExample Int64 -> Property)
        ]

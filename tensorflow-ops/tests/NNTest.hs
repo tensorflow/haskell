@@ -17,9 +17,8 @@
 
 module Main where
 
-import           Google.Test                        (googleTest)
 import           TensorFlow.Test                    (assertAllClose)
-import           Test.Framework (Test)
+import           Test.Framework (defaultMain, Test)
 import           Test.Framework.Providers.HUnit     (testCase)
 import qualified Data.Vector                        as V
 import qualified TensorFlow.Gradient                as TF
@@ -97,7 +96,8 @@ run :: TF.Fetchable t a => TF.Session t -> IO a
 run = TF.runSession . (>>= TF.run)
 
 main :: IO ()
-main = googleTest [ testGradientAtZero
-                  , testLogisticOutput
-                  , testLogisticOutputMultipleDim
-                  ]
+main = defaultMain
+            [ testGradientAtZero
+            , testLogisticOutput
+            , testLogisticOutputMultipleDim
+            ]
