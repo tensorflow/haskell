@@ -126,13 +126,13 @@ recordResult = do
     put $! ResultState (i+1) ns
     return $! output i o
 
-instance Rendered v => BuildResult (Tensor v a) where
+instance (TensorKind v, Rendered (Tensor v)) => BuildResult (Tensor v a) where
     buildResult = Tensor . pure <$> recordResult
 
 instance BuildResult ControlNode where
     buildResult = ControlNode <$> ask
 
-instance (Rendered v, TensorTypes as) => BuildResult (TensorList v as) where
+instance (TensorKind v, Rendered (Tensor v), TensorTypes as) => BuildResult (TensorList v as) where
   buildResult = loop (tensorTypes :: TensorTypeList as)
     where
         loop :: TensorTypeList bs -> Result (TensorList v bs)

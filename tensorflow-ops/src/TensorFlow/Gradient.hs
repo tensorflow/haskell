@@ -116,10 +116,10 @@ type GradientCompatible a =
 
 
 -- | Gradient of @y@ w.r.t. each element of @xs@.
-gradients :: forall a v1 v2 m . (MonadBuild m
-                              , Rendered v2
-                              , GradientCompatible a
-                              )
+gradients :: forall a v1 v2 m . ( MonadBuild m
+                                , Rendered (Tensor v2)
+                                , GradientCompatible a
+                                )
           => Tensor v1 a  -- ^ The output of the graph.
           -> [Tensor v2 a]  -- ^ Tensors for which gradients are computed.
           -> m [Tensor Value a]
