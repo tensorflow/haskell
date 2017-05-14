@@ -241,8 +241,8 @@ zeroInitializedVariable'
 zeroInitializedVariable' params = initializedVariable' params . zeros
 
 -- TODO: Support heterogeneous list of tensors.
-save :: forall a m v . (Rendered v, MonadBuild m, TensorType a)
-        => ByteString     -- ^ File path.
+save :: forall a m v . (Rendered (Tensor v), MonadBuild m, TensorType a)
+        => ByteString    -- ^ File path.
         -> [Tensor v a]  -- ^ Tensors to save.
         -> m ControlNode
 save path xs = build $ do

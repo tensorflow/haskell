@@ -22,8 +22,7 @@
 {-# LANGUAGE ViewPatterns #-}
 
 module TensorFlow.Gradient
-    ( GradientTarget(..)
-    , gradients
+    ( gradients
     ) where
 
 import Control.Monad (forM, zipWithM)
@@ -100,6 +99,7 @@ import TensorFlow.Tensor
     , tensorNodeName
     , renderedOutput
     , renderValue
+    , ConvertToTensor(..)
     )
 import TensorFlow.Types (Attribute, OneOf, TensorType, attrLens)
 import Proto.Tensorflow.Core.Framework.NodeDef
@@ -108,15 +108,6 @@ import Proto.Tensorflow.Core.Framework.NodeDef
 type GradientCompatible a =
     -- TODO(fmayle): MaxPoolGrad doesn't support Double for some reason.
     (Num a, OneOf '[ Float, Complex Float, Complex Double ] a)
-
--- | Types that gradients can be taken w.r.t. (namely 'Tensor' and 'Variable').
-class GradientTarget t where
-    targetOutput :: t a -> Output
-    targetZeros :: GradientCompatible a => t a -> Tensor Build a
-
-instance Rendered v => GradientTarget (Tensor v) where
-    targetOutput = renderedOutput
-    targetZeros = zerosLike
 
 -- TODO(fmayle): Support control flow.
 -- TODO(fmayle): Support gate_gradients-like option to avoid race conditions.
@@ -127,7 +118,8 @@ instance Rendered v => GradientTarget (Tensor v) where
 
 -- | Gradient of @y@ w.r.t. each element of @xs@.
 gradients :: forall a v1 t m . ( MonadBuild m
-                               , GradientTarget t
+                               , Rendered t
+                               , ConvertToTensor t
                                , GradientCompatible a
                                )
           => Tensor v1 a  -- ^ The output of the graph.
@@ -181,8 +173,8 @@ gradients y xs = build $ do
     gradientMap <- graphGrads gr initPending
     -- Lookup the gradients for each x.
     forM xs $ \x ->
-        let Output i xName = targetOutput x
-        in maybe (render $ targetZeros x) return $ do
+        let Output i xName = renderedOutput x
+        in maybe (render $ zerosLike $ convertToTensor x) return $ do
             n <- nodeMap ^. at xName
             gradientMap ^. at n . nonEmpty . outputIxAt i
 

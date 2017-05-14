@@ -13,6 +13,7 @@
 -- limitations under the License.
 
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE GADTs #-}
@@ -37,7 +38,8 @@ import Proto.Tensorflow.Core.Framework.NodeDef (device)
 import TensorFlow.Build
 import TensorFlow.Output (Output, NodeName, outputNodeName, Device(..))
 import TensorFlow.Types
-    ( TensorData(..)
+    ( TensorType
+    , TensorData(..)
     , ListOf(..)
     )
 import qualified TensorFlow.Internal.FFI as FFI
@@ -89,19 +91,16 @@ data Feed = Feed Output FFI.TensorData
 
 -- | A class ensuring that a given tensor is rendered, i.e., has a fixed
 -- name, device, etc.
-class TensorKind v => Rendered v where
-    rendered :: v a -> a
+class Rendered t where
+    renderedOutput :: t a -> Output
 
-instance Rendered Value where
-    rendered = runValue
+instance Rendered (Tensor Value) where
+    renderedOutput = runValue . tensorOutput
 
-instance Rendered Ref where
-    rendered = runRef
+instance Rendered (Tensor Ref) where
+    renderedOutput = runRef . tensorOutput
 
-renderedOutput :: Rendered v => Tensor v a -> Output
-renderedOutput = rendered . tensorOutput
-
-tensorNodeName :: Rendered v => Tensor v a -> NodeName
+tensorNodeName :: Rendered t => t a -> NodeName
 tensorNodeName = outputNodeName . renderedOutput
 
 
@@ -110,7 +109,7 @@ tensorNodeName = outputNodeName . renderedOutput
 --
 -- Note that if a 'Tensor' is rendered, its identity may change; so feeding the
 -- rendered 'Tensor' may be different than feeding the original 'Tensor'.
-feed :: Rendered v => Tensor v a -> TensorData a -> Feed
+feed :: Rendered t => t a -> TensorData a -> Feed
 feed t (TensorData td) = Feed (renderedOutput t) td
 
 -- | Create a 'Tensor' for a given name.  This can be used to reference nodes
@@ -129,7 +128,7 @@ tensorRefFromName = tensorFromName
 
 type TensorList v = ListOf (Tensor v)
 
-tensorListOutputs :: Rendered v => TensorList v as -> [Output]
+tensorListOutputs :: Rendered (Tensor v) => TensorList v as -> [Output]
 tensorListOutputs Nil = []
 tensorListOutputs (t :/ ts) = renderedOutput t : tensorListOutputs ts
 
@@ -137,7 +136,7 @@ tensorListOutputs (t :/ ts) = renderedOutput t : tensorListOutputs ts
 -- device as the given Tensor (see also 'withDevice'). Make sure that
 -- the action has side effects of rendering the desired tensors. A pure
 -- return would not have the desired effect.
-colocateWith :: (MonadBuild m, Rendered v) => Tensor v b -> m a -> m a
+colocateWith :: (MonadBuild m, Rendered t) => t b -> m a -> m a
 colocateWith t x = do
     d <- build $ Device . (^. device)
                <$> lookupNode (outputNodeName $ renderedOutput t)
@@ -184,10 +183,20 @@ class Monad v => TensorKind v where
     toBuild :: v a -> Build a
 
 instance TensorKind Value where
-    toBuild = return . rendered
+    toBuild = return . runValue
 
 instance TensorKind Ref where
-    toBuild = return . rendered
+    toBuild = return . runRef
 
 instance TensorKind Build where
     toBuild = id
+
+
+class ConvertToTensor t where
+    convertToTensor :: TensorType a => t a -> Tensor Build a
+
+instance ConvertToTensor (Tensor Value) where
+    convertToTensor = expr
+
+instance ConvertToTensor (Tensor Ref) where
+    convertToTensor = expr

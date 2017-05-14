@@ -30,17 +30,18 @@ import TensorFlow.Core
 import TensorFlow.Build (opDef)
 import TensorFlow.BuildOp (buildInputs, pureOp, OpParams)
 import TensorFlow.Output (opInputs, unNodeName)
-import TensorFlow.Tensor (tensorNodeName, renderedOutput)
+import TensorFlow.Tensor (ConvertToTensor(..), Rendered(..), tensorNodeName)
 import TensorFlow.Types (tensorType)
 import qualified TensorFlow.GenOps.Core as CoreOps
 import TensorFlow.Ops (zeros)
-import TensorFlow.Gradient (GradientTarget(..))
 
 newtype Variable a = Variable (Tensor Value ResourceHandle)
 
-instance GradientTarget Variable where
-    targetOutput (Variable v) = renderedOutput v
-    targetZeros = CoreOps.zerosLike . readValue
+instance Rendered Variable where
+    renderedOutput (Variable v) = renderedOutput v
+
+instance ConvertToTensor Variable where
+    convertToTensor = readValue
 
 -- | Creates a new, uninitialized variable.
 variable :: (MonadBuild m, TensorType a) => Shape -> m (Variable a)
