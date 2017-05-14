@@ -46,7 +46,7 @@ import qualified TensorFlow.GenOps.Core as CoreOps
 -- tensor. The returned tensor has shape `shape(ids) + shape(params)[1:]`.
 embeddingLookup :: forall a b v1 v2 m .
                    ( MonadBuild m
-                   , Rendered v1
+                   , Rendered (Tensor v1)
                    , TensorType a
                    , OneOf '[Int64, Int32] b
                    , Num b
