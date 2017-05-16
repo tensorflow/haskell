@@ -1,5 +1,5 @@
 name:                tensorflow
-version:             0.1.0.1
+version:             0.1.0.2
 synopsis:            TensorFlow bindings.
 description:
     This library provides an interface to the TensorFlow
@@ -61,6 +61,12 @@ library
   extra-libraries:     tensorflow
   default-language:    Haskell2010
   include-dirs: .
+  if os(darwin) {
+    -- The default XCode installation doesn't search this path, so add it
+    -- manually.  Alternately, users can run `xcode-select --install` to add
+    -- it permanently to their search path.
+    extra-lib-dirs: /usr/local/lib
+  }
 
 Test-Suite FFITest
   default-language: Haskell2010
