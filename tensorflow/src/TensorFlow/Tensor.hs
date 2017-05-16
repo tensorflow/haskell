@@ -38,7 +38,8 @@ import Proto.Tensorflow.Core.Framework.NodeDef (device)
 import TensorFlow.Build
 import TensorFlow.Output (Output, NodeName, outputNodeName, Device(..))
 import TensorFlow.Types
-    ( TensorData(..)
+    ( TensorType
+    , TensorData(..)
     , ListOf(..)
     )
 import qualified TensorFlow.Internal.FFI as FFI
@@ -189,3 +190,11 @@ instance TensorKind Ref where
 
 instance TensorKind Build where
     toBuild = id
+
+
+-- | Types which can be converted to `Tensor`.
+class ToTensor t where
+    toTensor :: TensorType a => t a -> Tensor Build a
+
+instance TensorKind v => ToTensor (Tensor v) where
+    toTensor = expr
