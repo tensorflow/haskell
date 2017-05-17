@@ -1,7 +1,9 @@
 # ChangeLog
 
 ## Upcoming (v0.2.0.0)
-- Expand the Rendered class to support ResourceHandle wrappers like Variables.
+- Expand the `Rendered` class and add a `ToTensor` class to let more functions
+  (gradients, feed, colocateWith) support `ResourceHandle` wrappers like
+  `Variables`.
 
 ## v0.1.0.2
 - Add extra-lib-dirs for OS X in the Hackage release (#122).
