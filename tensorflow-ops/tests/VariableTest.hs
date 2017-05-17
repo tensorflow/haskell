@@ -9,11 +9,8 @@ import TensorFlow.Core
     , run_
     , runSession
     , run
-    , withControlDependencies
-    , Shape(..)
-    )
+    , withControlDependencies)
 import qualified TensorFlow.Ops as Ops
-import TensorFlow.Gradient (targetZeros)
 import TensorFlow.Variable
     ( readValue
     , initializedVariable
@@ -32,7 +29,6 @@ main = defaultMain
             , testDependency
             , testRereadRef
             , testAssignAdd
-            , testTargetZeros
             ]
 
 testInitializedVariable :: Test
@@ -81,14 +77,3 @@ testAssignAdd = testCase "testAssignAdd" $ runSession $ do
     run_ =<< assignAdd w 17
     f1 <- run (readValue w)
     liftIO $ (42 + 17 :: Float) @=? unScalar f1
-
-testTargetZeros :: Test
-testTargetZeros = testCase "testTargetZeros" $ runSession $ do
-    do
-        w <- initializedVariable 42
-        z <- run (targetZeros w)
-        liftIO $ (0 :: Float) @=? unScalar z
-    do
-        w <- initializedVariable (Ops.constant (Shape [2, 3]) [1..6])
-        z <- run (targetZeros w)
-        liftIO $ (replicate 6 (0 :: Float)) @=? (V.toList z)

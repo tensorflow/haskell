@@ -99,7 +99,7 @@ import TensorFlow.Tensor
     , tensorNodeName
     , renderedOutput
     , renderValue
-    , ConvertToTensor(..)
+    , ToTensor(..)
     )
 import TensorFlow.Types (Attribute, OneOf, TensorType, attrLens)
 import Proto.Tensorflow.Core.Framework.NodeDef
@@ -119,7 +119,7 @@ type GradientCompatible a =
 -- | Gradient of @y@ w.r.t. each element of @xs@.
 gradients :: forall a v1 t m . ( MonadBuild m
                                , Rendered t
-                               , ConvertToTensor t
+                               , ToTensor t
                                , GradientCompatible a
                                )
           => Tensor v1 a  -- ^ The output of the graph.
@@ -174,7 +174,7 @@ gradients y xs = build $ do
     -- Lookup the gradients for each x.
     forM xs $ \x ->
         let Output i xName = renderedOutput x
-        in maybe (render $ zerosLike $ convertToTensor x) return $ do
+        in maybe (render $ zerosLike $ toTensor x) return $ do
             n <- nodeMap ^. at xName
             gradientMap ^. at n . nonEmpty . outputIxAt i
 

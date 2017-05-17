@@ -192,11 +192,9 @@ instance TensorKind Build where
     toBuild = id
 
 
-class ConvertToTensor t where
-    convertToTensor :: TensorType a => t a -> Tensor Build a
+-- | Types which can be converted to `Tensor`.
+class ToTensor t where
+    toTensor :: TensorType a => t a -> Tensor Build a
 
-instance ConvertToTensor (Tensor Value) where
-    convertToTensor = expr
-
-instance ConvertToTensor (Tensor Ref) where
-    convertToTensor = expr
+instance TensorKind v => ToTensor (Tensor v) where
+    toTensor = expr
