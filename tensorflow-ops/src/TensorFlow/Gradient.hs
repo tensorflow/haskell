@@ -99,6 +99,7 @@ import TensorFlow.Tensor
     , tensorNodeName
     , renderedOutput
     , renderValue
+    , ToTensor(..)
     )
 import TensorFlow.Types (Attribute, OneOf, TensorType, attrLens)
 import Proto.Tensorflow.Core.Framework.NodeDef
@@ -116,12 +117,13 @@ type GradientCompatible a =
 
 
 -- | Gradient of @y@ w.r.t. each element of @xs@.
-gradients :: forall a v1 v2 m . ( MonadBuild m
-                                , Rendered (Tensor v2)
-                                , GradientCompatible a
-                                )
+gradients :: forall a v1 t m . ( MonadBuild m
+                               , Rendered t
+                               , ToTensor t
+                               , GradientCompatible a
+                               )
           => Tensor v1 a  -- ^ The output of the graph.
-          -> [Tensor v2 a]  -- ^ Tensors for which gradients are computed.
+          -> [t a]        -- ^ Tensors for which gradients are computed.
           -> m [Tensor Value a]
 gradients y xs = build $ do
     -- The gradients are computed using "reverse accumulation", similarly to
@@ -171,10 +173,9 @@ gradients y xs = build $ do
     gradientMap <- graphGrads gr initPending
     -- Lookup the gradients for each x.
     forM xs $ \x ->
-        let xName = tensorNodeName x
-        in maybe (render $ zerosLike x) return $ do
+        let Output i xName = renderedOutput x
+        in maybe (render $ zerosLike $ toTensor x) return $ do
             n <- nodeMap ^. at xName
-            let i = outputIndex $ renderedOutput x
             gradientMap ^. at n . nonEmpty . outputIxAt i
 
 outputIxAt :: OutputIx -> Lens' (IntMap.IntMap v) (Maybe v)
@@ -687,9 +688,16 @@ opGrad "Fill" _ _ [dz] = [Nothing, Just $ sum dz rx]
   where
     rx = rangeOfRank dz
 
+-- Treat read ops as an identity function on the variable. This allows us to
+-- take gradients w.r.t. to the variable handle instead of the result of a read
+-- op. If a variable is read multiple times, the gradients will propagate back
+-- through each read.
+opGrad "ReadVariableOp" _ _ [dz] = [Just $ expr dz]
+
 -- TODO(fmayle): These can go away if we properly prune the graph.
 opGrad "Const" _ _ _ = [Nothing, Nothing]
 opGrad "Placeholder" _ _ _ = []
+opGrad "VarHandleOp" _ _ _ = []
 opGrad "Variable" _ _ _ = []
 
 opGrad n nodeDef ins grads =
@@ -723,6 +731,7 @@ numOutputs o =
         "Neg" -> 1
         "Placeholder" -> 1
         "OneHot" -> 1
+        "ReadVariableOp" -> 1
         "RefIdentity" -> 1
         "Relu" -> 1
         "ReluGrad" -> 1
@@ -737,6 +746,7 @@ numOutputs o =
         "Tile" -> 1
         "Transpose" -> 1
         "TruncatedNormal" -> 1
+        "VarHandleOp" -> 1
         "Variable" -> 1
         "ZerosLike" -> 1
         "Fill" -> 1
