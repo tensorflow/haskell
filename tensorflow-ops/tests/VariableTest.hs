@@ -59,13 +59,13 @@ testInitializedVariableShape =
 testInitializedValue :: Test
 testInitializedValue =
     testCase "testInitializedValue" $ runSession $ do
-        v <- initializedVariable (Ops.constant [1] [42 :: Float])
-        result <- run (initializedValue v)
+        initialized <- initializedVariable (Ops.constant [1] [42 :: Float])
+        result <- run (initializedValue initialized)
         liftIO $ Just [42] @=? (result :: Maybe (V.Vector Float))
 
-        v <- variable [1]
+        uninitialized <- variable [1]
         -- Can't use @=? because there is no Show instance for Tensor.
-        when (isJust (initializedValue (v :: Variable Float))) $
+        when (isJust (initializedValue (uninitialized :: Variable Float))) $
             liftIO $ assertFailure "initializedValue should be Nothing, got Just"
 
 testDependency :: Test
