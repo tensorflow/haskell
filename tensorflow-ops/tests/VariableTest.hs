@@ -1,6 +1,8 @@
 {-# LANGUAGE OverloadedLists #-}
 module Main (main) where
 
+import Data.Maybe (isJust)
+import Control.Monad (when)
 import Control.Monad.IO.Class (liftIO)
 import qualified Data.Vector.Storable as V
 import TensorFlow.Core
@@ -12,7 +14,9 @@ import TensorFlow.Core
     , withControlDependencies)
 import qualified TensorFlow.Ops as Ops
 import TensorFlow.Variable
-    ( readValue
+    ( Variable
+    , readValue
+    , initializedValue
     , initializedVariable
     , assign
     , assignAdd
@@ -20,12 +24,13 @@ import TensorFlow.Variable
     )
 import Test.Framework (defaultMain, Test)
 import Test.Framework.Providers.HUnit (testCase)
-import Test.HUnit ((@=?))
+import Test.HUnit ((@=?), assertFailure)
 
 main :: IO ()
 main = defaultMain
             [ testInitializedVariable
             , testInitializedVariableShape
+            , testInitializedValue
             , testDependency
             , testRereadRef
             , testAssignAdd
@@ -50,6 +55,18 @@ testInitializedVariableShape =
         vector <- initializedVariable (Ops.constant [1] [42 :: Float])
         result <- run (readValue vector)
         liftIO $ [42] @=? (result :: V.Vector Float)
+
+testInitializedValue :: Test
+testInitializedValue =
+    testCase "testInitializedValue" $ runSession $ do
+        initialized <- initializedVariable (Ops.constant [1] [42 :: Float])
+        result <- run (initializedValue initialized)
+        liftIO $ Just [42] @=? (result :: Maybe (V.Vector Float))
+
+        uninitialized <- variable [1]
+        -- Can't use @=? because there is no Show instance for Tensor.
+        when (isJust (initializedValue (uninitialized :: Variable Float))) $
+            liftIO $ assertFailure "initializedValue should be Nothing, got Just"
 
 testDependency :: Test
 testDependency =

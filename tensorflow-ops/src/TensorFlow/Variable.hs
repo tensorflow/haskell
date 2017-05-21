@@ -14,6 +14,7 @@ module TensorFlow.Variable
     , variable
     , variable'
     , readValue
+    , initializedValue
     , initializedVariable
     , initializedVariable'
     , zeroInitializedVariable
@@ -30,15 +31,19 @@ import TensorFlow.Core
 import TensorFlow.Build (opDef)
 import TensorFlow.BuildOp (buildInputs, pureOp, OpParams)
 import TensorFlow.Output (opInputs, unNodeName)
-import TensorFlow.Tensor (Rendered(..), ToTensor(..), tensorNodeName)
+import TensorFlow.Tensor (Rendered(..), ToTensor(..), renderValue, tensorNodeName)
 import TensorFlow.Types (tensorType)
 import qualified TensorFlow.GenOps.Core as CoreOps
 import TensorFlow.Ops (zeros)
 
-newtype Variable a = Variable (Tensor Value ResourceHandle)
+data Variable a = Variable
+    { variableHandle   :: Tensor Value ResourceHandle
+    , initializedValue :: Maybe (Tensor Value a)
+      -- ^ The initial value of a 'Variable' created with 'initializedVariable'.
+    }
 
 instance Rendered Variable where
-    renderedOutput (Variable v) = renderedOutput v
+    renderedOutput = renderedOutput . variableHandle
 
 instance ToTensor Variable where
     toTensor = readValue
@@ -56,7 +61,7 @@ variable' params s = build $ do
     rec t <- CoreOps.varHandleOp' (params . (opAttr "shared_name" .~ n))
                                     (tensorType (undefined :: a)) s
         let n = encodeUtf8 $ unNodeName $ tensorNodeName t
-    return $ Variable t
+    return $ Variable t Nothing
 
 -- | Creates a variable initialized to the given value.
 -- Initialization happens next time session runs.
@@ -68,10 +73,11 @@ initializedVariable' :: forall a m v . (MonadBuild m, TensorType a)
                     => OpParams -> Tensor v a -> m (Variable a)
 initializedVariable' params initializer = do
     -- The shape is not known initially.
-    v@(Variable h) <- variable' params (Shape [])
-    i <- CoreOps.assignVariableOp h initializer
+    (Variable h Nothing :: Variable a) <- variable' params (Shape [])
+    initializer' <- renderValue initializer
+    i <- CoreOps.assignVariableOp h initializer'
     addInitializer =<< group i
-    return v
+    return (Variable h (Just initializer'))
 
 -- | Creates a zero-initialized variable with the given shape.
 zeroInitializedVariable
@@ -102,7 +108,7 @@ readValue = readValue' id
 
 readValue' :: forall a . TensorType a
     => OpParams -> Variable a -> Tensor Build a
-readValue' params (Variable h)
+readValue' params (Variable h _)
     = pureOp [] $ do
         os <- buildInputs h
         pure $ opDef "ReadVariableOp"
@@ -117,7 +123,7 @@ assign = assign' id
 
 assign' :: (MonadBuild m, TensorType a)
     => OpParams -> Variable a -> Tensor v a -> m ControlNode
-assign' params (Variable h) v = CoreOps.assignVariableOp' params h v
+assign' params (Variable h _) v = CoreOps.assignVariableOp' params h v
 
 -- | Increments the value of a variable.
 assignAdd :: (MonadBuild m, TensorType a)
@@ -126,4 +132,4 @@ assignAdd = assignAdd' id
 
 assignAdd' :: (MonadBuild m, TensorType a)
     => OpParams -> Variable a -> Tensor v a -> m ControlNode
-assignAdd' params (Variable h) v = CoreOps.assignAddVariableOp' params h v
+assignAdd' params (Variable h _) v = CoreOps.assignAddVariableOp' params h v
