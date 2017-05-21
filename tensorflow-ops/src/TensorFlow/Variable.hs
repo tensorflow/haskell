@@ -36,11 +36,14 @@ import TensorFlow.Types (tensorType)
 import qualified TensorFlow.GenOps.Core as CoreOps
 import TensorFlow.Ops (zeros)
 
-data Variable a =
-    Variable (Tensor Value ResourceHandle) (Maybe (Tensor Value a))
+data Variable a = Variable
+    { variableHandle   :: Tensor Value ResourceHandle
+    , initializedValue :: Maybe (Tensor Value a)
+      -- ^ The initial value of a 'Variable' created with 'initializedVariable'.
+    }
 
 instance Rendered Variable where
-    renderedOutput (Variable v _) = renderedOutput v
+    renderedOutput = renderedOutput . variableHandle
 
 instance ToTensor Variable where
     toTensor = readValue
@@ -59,10 +62,6 @@ variable' params s = build $ do
                                     (tensorType (undefined :: a)) s
         let n = encodeUtf8 $ unNodeName $ tensorNodeName t
     return $ Variable t Nothing
-
--- | The initial value of a 'Variable' created with 'initializedVariable'.
-initializedValue :: Variable a -> Maybe (Tensor Value a)
-initializedValue (Variable _ i) = i
 
 -- | Creates a variable initialized to the given value.
 -- Initialization happens next time session runs.
