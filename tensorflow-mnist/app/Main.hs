@@ -15,7 +15,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedLists #-}
 
-import Control.Monad (when, forM_)
+import Control.Monad (forM_, when)
 import Control.Monad.IO.Class (liftIO)
 import Data.Int (Int32, Int64)
 import Data.List (genericLength)

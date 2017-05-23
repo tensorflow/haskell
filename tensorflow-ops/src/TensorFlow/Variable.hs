@@ -147,46 +147,48 @@ assignAdd' params (Variable h _) v = CoreOps.assignAddVariableOp' params h v
 -- m_t <- beta1 * m_{t-1} + (1 - beta1) * g_t
 -- v_t <- beta2 * v_{t-1} + (1 - beta2) * g_t * g_t
 -- variable <- variable - lr_t * m_t / (sqrt(v_t) + epsilon)
-resourceApplyAdam :: forall v'4 v'5 v'6 v'7 v'8 v'9 v'10 t
-                     m' . (MonadBuild m', OneOf '[(Data.Complex.Complex Double),
-                                                  (Data.Complex.Complex Float),
-                                                  Data.Int.Int16,
-                                                  Data.Int.Int32,
-                                                  Data.Int.Int64, Data.Int.Int8,
-                                                  Data.Word.Word16,
-                                                  Data.Word.Word8, Double,
-                                                  Float] t) =>
-                     Variable t -- ^ __var__: Should be from a Variable().
-                     -> Variable t -- ^ __m__: Should be from a Variable().
-                     -> Variable t -- ^ __v__: Should be from a Variable().
-                     -> Tensor v'4 t -- ^ __beta1_power__: Must be a scalar.
-                     -> Tensor v'5 t -- ^ __beta2_power__: Must be a scalar.
-                     -> Tensor v'6 t -- ^ __lr__: Scaling factor. Must be a scalar.
-                     -> Tensor v'7 t -- ^ __beta1__: Momentum factor. Must be a scalar.
-                     -> Tensor v'8 t -- ^ __beta2__: Momentum factor. Must be a scalar.
-                     -> Tensor v'9 t -- ^ __epsilon__: Ridge term. Must be a scalar.
-                     -> Tensor v'10 t -- ^ __grad__: The gradient.
-                     -> m' (ControlNode)
+resourceApplyAdam ::
+    (MonadBuild m,
+     OneOf '[(Data.Complex.Complex Double),
+             (Data.Complex.Complex Float),
+             Data.Int.Int16,
+             Data.Int.Int32,
+             Data.Int.Int64, Data.Int.Int8,
+             Data.Word.Word16,
+             Data.Word.Word8, Double,
+             Float] t)
+    => Variable t -- ^ __var__: Should be from a Variable().
+    -> Variable t -- ^ __m__: Should be from a Variable().
+    -> Variable t -- ^ __v__: Should be from a Variable().
+    -> Tensor v1 t -- ^ __beta1_power__: Must be a scalar.
+    -> Tensor v2 t -- ^ __beta2_power__: Must be a scalar.
+    -> Tensor v3 t -- ^ __lr__: Scaling factor. Must be a scalar.
+    -> Tensor v4 t -- ^ __beta1__: Momentum factor. Must be a scalar.
+    -> Tensor v5 t -- ^ __beta2__: Momentum factor. Must be a scalar.
+    -> Tensor v6 t -- ^ __epsilon__: Ridge term. Must be a scalar.
+    -> Tensor v7 t -- ^ __grad__: The gradient.
+    -> m (ControlNode)
 resourceApplyAdam = resourceApplyAdam' id
 
-resourceApplyAdam' :: forall v'4 v'5 v'6 v'7 v'8 v'9 v'10 t
-                      m' . (MonadBuild m',
-                            OneOf '[(Data.Complex.Complex Double),
-                                    (Data.Complex.Complex Float),
-                                    Data.Int.Int16, Data.Int.Int32,
-                                    Data.Int.Int64, Data.Int.Int8,
-                                    Data.Word.Word16, Data.Word.Word8, Double,
-                                    Float] t) => OpParams ->
-                      Variable t -- ^ __var__: Should be from a Variable().
-                      -> Variable t -- ^ __m__: Should be from a Variable().
-                      -> Variable t -- ^ __v__: Should be from a Variable().
-                      -> Tensor v'4 t -- ^ __beta1_power__: Must be a scalar.
-                      -> Tensor v'5 t -- ^ __beta2_power__: Must be a scalar.
-                      -> Tensor v'6 t -- ^ __lr__: Scaling factor. Must be a scalar.
-                      -> Tensor v'7 t -- ^ __beta1__: Momentum factor. Must be a scalar.
-                      -> Tensor v'8 t -- ^ __beta2__: Momentum factor. Must be a scalar.
-                      -> Tensor v'9 t -- ^ __epsilon__: Ridge term. Must be a scalar.
-                      -> Tensor v'10 t -- ^ __grad__: The gradient.
-                      -> m' (ControlNode)
+resourceApplyAdam' ::
+    (MonadBuild m,
+     OneOf '[(Data.Complex.Complex Double),
+             (Data.Complex.Complex Float),
+             Data.Int.Int16, Data.Int.Int32,
+             Data.Int.Int64, Data.Int.Int8,
+             Data.Word.Word16, Data.Word.Word8, Double,
+             Float] t)
+    => OpParams
+    -> Variable t -- ^ __var__: Should be from a Variable().
+    -> Variable t -- ^ __m__: Should be from a Variable().
+    -> Variable t -- ^ __v__: Should be from a Variable().
+    -> Tensor v1 t -- ^ __beta1_power__: Must be a scalar.
+    -> Tensor v2 t -- ^ __beta2_power__: Must be a scalar.
+    -> Tensor v3 t -- ^ __lr__: Scaling factor. Must be a scalar.
+    -> Tensor v4 t -- ^ __beta1__: Momentum factor. Must be a scalar.
+    -> Tensor v5 t -- ^ __beta2__: Momentum factor. Must be a scalar.
+    -> Tensor v6 t -- ^ __epsilon__: Ridge term. Must be a scalar.
+    -> Tensor v7 t -- ^ __grad__: The gradient.
+    -> m (ControlNode)
 resourceApplyAdam' params (Variable var _) (Variable m _) (Variable v _) =
     CoreOps.resourceApplyAdam' params var m v

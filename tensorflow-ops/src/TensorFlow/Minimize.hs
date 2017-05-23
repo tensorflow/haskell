@@ -39,13 +39,15 @@ import qualified TensorFlow.Variable as TF
 
 -- | Functions that minimize a loss w.r.t. a set of 'TF.Variable's.
 --
+-- Generally only performs one step of an iterative algorithm.
+--
 -- 'Minimizer's are defined as a function of the gradients instead of
 -- the loss so that users can apply transformations to the gradients.
 type Minimizer a =
     forall m. TF.MonadBuild m =>
     [TF.Variable a] -> [TF.Tensor TF.Value a] -> m TF.ControlNode
 
--- | Convenience wrapper around 'TF.gradients' and an 'Minimizer'.
+-- | Convenience wrapper around 'TF.gradients' and a 'Minimizer'.
 minimizeWith :: (TF.MonadBuild m, TF.GradientCompatible a)
              => Minimizer a
              -> TF.Tensor v a    -- ^ Loss.
@@ -73,6 +75,7 @@ data AdamConfig = AdamConfig
     }
 
 instance Default AdamConfig where
+  -- Recommended defaults from the adam paper.
   def = AdamConfig 0.001 0.9 0.999 1e-8
 
 -- | Perform one step of the adam algorithm.
