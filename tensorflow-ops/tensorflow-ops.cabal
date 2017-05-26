@@ -17,6 +17,7 @@ library
   exposed-modules: TensorFlow.Gradient
                  , TensorFlow.Ops
                  , TensorFlow.EmbeddingOps
+                 , TensorFlow.Minimize
                  , TensorFlow.NN
                  , TensorFlow.Queue
                  , TensorFlow.Variable

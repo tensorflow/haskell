@@ -15,7 +15,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedLists #-}
 
-import Control.Monad (zipWithM, when, forM_)
+import Control.Monad (forM_, when)
 import Control.Monad.IO.Class (liftIO)
 import Data.Int (Int32, Int64)
 import Data.List (genericLength)
@@ -23,9 +23,9 @@ import qualified Data.Text.IO as T
 import qualified Data.Vector as V
 
 import qualified TensorFlow.Core as TF
-import qualified TensorFlow.Gradient as TF
 import qualified TensorFlow.Ops as TF hiding (initializedVariable, zeroInitializedVariable)
 import qualified TensorFlow.Variable as TF
+import qualified TensorFlow.Minimize as TF
 
 import TensorFlow.Examples.MNIST.InputData
 import TensorFlow.Examples.MNIST.Parse
@@ -87,11 +87,7 @@ createModel = do
         loss =
             reduceMean $ fst $ TF.softmaxCrossEntropyWithLogits logits labelVecs
         params = [hiddenWeights, hiddenBiases, logitWeights, logitBiases]
-    grads <- TF.gradients loss params
-
-    let lr = TF.scalar 0.00001
-        applyGrad param grad = TF.assignAdd param (negate $ lr `TF.mul` grad)
-    trainStep <- TF.group =<< zipWithM applyGrad params grads
+    trainStep <- TF.minimizeWith TF.adam loss params
 
     let correctPredictions = TF.equal predict labels
     errorRateTensor <- TF.render $ 1 - reduceMean (TF.cast correctPredictions)

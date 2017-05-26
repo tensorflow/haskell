@@ -2,13 +2,14 @@
 {-# LANGUAGE OverloadedLists #-}
 
 import Control.Monad.IO.Class (liftIO)
-import Control.Monad (replicateM_, zipWithM)
+import Control.Monad (replicateM_)
 
-import qualified TensorFlow.GenOps.Core as TF (square, rank)
-import qualified TensorFlow.Core as TF
-import qualified TensorFlow.Gradient as TF
-import qualified TensorFlow.Ops as TF
 import qualified Data.Vector as V
+import qualified TensorFlow.Core as TF
+import qualified TensorFlow.GenOps.Core as TF (square, rank)
+import qualified TensorFlow.Minimize as TF
+import qualified TensorFlow.Ops as TF hiding (initializedVariable)
+import qualified TensorFlow.Variable as TF
 
 import Test.Framework (defaultMain, Test)
 import Test.Framework.Providers.HUnit (testCase)
@@ -26,22 +27,13 @@ fitMatrix = testCase "fitMatrix" $ TF.runSession $ do
   v <- TF.initializedVariable =<< randomParam [1, 2]
   let ones = [1, 1, 1, 1] :: [Float]
       matx = TF.constant [2, 2] ones
-      diff = matx `TF.sub` (u `TF.matMul` v)
+      diff = matx `TF.sub` (TF.readValue u `TF.matMul` TF.readValue v)
       loss = reduceMean $ TF.square diff
-  trainStep <- gradientDescent 0.01 loss [u, v]
+  trainStep <- TF.minimizeWith (TF.gradientDescent 0.01) loss [u, v]
   replicateM_ 1000 (TF.run trainStep)
-  (u',v') <- TF.run (u, v)
+  (u',v') <- TF.run (TF.readValue u, TF.readValue v)
   -- ones = u * v
   liftIO $ assertAllClose (V.fromList ones) ((*) <$> u' <*> v')
-  
-gradientDescent :: Float
-                -> TF.Tensor TF.Build Float
-                -> [TF.Tensor TF.Ref Float]
-                -> TF.Session TF.ControlNode
-gradientDescent alpha loss params = do
-    let applyGrad param grad =
-            TF.assign param (param `TF.sub` (TF.scalar alpha `TF.mul` grad))
-    TF.group =<< zipWithM applyGrad params =<< TF.gradients loss params
 
 main :: IO ()
 main = defaultMain [ fitMatrix ]
