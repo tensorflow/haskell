@@ -34,6 +34,7 @@ import System.Directory (doesFileExist)
 import qualified Crypto.Hash as Hash
 import qualified Data.ByteString.Lazy as B
 import qualified Network.HTTP as HTTP
+import qualified Network.Browser as Browser
 import qualified Network.URI as URI
 
 main :: IO ()
@@ -65,9 +66,13 @@ httpDownload url outFile = do
     let uri = fromMaybe
               (error ("Can't be: invalid URI " ++ url))
               (URI.parseURI url)
-    result <- HTTP.simpleHTTP (HTTP.defaultGETRequest_ uri)
-    HTTP.getResponseCode result >>= \case
-        (2, 0, 0) -> HTTP.getResponseBody result >>= B.writeFile outFile
+    (_, rsp)
+        <- Browser.browse $ do
+              Browser.setAllowRedirects True
+              Browser.setCheckForProxy True
+              Browser.request $ HTTP.defaultGETRequest_ uri
+    case HTTP.rspCode rsp of
+        (2, 0, 0) -> B.writeFile outFile $ HTTP.rspBody rsp
         s -> error ( "Failed to download " ++ url ++ " error code " ++ show s
                      ++ helpfulMessage
                     )
