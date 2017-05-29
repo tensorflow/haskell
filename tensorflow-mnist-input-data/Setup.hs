@@ -68,8 +68,8 @@ httpDownload url outFile = do
               (URI.parseURI url)
     (_, rsp)
         <- Browser.browse $ do
-              Browser.setAllowRedirects True -- handle HTTP redirects
-              Browser.setCheckForProxy True -- detect proxy if setted
+              Browser.setAllowRedirects True
+              Browser.setCheckForProxy True
               Browser.request $ HTTP.defaultGETRequest_ uri
     case HTTP.rspCode rsp of
         (2, 0, 0) -> B.writeFile outFile $ HTTP.rspBody rsp
