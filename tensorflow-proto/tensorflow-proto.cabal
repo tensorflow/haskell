@@ -11,32 +11,54 @@ copyright:           Google Inc.
 category:            Machine Learning
 build-type:          Custom
 cabal-version:       >=1.24
-extra-source-files:  third_party/tensorflow/tensorflow/core/framework/*.proto
-                   , third_party/tensorflow/tensorflow/core/protobuf/config.proto
-                   , third_party/tensorflow/tensorflow/core/protobuf/debug.proto
-                   , third_party/tensorflow/tensorflow/core/util/event.proto
+extra-source-files:  third_party/tensorflow/tensorflow/core/example/*.proto
+                   , third_party/tensorflow/tensorflow/core/framework/*.proto
+                   , third_party/tensorflow/tensorflow/core/lib/core/error_codes.proto
+                   , third_party/tensorflow/tensorflow/core/protobuf/*.proto
+                   , third_party/tensorflow/tensorflow/core/util/*.proto
 
 library
-  exposed-modules:     Proto.Tensorflow.Core.Framework.AttrValue
+  exposed-modules:     Proto.Tensorflow.Core.Example.Example
+                     , Proto.Tensorflow.Core.Example.ExampleParserConfiguration
+                     , Proto.Tensorflow.Core.Example.Feature
+                     , Proto.Tensorflow.Core.Framework.AllocationDescription
+                     , Proto.Tensorflow.Core.Framework.AttrValue
+                     , Proto.Tensorflow.Core.Framework.CostGraph
+                     , Proto.Tensorflow.Core.Framework.DeviceAttributes
+                     , Proto.Tensorflow.Core.Framework.Function
                      , Proto.Tensorflow.Core.Framework.Graph
+                     , Proto.Tensorflow.Core.Framework.KernelDef
+                     , Proto.Tensorflow.Core.Framework.LogMemory
                      , Proto.Tensorflow.Core.Framework.NodeDef
                      , Proto.Tensorflow.Core.Framework.OpDef
                      , Proto.Tensorflow.Core.Framework.ResourceHandle
+                     , Proto.Tensorflow.Core.Framework.StepStats
                      , Proto.Tensorflow.Core.Framework.Summary
                      , Proto.Tensorflow.Core.Framework.Tensor
-                     , Proto.Tensorflow.Core.Framework.TensorShape
-                     , Proto.Tensorflow.Core.Framework.Types
-                     , Proto.Tensorflow.Core.Protobuf.Config
-                     , Proto.Tensorflow.Core.Util.Event
-  other-modules:       Proto.Tensorflow.Core.Framework.AllocationDescription
-                     , Proto.Tensorflow.Core.Framework.CostGraph
-                     , Proto.Tensorflow.Core.Framework.Function
-                     , Proto.Tensorflow.Core.Framework.StepStats
                      , Proto.Tensorflow.Core.Framework.TensorDescription
+                     , Proto.Tensorflow.Core.Framework.TensorShape
+                     , Proto.Tensorflow.Core.Framework.TensorSlice
+                     , Proto.Tensorflow.Core.Framework.Types
+                     , Proto.Tensorflow.Core.Framework.Variable
                      , Proto.Tensorflow.Core.Framework.Versions
+                     , Proto.Tensorflow.Core.Lib.Core.ErrorCodes
+                     , Proto.Tensorflow.Core.Protobuf.Config
+                     , Proto.Tensorflow.Core.Protobuf.ControlFlow
                      , Proto.Tensorflow.Core.Protobuf.Debug
+                     , Proto.Tensorflow.Core.Protobuf.MetaGraph
+                     , Proto.Tensorflow.Core.Protobuf.NamedTensor
+                     , Proto.Tensorflow.Core.Protobuf.QueueRunner
+                     , Proto.Tensorflow.Core.Protobuf.TensorBundle
+                     , Proto.Tensorflow.Core.Protobuf.SavedModel
+                     , Proto.Tensorflow.Core.Protobuf.Saver
+                     , Proto.Tensorflow.Core.Protobuf.TensorflowServer
+                     , Proto.Tensorflow.Core.Util.Event
+                     , Proto.Tensorflow.Core.Util.MemmappedFileSystem
+                     , Proto.Tensorflow.Core.Util.SavedTensorSlice
+                     , Proto.Tensorflow.Core.Util.TestLog
   build-depends:  proto-lens == 0.2.*
                 , proto-lens-protoc == 0.2.*
+                , proto-lens-protobuf-types == 0.2.*
                 , base >= 4.7 && < 5
   default-language:    Haskell2010
   include-dirs: .
