@@ -91,3 +91,15 @@ library on your machine under `/usr/local`.
 After running the script to install system dependencies, build the project with stack: 
 
     stack test
+
+## Build on NixOS
+
+`tools/userchroot.nix` expression contains definitions to open
+chroot-environment containing necessary dependencies. Type
+
+    $ nix-shell tools/userchroot.nix
+    $ stack build --system-ghc
+
+to enter the environment and build the project. Note, that it is an emulation
+of common Linux environment rather than full-featured Nix package expression.
+No exportable Nix package will appear, but local development is possible.
