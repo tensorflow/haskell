@@ -156,6 +156,15 @@ testDiamond = testCase "testDiamond" $ do
     (4 :: Float) @=? TF.unScalar dx
 
 
+testAddNGradient :: Test
+testAddNGradient = testCase "testAddNGradient" $ do
+    [dx] <- TF.runSession $ do
+        x <- TF.render $ TF.vector [1, 2, 0 :: Float]
+        let y = TF.addN [x, x]
+        TF.gradients y [x] >>= TF.run
+    V.fromList [2, 2, 2 :: Float] @=? dx
+
+
 testMaxGradient :: Test
 testMaxGradient = testCase "testMaxGradient" $ do
     [dx] <- TF.runSession $ do
@@ -298,6 +307,7 @@ main = defaultMain
             , testCreateGraphStateful
             , testCreateGraphNameScopes
             , testDiamond
+            , testAddNGradient
             , testMaxGradient
             , testReluGrad
             , testReluGradGrad
