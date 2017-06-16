@@ -511,6 +511,11 @@ opGrad "Add" _ [toT -> x, toT -> y] [dz] =
     sy = shape (y :: Tensor Build a)
     (rx, ry) = broadcastGradientArgs sx sy
 
+-- Copies the gradients to all inputs
+-- Not broadcasting
+opGrad "AddN" _ inputs [dz] =
+    map ((const . Just . expr) dz) inputs
+
 opGrad "Sub" u v w =
     [Just x, Just (-y)]
   where
@@ -711,6 +716,7 @@ numOutputs o =
     case o ^. op of
         "Abs" -> 1
         "Add" -> 1
+        "AddN" -> 1
         "Cast" -> 1
         "Const" -> 1
         "Conv2D" -> 1
