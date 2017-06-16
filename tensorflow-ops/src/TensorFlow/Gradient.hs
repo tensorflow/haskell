@@ -431,6 +431,22 @@ flatSlice t begin size = CoreOps.slice t (vector [begin]) (vector [size])
 nodeDefName :: NodeDef -> NodeName
 nodeDefName = NodeName . view name
 
+-- | Gradient helper for binary component wise operations
+-- See https://github.com/tensorflow/tensorflow/blob/e9de087fa7f59c39bbe12ac2c83c5547c83f746c/tensorflow/core/ops/math_grad.cc#L329
+gradForBinaryCwise :: ( OneOf '[ Int32, Int64, Float, Double, Complex Float, Complex Double ] t
+                      )
+                   => (Tensor v1 t, Tensor v1 t)
+                   -> (Tensor v1 t, Tensor v1 t)
+                   -> [ Maybe (Tensor Build t) ]
+gradForBinaryCwise (x, gx) (y, gy) =
+    [ Just dx
+    , Just dy ]
+  where
+    dx = reshape (sum gx rx) sx
+    dy = reshape (sum gy ry) sy
+    sx = shape x -- (x :: Tensor Build t)
+    sy = shape y -- (y :: Tensor Build t)
+    (rx, ry) = broadcastGradientArgs sx sy
 
 -- | The gradient function for an op type.
 --
@@ -482,6 +498,15 @@ opGrad "Max" _ [toT -> x, toT -> indices] [dz] =
 
 -- Min and Max have identical gradient implementations.
 opGrad "Min" u v w = opGrad "Max" u v w
+
+-- Element wise maximum gradient
+-- See https://github.com/tensorflow/tensorflow/blob/e9de087fa7f59c39bbe12ac2c83c5547c83f746c/tensorflow/core/ops/math_grad.cc#L473
+opGrad "Maximum" _ [toT -> x, toT -> y] [dz] =
+    gradForBinaryCwise (x, gx) (y, gy)
+  where
+    xmask = CoreOps.greaterEqual x y
+    gx = CoreOps.select xmask dz (CoreOps.zerosLike dz)
+    gy = CoreOps.select (CoreOps.logicalNot xmask) dz (CoreOps.zerosLike dz)
 
 opGrad "Sum" _ [toT -> x, toT -> indices] [dz] =
     [ Just $ CoreOps.tile grad tileScaling, Nothing ]
@@ -725,6 +750,7 @@ numOutputs o =
         "Log" -> 1
         "MatMul" -> 1
         "Max" -> 1
+        "Maximum" -> 1
         "MaxPool" -> 1
         "Mean" -> 1
         "Min" -> 1
