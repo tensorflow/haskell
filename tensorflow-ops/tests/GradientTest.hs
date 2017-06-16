@@ -29,7 +29,7 @@ import qualified Data.Vector as V
 import Control.Monad.IO.Class (liftIO)
 
 import qualified TensorFlow.Core as TF
-import qualified TensorFlow.GenOps.Core as TF (max, tile)
+import qualified TensorFlow.GenOps.Core as TF (max, tile, maximum)
 import qualified TensorFlow.Gradient as TF
 import qualified TensorFlow.Ops as TF hiding (zeroInitializedVariable)
 import qualified TensorFlow.Output as TF
@@ -173,6 +173,27 @@ testMaxGradient = testCase "testMaxGradient" $ do
         TF.gradients y [x] >>= TF.run
     V.fromList [0, 0, 1, 0, 0 :: Float] @=? dx
 
+-- run single test like this:
+-- stack --docker --docker-image=$IMAGE_NAME test tensorflow-ops:GradientTest --test-arguments -t"*MaximumGrad*"
+testMaximumGrad :: Test
+testMaximumGrad = testCase "testMaximumGrad" $ do
+    [gx, gy] <- TF.runSession $ do
+        x <- TF.render $ TF.vector [0 :: Float]
+        y <- TF.render $ TF.vector [0 :: Float]
+        let z = TF.maximum x y
+        TF.gradients z [x, y] >>= TF.run
+    V.fromList [1] @=? gx
+    V.fromList [1] @=? gy
+
+testMaximumGradGrad :: Test
+testMaximumGradGrad = testCase "testMaximumGradGrad" $ do
+    [ggx] <- TF.runSession $ do
+        x <- TF.render $ TF.vector [2 :: Float]
+        y <- TF.render $ TF.vector [1 :: Float]
+        let z = TF.maximum x y
+        [gx, _gy] <- TF.gradients z [x, y]
+        TF.gradients gx [x] >>= TF.run
+    V.fromList [0] @=? ggx
 
 testReluGrad :: Test
 testReluGrad = testCase "testReluGrad" $ do
@@ -190,7 +211,6 @@ testReluGradGrad = testCase "testReluGradGrad" $ do
         [y'] <- TF.gradients y [x]
         TF.gradients y' [x] >>= TF.run
     V.fromList [0] @=? dx
-
 
 testFillGrad :: Test
 testFillGrad = testCase "testFillGrad" $ do
@@ -309,6 +329,8 @@ main = defaultMain
             , testDiamond
             , testAddNGradient
             , testMaxGradient
+            , testMaximumGrad
+            , testMaximumGradGrad
             , testReluGrad
             , testReluGradGrad
             , testFillGrad
