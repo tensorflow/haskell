@@ -19,13 +19,14 @@ import Control.Monad.Trans.Resource (runResourceT)
 import Data.Conduit ((=$=))
 import Data.Default (def)
 import Data.List ((\\))
-import Data.ProtoLens (decodeMessageOrDie)
+import Data.ProtoLens (encodeMessage, decodeMessageOrDie)
 import Lens.Family2 ((^.), (.~), (&))
-import Proto.Tensorflow.Core.Util.Event (Event, fileVersion, step)
+import Proto.Tensorflow.Core.Util.Event (Event, graphDef, fileVersion, step)
 import System.Directory (getDirectoryContents)
 import System.FilePath ((</>))
 import System.IO.Temp (withSystemTempDirectory)
-import TensorFlow.Logging (withEventWriter, logEvent)
+import TensorFlow.Core (Build, ControlNode, asGraphDef, noOp)
+import TensorFlow.Logging (withEventWriter, logEvent, logGraph)
 import TensorFlow.Records.Conduit (sourceTFRecords)
 import Test.Framework (defaultMain, Test)
 import Test.Framework.Providers.HUnit (testCase)
@@ -59,6 +60,22 @@ testEventWriter = testCase "EventWriter" $
                     (T.pack "brain.Event:2") (header ^. fileVersion)
         assertEqual "Body has expected records" expected body
 
+testLogGraph :: Test
+testLogGraph = testCase "LogGraph" $
+    withSystemTempDirectory "event_writer_logs" $ \dir -> do
+        let graphBuild = noOp :: Build ControlNode
+            expectedGraph = asGraphDef graphBuild
+            expectedGraphEvent = (def :: Event) & graphDef .~ (encodeMessage expectedGraph)
+
+        withEventWriter dir $ \eventWriter ->
+            logGraph eventWriter graphBuild
+        files <- listDirectory dir
+        records <- runResourceT $ Conduit.runConduit $
+            sourceTFRecords (dir </> head files) =$= Conduit.consume
+        let (_:event:_) = decodeMessageOrDie . BL.toStrict <$> records
+        assertEqual "First record expected to be Event containing GraphDef" expectedGraphEvent event
+
 main :: IO ()
 main = defaultMain [ testEventWriter
+                   , testLogGraph
                    ]

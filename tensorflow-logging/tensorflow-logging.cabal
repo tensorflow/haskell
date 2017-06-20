@@ -55,6 +55,7 @@ Test-Suite LoggingTest
                , proto-lens
                , resourcet
                , temporary
+               , tensorflow
                , tensorflow-logging
                , tensorflow-proto
                , tensorflow-records-conduit

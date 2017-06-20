@@ -39,6 +39,7 @@ module TensorFlow.Logging
     ( EventWriter
     , withEventWriter
     , logEvent
+    , logGraph
     , logSummary
     , SummaryTensor
     , histogramSummary
@@ -64,10 +65,10 @@ import Data.Time.Clock.POSIX (utcTimeToPOSIXSeconds)
 import Lens.Family2 ((.~), (&))
 import Network.HostName (getHostName)
 import Proto.Tensorflow.Core.Framework.Summary (Summary)
-import Proto.Tensorflow.Core.Util.Event (Event, fileVersion, step, summary, wallTime)
+import Proto.Tensorflow.Core.Util.Event (Event, fileVersion, graphDef, step, summary, wallTime)
 import System.Directory (createDirectoryIfMissing)
 import System.FilePath ((</>))
-import TensorFlow.Build (MonadBuild)
+import TensorFlow.Build (MonadBuild, Build, asGraphDef)
 import TensorFlow.Ops (scalar)
 import TensorFlow.Records.Conduit (sinkTFRecords)
 import TensorFlow.Tensor (Tensor, render, SummaryTensor, addSummary, collectAllSummaries)
@@ -123,6 +124,14 @@ closeEventWriter (EventWriter q done) =
 logEvent :: MonadIO m => EventWriter -> Event -> m ()
 logEvent (EventWriter q _) pb = liftIO (atomically (writeTBMQueue q pb))
 
+-- | Logs the graph for the given 'Build' action.
+logGraph :: MonadIO m => EventWriter -> Build a -> m ()
+logGraph writer build = do
+  let graph = asGraphDef build
+      graphBytes = encodeMessage graph
+      graphEvent = (def :: Event) & graphDef .~ graphBytes
+  logEvent writer graphEvent
+
 -- | Logs the given Summary event with an optional global step (use 0 if not
 -- applicable).
 logSummary :: MonadIO m => EventWriter -> Int64 -> Summary -> m ()
@@ -132,6 +141,7 @@ logSummary writer step' summaryProto = do
                          & step .~ step'
                          & summary .~ summaryProto
                     )
+
 
 -- Number of seconds since epoch.
 doubleWallTime :: IO Double
