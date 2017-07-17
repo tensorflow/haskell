@@ -62,7 +62,7 @@ fit xData yData = TF.runSession $ do
 # Installation Instructions
 
 Note: building this repository with `stack` requires version `1.4.0` or newer.
-Check your stack version with `stack --version` in terminal.
+Check your stack version with `stack --version` in a terminal.
 
 ## Build with Docker on Linux
 
