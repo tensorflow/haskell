@@ -83,7 +83,7 @@ There is also a demo application:
 
 ## Build on macOS
 
-Run the [install_osx_dependencies.sh](./tools/install_osx_dependencies.sh)
+Run the [install_macos_dependencies.sh](./tools/install_macos_dependencies.sh)
 script in the `tools/` directory. The script installs dependencies
 via [Homebrew](http://brew.sh) and then downloads and installs the TensorFlow
 library on your machine under `/usr/local`.
