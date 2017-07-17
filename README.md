@@ -62,6 +62,7 @@ fit xData yData = TF.runSession $ do
 # Installation Instructions
 
 Note: building this repository with `stack` requires version `1.4.0` or newer.
+Check your stack version with `stack --version` in terminal.
 
 ## Build with Docker on Linux
 
@@ -88,7 +89,7 @@ script in the `tools/` directory. The script installs dependencies
 via [Homebrew](http://brew.sh) and then downloads and installs the TensorFlow
 library on your machine under `/usr/local`.
 
-After running the script to install system dependencies, build the project with stack: 
+After running the script to install system dependencies, build the project with stack:
 
     stack test
 
