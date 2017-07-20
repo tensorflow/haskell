@@ -1,7 +1,7 @@
 #!/bin/bash
 set -eu
 
-echo "Installing OSX System Dependencies"
+echo "Installing macOS System Dependencies"
 echo "=================================="
 
 if ! type "brew" > /dev/null; then
