@@ -465,12 +465,12 @@ opGrad "Concat" nodedef _ix [dy]
          x  = map toT $ tail _ix
          _i = toT $ head _ix
          i  = reshape _i one
-         n  = length x
+         m  = length x
          s  :: [Tensor Build Int32]
          s  = map shape x
          di :: Tensor Build Int32
          di = CoreOps.concat (scalar 0) $ map (\t -> CoreOps.slice t i one) s
-         dx = CoreOps.splitV (fromIntegral n) dy di _i
+         dx = CoreOps.splitV (fromIntegral m) dy di _i
          reshapeZip = zipWith reshape
          one = constant (Shape [1 :: Int64]) [1 :: Int32]
 
