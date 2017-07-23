@@ -19,6 +19,7 @@
 
 import Data.Int (Int32, Int64)
 import Data.List (sort)
+import qualified Data.List as List
 import Data.ProtoLens.TextFormat (showMessage)
 import Test.Framework (defaultMain, Test)
 import Lens.Family2 ((^..), (.~))
@@ -26,6 +27,8 @@ import Lens.Family2 ((^..), (.~))
 import Test.Framework.Providers.HUnit (testCase)
 import Test.HUnit ((@=?), assertEqual)
 import qualified Data.Vector as V
+import System.Random (randomIO, randomRIO)
+import Control.Monad(forM, forM_, replicateM)
 import Control.Monad.IO.Class (liftIO)
 
 import qualified TensorFlow.Core as TF
@@ -164,6 +167,119 @@ testMaxGradient = testCase "testMaxGradient" $ do
         TF.gradients y [x] >>= TF.run
     V.fromList [0, 0, 1, 0, 0 :: Float] @=? dx
 
+testConcatGradient :: Test
+testConcatGradient = testCase "testConcatGradient" $ do
+    [dv,dv'] <- TF.runSession $ do
+        v  <- TF.render $ TF.vector [1 :: Float]
+        v' <- TF.render $ TF.vector [2 :: Float]
+        let y = TF.concat (TF.scalar 0) [ v, v' ]
+        TF.gradients y [v,v'] >>= TF.run
+    V.fromList [1 :: Float] @=? dv
+    V.fromList [1 :: Float] @=? dv'
+    [dv,dv'] <- TF.runSession $ do
+        v  <- TF.render $ TF.vector [1,2,3,4 :: Float]
+        v' <- TF.render $ TF.vector [5,6,7,8 :: Float]
+        let y = TF.concat (TF.scalar 0) [ v, v', v ]
+        TF.gradients y [v,v'] >>= TF.run
+    V.fromList [2,2,2,2 :: Float] @=? dv
+    V.fromList [1,1,1,1 :: Float] @=? dv'
+
+-- This test checks that the gradient of a concat op
+--   along the second dimension is as expected.
+--   This test is a port of ConcatTest._testGradientsSimple from
+--   tensorflow/tensorflow/compiler/tests/concat_ops_test.py
+testConcatGradientSimple :: Test
+testConcatGradientSimple = testCase "testConcatGradientSimple" $ do
+    let shapes     = [[10,x,2] | x <- [1,2,6]]
+    (inputGrads :: [[Float]]) <- forM shapes $ \shape ->
+       replicateM (List.product shape) randomIO
+    (inputs :: [[Float]]) <- forM shapes $ \shape ->
+       replicateM (List.product shape) randomIO
+    dinputs <- TF.runSession $ do
+        inputTensors <- forM (inputs `zip` shapes) $ \(input,shape) ->
+                          TF.render $ TF.constant (TF.Shape shape) input
+        inputGradTensors <- forM (inputGrads `zip` shapes) $ \(inputGrad, shape) ->
+                               TF.render $ TF.constant (TF.Shape shape) inputGrad
+        inputGradTensor <- TF.render $ TF.concat (TF.scalar 1) inputGradTensors
+        inputTensor <- TF.render $ TF.concat (TF.scalar 1) inputTensors
+        output <- TF.render $ inputTensor `TF.mul` inputGradTensor
+        TF.gradients output inputTensors >>= TF.run
+    (V.fromList <$> inputGrads) @=? dinputs
+
+-- This test checks that the gradient of a concat op
+--   along the first dimension is as expected.
+--   This test is a port of ConcatTest._testGradientsFirstDim from
+--   tensorflow/tensorflow/compiler/tests/concat_ops_test.py
+testConcatGradientFirstDim :: Test
+testConcatGradientFirstDim = testCase "testConcatGradientFirstDim" $ do
+    let shapes     = [[x,10,2] | x <- [1,2,6]]
+    (inputGrads :: [[Float]]) <- forM shapes $ \shape ->
+       replicateM (List.product shape) randomIO
+    (inputs :: [[Float]]) <- forM shapes $ \shape ->
+       replicateM (List.product shape) randomIO
+    dinputs <- TF.runSession $ do
+        inputTensors <- forM (inputs `zip` shapes) $ \(input,shape) ->
+                          TF.render $ TF.constant (TF.Shape shape) input
+        inputGradTensors <- forM (inputGrads `zip` shapes) $ \(inputGrad, shape) ->
+                               TF.render $ TF.constant (TF.Shape shape) inputGrad
+        inputGradTensor <- TF.render $ TF.concat (TF.scalar 0) inputGradTensors
+        inputTensor <- TF.render $ TF.concat (TF.scalar 0) inputTensors
+        output <- TF.render $ inputTensor `TF.mul` inputGradTensor
+        TF.gradients output inputTensors >>= TF.run
+    (V.fromList <$> inputGrads) @=? dinputs
+
+-- This test checks that the gradient of a concat op
+--   along the last dimension is as expected.
+--   This test is a port of ConcatTest._testGradientsLastDim from
+--   tensorflow/tensorflow/compiler/tests/concat_ops_test.py
+testConcatGradientLastDim :: Test
+testConcatGradientLastDim = testCase "testConcatGradientLastDim" $ do
+    let shapes     = [[10,2,x] | x <- [1,2,6]]
+    (inputGrads :: [[Float]]) <- forM shapes $ \shape ->
+       replicateM (List.product shape) randomIO
+    (inputs :: [[Float]]) <- forM shapes $ \shape ->
+       replicateM (List.product shape) randomIO
+    dinputs <- TF.runSession $ do
+        inputTensors <- forM (inputs `zip` shapes) $ \(input,shape) ->
+                          TF.render $ TF.constant (TF.Shape shape) input
+        inputGradTensors <- forM (inputGrads `zip` shapes) $ \(inputGrad, shape) ->
+                               TF.render $ TF.constant (TF.Shape shape) inputGrad
+        inputGradTensor <- TF.render $ TF.concat (TF.scalar 2) inputGradTensors
+        inputTensor <- TF.render $ TF.concat (TF.scalar 2) inputTensors
+        output <- TF.render $ inputTensor `TF.mul` inputGradTensor
+        TF.gradients output inputTensors >>= TF.run
+    (V.fromList <$> inputGrads) @=? dinputs
+
+
+-- This test checks that the gradient of a concat op
+--   along a random dimension across random shapes is as expected.
+--   This test is a port of ConcatTest._RunAndVerifyGradientsRandom from
+--   tensorflow/tensorflow/compiler/tests/concat_ops_test.py
+testConcatRunAndVerifyGradientsRandom :: Test
+testConcatRunAndVerifyGradientsRandom = testCase "testConcatRunAndVerifyGradientsRandom" $
+    forM_ [1..5] $ \_ -> do
+      (shapes' :: [Int64]) <- replicateM 5 $ randomRIO (1, 5)
+      (numTensors :: Int)  <- randomRIO (2, 10)
+      (concatDim :: Int32) <- randomRIO (0, 4)
+      (concatDimSizes :: [Int64]) <- replicateM numTensors $ randomRIO (1, 5)
+      let concatDimSize = sum concatDimSizes
+          update i xs x = take (fromIntegral i) xs ++ x: drop (fromIntegral $ i+1) xs
+          shapes        = map (update concatDim shapes') concatDimSizes
+          wholeshape    = update concatDim shapes' concatDimSize
+      (inputGrads :: [[Float]]) <- forM shapes $ \shape ->
+         replicateM (fromIntegral $ List.product shape) randomIO
+      (inputs :: [[Float]]) <- forM shapes $ \shape ->
+         replicateM (fromIntegral $ List.product shape) randomIO
+      dinputs <- TF.runSession $ do
+          inputTensors <- forM (inputs `zip` shapes) $ \(input,shape) ->
+                            TF.render $ TF.constant (TF.Shape shape) input
+          inputTensor  <- TF.render $ TF.concat (TF.scalar concatDim) inputTensors
+          inputGradTensors <- forM (inputGrads `zip` shapes) $ \(inputGrad, shape) ->
+                                 TF.render $ TF.constant (TF.Shape shape) inputGrad
+          inputGradTensor  <- TF.render $ TF.concat (TF.scalar concatDim) inputGradTensors
+          output <- TF.render $ inputTensor `TF.mul` inputGradTensor
+          TF.gradients output inputTensors >>= TF.run
+      (V.fromList <$> inputGrads) @=? dinputs
 
 testReluGrad :: Test
 testReluGrad = testCase "testReluGrad" $ do
@@ -299,6 +415,11 @@ main = defaultMain
             , testCreateGraphNameScopes
             , testDiamond
             , testMaxGradient
+            , testConcatGradient
+            , testConcatGradientSimple
+            , testConcatGradientFirstDim
+            , testConcatGradientLastDim
+            , testConcatRunAndVerifyGradientsRandom
             , testReluGrad
             , testReluGradGrad
             , testFillGrad
