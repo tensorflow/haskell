@@ -458,7 +458,7 @@ opGrad "ReluGrad" _ [_, toT -> x ] [dz] = [Just $ reluGrad dz x, Just $ CoreOps.
 --  The incoming gradient from backpropagation is
 --   simply forwarded split across input tensors.
 --   Forwarded gradients have shapes s = [s1, ..., sm].
-opGrad "Concat" nodedef _ix [dy]
+opGrad "Concat" _ _ix [dy]
  | length x == 1 = Nothing : [Just $ expr dy]
  | otherwise     = Nothing : map Just (dx `reshapeZip` s)
    where x  :: [Tensor Build a]
