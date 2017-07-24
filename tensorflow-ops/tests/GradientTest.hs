@@ -176,13 +176,13 @@ testConcatGradient = testCase "testConcatGradient" $ do
         TF.gradients y [v,v'] >>= TF.run
     V.fromList [1 :: Float] @=? dv
     V.fromList [1 :: Float] @=? dv'
-    [dv,dv'] <- TF.runSession $ do
-        v  <- TF.render $ TF.vector [1,2,3,4 :: Float]
-        v' <- TF.render $ TF.vector [5,6,7,8 :: Float]
-        let y = TF.concat (TF.scalar 0) [ v, v', v ]
-        TF.gradients y [v,v'] >>= TF.run
-    V.fromList [2,2,2,2 :: Float] @=? dv
-    V.fromList [1,1,1,1 :: Float] @=? dv'
+    [dw,dw'] <- TF.runSession $ do
+        w  <- TF.render $ TF.vector [1,2,3,4 :: Float]
+        w' <- TF.render $ TF.vector [5,6,7,8 :: Float]
+        let y = TF.concat (TF.scalar 0) [ w, w', w ]
+        TF.gradients y [w,w'] >>= TF.run
+    V.fromList [2,2,2,2 :: Float] @=? dw
+    V.fromList [1,1,1,1 :: Float] @=? dw'
 
 -- This test checks that the gradient of a concat op
 --   along the second dimension is as expected.
@@ -257,15 +257,13 @@ testConcatGradientLastDim = testCase "testConcatGradientLastDim" $ do
 --   tensorflow/tensorflow/compiler/tests/concat_ops_test.py
 testConcatRunAndVerifyGradientsRandom :: Test
 testConcatRunAndVerifyGradientsRandom = testCase "testConcatRunAndVerifyGradientsRandom" $
-    forM_ [1..5] $ \_ -> do
+    forM_ [1..5 :: Int] $ \_ -> do
       (shapes' :: [Int64]) <- replicateM 5 $ randomRIO (1, 5)
       (numTensors :: Int)  <- randomRIO (2, 10)
       (concatDim :: Int32) <- randomRIO (0, 4)
       (concatDimSizes :: [Int64]) <- replicateM numTensors $ randomRIO (1, 5)
-      let concatDimSize = sum concatDimSizes
-          update i xs x = take (fromIntegral i) xs ++ x: drop (fromIntegral $ i+1) xs
+      let update i xs x = take (fromIntegral i) xs ++ x: drop (fromIntegral $ i+1) xs
           shapes        = map (update concatDim shapes') concatDimSizes
-          wholeshape    = update concatDim shapes' concatDimSize
       (inputGrads :: [[Float]]) <- forM shapes $ \shape ->
          replicateM (fromIntegral $ List.product shape) randomIO
       (inputs :: [[Float]]) <- forM shapes $ \shape ->
