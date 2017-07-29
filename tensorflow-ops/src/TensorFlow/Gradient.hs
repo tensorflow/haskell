@@ -70,7 +70,6 @@ import TensorFlow.BuildOp
 import TensorFlow.Ops
     ( addN
     , broadcastGradientArgs
-    , constant
     , expandDims
     , fill
     , matMul
@@ -103,7 +102,7 @@ import TensorFlow.Tensor
     , renderValue
     , ToTensor(..)
     )
-import TensorFlow.Types (Attribute, OneOf, TensorType, attrLens, Shape(..))
+import TensorFlow.Types (Attribute, OneOf, TensorType, attrLens)
 import Proto.Tensorflow.Core.Framework.NodeDef
     (NodeDef, attr, input, op, name)
 
@@ -444,35 +443,38 @@ opGrad "Neg" _ [_] [dz] = [Just $ negate $ expr dz]
 opGrad "Relu" _ [toT -> x] [dz] = [Just $ reluGrad dz x]
 opGrad "ReluGrad" _ [_, toT -> x ] [dz] = [Just $ reluGrad dz x, Just $ CoreOps.zerosLike x]
 
--- Concat concatenates input tensors
---   x1 of shape s1 = [d1, ..., di_1, ..., dn]
---   x2 of shape s2 = [d1, ..., di_2, ..., dn]
---    .           .     .          .        .
---    .           .     .          .        .
---    .           .     .          .        .
---   xm of shape sm = [d1, ..., di_m, ..., dn]
---  along dimension i to an output tensor
---   y  of shape sy = [d1, ..., d, ..., dn]
---  where d = sum di = sum [di_1,...,di_m]
---
---  The incoming gradient from backpropagation is
---   simply forwarded split across input tensors.
---   Forwarded gradients have shapes s = [s1, ..., sm].
 opGrad "Concat" _ _ix [dy]
- | length x == 1 = Nothing : [Just $ expr dy]
- | otherwise     = Nothing : map Just (dx `reshapeZip` s)
-   where x  :: [Tensor Build a]
-         x  = map toT $ tail _ix
-         _i = toT $ head _ix
-         i  = reshape _i one
-         m  = length x
-         s  :: [Tensor Build Int32]
-         s  = map shape x
-         di :: Tensor Build Int32
-         di = CoreOps.concat (scalar 0) $ map (\t -> CoreOps.slice t i one) s
-         dx = CoreOps.splitV (fromIntegral m) dy di _i
-         reshapeZip = zipWith reshape
-         one = constant (Shape [1 :: Int64]) [1 :: Int32]
+    -- Concat concatenates input tensors
+    --   x1 of shape s1 = [k1, ..., ki_1, ..., kn]
+    --   x2 of shape s2 = [k1, ..., ki_2, ..., kn]
+    --    .           .     .          .        .
+    --    .           .     .          .        .
+    --    .           .     .          .        .
+    --   xm of shape sm = [k1, ..., ki_m, ..., kn]
+    --  along dimension i to an output tensor
+    --   y  of shape sy = [k1, ..., k, ..., kn]
+    --  where k = sum ki = sum [ki_1,...,ki_m]
+    --
+    --  The incoming gradient dy from backpropagation is
+    --   simply forwarded split across input tensors yielding dx.
+    --   Forwarded gradients have shapes s = [s1, ..., sm].
+    | m == 1    = Nothing : [Just $ expr dy]
+    | otherwise = Nothing : map Just (dx `reshapeZip` s)
+  where
+    reshapeZip = zipWith reshape
+    dx = CoreOps.splitV (fromIntegral m) dy ki _i
+    s  :: [Tensor Build Int32]
+    s  = map shape x
+    x  :: [Tensor Build a]
+    x  = map toT $ tail _ix
+    -- i: concat dimension. Adjusted modulo n to handle negative indices.
+    _i = toT (head _ix) `CoreOps.floorMod` n
+    i  = reshape _i $ vector [1 :: Int32]
+    -- sizes along concatenated dimension
+    ki :: Tensor Build Int32
+    ki = CoreOps.concat 0 $ map (\t -> CoreOps.slice t i $ vector [1 :: Int32]) s
+    m  = length x
+    n  = CoreOps.rank (head x)
 
 opGrad "Square" _ [toT -> x] [dz] =
     -- TODO(fmayle): Handle complex numbers.
