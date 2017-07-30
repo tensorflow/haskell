@@ -190,6 +190,7 @@ Test-Suite GradientTest
                , base
                , proto-lens
                , lens-family
+               , random
                , tensorflow
                , tensorflow-core-ops
                , tensorflow-ops
