@@ -35,11 +35,8 @@ library
                   , TensorFlow.Tensor
                   , TensorFlow.Types
   other-modules:    TensorFlow.Internal.Raw
-                  , TensorFlow.Orphans
   build-tools:      c2hs
   build-depends:  proto-lens == 0.2.*
-                -- Used by the custom Setup script (for the test-suite).
-                , proto-lens-protoc == 0.2.*
                 , tensorflow-proto == 0.1.*
                 , base >= 4.7 && < 5
                 , async

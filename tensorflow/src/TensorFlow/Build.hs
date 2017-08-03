@@ -91,7 +91,6 @@ import Proto.Tensorflow.Core.Framework.NodeDef
     , op
     )
 
-import TensorFlow.Orphans ()
 import TensorFlow.Output
 
 newtype Unique = Unique Int
