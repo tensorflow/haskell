@@ -44,7 +44,6 @@ import Lens.Family2.Unchecked (lens)
 import Proto.Tensorflow.Core.Framework.AttrValue (AttrValue(..))
 import Data.Default (def)
 import TensorFlow.Types (Attribute, attrLens)
-import TensorFlow.Orphans ()
 
 -- | A type of graph node which has no outputs. These nodes are
 -- valuable for causing side effects when they are run.
