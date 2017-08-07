@@ -20,7 +20,8 @@ extra-deps:
 - proto-lens-protobuf-types-0.2.2.0
 - proto-lens-0.2.2.0
 - proto-lens-descriptors-0.2.2.0
-- proto-lens-protoc-0.2.2.1
+- proto-lens-protoc-0.2.2.3
+- lens-labels-0.1.0.2
 
 # For Mac OS X, whose linker doesn't use this path by default
 # unless you run `xcode-select --install`.

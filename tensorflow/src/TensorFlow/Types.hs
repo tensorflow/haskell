@@ -19,6 +19,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MonoLocalBinds #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RankNTypes #-}
@@ -453,10 +454,10 @@ infixr 5 /:/
 --
 -- using an enumeration of all the possible 'TensorType's.
 type OneOf ts a
-    -- Assert `TensorTypes ts` to make error messages a little better.
-    = (TensorType a, TensorTypes ts, NoneOf (AllTensorTypes \\ ts) a)
+    -- Assert `TensorTypes' ts` to make error messages a little better.
+    = (TensorType a, TensorTypes' ts, NoneOf (AllTensorTypes \\ ts) a)
 
-type OneOfs ts as = (TensorTypes as, TensorTypes ts,
+type OneOfs ts as = (TensorTypes as, TensorTypes' ts,
                         NoneOfs (AllTensorTypes \\ ts) as)
 
 type family NoneOfs ts as :: Constraint where
@@ -485,6 +486,29 @@ instance TensorTypes '[] where
 -- | A constraint that the input is a list of 'TensorTypes'.
 instance (TensorType t, TensorTypes ts) => TensorTypes (t ': ts) where
     tensorTypes = TensorTypeProxy :/ tensorTypes
+
+-- | A simpler version of the 'TensorTypes' class, that doesn't run
+-- afoul of @-Wsimplifiable-class-constraints@.
+--
+-- In more detail: the constraint @OneOf '[Double, Float] a@ leads
+-- to the constraint @TensorTypes' '[Double, Float]@, as a safety-check
+-- to give better error messages.  However, if @TensorTypes'@ were a class,
+-- then GHC 8.2.1 would complain with the above warning unless @NoMonoBinds@
+-- were enabled.  So instead, we use a separate type family for this purpose.
+-- For more details: https://ghc.haskell.org/trac/ghc/ticket/11948
+type family TensorTypes' (ts :: [*]) :: Constraint where
+    -- Specialize this type family when `ts` is a long list, to avoid deeply
+    -- nested tuples of constraints.  Works around a bug in ghc-8.0:
+    -- https://ghc.haskell.org/trac/ghc/ticket/12175
+    TensorTypes' (t1 ': t2 ': t3 ': t4 ': ts)
+        = (TensorType t1, TensorType t2, TensorType t3, TensorType t4
+              , TensorTypes' ts)
+    TensorTypes' (t1 ': t2 ': t3 ': ts)
+        = (TensorType t1, TensorType t2, TensorType t3, TensorTypes' ts)
+    TensorTypes' (t1 ': t2 ': ts)
+        = (TensorType t1, TensorType t2, TensorTypes' ts)
+    TensorTypes' (t ': ts) = (TensorType t, TensorTypes' ts)
+    TensorTypes' '[] = ()
 
 -- | A constraint checking that two types are different.
 type family a /= b :: Constraint where
@@ -529,7 +553,7 @@ type family as \\ bs where
 -- Assumes that @a@ and each of the elements of @ts@ are 'TensorType's.
 type family NoneOf ts a :: Constraint where
     -- Specialize this type family when `ts` is a long list, to avoid deeply
-    -- nested tuples of constraints.  Works around a bug in ghc-8:
+    -- nested tuples of constraints.  Works around a bug in ghc-8.0:
     -- https://ghc.haskell.org/trac/ghc/ticket/12175
     NoneOf (t1 ': t2 ': t3 ': t4 ': ts) a
         = (a /= t1, a /= t2, a /= t3, a /= t4, NoneOf ts a)
