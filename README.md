@@ -86,7 +86,7 @@ There is also a demo application:
 
 Run the [install_macos_dependencies.sh](./tools/install_macos_dependencies.sh)
 script in the `tools/` directory. The script installs dependencies
-via [Homebrew](http://brew.sh) and then downloads and installs the TensorFlow
+via [Homebrew](https://brew.sh/) and then downloads and installs the TensorFlow
 library on your machine under `/usr/local`.
 
 After running the script to install system dependencies, build the project with stack:
@@ -104,3 +104,6 @@ chroot-environment containing necessary dependencies. Type
 to enter the environment and build the project. Note, that it is an emulation
 of common Linux environment rather than full-featured Nix package expression.
 No exportable Nix package will appear, but local development is possible.
+
+## License
+This project is licensed under the terms of the [Apache 2.0 license](LICENSE).
