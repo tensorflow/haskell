@@ -817,7 +817,7 @@ numOutputs o =
         "Variable" -> 1
         "ZerosLike" -> 1
         "Fill" -> 1
-        _ -> error $ "numOuputs not implemented for " ++ show (o ^. op)
+        _ -> error $ "numOutputs not implemented for " ++ show (o ^. op)
 
 -- Divides `x / y` assuming `x, y >= 0`, treating `0 / 0 = 0`
 safeShapeDiv :: Tensor v1 Int32 -> Tensor v2 Int32 -> Tensor Build Int32
