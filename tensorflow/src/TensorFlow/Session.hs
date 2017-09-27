@@ -20,6 +20,7 @@
 
 module TensorFlow.Session (
     Session,
+    SessionT,
     Options,
     sessionConfig,
     sessionTarget,
@@ -39,7 +40,7 @@ module TensorFlow.Session (
 import Control.Monad (forever, unless, void)
 import Control.Monad.Catch (MonadThrow, MonadCatch, MonadMask)
 import Control.Monad.IO.Class (MonadIO, liftIO)
-import Control.Monad.Trans.Class (lift)
+import Control.Monad.Trans.Class (MonadTrans, lift)
 import Control.Monad.Trans.Reader (ReaderT(..), ask, asks)
 import Data.ByteString (ByteString)
 import Data.Default (Default, def)
@@ -73,13 +74,18 @@ data SessionState
         , tracer :: Tracer
         }
 
-newtype Session a
-    = Session (ReaderT SessionState (BuildT IO) a)
+newtype SessionT m a
+    = Session (ReaderT SessionState (BuildT m) a)
     deriving (Functor, Applicative, Monad, MonadIO, MonadThrow, MonadCatch,
               MonadMask)
 
+instance MonadTrans SessionT where
+  lift = Session . lift . lift
+
+type Session = SessionT IO
+
 -- | Run 'Session' actions in a new TensorFlow session.
-runSession :: Session a -> IO a
+runSession :: (MonadMask m, MonadIO m) => SessionT m a -> m a
 runSession = runSessionWithOptions def
 
 -- | Customization for session. Use the lenses to update:
@@ -112,7 +118,7 @@ sessionTracer = lens _sessionTracer (\g x -> g { _sessionTracer = x })
 
 -- | Run 'Session' actions in a new TensorFlow session created with
 -- the given option setter actions ('sessionTarget', 'sessionConfig').
-runSessionWithOptions :: Options -> Session a -> IO a
+runSessionWithOptions :: (MonadMask m, MonadIO m) => Options -> SessionT m a -> m a
 runSessionWithOptions options (Session m) =
     FFI.withSession applyOptions $
         \as rs ->
@@ -122,14 +128,14 @@ runSessionWithOptions options (Session m) =
             FFI.setSessionTarget (options ^. sessionTarget) opt
             FFI.setSessionConfig (options ^. sessionConfig) opt
 
-instance MonadBuild Session where
+instance Monad m => MonadBuild (SessionT m) where
     build = Session . lift . build
 
 -- | Add all pending rendered nodes to the TensorFlow graph and runs
 -- any pending initializers.
 --
 -- Note that run, runWithFeeds, etc. will all call this function implicitly.
-extend :: Session ()
+extend :: MonadIO m => SessionT m ()
 extend = do
     session <- Session (asks rawSession)
     trace <- Session (asks tracer)
@@ -145,13 +151,13 @@ extend = do
 
 -- | Run a subgraph 't', rendering any dependent nodes that aren't already
 -- rendered, and fetch the corresponding values for 'a'.
-run :: Fetchable t a => t -> Session a
+run :: (MonadIO m, Fetchable t a) => t -> SessionT m a
 run = runWithFeeds []
 
 -- | Run a subgraph 't', rendering any dependent nodes that aren't already
 -- rendered, feed the given input values, and fetch the corresponding result
 -- values for 'a'.
-runWithFeeds :: Fetchable t a => [Feed] -> t -> Session a
+runWithFeeds :: (MonadIO m, Fetchable t a) => [Feed] -> t -> SessionT m a
 runWithFeeds feeds t = do
     ns <- build $ getNodes t
     -- Note that this call to "fetch" shouldn't affect the following "extend"
@@ -160,7 +166,7 @@ runWithFeeds feeds t = do
     fetch <- build $ getFetch t
     runFetchWithFeeds feeds ns fetch
 
-runFetchWithFeeds :: [Feed] -> Set NodeName -> Fetch a -> Session a
+runFetchWithFeeds :: MonadIO m => [Feed] -> Set NodeName -> Fetch a -> SessionT m a
 runFetchWithFeeds feeds target (Fetch fetch restore) = do
     extend
     let feeds' = fixFeeds feeds
@@ -180,14 +186,14 @@ toNodeNames = map (encodeUtf8 . unNodeName)
 -- | Run a subgraph 't', rendering and extending any dependent nodes that aren't
 -- already rendered.  This behaves like 'run' except that it doesn't do any
 -- fetches.
-run_ :: Nodes t => t -> Session ()
+run_ :: (MonadIO m, Nodes t) => t -> SessionT m ()
 run_ = runWithFeeds_ []
 
 -- | Run a subgraph 't', rendering any dependent nodes that aren't already
 -- rendered, feed the given input values, and fetch the corresponding result
 -- values for 'a'.  This behaves like 'runWithFeeds' except that it doesn't do
 -- any fetches.
-runWithFeeds_ :: Nodes t => [Feed] -> t -> Session ()
+runWithFeeds_ :: (MonadIO m, Nodes t) => [Feed] -> t -> SessionT m ()
 runWithFeeds_ feeds t = do
     ns <- build $ getNodes t
     runFetchWithFeeds feeds ns (pure ())
@@ -199,9 +205,9 @@ fixFeeds = map $ \(Feed o d) -> (encodeUtf8 $ encodeOutput o, d)
 -- forever until runSession exits or an exception occurs. Graph
 -- extension happens synchronously, but the resultant run proceeds as
 -- a separate thread.
-asyncProdNodes :: Nodes t
+asyncProdNodes :: (MonadIO m, Nodes t)
                   => t  -- ^ Node to evaluate concurrently.
-                  -> Session ()
+                  -> SessionT m ()
 asyncProdNodes nodes = do
     target <- build (getNodes nodes)
     extend
