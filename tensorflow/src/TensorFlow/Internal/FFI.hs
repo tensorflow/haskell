@@ -33,8 +33,9 @@ module TensorFlow.Internal.FFI
 
 import Control.Concurrent.Async (Async, async, cancel, waitCatch)
 import Control.Concurrent.MVar (MVar, modifyMVarMasked_, newMVar, takeMVar)
-import Control.Exception (Exception, throwIO, bracket, finally, mask_)
 import Control.Monad (when)
+import Control.Monad.Catch (MonadMask, Exception, throwM, bracket, finally, mask_)
+import Control.Monad.IO.Class (MonadIO, liftIO)
 import Data.Bits (Bits, toIntegralSized)
 import Data.Int (Int64)
 import Data.Maybe (fromMaybe)
@@ -75,13 +76,14 @@ data TensorData = TensorData
 
 -- | Runs the given action after creating a session with options
 -- populated by the given optionSetter.
-withSession :: (Raw.SessionOptions -> IO ())
-            -> ((IO () -> IO ()) -> Raw.Session -> IO a)
+withSession :: (MonadIO m, MonadMask m)
+            => (Raw.SessionOptions -> IO ())
+            -> ((IO () -> IO ()) -> Raw.Session -> m a)
             -- ^ The action can spawn concurrent tasks which will
             -- be canceled before withSession returns.
-            -> IO a
+            -> m a
 withSession optionSetter action = do
-    drain <- newMVar []
+    drain <- liftIO $ newMVar []
     let cleanup s =
         -- Closes the session to nudge the pending run calls to fail and exit.
             finally (checkStatus (Raw.closeSession s)) $ do
@@ -89,10 +91,10 @@ withSession optionSetter action = do
                 -- Collects all runners before deleting the session.
                 mapM_ shutDownRunner runners
                 checkStatus (Raw.deleteSession s)
-    bracket Raw.newSessionOptions Raw.deleteSessionOptions $ \options -> do
-        optionSetter options
-        bracket
-            (checkStatus (Raw.newSession options))
+    let bracketIO x y = bracket (liftIO x) (liftIO . y)
+    bracketIO Raw.newSessionOptions Raw.deleteSessionOptions $ \options -> do
+        bracketIO
+            (optionSetter options >> checkStatus (Raw.newSession options))
             cleanup
             (action (asyncCollector drain))
 
@@ -225,7 +227,7 @@ checkStatus fn =
         when (code /= Raw.TF_OK) $ do
             msg <- T.decodeUtf8With T.lenientDecode <$>
                    (Raw.message status >>= B.packCString)
-            throwIO $ TensorFlowException code msg
+            throwM $ TensorFlowException code msg
         return result
 
 setSessionConfig :: ConfigProto -> Raw.SessionOptions -> IO ()
@@ -258,7 +260,7 @@ getAllOpList = do
     where
       checkCall = do
           p <- Raw.getAllOpList
-          when (p == nullPtr) (throwIO exception)
+          when (p == nullPtr) (throwM exception)
           return p
       exception = TensorFlowException
                 Raw.TF_UNKNOWN "GetAllOpList failure, check logs"
