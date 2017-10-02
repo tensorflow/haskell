@@ -91,11 +91,11 @@ withSession optionSetter action = do
                 -- Collects all runners before deleting the session.
                 mapM_ shutDownRunner runners
                 checkStatus (Raw.deleteSession s)
-    bracket (liftIO $ Raw.newSessionOptions) (liftIO . Raw.deleteSessionOptions) $ \options -> do
-        liftIO $ optionSetter options
-        bracket
-            (liftIO $ checkStatus (Raw.newSession options))
-            (liftIO . cleanup)
+    let bracketIO x y = bracket (liftIO x) (liftIO . y)
+    bracketIO Raw.newSessionOptions Raw.deleteSessionOptions $ \options -> do
+        bracketIO
+            (optionSetter options >> checkStatus (Raw.newSession options))
+            cleanup
             (action (asyncCollector drain))
 
 asyncCollector :: MVar [Async ()] -> IO () -> IO ()
