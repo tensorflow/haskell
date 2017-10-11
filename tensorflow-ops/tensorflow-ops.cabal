@@ -188,6 +188,7 @@ Test-Suite GradientTest
   hs-source-dirs: tests
   build-depends: HUnit
                , base
+               , bytestring
                , proto-lens
                , lens-family
                , random
