@@ -32,7 +32,7 @@ import Control.Monad(forM_, replicateM, zipWithM)
 import Control.Monad.IO.Class (liftIO)
 
 import qualified TensorFlow.Core as TF
-import qualified TensorFlow.GenOps.Core as TF (max, tile, maximum)
+import qualified TensorFlow.GenOps.Core as TF (conv2DBackpropInput', max, maximum, tile)
 import qualified TensorFlow.Gradient as TF
 import qualified TensorFlow.Ops as TF hiding (zeroInitializedVariable)
 import qualified TensorFlow.Output as TF
@@ -41,6 +41,8 @@ import qualified TensorFlow.Variable as TF
 
 import Proto.Tensorflow.Core.Framework.Graph (node)
 import Proto.Tensorflow.Core.Framework.NodeDef (op)
+
+import qualified Data.ByteString.Char8 as BS
 
 testGradientSimple :: Test
 testGradientSimple = testCase "testGradientSimple" $ do
@@ -313,7 +315,6 @@ testTile2DGrad = testCase "testTileGrad2D" $ do
     shapeX @=? (shapeDX :: V.Vector Int32)
     V.fromList [6, 6, 6, 6, 6, 6::Float] @=? (dx :: V.Vector Float)
 
-
 matMulGradient :: Test
 matMulGradient = testCase "matMulGradients" $ do
 
@@ -388,6 +389,28 @@ transAttrs :: (TF.Attribute a,
 transAttrs a b =
   (TF.opAttr "transpose_a" .~ a) . (TF.opAttr "transpose_b" .~ b)
 
+testConv2DBackpropInputGrad :: Test
+testConv2DBackpropInputGrad = testCase "testConv2DBackpropInputGrad" $ do
+    (dx, shapeDX, shapeX) <- TF.runSession $ do
+        let conv_input_shape = TF.vector [1, 2, 2, 1 :: Int32] -- [batch, h, w, in_channels]
+        let conv_out_shape = TF.vector [1, 1, 1, 1 :: Int32]  -- [batch, h, w, out_channels]
+        x <- TF.render $ TF.fill conv_out_shape (TF.scalar (1::Float))
+
+        let filterShape = TF.vector [2, 2, 1, 1 :: Int32] -- [fh, fw, inc, out]
+        filter <- TF.render $ TF.fill filterShape (TF.scalar (1::Float))
+        let y = TF.conv2DBackpropInput'
+                ( (TF.opAttr "strides" .~ [1::Int64, 1, 1, 1])
+                . (TF.opAttr "padding" .~ (BS.pack "VALID"))
+                . (TF.opAttr "data_format" .~ (BS.pack "NHWC"))
+                )
+                conv_input_shape filter x
+
+        [dx] <- TF.gradients y [x]
+        TF.run (dx, TF.shape dx, TF.shape x)
+    shapeX @=? (shapeDX :: V.Vector Int32)
+    V.fromList [4::Float] @=? (dx :: V.Vector Float)
+
+
 main :: IO ()
 main = defaultMain
             [ testGradientSimple
@@ -413,4 +436,5 @@ main = defaultMain
             , matMulTransposeGradient (False, True)
             , matMulTransposeGradient (True, False)
             , matMulTransposeGradient (True, True)
+            , testConv2DBackpropInputGrad
             ]

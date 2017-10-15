@@ -650,6 +650,27 @@ opGrad "Conv2D" nodeDef [toT -> x, toT -> y] [dz] =
     useCudnnOnGpu = lookupAttr nodeDef "use_cudnn_on_gpu" :: Bool
     dataFormat = lookupAttr nodeDef "data_format" :: ByteString
 
+opGrad "Conv2DBackpropInput" nodeDef [_, toT -> x, toT -> y] [dz] =
+    [ Nothing
+    , Just $ CoreOps.conv2DBackpropFilter'
+                ((opAttr "strides" .~ strides)
+                    . (opAttr "padding" .~ padding)
+                    . (opAttr "use_cudnn_on_gpu" .~ useCudnnOnGpu)
+                    . (opAttr "data_format" .~ dataFormat))
+                dz (shape x) y
+    , Just $ CoreOps.conv2D'
+                ((opAttr "strides" .~ strides)
+                    . (opAttr "padding" .~ padding)
+                    . (opAttr "use_cudnn_on_gpu" .~ useCudnnOnGpu)
+                    . (opAttr "data_format" .~ dataFormat))
+                dz x
+    ]
+  where
+    strides = lookupAttr nodeDef "strides" :: [Int64]
+    padding = lookupAttr nodeDef "padding" :: ByteString
+    useCudnnOnGpu = lookupAttr nodeDef "use_cudnn_on_gpu" :: Bool
+    dataFormat = lookupAttr nodeDef "data_format" :: ByteString
+
 opGrad "MaxPool" nodeDef [toT -> x] [dz] =
     [ Just $ CoreOps.maxPoolGrad'
                 ((opAttr "ksize" .~ ksize)
@@ -779,6 +800,7 @@ numOutputs o =
         "Const" -> 1
         "Concat" -> 1
         "Conv2D" -> 1
+        "Conv2DBackpropInput" -> 1
         "Div" -> 1
         "DynamicStitch" -> 1
         "DynamicPartition" ->
