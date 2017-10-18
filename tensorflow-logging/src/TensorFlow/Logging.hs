@@ -33,7 +33,9 @@
 -- >                 TF.logSummary eventWriter step summary
 -- >             else TF.run_ trainStep
 
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TypeOperators #-}
+
 
 module TensorFlow.Logging
     ( EventWriter
@@ -43,6 +45,7 @@ module TensorFlow.Logging
     , logSummary
     , SummaryTensor
     , histogramSummary
+    , imageSummary
     , scalarSummary
     , mergeAllSummaries
     ) where
@@ -59,6 +62,7 @@ import Data.Conduit ((=$=))
 import Data.Conduit.TQueue (sourceTBMQueue)
 import Data.Default (def)
 import Data.Int (Int64)
+import Data.Word (Word8, Word16)
 import Data.ProtoLens (encodeMessage)
 import Data.Time.Clock (getCurrentTime)
 import Data.Time.Clock.POSIX (utcTimeToPOSIXSeconds)
@@ -72,7 +76,7 @@ import TensorFlow.Build (MonadBuild, Build, asGraphDef)
 import TensorFlow.Ops (scalar)
 import TensorFlow.Records.Conduit (sinkTFRecords)
 import TensorFlow.Tensor (Tensor, render, SummaryTensor, addSummary, collectAllSummaries)
-import TensorFlow.Types (TensorType, type(/=))
+import TensorFlow.Types (TensorType, type(/=), OneOf)
 import Text.Printf (printf)
 import qualified Data.ByteString.Lazy as L
 import qualified Data.Conduit as Conduit
@@ -142,7 +146,6 @@ logSummary writer step' summaryProto = do
                          & summary .~ summaryProto
                     )
 
-
 -- Number of seconds since epoch.
 doubleWallTime :: IO Double
 doubleWallTime = asDouble <$> getCurrentTime
@@ -155,6 +158,16 @@ histogramSummary ::
      -- OneOf '[Int16, Int32, Int64, Int8, Word16, Word8, Double, Float] t)
     => ByteString -> Tensor v t -> m ()
 histogramSummary tag = addSummary . CoreOps.histogramSummary (scalar tag)
+
+-- | Adds a 'CoreOps.imageSummary' node. The tag argument is intentionally
+-- limited to a single value for simplicity.
+imageSummary ::
+    (OneOf '[Word8, Word16, Float] t, MonadBuild m)
+    => ByteString
+    -> Tensor v t
+    -> m ()
+
+imageSummary tag = addSummary . CoreOps.imageSummary (scalar tag)
 
 -- | Adds a 'CoreOps.scalarSummary' node.
 scalarSummary ::
