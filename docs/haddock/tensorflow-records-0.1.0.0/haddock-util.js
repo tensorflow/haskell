@@ -131,11 +131,11 @@ function perform_search(full)
     var text = document.getElementById("searchbox").value.toLowerCase();
     if (text == last_search && !full) return;
     last_search = text;
-    
+
     var table = document.getElementById("indexlist");
     var status = document.getElementById("searchmsg");
     var children = table.firstChild.childNodes;
-    
+
     // first figure out the first node with the prefix
     var first = bisect(-1);
     var last = (first == -1 ? -1 : bisect(1));
@@ -166,7 +166,7 @@ function perform_search(full)
         status.innerHTML = "";
     }
 
-    
+
     function setclass(first, last, status)
     {
         for (var i = first; i <= last; i++)
@@ -174,8 +174,8 @@ function perform_search(full)
             children[i].className = status;
         }
     }
-    
-    
+
+
     // do a binary search, treating 0 as ...
     // return either -1 (no 0's found) or location of most far match
     function bisect(dir)
@@ -201,9 +201,9 @@ function perform_search(full)
             if (checkitem(i) == 0) return i;
         }
         return -1;
-    }    
-    
-    
+    }
+
+
     // from an index, decide what the result is
     // 0 = match, -1 is lower, 1 is higher
     function checkitem(i)
@@ -212,8 +212,8 @@ function perform_search(full)
         if (s == text) return 0;
         else return (s > text ? -1 : 1);
     }
-    
-    
+
+
     // from an index, get its string
     // this abstracts over alternates
     function getitem(i)
@@ -229,7 +229,7 @@ function perform_search(full)
 }
 
 function setSynopsis(filename) {
-    if (parent.window.synopsis) {
+    if (parent.window.synopsis && parent.window.synopsis.location) {
         if (parent.window.synopsis.location.replace) {
             // In Firefox this avoids adding the change to the history.
             parent.window.synopsis.location.replace(filename);
@@ -245,33 +245,6 @@ function addMenuItem(html) {
     var btn = menu.firstChild.cloneNode(false);
     btn.innerHTML = html;
     menu.appendChild(btn);
-  }
-}
-
-function adjustForFrames() {
-  var bodyCls;
-  
-  if (parent.location.href == window.location.href) {
-    // not in frames, so add Frames button
-    addMenuItem("<a href='#' onclick='reframe();return true;'>Frames</a>");
-    bodyCls = "no-frame";
-  }
-  else {
-    bodyCls = "in-frame";
-  }
-  addClass(document.body, bodyCls);
-}
-
-function reframe() {
-  setCookie("haddock-reframe", document.URL);
-  window.location = "frames.html";
-}
-
-function postReframe() {
-  var s = getCookie("haddock-reframe");
-  if (s) {
-    parent.window.main.location = s;
-    clearCookie("haddock-reframe");
   }
 }
 
@@ -337,7 +310,6 @@ function styleMenu(show) {
 
 function pageLoad() {
   addStyleMenu();
-  adjustForFrames();
   resetStyle();
   restoreCollapsed();
 }

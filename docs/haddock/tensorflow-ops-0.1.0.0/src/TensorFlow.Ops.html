@@ -1,0 +1,409 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">-- Copyright 2016 TensorFlow authors.</span><span>
+</span><a name="line-2"></a><span class="hs-comment">--</span><span>
+</span><a name="line-3"></a><span class="hs-comment">-- Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span><span>
+</span><a name="line-4"></a><span class="hs-comment">-- you may not use this file except in compliance with the License.</span><span>
+</span><a name="line-5"></a><span class="hs-comment">-- You may obtain a copy of the License at</span><span>
+</span><a name="line-6"></a><span class="hs-comment">--</span><span>
+</span><a name="line-7"></a><span class="hs-comment">--     http://www.apache.org/licenses/LICENSE-2.0</span><span>
+</span><a name="line-8"></a><span class="hs-comment">--</span><span>
+</span><a name="line-9"></a><span class="hs-comment">-- Unless required by applicable law or agreed to in writing, software</span><span>
+</span><a name="line-10"></a><span class="hs-comment">-- distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span><span>
+</span><a name="line-11"></a><span class="hs-comment">-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span><span>
+</span><a name="line-12"></a><span class="hs-comment">-- See the License for the specific language governing permissions and</span><span>
+</span><a name="line-13"></a><span class="hs-comment">-- limitations under the License.</span><span>
+</span><a name="line-14"></a><span>
+</span><a name="line-15"></a><span class="hs-comment">-- | This module contains definitions for some built-in TensorFlow operations.</span><span>
+</span><a name="line-16"></a><span class="hs-comment">--</span><span>
+</span><a name="line-17"></a><span class="hs-comment">-- Note that certain, &quot;stateful&quot; ops like 'variable' and 'assign' return a</span><span>
+</span><a name="line-18"></a><span class="hs-comment">-- 'Build' action (e.g., @Build (Tensor Ref a)@ instead of a pure value; the</span><span>
+</span><a name="line-19"></a><span class="hs-comment">-- returned 'Tensor's are always rendered in the current 'Build' context.  This</span><span>
+</span><a name="line-20"></a><span class="hs-comment">-- approach helps us avoid problems with inlining or common subexpression</span><span>
+</span><a name="line-21"></a><span class="hs-comment">-- elimination, by writing</span><span>
+</span><a name="line-22"></a><span class="hs-comment">--</span><span>
+</span><a name="line-23"></a><span class="hs-comment">-- &gt; do</span><span>
+</span><a name="line-24"></a><span class="hs-comment">-- &gt;     v &lt;- variable []</span><span>
+</span><a name="line-25"></a><span class="hs-comment">-- &gt;     w &lt;- assign v 3</span><span>
+</span><a name="line-26"></a><span class="hs-comment">-- &gt;     render $ w * w</span><span>
+</span><a name="line-27"></a><span class="hs-comment">--</span><span>
+</span><a name="line-28"></a><span class="hs-comment">-- instead of</span><span>
+</span><a name="line-29"></a><span class="hs-comment">--</span><span>
+</span><a name="line-30"></a><span class="hs-comment">-- &gt; let</span><span>
+</span><a name="line-31"></a><span class="hs-comment">-- &gt;    v = variable []</span><span>
+</span><a name="line-32"></a><span class="hs-comment">-- &gt;    w = assign v 3</span><span>
+</span><a name="line-33"></a><span class="hs-comment">-- &gt; in w * w</span><span>
+</span><a name="line-34"></a><span class="hs-comment">--</span><span>
+</span><a name="line-35"></a><span class="hs-comment">-- since the latter could be reasonably transformed by the compiler into (or</span><span>
+</span><a name="line-36"></a><span class="hs-comment">-- vice versa)</span><span>
+</span><a name="line-37"></a><span class="hs-comment">--</span><span>
+</span><a name="line-38"></a><span class="hs-comment">-- &gt; let</span><span>
+</span><a name="line-39"></a><span class="hs-comment">-- &gt;    v = variable []</span><span>
+</span><a name="line-40"></a><span class="hs-comment">-- &gt;    w = assign v 3</span><span>
+</span><a name="line-41"></a><span class="hs-comment">-- &gt;    w' = assign v 3</span><span>
+</span><a name="line-42"></a><span class="hs-comment">-- &gt; in w * w'</span><span>
+</span><a name="line-43"></a><span class="hs-comment">--</span><span>
+</span><a name="line-44"></a><span class="hs-comment">-- Ops should return a 'Build' action if their original 'OpDef' marks them as</span><span>
+</span><a name="line-45"></a><span class="hs-comment">-- stateful, or if they take any Refs as input.  (This mirrors the rules that</span><span>
+</span><a name="line-46"></a><span class="hs-comment">-- TensorFlow uses to avoid common subexpression elimination.)</span><span>
+</span><a name="line-47"></a><span class="hs-pragma">{-# LANGUAGE ConstraintKinds #-}</span><span>
+</span><a name="line-48"></a><span class="hs-pragma">{-# LANGUAGE DataKinds #-}</span><span>
+</span><a name="line-49"></a><span class="hs-pragma">{-# LANGUAGE FlexibleContexts #-}</span><span>
+</span><a name="line-50"></a><span class="hs-pragma">{-# LANGUAGE FlexibleInstances #-}</span><span>
+</span><a name="line-51"></a><span class="hs-pragma">{-# LANGUAGE OverloadedLists #-}</span><span>
+</span><a name="line-52"></a><span class="hs-pragma">{-# LANGUAGE OverloadedStrings #-}</span><span>
+</span><a name="line-53"></a><span class="hs-pragma">{-# LANGUAGE RankNTypes #-}</span><span>
+</span><a name="line-54"></a><span class="hs-pragma">{-# LANGUAGE ScopedTypeVariables #-}</span><span>
+</span><a name="line-55"></a><span class="hs-pragma">{-# LANGUAGE TypeFamilies #-}</span><span>
+</span><a name="line-56"></a><span class="hs-pragma">{-# LANGUAGE UndecidableInstances #-}</span><span>
+</span><a name="line-57"></a><span class="hs-pragma">{-# OPTIONS_GHC -fno-warn-orphans #-}</span><span>
+</span><a name="line-58"></a><span>
+</span><a name="line-59"></a><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">TensorFlow</span><span class="hs-operator">.</span><span class="hs-identifier">Ops</span><span>
+</span><a name="line-60"></a><span>    </span><span class="hs-special">(</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">add</span><span>
+</span><a name="line-61"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">add'</span><span>
+</span><a name="line-62"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">abs</span><span>
+</span><a name="line-63"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">abs'</span><span>
+</span><a name="line-64"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">addN</span><span>
+</span><a name="line-65"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">addN'</span><span>
+</span><a name="line-66"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">argMax</span><span>
+</span><a name="line-67"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">argMax'</span><span>
+</span><a name="line-68"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">assign</span><span>
+</span><a name="line-69"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">assign'</span><span>
+</span><a name="line-70"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">broadcastGradientArgs</span><span>
+</span><a name="line-71"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">broadcastGradientArgs'</span><span>
+</span><a name="line-72"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">cast</span><span>
+</span><a name="line-73"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">cast'</span><span>
+</span><a name="line-74"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">concat</span><span>
+</span><a name="line-75"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">concat'</span><span>
+</span><a name="line-76"></a><span>    </span><span class="hs-special">,</span><span> </span><a href="TensorFlow.Ops.html#constant"><span class="hs-identifier hs-var">constant</span></a><span>
+</span><a name="line-77"></a><span>    </span><span class="hs-special">,</span><span> </span><a href="TensorFlow.Ops.html#constant%27"><span class="hs-identifier hs-var">constant'</span></a><span>
+</span><a name="line-78"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">equal</span><span>
+</span><a name="line-79"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">equal'</span><span>
+</span><a name="line-80"></a><span>    </span><span class="hs-special">,</span><span> </span><a href="TensorFlow.Ops.html#expandDims"><span class="hs-identifier hs-var">expandDims</span></a><span>
+</span><a name="line-81"></a><span>    </span><span class="hs-special">,</span><span> </span><a href="TensorFlow.Ops.html#expandDims%27"><span class="hs-identifier hs-var">expandDims'</span></a><span>
+</span><a name="line-82"></a><span>    </span><span class="hs-special">,</span><span> </span><a href="TensorFlow.Ops.html#initializedVariable"><span class="hs-identifier hs-var">initializedVariable</span></a><span>
+</span><a name="line-83"></a><span>    </span><span class="hs-special">,</span><span> </span><a href="TensorFlow.Ops.html#initializedVariable%27"><span class="hs-identifier hs-var">initializedVariable'</span></a><span>
+</span><a name="line-84"></a><span>    </span><span class="hs-special">,</span><span> </span><a href="TensorFlow.Ops.html#zeroInitializedVariable"><span class="hs-identifier hs-var">zeroInitializedVariable</span></a><span>
+</span><a name="line-85"></a><span>    </span><span class="hs-special">,</span><span> </span><a href="TensorFlow.Ops.html#zeroInitializedVariable%27"><span class="hs-identifier hs-var">zeroInitializedVariable'</span></a><span>
+</span><a name="line-86"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">fill</span><span>
+</span><a name="line-87"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">fill'</span><span>
+</span><a name="line-88"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">identity</span><span>
+</span><a name="line-89"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">identity'</span><span>
+</span><a name="line-90"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">matMul</span><span>
+</span><a name="line-91"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">matMul'</span><span>
+</span><a name="line-92"></a><span>    </span><span class="hs-special">,</span><span> </span><a href="TensorFlow.Ops.html#matTranspose"><span class="hs-identifier hs-var">matTranspose</span></a><span>
+</span><a name="line-93"></a><span>    </span><span class="hs-special">,</span><span> </span><a href="TensorFlow.Ops.html#matTranspose%27"><span class="hs-identifier hs-var">matTranspose'</span></a><span>
+</span><a name="line-94"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">mean</span><span>
+</span><a name="line-95"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">mean'</span><span>
+</span><a name="line-96"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">mul</span><span>
+</span><a name="line-97"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">mul'</span><span>
+</span><a name="line-98"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">neg</span><span>
+</span><a name="line-99"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">neg'</span><span>
+</span><a name="line-100"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">oneHot</span><span>
+</span><a name="line-101"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">oneHot'</span><span>
+</span><a name="line-102"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">pack</span><span>
+</span><a name="line-103"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">pack'</span><span>
+</span><a name="line-104"></a><span>    </span><span class="hs-special">,</span><span> </span><a href="TensorFlow.Ops.html#placeholder"><span class="hs-identifier hs-var">placeholder</span></a><span>
+</span><a name="line-105"></a><span>    </span><span class="hs-special">,</span><span> </span><a href="TensorFlow.Ops.html#placeholder%27"><span class="hs-identifier hs-var">placeholder'</span></a><span>
+</span><a name="line-106"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">range</span><span>
+</span><a name="line-107"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">range'</span><span>
+</span><a name="line-108"></a><span>    </span><span class="hs-special">,</span><span> </span><a href="TensorFlow.Ops.html#reducedShape"><span class="hs-identifier hs-var">reducedShape</span></a><span>
+</span><a name="line-109"></a><span>    </span><span class="hs-special">,</span><span> </span><a href="TensorFlow.Ops.html#reduceMean"><span class="hs-identifier hs-var">reduceMean</span></a><span>
+</span><a name="line-110"></a><span>    </span><span class="hs-special">,</span><span> </span><a href="TensorFlow.Ops.html#reduceMean%27"><span class="hs-identifier hs-var">reduceMean'</span></a><span>
+</span><a name="line-111"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">relu</span><span>
+</span><a name="line-112"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">relu'</span><span>
+</span><a name="line-113"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">reluGrad</span><span>
+</span><a name="line-114"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">reluGrad'</span><span>
+</span><a name="line-115"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">reshape</span><span>
+</span><a name="line-116"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">reshape'</span><span>
+</span><a name="line-117"></a><span>    </span><span class="hs-special">,</span><span> </span><a href="TensorFlow.Ops.html#restore"><span class="hs-identifier hs-var">restore</span></a><span>
+</span><a name="line-118"></a><span>    </span><span class="hs-special">,</span><span> </span><a href="TensorFlow.Ops.html#restoreFromName"><span class="hs-identifier hs-var">restoreFromName</span></a><span>
+</span><a name="line-119"></a><span>    </span><span class="hs-special">,</span><span> </span><a href="TensorFlow.Ops.html#save"><span class="hs-identifier hs-var">save</span></a><span>
+</span><a name="line-120"></a><span>    </span><span class="hs-special">,</span><span> </span><a href="TensorFlow.Ops.html#scalar"><span class="hs-identifier hs-var">scalar</span></a><span>
+</span><a name="line-121"></a><span>    </span><span class="hs-special">,</span><span> </span><a href="TensorFlow.Ops.html#scalar%27"><span class="hs-identifier hs-var">scalar'</span></a><span>
+</span><a name="line-122"></a><span>    </span><span class="hs-special">,</span><span> </span><a href="TensorFlow.Ops.html#shape"><span class="hs-identifier hs-var">shape</span></a><span>
+</span><a name="line-123"></a><span>    </span><span class="hs-special">,</span><span> </span><a href="TensorFlow.Ops.html#shape%27"><span class="hs-identifier hs-var">shape'</span></a><span>
+</span><a name="line-124"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">sign</span><span>
+</span><a name="line-125"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">sign'</span><span>
+</span><a name="line-126"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">size</span><span>
+</span><a name="line-127"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">size'</span><span>
+</span><a name="line-128"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">softmax</span><span>
+</span><a name="line-129"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">softmax'</span><span>
+</span><a name="line-130"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">softmaxCrossEntropyWithLogits</span><span>
+</span><a name="line-131"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">softmaxCrossEntropyWithLogits'</span><span>
+</span><a name="line-132"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">sparseToDense</span><span>
+</span><a name="line-133"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">sparseToDense'</span><span>
+</span><a name="line-134"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">sub</span><span>
+</span><a name="line-135"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">sub'</span><span>
+</span><a name="line-136"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">sum</span><span>
+</span><a name="line-137"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">sum'</span><span>
+</span><a name="line-138"></a><span>    </span><span class="hs-special">,</span><span> </span><a href="TensorFlow.Ops.html#reduceSum"><span class="hs-identifier hs-var">reduceSum</span></a><span>
+</span><a name="line-139"></a><span>    </span><span class="hs-special">,</span><span> </span><a href="TensorFlow.Ops.html#reduceSum%27"><span class="hs-identifier hs-var">reduceSum'</span></a><span>
+</span><a name="line-140"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">transpose</span><span>
+</span><a name="line-141"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">transpose'</span><span>
+</span><a name="line-142"></a><span>    </span><span class="hs-special">,</span><span> </span><a href="TensorFlow.Ops.html#truncatedNormal"><span class="hs-identifier hs-var">truncatedNormal</span></a><span>
+</span><a name="line-143"></a><span>    </span><span class="hs-special">,</span><span> </span><a href="TensorFlow.Ops.html#truncatedNormal%27"><span class="hs-identifier hs-var">truncatedNormal'</span></a><span>
+</span><a name="line-144"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">variable</span><span>
+</span><a name="line-145"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">variable'</span><span>
+</span><a name="line-146"></a><span>    </span><span class="hs-special">,</span><span> </span><a href="TensorFlow.Ops.html#vector"><span class="hs-identifier hs-var">vector</span></a><span>
+</span><a name="line-147"></a><span>    </span><span class="hs-special">,</span><span> </span><a href="TensorFlow.Ops.html#vector%27"><span class="hs-identifier hs-var">vector'</span></a><span>
+</span><a name="line-148"></a><span>    </span><span class="hs-special">,</span><span> </span><a href="TensorFlow.Ops.html#zeros"><span class="hs-identifier hs-var">zeros</span></a><span>
+</span><a name="line-149"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">zerosLike</span><span>
+</span><a name="line-150"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">CoreOps</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">zerosLike'</span><span>
+</span><a name="line-151"></a><span>    </span><span class="hs-special">,</span><span> </span><a href="TensorFlow.Ops.html#scalarize"><span class="hs-identifier hs-var">scalarize</span></a><span>
+</span><a name="line-152"></a><span>    </span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><a name="line-153"></a><span>
+</span><a name="line-154"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Data</span><span class="hs-operator">.</span><span class="hs-identifier">ByteString</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-type">ByteString</span><span class="hs-special">)</span><span>
+</span><a name="line-155"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Data</span><span class="hs-operator">.</span><span class="hs-identifier">Complex</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-type">Complex</span><span class="hs-special">)</span><span>
+</span><a name="line-156"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Data</span><span class="hs-operator">.</span><span class="hs-identifier">Int</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-type">Int32</span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-type">Int64</span><span class="hs-special">)</span><span>
+</span><a name="line-157"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Data</span><span class="hs-operator">.</span><span class="hs-identifier">Word</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-type">Word16</span><span class="hs-special">)</span><span>
+</span><a name="line-158"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Prelude</span><span> </span><span class="hs-keyword">hiding</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-var">abs</span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">sum</span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">concat</span><span class="hs-special">)</span><span>
+</span><a name="line-159"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Data</span><span class="hs-operator">.</span><span class="hs-identifier">ProtoLens</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-var">def</span><span class="hs-special">)</span><span>
+</span><a name="line-160"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Data</span><span class="hs-operator">.</span><span class="hs-identifier">Text</span><span class="hs-operator">.</span><span class="hs-identifier">Encoding</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-var">encodeUtf8</span><span class="hs-special">)</span><span>
+</span><a name="line-161"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Lens</span><span class="hs-operator">.</span><span class="hs-identifier">Family2</span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="hs-operator hs-var">.~</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="hs-operator hs-var">&amp;</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a name="line-162"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Text</span><span class="hs-operator">.</span><span class="hs-identifier">Printf</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-var">printf</span><span class="hs-special">)</span><span>
+</span><a name="line-163"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Proto</span><span class="hs-operator">.</span><span class="hs-identifier">Tensorflow</span><span class="hs-operator">.</span><span class="hs-identifier">Core</span><span class="hs-operator">.</span><span class="hs-identifier">Framework</span><span class="hs-operator">.</span><span class="hs-identifier">Tensor</span><span>
+</span><a name="line-164"></a><span>    </span><span class="hs-special">(</span><span> </span><span class="hs-identifier hs-type">TensorProto</span><span>
+</span><a name="line-165"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">dtype</span><span>
+</span><a name="line-166"></a><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">tensorShape</span><span>
+</span><a name="line-167"></a><span>    </span><span class="hs-special">)</span><span>
+</span><a name="line-168"></a><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-identifier">Proto</span><span class="hs-operator">.</span><span class="hs-identifier">Tensorflow</span><span class="hs-operator">.</span><span class="hs-identifier">Core</span><span class="hs-operator">.</span><span class="hs-identifier">Framework</span><span class="hs-operator">.</span><span class="hs-identifier">TensorShape</span><span>
+</span><a name="line-169"></a><span>  </span><span class="hs-keyword">as</span><span> </span><span class="hs-identifier">TensorShape</span><span>
+</span><a name="line-170"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">TensorFlow</span><span class="hs-operator">.</span><span class="hs-identifier">Build</span><span>
+</span><a name="line-171"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">TensorFlow</span><span class="hs-operator">.</span><span class="hs-identifier">BuildOp</span><span>
+</span><a name="line-172"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">TensorFlow</span><span class="hs-operator">.</span><span class="hs-identifier">ControlFlow</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-var">group</span><span class="hs-special">)</span><span>
+</span><a name="line-173"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">TensorFlow</span><span class="hs-operator">.</span><span class="hs-identifier">Tensor</span><span>
+</span><a name="line-174"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">TensorFlow</span><span class="hs-operator">.</span><span class="hs-identifier">Types</span><span>
+</span><a name="line-175"></a><span>
+</span><a name="line-176"></a><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-identifier">TensorFlow</span><span class="hs-operator">.</span><span class="hs-identifier">GenOps</span><span class="hs-operator">.</span><span class="hs-identifier">Core</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="hs-identifier">CoreOps</span><span>
+</span><a name="line-177"></a><span>
+</span><a name="line-178"></a><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-identifier">Prelude</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-var">abs</span><span class="hs-special">)</span><span>
+</span><a name="line-179"></a><span>
+</span><a name="line-180"></a><span class="hs-comment">-- TODO: Look into hs-boot refactoring to allow mutually recursive imports.</span><span>
+</span><a name="line-181"></a><span class="hs-comment">-- | Must be defined as an orphan because of the dependency order between Ops</span><span>
+</span><a name="line-182"></a><span class="hs-comment">-- and Tensor.</span><span>
+</span><a name="line-183"></a><span class="hs-comment">--</span><span>
+</span><a name="line-184"></a><span class="hs-comment">-- The indirect constraint &quot;v ~ Value&quot; helps disambiguate types, for example in</span><span>
+</span><a name="line-185"></a><span class="hs-comment">-- &quot;neg 1 :: Tensor Value Float&quot;, it helps find the type of the subexpression</span><span>
+</span><a name="line-186"></a><span class="hs-comment">-- &quot;1&quot;.</span><span>
+</span><a name="line-187"></a><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span> </span><span class="hs-identifier hs-type">TensorType</span><span> </span><a href="#local-6989586621679054296"><span class="hs-identifier hs-type">a</span></a><span>
+</span><a name="line-188"></a><span>         </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-type">Num</span><span> </span><a href="#local-6989586621679054296"><span class="hs-identifier hs-type">a</span></a><span>
+</span><a name="line-189"></a><span>         </span><span class="hs-special">,</span><span> </span><a href="#local-6989586621679054297"><span class="hs-identifier hs-type">v</span></a><span> </span><span class="hs-glyph">~</span><span> </span><span class="hs-identifier hs-type">Build</span><span>
+</span><a name="line-190"></a><span>         </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-type">OneOf</span><span> </span><span class="hs-char">'[ Double, Float, Int32, Int64
+                  , Complex Float, Complex Double] a) =&gt; Num (Tensor v a) where
+    (+) = CoreOps.add
+    (*) = CoreOps.mul
+    (-) = CoreOps.sub
+    abs = CoreOps.abs
+    fromInteger = scalar . fromInteger
+    signum = CoreOps.sign
+    negate = CoreOps.neg
+
+matTranspose :: TensorType a =&gt; Tensor e a -&gt; Tensor Build a
+matTranspose = matTranspose' id
+
+matTranspose' :: TensorType a =&gt; OpParams -&gt; Tensor v a -&gt; Tensor Build a
+matTranspose' params = flip (CoreOps.transpose' params) (vector [1, 0 :: Int32])
+
+placeholder :: (MonadBuild m, TensorType a) =&gt; Shape -&gt; m (Tensor Value a)
+placeholder = placeholder' id
+
+placeholder' :: forall m a . (MonadBuild m, TensorType a)
+             =&gt; OpParams -&gt; Shape -&gt; m (Tensor Value a)
+placeholder' params pShape
+    -- Note: we don't use CoreOps.placeholder' since that op isn't stateful,
+    -- and thus would be CSE'd.
+    = build $ buildOp [] $ opDef &quot;Placeholder&quot;
+                &amp; opAttr &quot;dtype&quot; .~ tensorType (undefined :: a)
+                &amp; opAttr &quot;shape&quot; .~ pShape
+                &amp; params
+
+-- | Creates a variable initialized to the given value.
+-- Initialization happens next time session runs.
+initializedVariable :: (MonadBuild m, TensorType a)
+                    =&gt; Tensor v a -&gt; m (Tensor Ref a)
+initializedVariable = initializedVariable' id
+
+initializedVariable' :: (MonadBuild m, TensorType a)
+                    =&gt; OpParams -&gt; Tensor v a -&gt; m (Tensor Ref a)
+initializedVariable' params initializer = do
+    v &lt;- CoreOps.variable' params []  -- The shape is not known initially.
+    i &lt;- CoreOps.assign' (opAttr &quot;validate_shape&quot; .~ False) v
+                            initializer
+    addInitializer =&lt;&lt; group i
+    return v
+
+-- | Creates a zero-initialized variable with the given shape.
+zeroInitializedVariable
+  :: (MonadBuild m, TensorType a, Num a) =&gt;
+     TensorFlow.Types.Shape -&gt; m (Tensor TensorFlow.Tensor.Ref a)
+zeroInitializedVariable = zeroInitializedVariable' id
+
+zeroInitializedVariable'
+  :: (MonadBuild m, TensorType a, Num a) =&gt;
+     OpParams -&gt; TensorFlow.Types.Shape -&gt; m (Tensor TensorFlow.Tensor.Ref a)
+zeroInitializedVariable' params = initializedVariable' params . zeros
+
+-- TODO: Support heterogeneous list of tensors.
+save :: forall a m v . (Rendered (Tensor v), MonadBuild m, TensorType a)
+        =&gt; ByteString    -- ^ File path.
+        -&gt; [Tensor v a]  -- ^ Tensors to save.
+        -&gt; m ControlNode
+save path xs = build $ do
+    let toByteStringTensor = scalar . encodeUtf8 . encodeOutput . renderedOutput
+    let names = fmap toByteStringTensor xs
+    let types = replicate (length xs) (tensorType (undefined :: a))
+    names' &lt;- buildInputs $ CoreOps.pack names
+    xs' &lt;- buildInputs xs
+    path' &lt;- buildInputs $ scalar path
+    buildOp [] $ opDef &quot;Save&quot;
+                    &amp; opAttr &quot;T&quot; .~ types
+                    &amp; opInputs .~ (path' ++ names' ++ xs')
+
+-- | Restore a tensor's value from a checkpoint file.
+--
+-- This version allows restoring from a checkpoint file that uses a different
+-- tensor name than the variable.
+restoreFromName :: forall a m . (MonadBuild m, TensorType a)
+                =&gt; ByteString    -- ^ File path.
+                -&gt; ByteString    -- ^ Tensor name override.
+                -&gt; Tensor Ref a  -- ^ Tensor to restore.
+                -&gt; m ControlNode
+restoreFromName path name x = build $ do
+    path' &lt;- buildInputs $ scalar path
+    name' &lt;- buildInputs $ scalar name
+    restoreOp &lt;- buildOp [] $ opDef &quot;Restore&quot;
+                               &amp; opAttr &quot;dt&quot; .~ tensorType (undefined :: a)
+                               &amp; opInputs .~ (path' ++ name')
+    group =&lt;&lt; CoreOps.assign x (restoreOp :: Tensor Value a)
+
+-- | Restore a tensor's value from a checkpoint file.
+restore :: forall a m . (MonadBuild m, TensorType a)
+        =&gt; ByteString    -- ^ File path.
+        -&gt; Tensor Ref a  -- ^ Tensor to restore.
+        -&gt; m ControlNode
+restore path x = restoreFromName path name x
+  where
+    name = encodeUtf8 $ encodeOutput $ renderedOutput x
+
+-- | Create a constant tensor.
+--
+-- The values should be in row major order, e.g.,
+--
+--   element 0:   index (0, ..., 0)
+--   element 1:   index (0, ..., 1)
+--   ...
+constant :: TensorType a =&gt; Shape -&gt; [a] -&gt; Tensor Build a
+constant = constant' id
+
+constant' :: forall a . TensorType a =&gt; OpParams -&gt; Shape -&gt; [a] -&gt; Tensor Build a
+constant' params (Shape cShape) values
+    | invalidLength = error invalidLengthMsg
+    | otherwise = CoreOps.const' (params . (opAttr &quot;value&quot; .~ typedNode))
+  where
+    invalidLength = product cShape /= fromIntegral (length values)
+    invalidLengthMsg = printf &quot;invalid tensor length: expected %d got %d&quot;
+                              (product cShape)
+                              (length values)
+    typedNode :: TensorProto
+    typedNode = def
+                &amp; dtype .~ tensorType (undefined :: a)
+                &amp; tensorShape.TensorShape.dim .~
+                      [def &amp; TensorShape.size .~ x | x &lt;- cShape]
+                &amp; tensorVal .~ values
+
+-- | Reshape a N-D tensor down to a scalar.
+--
+-- See `TensorFlow.GenOps.Core.reshape`.
+scalarize :: TensorType a =&gt; Tensor v a -&gt; Tensor Build a
+scalarize t = CoreOps.reshape t (vector scalarShape)
+    where
+        scalarShape = [] :: [Int32]
+
+-- | Sum a tensor down to a scalar
+-- Seee `TensorFlow.GenOps.Core.sum`
+reduceSum :: (OneOf '[ Double, Float, Int32, Int64
+                     , Complex Float, Complex Double] a) =&gt;
+             Tensor v a -&gt; Tensor Build a
+reduceSum x = CoreOps.sum x allAxes
+  where allAxes = CoreOps.range 0 (CoreOps.rank x :: Tensor Build Int32) 1
+
+reduceSum' :: (OneOf '[ Double, Float, Int32, Int64
+                      , Complex Float, Complex Double] a) =&gt;
+              OpParams -&gt; Tensor v a -&gt; Tensor Build a
+reduceSum' params x = CoreOps.sum' params x allAxes
+  where allAxes = CoreOps.range 0 (CoreOps.rank x :: Tensor Build Int32) 1
+
+-- | Computes the mean of elements across dimensions of a tensor.
+-- See `TensorFlow.GenOps.Core.mean`
+reduceMean
+  :: ( TensorType a
+     , OneOf '[ Double, Float, Complex Float, Complex Double] a
+     )
+  =&gt; Tensor v a -&gt; Tensor Build a
+reduceMean = reduceMean' id
+
+reduceMean'
+  :: ( TensorType a
+     , OneOf '[ Double, Float, Complex Float, Complex Double] a
+     )
+  =&gt; OpParams -&gt; Tensor v a -&gt; Tensor Build a
+reduceMean' params x = CoreOps.mean' params x allAxes
+  where allAxes = CoreOps.range 0 (CoreOps.rank x :: Tensor Build Int32) 1
+
+-- | Create a constant vector.
+vector :: TensorType a =&gt; [a] -&gt; Tensor Build a
+vector = vector' id
+
+vector' :: TensorType a =&gt; OpParams -&gt; [a] -&gt; Tensor Build a
+vector' params xs = constant' params [fromIntegral $ length xs] xs
+
+-- | Create a constant scalar.
+scalar :: TensorType a =&gt; a -&gt; Tensor Build a
+scalar = scalar' id
+
+scalar' :: TensorType a =&gt; OpParams -&gt; a -&gt; Tensor Build a
+scalar' params x = constant' params [] [x]
+
+-- | Random tensor from the unit normal distribution with bounded values.
+--
+-- This is a type-restricted version of 'TensorFlow.GenOps.Core.truncatedNormal'.
+truncatedNormal :: (MonadBuild m, OneOf '[Word16, Double, Float] a)
+                =&gt; Tensor v Int64  -- ^ Shape.
+                -&gt; m (Tensor Value a)
+truncatedNormal = CoreOps.truncatedNormal
+
+truncatedNormal' :: (MonadBuild m, OneOf '[Word16, Double, Float] a)
+                =&gt; OpParams -&gt; Tensor v Int64  -- ^ Shape.
+                -&gt; m (Tensor Value a)
+truncatedNormal' = CoreOps.truncatedNormal'
+
+zeros :: forall a . (Num a, TensorType a) =&gt; Shape -&gt; Tensor Build a
+zeros (Shape s) = CoreOps.fill (vector $ map fromIntegral s) (scalar 0)
+
+shape :: TensorType t =&gt; Tensor v t -&gt; Tensor Build Int32
+shape = CoreOps.shape
+
+shape' :: TensorType t =&gt; OpParams -&gt; Tensor v t -&gt; Tensor Build Int32
+shape' = CoreOps.shape'
+
+expandDims :: TensorType t =&gt; Tensor v1 t -&gt; Tensor v2 Int32 -&gt; Tensor Build t
+expandDims = CoreOps.expandDims
+
+expandDims' :: TensorType t =&gt; OpParams -&gt; Tensor v1 t -&gt; Tensor v2 Int32 -&gt; Tensor Build t
+expandDims' = CoreOps.expandDims'
+
+-- | Helper function for reduction ops (translation of math_ops.reduced_shape).
+reducedShape :: (OneOf '[ Int32, Int64 ] t1, OneOf '[ Int32, Int64 ] t2) =&gt;
+                Tensor v1 t1 -&gt; Tensor v2 t2 -&gt; Tensor Build Int32
+reducedShape inputShape axes =
+    let inputShape32 = toInt32 inputShape         -- [2, 3, 5, 7]
+        axes32 = toInt32 axes                     -- [1, 2]
+        toInt32 x = CoreOps.cast x :: Tensor Build Int32
+        inputRank = CoreOps.size inputShape32     -- 4
+        axesMod = (axes32 + inputRank) `CoreOps.mod` inputRank
+        axesShape = shape axesMod                 -- [2]
+    in CoreOps.dynamicStitch                      -- [2, 1, 1, 7]
+         [CoreOps.range 0 inputRank 1,            -- [0, 1, 2, 3]
+           axesMod]                               -- [1, 2]
+         [inputShape32,                           -- [2, 3, 5, 7]
+           CoreOps.fill axesShape 1]              -- [1, 1]
+</span></pre></body></html>
