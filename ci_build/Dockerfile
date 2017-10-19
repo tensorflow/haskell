@@ -28,8 +28,8 @@ RUN \
     curl -O -L https://github.com/google/protobuf/releases/download/v3.2.0/protoc-3.2.0-linux-x86_64.zip && \
     unzip -d /usr/local protoc-3.2.0-linux-x86_64.zip bin/protoc && \
     chmod 755 /usr/local/bin/protoc && \
-    curl -O https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-cpu-linux-x86_64-1.0.0.tar.gz && \
-    tar zxf libtensorflow-cpu-linux-x86_64-1.0.0.tar.gz -C /usr/local && \
+    curl -O https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-cpu-linux-x86_64-1.3.0.tar.gz && \
+    tar zxf libtensorflow-cpu-linux-x86_64-1.3.0.tar.gz -C /usr/local && \
     ldconfig && \
     stack setup && \
     stack test --only-dependencies

@@ -42,15 +42,17 @@ library
                      , Proto.Tensorflow.Core.Framework.Variable
                      , Proto.Tensorflow.Core.Framework.Versions
                      , Proto.Tensorflow.Core.Lib.Core.ErrorCodes
+                     , Proto.Tensorflow.Core.Protobuf.Cluster
                      , Proto.Tensorflow.Core.Protobuf.Config
                      , Proto.Tensorflow.Core.Protobuf.ControlFlow
                      , Proto.Tensorflow.Core.Protobuf.Debug
                      , Proto.Tensorflow.Core.Protobuf.MetaGraph
                      , Proto.Tensorflow.Core.Protobuf.NamedTensor
                      , Proto.Tensorflow.Core.Protobuf.QueueRunner
-                     , Proto.Tensorflow.Core.Protobuf.TensorBundle
+                     , Proto.Tensorflow.Core.Protobuf.RewriterConfig
                      , Proto.Tensorflow.Core.Protobuf.SavedModel
                      , Proto.Tensorflow.Core.Protobuf.Saver
+                     , Proto.Tensorflow.Core.Protobuf.TensorBundle
                      , Proto.Tensorflow.Core.Protobuf.TensorflowServer
                      , Proto.Tensorflow.Core.Util.Event
                      , Proto.Tensorflow.Core.Util.MemmappedFileSystem

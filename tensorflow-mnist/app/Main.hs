@@ -14,6 +14,7 @@
 
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedLists #-}
+{-# LANGUAGE TypeApplications #-}
 
 import Control.Monad (forM_, when)
 import Control.Monad.IO.Class (liftIO)
@@ -75,7 +76,7 @@ createModel = do
     logitBiases <- TF.zeroInitializedVariable [numLabels]
     let logits = (hidden `TF.matMul` TF.readValue logitWeights)
                  `TF.add` TF.readValue logitBiases
-    predict <- TF.render $ TF.cast $
+    predict <- TF.render @TF.Build @LabelType $
                TF.argMax (TF.softmax logits) (TF.scalar (1 :: LabelType))
 
     -- Create training action.

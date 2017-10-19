@@ -1,6 +1,7 @@
 # ChangeLog
 
 ## Upcoming (v0.2.0.0)
+- Support to tensorflow 1.3.
 - Expand the `Rendered` class and add a `ToTensor` class to let more functions
   (gradients, feed, colocateWith) support `ResourceHandle` wrappers like
   `Variables`.
