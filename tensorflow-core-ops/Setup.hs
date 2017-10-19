@@ -90,7 +90,14 @@ fudgePackageDesc lbi p = p
 
 blackList =
     [ -- Requires the "func" type:
-      "SymbolicGradient"
+      "FilterDataset"
+    , "FlatMapDataset"
+    , "GroupByWindowDataset"
+    , "InterleaveDataset"
+    , "MapDataset"
+    , "OneShotIterator"
+    , "ParallelMapDataset"
+    , "SymbolicGradient"
     ]
 
 autogenModulesDir :: LocalBuildInfo -> FilePath

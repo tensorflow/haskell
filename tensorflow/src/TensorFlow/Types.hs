@@ -97,7 +97,7 @@ import Proto.Tensorflow.Core.Framework.AttrValue
     , tensor
     )
 import Proto.Tensorflow.Core.Framework.ResourceHandle
-    (ResourceHandle)
+    (ResourceHandleProto)
 import Proto.Tensorflow.Core.Framework.Tensor as Tensor
     ( TensorProto(..)
     , boolVal
@@ -118,6 +118,8 @@ import Proto.Tensorflow.Core.Framework.Types (DataType(..))
 
 import TensorFlow.Internal.VarInt (getVarInt, putVarInt)
 import qualified TensorFlow.Internal.FFI as FFI
+
+type ResourceHandle = ResourceHandleProto
 
 -- | The class of scalar types supported by tensorflow.
 class TensorType a where

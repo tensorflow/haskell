@@ -13,8 +13,8 @@ let
     name = "tensorflow-c";
 
     src = fetchurl {
-      url = "https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-cpu-linux-x86_64-1.0.0.tar.gz";
-      sha256 = "1kmss9wdri5ibd19b4ymh2dvajw5cy34bxzxlaa5i60hiwpppljy";
+      url = "https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-cpu-linux-x86_64-1.3.0.tar.gz";
+      sha256 = "1d4bda5316063b70cf50a668d774b2067ef2a8ab163ff2eb29592bf3c24e2183";
     };
 
     buildCommand = ''
@@ -63,4 +63,3 @@ stdenv.mkDerivation {
   nativeBuildInputs = [ fhs ];
   shellHook = "exec fhs";
 }
-
