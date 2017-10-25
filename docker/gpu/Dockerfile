@@ -1,7 +1,7 @@
 # Prepare the image with:
 #   docker build -t tensorflow/haskell:1.3.0-gpu docker/gpu
 FROM gcr.io/tensorflow/tensorflow:1.3.0-gpu
-MAINTAINER TensorFlow authors <tensorflow-haskell@googlegroups.com>
+LABEL maintainer="TensorFlow authors <tensorflow-haskell@googlegroups.com>"
 
 RUN apt-get update
 
