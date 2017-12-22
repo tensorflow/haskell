@@ -118,5 +118,9 @@ to enter the environment and build the project. Note, that it is an emulation
 of common Linux environment rather than full-featured Nix package expression.
 No exportable Nix package will appear, but local development is possible.
 
-## License
+# Related Projects
+
+https://github.com/helq/tensorflow-haskell-deptyped is experimenting with using dependent types to statically validate tensor shapes. May be merged with this repository in the future.
+
+# License
 This project is licensed under the terms of the [Apache 2.0 license](LICENSE).
