@@ -2,7 +2,7 @@
 
 # Builds a test image and runs the tests inside.
 
-set -eu -o pipefail
+set -eux -o pipefail
 
 IMAGE_NAME=tensorflow/haskell/ci_build:lts8
 
