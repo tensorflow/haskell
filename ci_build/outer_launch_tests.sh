@@ -7,6 +7,6 @@ set -eu -o pipefail
 IMAGE_NAME=tensorflow/haskell/ci_build:lts8
 
 cd "$( dirname "$0" )"/..
-git submodule update
+git submodule update --init --recursive
 docker build -t $IMAGE_NAME -f ci_build/Dockerfile .
 docker run $IMAGE_NAME stack build --pedantic --test
