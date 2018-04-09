@@ -1,4 +1,4 @@
-[![Build Status](https://ci.tensorflow.org/buildStatus/icon?job=tensorflow-haskell-master)](https://ci.tensorflow.org/job/tensorflow-haskell-master)
+![Build Status](https://storage.cloud.google.com/tensorflow-haskell-kokoro-build-badges/github.png)
 
 The tensorflow-haskell package provides Haskell bindings to
 [TensorFlow](https://www.tensorflow.org/).
