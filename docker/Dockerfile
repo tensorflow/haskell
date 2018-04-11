@@ -13,7 +13,9 @@ RUN apt-get install -y \
         # Makes stack viable in the container
         libgmp-dev \
         # Required for locales configuration.
-        locales
+        locales \
+        # Required for tcp connections (See: https://github.com/tensorflow/haskell/issues/182)
+        netbase
 
 # Our MNIST demo program outputs Unicode characters.
 RUN dpkg-reconfigure locales && \
