@@ -41,6 +41,7 @@ module TensorFlow.Types
     , Attribute(..)
     , DataType(..)
     , ResourceHandle
+    , Variant(..)
     -- * Lists
     , ListOf(..)
     , List
@@ -72,7 +73,7 @@ import Data.Monoid ((<>))
 import Data.ProtoLens.TextFormat (showMessageShort)
 import Data.Proxy (Proxy(..))
 import Data.String (IsString)
-import Data.Word (Word8, Word16, Word64)
+import Data.Word (Word8, Word16, Word32, Word64)
 import Foreign.Storable (Storable)
 import GHC.Exts (Constraint, IsList(..))
 import Lens.Family2 (Lens', view, (&), (.~), (^..))
@@ -109,7 +110,8 @@ import Proto.Tensorflow.Core.Framework.Tensor as Tensor
     , int64Val
     , resourceHandleVal
     , stringVal
-    , stringVal
+    , uint32Val
+    , uint64Val
     )
 import Proto.Tensorflow.Core.Framework.TensorShape
     ( TensorShapeProto(..)
@@ -123,6 +125,11 @@ import TensorFlow.Internal.VarInt (getVarInt, putVarInt)
 import qualified TensorFlow.Internal.FFI as FFI
 
 type ResourceHandle = ResourceHandleProto
+
+-- | Dynamic type.
+-- TensorFlow variants aren't supported yet. This type acts a placeholder to
+-- simplify op generation.
+data Variant = Variant
 
 -- | The class of scalar types supported by tensorflow.
 class TensorType a where
@@ -163,6 +170,16 @@ instance TensorType Word16 where
     tensorRefType _ = DT_UINT16_REF
     tensorVal = intVal . integral
 
+instance TensorType Word32 where
+    tensorType _ = DT_UINT32
+    tensorRefType _ = DT_UINT32_REF
+    tensorVal = uint32Val
+
+instance TensorType Word64 where
+    tensorType _ = DT_UINT64
+    tensorRefType _ = DT_UINT64_REF
+    tensorVal = uint64Val
+
 instance TensorType Int16 where
     tensorType _ = DT_INT16
     tensorRefType _ = DT_INT16_REF
@@ -197,6 +214,11 @@ instance TensorType ResourceHandle where
     tensorType _ = DT_RESOURCE
     tensorRefType _ = DT_RESOURCE_REF
     tensorVal = resourceHandleVal
+
+instance TensorType Variant where
+    tensorType _ = DT_VARIANT
+    tensorRefType _ = DT_VARIANT_REF
+    tensorVal = error "TODO Variant"
 
 -- | Tensor data with the correct memory layout for tensorflow.
 newtype TensorData a = TensorData { unTensorData :: FFI.TensorData }

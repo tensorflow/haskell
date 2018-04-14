@@ -150,7 +150,7 @@ imports = stack [
     , "import Data.Complex (Complex)"
     , "import Data.Int (Int8, Int16, Int32, Int64)"
     , "import Data.Proxy (Proxy(Proxy))"
-    , "import Data.Word (Word8, Word16)"
+    , "import Data.Word (Word8, Word16, Word32, Word64)"
     , "import Lens.Family2 ((.~), (&))"
     , "import TensorFlow.Build"
     , "import TensorFlow.BuildOp"
@@ -415,9 +415,12 @@ dtTypeToHaskell DT_QUINT16 = "Data.Word.Word16"  -- TODO(gnezdo): make unique
 dtTypeToHaskell DT_QUINT8 = "Data.Word.Word8"  -- TODO(gnezdo): make unique
 dtTypeToHaskell DT_STRING = "Data.ByteString.ByteString"
 dtTypeToHaskell DT_UINT16 = "Data.Word.Word16"
+dtTypeToHaskell DT_UINT32 = "Data.Word.Word32"
+dtTypeToHaskell DT_UINT64 = "Data.Word.Word64"
 dtTypeToHaskell DT_HALF = "Data.Word.Word16"  -- TODO(gnezdo): make unique
 dtTypeToHaskell DT_UINT8 = "Data.Word.Word8"
 dtTypeToHaskell DT_RESOURCE = "ResourceHandle"
+dtTypeToHaskell DT_VARIANT = "Variant"
 dtTypeToHaskell x =
     Text.pack $ "Unsupported type in dtTypeToHaskell: " ++ show x
 

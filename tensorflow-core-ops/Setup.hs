@@ -92,12 +92,20 @@ blackList =
     [ -- Requires the "func" type:
       "FilterDataset"
     , "FlatMapDataset"
+    , "GeneratorDataset"
     , "GroupByWindowDataset"
     , "InterleaveDataset"
+    , "MapAndBatchDataset"
+    , "MapDataset"
     , "MapDataset"
     , "OneShotIterator"
+    , "ParallelInterleaveDataset"
     , "ParallelMapDataset"
+    , "RemoteCall"
+    , "ScanDataset"
     , "SymbolicGradient"
+    , "_If"
+    , "_While"
     ]
 
 autogenModulesDir :: LocalBuildInfo -> FilePath
