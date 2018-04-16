@@ -67,13 +67,15 @@ import Data.Functor.Identity (Identity(..))
 import Data.Complex (Complex)
 import Data.Default (def)
 import Data.Int (Int8, Int16, Int32, Int64)
+import Data.Maybe (fromMaybe)
 import Data.Monoid ((<>))
+import Data.ProtoLens.TextFormat (showMessageShort)
 import Data.Proxy (Proxy(..))
 import Data.String (IsString)
 import Data.Word (Word8, Word16, Word64)
 import Foreign.Storable (Storable)
 import GHC.Exts (Constraint, IsList(..))
-import Lens.Family2 (Lens', view, (&), (.~))
+import Lens.Family2 (Lens', view, (&), (.~), (^..))
 import Lens.Family2.Unchecked (iso)
 import Text.Printf (printf)
 import qualified Data.Attoparsec.ByteString as Atto
@@ -113,6 +115,7 @@ import Proto.Tensorflow.Core.Framework.TensorShape
     ( TensorShapeProto(..)
     , dim
     , size
+    , unknownRank
     )
 import Proto.Tensorflow.Core.Framework.Types (DataType(..))
 
@@ -353,6 +356,9 @@ headFromSingleton x
 
 
 -- | Shape (dimensions) of a tensor.
+--
+-- TensorFlow supports shapes of unknown rank, which are represented as
+-- @Nothing :: Maybe Shape@ in Haskell.
 newtype Shape = Shape [Int64] deriving Show
 
 instance IsList Shape where
@@ -363,8 +369,24 @@ instance IsList Shape where
 protoShape :: Lens' TensorShapeProto Shape
 protoShape = iso protoToShape shapeToProto
   where
-    protoToShape = Shape . fmap (view size) . view dim
-    shapeToProto (Shape ds) = (def :: TensorShapeProto) & dim .~ fmap (\d -> def & size .~ d) ds
+    protoToShape p = fromMaybe (error msg) (view protoMaybeShape p)
+      where msg = "Can't convert TensorShapeProto with unknown rank to Shape: "
+                  ++ showMessageShort p
+    shapeToProto s' = def & protoMaybeShape .~ Just s'
+
+protoMaybeShape :: Lens' TensorShapeProto (Maybe Shape)
+protoMaybeShape = iso protoToShape shapeToProto
+  where
+    protoToShape :: TensorShapeProto -> Maybe Shape
+    protoToShape p =
+        if view unknownRank p
+            then Nothing
+            else Just (Shape (p ^.. dim . traverse . size))
+    shapeToProto :: Maybe Shape -> TensorShapeProto
+    shapeToProto Nothing =
+        def & unknownRank .~ True
+    shapeToProto (Just (Shape ds)) =
+        def & dim .~ fmap (\d -> def & size .~ d) ds
 
 
 class Attribute a where
@@ -390,6 +412,9 @@ instance Attribute Bool where
 
 instance Attribute Shape where
     attrLens = shape . protoShape
+
+instance Attribute (Maybe Shape) where
+    attrLens = shape . protoMaybeShape
 
 -- TODO(gnezdo): support generating list(Foo) from [Foo].
 instance Attribute AttrValue'ListValue where

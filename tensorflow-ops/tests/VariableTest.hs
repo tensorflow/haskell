@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedLists #-}
 module Main (main) where
 
+import Data.Int (Int32)
 import Data.Maybe (isJust)
 import Control.Monad (when)
 import Control.Monad.IO.Class (liftIO)
@@ -55,6 +56,8 @@ testInitializedVariableShape =
         vector <- initializedVariable (Ops.constant [1] [42 :: Float])
         result <- run (readValue vector)
         liftIO $ [42] @=? (result :: V.Vector Float)
+        s <- run (Ops.shape (readValue vector))
+        liftIO $ [1] @=? (s :: V.Vector Int32)
 
 testInitializedValue :: Test
 testInitializedValue =
