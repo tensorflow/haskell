@@ -69,12 +69,13 @@ import Data.Default (def)
 import Data.Int (Int8, Int16, Int32, Int64)
 import Data.Maybe (fromMaybe)
 import Data.Monoid ((<>))
+import Data.ProtoLens.TextFormat (showMessageShort)
 import Data.Proxy (Proxy(..))
 import Data.String (IsString)
 import Data.Word (Word8, Word16, Word64)
 import Foreign.Storable (Storable)
 import GHC.Exts (Constraint, IsList(..))
-import Lens.Family2 (Lens', view, (&), (.~))
+import Lens.Family2 (Lens', view, (&), (.~), (^..))
 import Lens.Family2.Unchecked (iso)
 import Text.Printf (printf)
 import qualified Data.Attoparsec.ByteString as Atto
@@ -357,7 +358,7 @@ headFromSingleton x
 -- | Shape (dimensions) of a tensor.
 --
 -- TensorFlow supports shapes of unknown rank, which are represented as
--- 'Maybe Shape' in Haskell.
+-- @Nothing :: Maybe Shape@ in Haskell.
 newtype Shape = Shape [Int64] deriving Show
 
 instance IsList Shape where
@@ -369,7 +370,8 @@ protoShape :: Lens' TensorShapeProto Shape
 protoShape = iso protoToShape shapeToProto
   where
     protoToShape p = fromMaybe (error msg) (view protoMaybeShape p)
-      where msg = "Can't convert TensorShapeProto with unknown rank to Shape"
+      where msg = "Can't convert TensorShapeProto with unknown rank to Shape: "
+                  ++ showMessageShort p
     shapeToProto s' = def & protoMaybeShape .~ Just s'
 
 protoMaybeShape :: Lens' TensorShapeProto (Maybe Shape)
@@ -379,7 +381,7 @@ protoMaybeShape = iso protoToShape shapeToProto
     protoToShape p =
         if view unknownRank p
             then Nothing
-            else Just (Shape (view size <$> view dim p))
+            else Just (Shape (p ^.. dim . traverse . size))
     shapeToProto :: Maybe Shape -> TensorShapeProto
     shapeToProto Nothing =
         def & unknownRank .~ True
