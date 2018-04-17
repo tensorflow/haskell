@@ -377,7 +377,7 @@ truncatedNormal' :: (MonadBuild m, OneOf '[Word16, Double, Float] a)
 truncatedNormal' = CoreOps.truncatedNormal'
 
 zeros :: forall a . (Num a, TensorType a) => Shape -> Tensor Build a
-zeros (Shape s) = CoreOps.fill (vector $ map fromIntegral s) (scalar 0)
+zeros (Shape s) = CoreOps.fill (vector s) (scalar 0)
 
 shape :: TensorType t => Tensor v t -> Tensor Build Int32
 shape = CoreOps.shape
