@@ -41,7 +41,7 @@ module TensorFlow.Types
     , Attribute(..)
     , DataType(..)
     , ResourceHandle
-    , Variant(..)
+    , Variant
     -- * Lists
     , ListOf(..)
     , List
@@ -129,7 +129,7 @@ type ResourceHandle = ResourceHandleProto
 -- | Dynamic type.
 -- TensorFlow variants aren't supported yet. This type acts a placeholder to
 -- simplify op generation.
-data Variant = Variant
+data Variant
 
 -- | The class of scalar types supported by tensorflow.
 class TensorType a where
