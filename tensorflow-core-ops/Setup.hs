@@ -92,8 +92,10 @@ blackList =
     [ -- Requires the "func" type:
       "FilterDataset"
     , "FlatMapDataset"
+    , "For"
     , "GeneratorDataset"
     , "GroupByWindowDataset"
+    , "If"
     , "InterleaveDataset"
     , "MapAndBatchDataset"
     , "MapDataset"
@@ -104,6 +106,8 @@ blackList =
     , "RemoteCall"
     , "ScanDataset"
     , "SymbolicGradient"
+    , "TPUReplicate"
+    , "While"
     , "_If"
     , "_While"
     ]

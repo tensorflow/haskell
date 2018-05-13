@@ -13,8 +13,8 @@ let
     name = "tensorflow-c";
 
     src = fetchurl {
-      url = "https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-cpu-linux-x86_64-1.7.0.tar.gz";
-      sha256 = "621642b1fddd3831e048817d2220d9d7cf8ba359ac81c83a808bcdd9a982ee90";
+      url = "https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-cpu-linux-x86_64-1.8.0.tar.gz";
+      sha256 = "0a8e334d7c20879df9857c762472329d70cbf2f316af113d0b26f5c17209fe63";
     };
 
     buildCommand = ''
