@@ -25,7 +25,7 @@ else
 fi
 
 echo "Downloading libtensorflow..."
-curl https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-cpu-darwin-x86_64-1.7.0.tar.gz > libtensorflow.tar.gz
+curl https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-cpu-darwin-x86_64-1.8.0.tar.gz > libtensorflow.tar.gz
 
 echo "Extracting and copying libtensorflow..."
 sudo tar zxf libtensorflow.tar.gz -C /usr/local
