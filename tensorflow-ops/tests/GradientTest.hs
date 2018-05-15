@@ -392,18 +392,18 @@ transAttrs a b =
 testConv2DBackpropInputGrad :: Test
 testConv2DBackpropInputGrad = testCase "testConv2DBackpropInputGrad" $ do
     (dx, shapeDX, shapeX) <- TF.runSession $ do
-        let conv_input_shape = TF.vector [1, 2, 2, 1 :: Int32] -- [batch, h, w, in_channels]
-        let conv_out_shape = TF.vector [1, 1, 1, 1 :: Int32]  -- [batch, h, w, out_channels]
-        x <- TF.render $ TF.fill conv_out_shape (TF.scalar (1::Float))
+        let convInputShape = TF.vector [1, 2, 2, 1 :: Int32] -- [batch, h, w, in_channels]
+        let convOutShape = TF.vector [1, 1, 1, 1 :: Int32]  -- [batch, h, w, out_channels]
+        x <- TF.render $ TF.fill convOutShape (TF.scalar (1::Float))
 
         let filterShape = TF.vector [2, 2, 1, 1 :: Int32] -- [fh, fw, inc, out]
-        filter <- TF.render $ TF.fill filterShape (TF.scalar (1::Float))
+        filter' <- TF.render $ TF.fill filterShape (TF.scalar (1::Float))
         let y = TF.conv2DBackpropInput'
                 ( (TF.opAttr "strides" .~ [1::Int64, 1, 1, 1])
                 . (TF.opAttr "padding" .~ (BS.pack "VALID"))
                 . (TF.opAttr "data_format" .~ (BS.pack "NHWC"))
                 )
-                conv_input_shape filter x
+                convInputShape filter' x
 
         [dx] <- TF.gradients y [x]
         TF.run (dx, TF.shape dx, TF.shape x)
