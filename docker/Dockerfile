@@ -14,7 +14,7 @@ RUN apt-get install -y \
         libgmp-dev \
         # Required for locales configuration.
         locales \
-        # Required for tcp connections (See: https://github.com/tensorflow/haskell/issues/182)
+        # Required for tcp connections by stack (See: https://github.com/tensorflow/haskell/issues/182)
         netbase
 
 # Our MNIST demo program outputs Unicode characters.

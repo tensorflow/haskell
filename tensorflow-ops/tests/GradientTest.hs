@@ -397,13 +397,13 @@ testConv2DBackpropInputGrad = testCase "testConv2DBackpropInputGrad" $ do
         x <- TF.render $ TF.fill conv_out_shape (TF.scalar (1::Float))
 
         let filterShape = TF.vector [2, 2, 1, 1 :: Int32] -- [fh, fw, inc, out]
-        filter <- TF.render $ TF.fill filterShape (TF.scalar (1::Float))
+        filter' <- TF.render $ TF.fill filterShape (TF.scalar (1::Float))
         let y = TF.conv2DBackpropInput'
                 ( (TF.opAttr "strides" .~ [1::Int64, 1, 1, 1])
                 . (TF.opAttr "padding" .~ (BS.pack "VALID"))
                 . (TF.opAttr "data_format" .~ (BS.pack "NHWC"))
                 )
-                conv_input_shape filter x
+                conv_input_shape filter' x
 
         [dx] <- TF.gradients y [x]
         TF.run (dx, TF.shape dx, TF.shape x)

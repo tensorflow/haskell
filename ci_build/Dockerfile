@@ -13,7 +13,6 @@ WORKDIR /tfhs
 
 RUN \
     apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 575159689BEFB442 && \
-    echo 'deb http://download.fpcomplete.com/ubuntu trusty main'| tee /etc/apt/sources.list.d/fpco.list && \
     apt-get update && \
     apt-get install -y \
         # Required by snappy-frames dependency.
@@ -23,7 +22,12 @@ RUN \
         # Makes stack viable in the container
         libgmp-dev \
         libcurl3-dev \
-        stack && \
+        # Required for tcp connections by stack (See: https://github.com/tensorflow/haskell/issues/182)
+        netbase \
+        && \
+    # Installs stack.
+    curl -O -L https://github.com/commercialhaskell/stack/releases/download/v1.7.1/stack-1.7.1-linux-x86_64.tar.gz && \
+    tar zxf stack-1.7.1-linux-x86_64.tar.gz -C /usr/local/bin stack-1.7.1-linux-x86_64/stack --strip 1 && \
     # Installs protoc and the libraries.
     curl -O -L https://github.com/google/protobuf/releases/download/v3.2.0/protoc-3.2.0-linux-x86_64.zip && \
     unzip -d /usr/local protoc-3.2.0-linux-x86_64.zip bin/protoc && \
