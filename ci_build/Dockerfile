@@ -12,6 +12,7 @@ ADD . /tfhs
 WORKDIR /tfhs
 
 RUN \
+    apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 575159689BEFB442 && \
     apt-get update && \
     apt-get install -y \
         # Required by snappy-frames dependency.
