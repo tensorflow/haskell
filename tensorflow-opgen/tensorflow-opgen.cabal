@@ -23,7 +23,7 @@ library
                 , containers
                 , filepath
                 , lens-family
-                , mainland-pretty
+                , mainland-pretty == 0.6.*
                 , optparse-applicative
                 , semigroups
                 , text
