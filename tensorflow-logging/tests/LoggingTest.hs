@@ -16,7 +16,7 @@
 module Main where
 
 import Control.Monad.Trans.Resource (runResourceT)
-import Data.Conduit ((=$=))
+import Data.Conduit ((.|))
 import Data.Default (def)
 import Data.List ((\\))
 import Data.ProtoLens (encodeMessage, decodeMessageOrDie)
@@ -53,7 +53,7 @@ testEventWriter = testCase "EventWriter" $
         files <- listDirectory dir
         assertEqual "One file exists after" 1 (length files)
         records <- runResourceT $ Conduit.runConduit $
-            sourceTFRecords (dir </> head files) =$= Conduit.consume
+            sourceTFRecords (dir </> head files) .| Conduit.consume
         assertBool "File is not empty" (not (null records))
         let (header:body) = decodeMessageOrDie . BL.toStrict <$> records
         assertEqual "Header has expected version"
@@ -71,7 +71,7 @@ testLogGraph = testCase "LogGraph" $
             logGraph eventWriter graphBuild
         files <- listDirectory dir
         records <- runResourceT $ Conduit.runConduit $
-            sourceTFRecords (dir </> head files) =$= Conduit.consume
+            sourceTFRecords (dir </> head files) .| Conduit.consume
         let (_:event:_) = decodeMessageOrDie . BL.toStrict <$> records
         assertEqual "First record expected to be Event containing GraphDef" expectedGraphEvent event
 
