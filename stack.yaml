@@ -1,4 +1,4 @@
-resolver: lts-8.13
+resolver: lts-11.9
 
 packages:
 - tensorflow
@@ -16,12 +16,11 @@ packages:
 extra-deps:
 - snappy-framing-0.1.1
 - snappy-0.2.0.2
-# TODO: Remove these once the new versions are in lts-9.
+# `haskell-src-exts < 1.20` is needed due the dependency on
+# `proto-lens-protoc < 0.3` in the `tensorflow-proto` package:
+- haskell-src-exts-1.19.1
 - proto-lens-protobuf-types-0.2.2.0
-- proto-lens-0.2.2.0
-- proto-lens-descriptors-0.2.2.0
 - proto-lens-protoc-0.2.2.3
-- lens-labels-0.1.0.2
 
 # For Mac OS X, whose linker doesn't use this path by default
 # unless you run `xcode-select --install`.

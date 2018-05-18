@@ -58,7 +58,7 @@ import Control.Monad.Catch (MonadMask, bracket)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.Trans.Resource (runResourceT)
 import Data.ByteString (ByteString)
-import Data.Conduit ((=$=))
+import Data.Conduit ((.|))
 import Data.Conduit.TQueue (sourceTBMQueue)
 import Data.Default (def)
 import Data.Int (Int64)
@@ -113,8 +113,8 @@ newEventWriter logdir = do
     let writer = EventWriter q done
         consumeQueue = runResourceT $ Conduit.runConduit $
             sourceTBMQueue q
-            =$= Conduit.map (L.fromStrict . encodeMessage)
-            =$= sinkTFRecords filename
+            .| Conduit.map (L.fromStrict . encodeMessage)
+            .| sinkTFRecords filename
     _ <- forkFinally consumeQueue (\_ -> putMVar done ())
     logEvent writer $ def & wallTime .~ t
                           & fileVersion .~ T.pack "brain.Event:2"

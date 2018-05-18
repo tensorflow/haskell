@@ -30,24 +30,24 @@ import Control.Monad.Catch (MonadThrow)
 import Control.Monad.Trans.Resource (MonadResource)
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as BL
-import Data.Conduit ((=$=), Conduit, Consumer, Producer)
+import Data.Conduit ((.|), ConduitT)
 import Data.Conduit.Binary (sinkFile, sourceFile)
 import Data.Conduit.Cereal (conduitGet2, conduitPut)
 
 import TensorFlow.Records (getTFRecord, putTFRecord)
 
 -- | Decode TFRecords from a stream of bytes.
-decodeTFRecords :: MonadThrow m => Conduit B.ByteString m BL.ByteString
+decodeTFRecords :: MonadThrow m => ConduitT B.ByteString BL.ByteString m ()
 decodeTFRecords = conduitGet2 getTFRecord
 
 -- | Read TFRecords from a file.
-sourceTFRecords :: (MonadResource m, MonadThrow m) => FilePath -> Producer m BL.ByteString
-sourceTFRecords path = sourceFile path =$= decodeTFRecords
+sourceTFRecords :: (MonadResource m, MonadThrow m) => FilePath -> ConduitT i BL.ByteString m ()
+sourceTFRecords path = sourceFile path .| decodeTFRecords
 
 -- | Encode TFRecords to a stream of bytes.
-encodeTFRecords :: Monad m => Conduit BL.ByteString m B.ByteString
+encodeTFRecords :: Monad m => ConduitT BL.ByteString B.ByteString m ()
 encodeTFRecords = conduitPut putTFRecord
 
 -- | Write TFRecords to a file.
-sinkTFRecords :: (MonadResource m) => FilePath -> Consumer BL.ByteString m ()
-sinkTFRecords path = encodeTFRecords =$= sinkFile path
+sinkTFRecords :: (MonadResource m) => FilePath -> ConduitT BL.ByteString o m ()
+sinkTFRecords path = encodeTFRecords .| sinkFile path
