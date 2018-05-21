@@ -24,12 +24,16 @@ else
     brew install snappy
 fi
 
+TMP_DIR=$(mktemp -d)
+
 echo "Downloading libtensorflow..."
-curl https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-cpu-darwin-x86_64-1.8.0.tar.gz > libtensorflow.tar.gz
+curl https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-cpu-darwin-x86_64-1.8.0.tar.gz > "$TMP_DIR/libtensorflow.tar.gz"
 
 echo "Extracting and copying libtensorflow..."
-sudo tar zxf libtensorflow.tar.gz -C /usr/local
-rm libtensorflow.tar.gz
+tar zxf "$TMP_DIR/libtensorflow.tar.gz" -C "$TMP_DIR"
+sudo rsync -a "$TMP_DIR/lib/" /usr/local/lib
+sudo rsync -a "$TMP_DIR/include/" /usr/local/include
+rm -rf "$TMP_DIR"
 sudo mv /usr/local/lib/libtensorflow.so /usr/local/lib/libtensorflow.dylib
 
 sudo install_name_tool -id libtensorflow.dylib /usr/local/lib/libtensorflow.dylib
