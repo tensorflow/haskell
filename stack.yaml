@@ -29,3 +29,7 @@ extra-lib-dirs:
     - /usr/local/lib
 extra-include-dirs:
     - /usr/local/include
+
+nix:
+    enable: false
+    shell-file: shell.nix
