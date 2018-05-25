@@ -108,11 +108,14 @@ After running the script to install system dependencies, build the project with 
 
 ## Build on NixOS
 
-`tools/userchroot.nix` expression contains definitions to open
-chroot-environment containing necessary dependencies. Type
+The `shell.nix` provides an environment containing the necessary
+dependencies. To build, run:
 
-    $ nix-shell tools/userchroot.nix
-    $ stack build --system-ghc
+    $ stack --nix build
+
+or alternatively you can run
+
+    $ nix-shell
 
 to enter the environment and build the project. Note, that it is an emulation
 of common Linux environment rather than full-featured Nix package expression.
