@@ -1,5 +1,5 @@
 name:                tensorflow-logging
-version:             0.1.0.0
+version:             0.2.0.0
 synopsis:            TensorBoard related functionality.
 description:         Please see README.md
 homepage:            https://github.com/tensorflow/haskell#readme
@@ -29,10 +29,10 @@ library
                 , stm
                 , stm-chans
                 , stm-conduit
-                , tensorflow == 0.1.*
-                , tensorflow-core-ops == 0.1.*
-                , tensorflow-ops == 0.1.*
-                , tensorflow-proto == 0.1.*
+                , tensorflow == 0.2.*
+                , tensorflow-core-ops == 0.2.*
+                , tensorflow-ops == 0.2.*
+                , tensorflow-proto == 0.2.*
                 , tensorflow-records-conduit
                 , text
                 , time
