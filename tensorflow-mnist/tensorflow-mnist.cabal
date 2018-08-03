@@ -28,9 +28,9 @@ library
                 , lens-family
                 , containers
                 , split
-                , tensorflow-proto == 0.1.*
-                , tensorflow-core-ops == 0.1.*
-                , tensorflow
+                , tensorflow-proto == 0.2.*
+                , tensorflow-core-ops == 0.2.*
+                , tensorflow == 0.2.*
                 , text
                 , vector
                 , zlib
