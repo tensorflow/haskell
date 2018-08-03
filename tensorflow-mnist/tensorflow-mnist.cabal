@@ -30,7 +30,7 @@ library
                 , split
                 , tensorflow-proto == 0.2.*
                 , tensorflow-core-ops == 0.2.*
-                , tensorflow
+                , tensorflow == 0.2.*
                 , text
                 , vector
                 , zlib

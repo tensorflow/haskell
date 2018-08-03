@@ -33,7 +33,7 @@ library
                 , tensorflow-core-ops == 0.2.*
                 , tensorflow-ops == 0.2.*
                 , tensorflow-proto == 0.2.*
-                , tensorflow-records-conduit
+                , tensorflow-records-conduit == 0.1.*
                 , text
                 , time
                 , transformers
