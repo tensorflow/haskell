@@ -69,31 +69,49 @@ Check your stack version with `stack --version` in a terminal.
 As an expedient we use [docker](https://www.docker.com/) for building. Once you have docker
 working, the following commands will compile and run the tests.
 
-    git clone --recursive https://github.com/tensorflow/haskell.git tensorflow-haskell
-    cd tensorflow-haskell
-    IMAGE_NAME=tensorflow/haskell:v0
-    docker build -t $IMAGE_NAME docker
-    # TODO: move the setup step to the docker script.
-    stack --docker --docker-image=$IMAGE_NAME setup
-    stack --docker --docker-image=$IMAGE_NAME test
+```
+git clone --recursive https://github.com/tensorflow/haskell.git tensorflow-haskell
+cd tensorflow-haskell
+IMAGE_NAME=tensorflow/haskell:v0
+docker build -t $IMAGE_NAME docker
+# TODO: move the setup step to the docker script.
+stack --docker --docker-image=$IMAGE_NAME setup
+stack --docker --docker-image=$IMAGE_NAME test
+```
 
 There is also a demo application:
 
-    cd tensorflow-mnist
-    stack --docker --docker-image=$IMAGE_NAME build --exec Main
+```
+cd tensorflow-mnist
+stack --docker --docker-image=$IMAGE_NAME build --exec Main
+```
 
-### Docker GPU support
+### Stack + Docker + GPU
 
 If you want to use GPU you can do:
 
-    IMAGE_NAME=tensorflow/haskell:1.3.0-gpu
-    docker build -t $IMAGE_NAME docker/gpu
+```
+IMAGE_NAME=tensorflow/haskell:1.9.0-gpu
+docker build -t $IMAGE_NAME docker/gpu
+```
 
-We need stack to use nvidia-docker by using a 'docker' wrapper script. This will shadow the normal docker command.
+### Using nvidia-docker version 2
+See [Nvidia docker 2 install instructions](https://github.com/nvidia/nvidia-docker/wiki/Installation-(version-2.0))
 
-    ln -s `pwd`/tools/nvidia-docker-wrapper.sh <somewhere in your path>/docker
-    stack --docker --docker-image=$IMAGE_NAME setup
-    stack --docker --docker-image=$IMAGE_NAME test
+```
+stack --docker --docker-image=$IMAGE_NAME setup
+stack --docker --docker-run-args "--runtime=nvidia" --docker-image=$IMAGE_NAME test
+```
+
+### Using nvidia-docker classic
+
+Stack needs to use `nvidia-docker` instead of the normal `docker` for GPU support. We must wrap 'docker' with a script. This script will shadow the normal `docker` command.
+
+```
+ln -s `pwd`/tools/nvidia-docker-wrapper.sh <somewhere in your path>/docker
+stack --docker --docker-image=$IMAGE_NAME setup
+stack --docker --docker-image=$IMAGE_NAME test
+```
 
 ## Build on macOS
 
