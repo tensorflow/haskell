@@ -22,7 +22,8 @@ import TensorFlow.Internal.FFI (getAllOpList)
 import Test.HUnit (assertBool, assertFailure)
 import Test.Framework (defaultMain)
 import Test.Framework.Providers.HUnit (testCase)
-import Proto.Tensorflow.Core.Framework.OpDef (OpList, op)
+import Proto.Tensorflow.Core.Framework.OpDef (OpList)
+import Proto.Tensorflow.Core.Framework.OpDef_Fields (op)
 
 testParseAll :: IO ()
 testParseAll = do

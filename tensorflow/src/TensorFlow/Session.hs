@@ -50,7 +50,8 @@ import Data.Set (Set)
 import Data.Text.Encoding (encodeUtf8)
 import Lens.Family2 (Lens', (^.), (&), (.~))
 import Lens.Family2.Unchecked (lens)
-import Proto.Tensorflow.Core.Framework.Graph (GraphDef, node)
+import Proto.Tensorflow.Core.Framework.Graph (GraphDef)
+import Proto.Tensorflow.Core.Framework.Graph_Fields (node)
 import Proto.Tensorflow.Core.Protobuf.Config (ConfigProto)
 import TensorFlow.Build
 import TensorFlow.Nodes

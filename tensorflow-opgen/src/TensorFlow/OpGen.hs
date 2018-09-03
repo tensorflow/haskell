@@ -60,7 +60,9 @@ import Options.Applicative (Parser, help, long, strOption, value)
 import Proto.Tensorflow.Core.Framework.OpDef
   ( OpList
   , OpDef
-  , attr
+  )
+import Proto.Tensorflow.Core.Framework.OpDef_Fields
+  ( attr
   , inputArg
   , name
   , op

@@ -39,8 +39,8 @@ import qualified TensorFlow.Output as TF
 import qualified TensorFlow.Types as TF
 import qualified TensorFlow.Variable as TF
 
-import Proto.Tensorflow.Core.Framework.Graph (node)
-import Proto.Tensorflow.Core.Framework.NodeDef (op)
+import Proto.Tensorflow.Core.Framework.Graph_Fields (node)
+import Proto.Tensorflow.Core.Framework.NodeDef_Fields (op)
 
 import qualified Data.ByteString.Char8 as BS
 

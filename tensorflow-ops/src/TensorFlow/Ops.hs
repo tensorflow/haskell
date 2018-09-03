@@ -160,13 +160,14 @@ import Data.ProtoLens (def)
 import Data.Text.Encoding (encodeUtf8)
 import Lens.Family2 ((.~), (&))
 import Text.Printf (printf)
-import Proto.Tensorflow.Core.Framework.Tensor
-    ( TensorProto
-    , dtype
+import Proto.Tensorflow.Core.Framework.Tensor  (TensorProto)
+import Proto.Tensorflow.Core.Framework.Tensor_Fields
+    ( dtype
     , tensorShape
     )
-import qualified Proto.Tensorflow.Core.Framework.TensorShape
+import qualified Proto.Tensorflow.Core.Framework.TensorShape_Fields
   as TensorShape
+
 import TensorFlow.Build
 import TensorFlow.BuildOp
 import TensorFlow.ControlFlow (group)

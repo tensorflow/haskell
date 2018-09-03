@@ -24,12 +24,13 @@ import qualified Data.Text.IO as Text
 import Lens.Family2 ((&), (.~), (^.))
 import Prelude hiding (abs)
 import Proto.Tensorflow.Core.Framework.Graph
-    ( GraphDef(..)
-    , version
+    ( GraphDef(..) )
+import Proto.Tensorflow.Core.Framework.Graph_Fields
+    ( version
     , node )
 import Proto.Tensorflow.Core.Framework.NodeDef
-    ( NodeDef(..)
-    , op )
+    ( NodeDef(..) )
+import Proto.Tensorflow.Core.Framework.NodeDef_Fields (op)
 import System.IO as IO
 import TensorFlow.Examples.MNIST.InputData
 import TensorFlow.Examples.MNIST.Parse

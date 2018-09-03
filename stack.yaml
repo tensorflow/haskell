@@ -16,11 +16,10 @@ packages:
 extra-deps:
 - snappy-framing-0.1.1
 - snappy-0.2.0.2
-# `haskell-src-exts < 1.20` is needed due the dependency on
-# `proto-lens-protoc < 0.3` in the `tensorflow-proto` package:
-- haskell-src-exts-1.19.1
-- proto-lens-protobuf-types-0.2.2.0
-- proto-lens-protoc-0.2.2.3
+- proto-lens-protobuf-types-0.3.0.1
+- proto-lens-protoc-0.3.1.0
+- proto-lens-0.3.1.0
+- lens-labels-0.2.0.1
 
 # For Mac OS X, whose linker doesn't use this path by default
 # unless you run `xcode-select --install`.
