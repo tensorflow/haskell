@@ -34,7 +34,7 @@ import qualified Data.Text as Text
 import Lens.Family2 ((^.))
 import Lens.Family2.State ((%=), use)
 
-import Proto.Tensorflow.Core.Framework.NodeDef (device)
+import Proto.Tensorflow.Core.Framework.NodeDef_Fields (device)
 import TensorFlow.Build
 import TensorFlow.Output (Output, NodeName, outputNodeName, Device(..))
 import TensorFlow.Types

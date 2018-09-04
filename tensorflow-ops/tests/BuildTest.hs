@@ -21,11 +21,12 @@ module Main where
 import Control.Monad.IO.Class (liftIO)
 import Lens.Family2 ((^.), (.~))
 import Data.List (sort)
-import Proto.Tensorflow.Core.Framework.Graph
+import Proto.Tensorflow.Core.Framework.Graph_Fields
     ( node )
 import Proto.Tensorflow.Core.Framework.NodeDef
-    ( NodeDef
-    , device
+    ( NodeDef )
+import Proto.Tensorflow.Core.Framework.NodeDef_Fields
+    ( device
     , name
     , op )
 import TensorFlow.Build

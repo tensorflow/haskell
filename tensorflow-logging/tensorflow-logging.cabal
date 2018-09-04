@@ -24,7 +24,7 @@ library
                 , filepath
                 , hostname
                 , lens-family
-                , proto-lens == 0.2.*
+                , proto-lens == 0.3.*
                 , resourcet
                 , stm
                 , stm-chans

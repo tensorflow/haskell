@@ -103,8 +103,9 @@ import TensorFlow.Tensor
     , ToTensor(..)
     )
 import TensorFlow.Types (Attribute, OneOf, TensorType, attrLens)
-import Proto.Tensorflow.Core.Framework.NodeDef
-    (NodeDef, attr, input, op, name)
+import Proto.Tensorflow.Core.Framework.NodeDef (NodeDef)
+import Proto.Tensorflow.Core.Framework.NodeDef_Fields
+    ( attr, input, op, name)
 
 type GradientCompatible a =
     -- TODO(fmayle): MaxPoolGrad doesn't support Double for some reason.

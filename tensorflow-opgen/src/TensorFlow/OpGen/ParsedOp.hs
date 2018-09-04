@@ -31,12 +31,14 @@ import qualified Data.Set as Set
 import Data.Text (Text)
 import qualified Data.Text as Text
 import Lens.Family2 ((^.))
-import Proto.Tensorflow.Core.Framework.AttrValue (list)
+import Proto.Tensorflow.Core.Framework.AttrValue_Fields (list)
 import Proto.Tensorflow.Core.Framework.OpDef
     ( OpDef
     , OpDef'ArgDef
     , OpDef'AttrDef
-    , allowedValues
+    )
+import Proto.Tensorflow.Core.Framework.OpDef_Fields
+    ( allowedValues
     , attr
     , maybe'defaultValue
     , description
@@ -51,6 +53,7 @@ import Proto.Tensorflow.Core.Framework.OpDef
     , typeAttr
     , type'
     )
+
 import Proto.Tensorflow.Core.Framework.Types (DataType(DT_RESOURCE))
 
 data ParsedOp = ParsedOp
