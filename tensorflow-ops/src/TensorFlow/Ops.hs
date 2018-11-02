@@ -112,6 +112,8 @@ module TensorFlow.Ops
     , CoreOps.relu'
     , CoreOps.reluGrad
     , CoreOps.reluGrad'
+    , CoreOps.tanh
+    , CoreOps.tanhGrad
     , CoreOps.reshape
     , CoreOps.reshape'
     , restore

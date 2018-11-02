@@ -45,7 +45,7 @@ import Lens.Family2 (Lens', view, (&), (^.), (.~), (%~))
 import Lens.Family2.State.Strict (uses)
 import Lens.Family2.Stock (at, intAt)
 import Lens.Family2.Unchecked (lens, iso)
-import Prelude hiding (sum)
+import Prelude hiding (sum, tanh)
 import Text.Printf (printf)
 import qualified Data.Graph.Inductive.Basic as FGL
 import qualified Data.Graph.Inductive.Graph as FGL
@@ -76,6 +76,8 @@ import TensorFlow.Ops
     , matMul'
     , reducedShape
     , reluGrad
+    , tanh
+    , tanhGrad
     , reshape
     , scalar
     , shape
@@ -459,6 +461,7 @@ opGrad "Abs" _ [toT -> x] [dz] = [Just $ expr dz * signum x]
 opGrad "Neg" _ [_] [dz] = [Just $ negate $ expr dz]
 opGrad "Relu" _ [toT -> x] [dz] = [Just $ reluGrad dz x]
 opGrad "ReluGrad" _ [_, toT -> x ] [dz] = [Just $ reluGrad dz x, Just $ CoreOps.zerosLike x]
+opGrad "Tanh" _ [toT -> x] [dz] = [Just $ tanhGrad (tanh x) dz]
 
 opGrad "Concat" _ _ix [dy]
     -- Concat concatenates input tensors
@@ -833,6 +836,7 @@ numOutputs o =
         "SparseSegmentSum" -> 1
         "Sub" -> 1
         "Sum" -> 1
+        "Tanh" -> 1
         "Tile" -> 1
         "Transpose" -> 1
         "TruncatedNormal" -> 1
