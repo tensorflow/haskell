@@ -282,6 +282,14 @@ testReluGradGrad = testCase "testReluGradGrad" $ do
         TF.gradients y' [x] >>= TF.run
     V.fromList [0] @=? dx
 
+testTanhGrad :: Test
+testTanhGrad = testCase "testTanhGrad" $ do
+    [dx] <- TF.runSession $ do
+        x <- TF.render $ TF.vector [0 :: Float]
+        let y = TF.tanh x
+        TF.gradients y [x] >>= TF.run
+    V.fromList [1] @=? dx
+
 testFillGrad :: Test
 testFillGrad = testCase "testFillGrad" $ do
     [dx] <- TF.runSession $ do
@@ -427,6 +435,7 @@ main = defaultMain
             , testMaximumGradGrad
             , testReluGrad
             , testReluGradGrad
+            , testTanhGrad
             , testFillGrad
             , testTileGrad
             , testTile2DGrad
