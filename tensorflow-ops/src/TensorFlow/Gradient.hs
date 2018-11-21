@@ -691,8 +691,8 @@ opGrad "MaxPool" nodeDef [toT -> x] [dz] =
     padding = lookupAttr nodeDef "padding" :: ByteString
     dataFormat = lookupAttr nodeDef "data_format" :: ByteString
 
-opGrad "Reshape" _ [toT -> x, _] [dz] =
-    [Just $ reshape dz $ shape (x :: Tensor Build a), Nothing]
+opGrad "Reshape" _ [toT -> x, _] [dz] = [Just $ reshape dz $ shape (x :: Tensor Build a), Nothing]
+opGrad "ExpandDims" n xs@[toT -> _, _] dzs@[_] = opGrad "Reshape" n xs dzs
 
 opGrad "OneHot" _ _ _ = [Nothing, Nothing, Nothing, Nothing]
 opGrad "TruncatedNormal" _ _ _ = [Nothing]
@@ -810,6 +810,7 @@ numOutputs o =
         "DynamicPartition" ->
             fromIntegral (lookupAttr o "num_partitions" :: Int64)
         "Exp" -> 1
+        "ExpandDims" -> 1
         "Gather" -> 1
         "LabelClasses" -> 1
         "LabelWeights" -> 1
