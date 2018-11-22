@@ -693,6 +693,20 @@ opGrad "MaxPool" nodeDef [toT -> x] [dz] =
 
 opGrad "Reshape" _ [toT -> x, _] [dz] = [Just $ reshape dz $ shape (x :: Tensor Build a), Nothing]
 opGrad "ExpandDims" n xs@[toT -> _, _] dzs@[_] = opGrad "Reshape" n xs dzs
+opGrad "Pad" _ [toT -> x, toT -> padPattern] [dz] =
+  [Just $ CoreOps.slice dz gradientSliceBegin gradientSliceSize, Nothing]
+  where
+    v1 = vector [1]
+     -- For some reason rankx' has an empty shape
+    rankx' = CoreOps.rank (x :: Tensor Build Float)
+    rankx = CoreOps.reshape rankx' v1
+    -- Size of column that is sliced from pad pattern
+    padPatternSliceSize = CoreOps.concat 0 [rankx, v1]
+    padPatternSliceBegin = vector [0, 0]
+    padPatternSliced :: Tensor Build Int32 = CoreOps.slice padPattern padPatternSliceBegin padPatternSliceSize
+    -- The slice of the pad pattern has the same rank as the pad pattern itself
+    gradientSliceBegin = CoreOps.reshape padPatternSliced rankx
+    gradientSliceSize = shape (x :: Tensor Build Float)
 
 opGrad "OneHot" _ _ _ = [Nothing, Nothing, Nothing, Nothing]
 opGrad "TruncatedNormal" _ _ _ = [Nothing]
@@ -823,6 +837,7 @@ numOutputs o =
         "Min" -> 1
         "Mul" -> 1
         "Neg" -> 1
+        "Pad" -> 1
         "Placeholder" -> 1
         "OneHot" -> 1
         "ReadVariableOp" -> 1

@@ -32,7 +32,7 @@ import Control.Monad(forM_, replicateM, zipWithM)
 import Control.Monad.IO.Class (liftIO)
 
 import qualified TensorFlow.Core as TF
-import qualified TensorFlow.GenOps.Core as TF (conv2DBackpropInput', max, maximum, tile)
+import qualified TensorFlow.GenOps.Core as TF (conv2DBackpropInput', max, maximum, tile, pad)
 import qualified TensorFlow.Gradient as TF
 import qualified TensorFlow.Ops as TF hiding (zeroInitializedVariable)
 import qualified TensorFlow.Output as TF
@@ -313,6 +313,17 @@ testReshape =
     V.fromList [1, 1, 1, 1] @=? dx
     V.fromList [2, 2] @=? s
 
+testPad :: Test
+testPad =
+  testCase "testPad" $ do
+    ([dx], [s]) <-
+      TF.runSession $ do
+        (x :: TF.Tensor TF.Value Float) <- TF.render $ TF.zeros $ TF.Shape [2, 2, 3 :: Int64]
+        let y = TF.pad x $ TF.constant (TF.Shape [3, 2]) [1, 4, 1, 1, 2, 3 :: Int32]
+        calculateGradWithShape y x
+    V.fromList [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1] @=? dx
+    V.fromList [2, 2, 3] @=? s
+
 calculateGradWithShape :: TF.Tensor TF.Build Float -> TF.Tensor TF.Value Float -> SessionT IO ([V.Vector Float], [V.Vector Int32])
 calculateGradWithShape y x = do
   gs <- TF.gradients y [x]
@@ -468,6 +479,7 @@ main = defaultMain
             , testTanhGrad
             , testExpandDims
             , testReshape
+            , testPad
             , testFillGrad
             , testTileGrad
             , testTile2DGrad
