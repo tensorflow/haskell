@@ -708,6 +708,20 @@ opGrad "Pad" _ [toT -> x, toT -> padPattern] [dz] =
     gradientSliceBegin = CoreOps.reshape padPatternSliced rankx
     gradientSliceSize = shape (x :: Tensor Build Float)
 
+opGrad "BatchToSpaceND" _ [_, toT -> blockShape, toT -> crops] [dz] =
+  [Just $ CoreOps.spaceToBatchND dz blockShape' crops', Nothing, Nothing]
+  where
+    -- TODO: This could be either Int32 or Int64.
+    (blockShape' :: Tensor Build Int32) = blockShape
+    (crops' :: Tensor Build Int32) = crops
+
+opGrad "SpaceToBatchND" _ [_, toT -> blockShape, toT -> paddings] [dz] =
+  [Just $ CoreOps.batchToSpaceND dz blockShape' paddings', Nothing, Nothing]
+  where
+    -- TODO: This could be either Int32 or Int64.
+    (blockShape' :: Tensor Build Int32) = blockShape
+    (paddings' :: Tensor Build Int32) = paddings
+
 opGrad "OneHot" _ _ _ = [Nothing, Nothing, Nothing, Nothing]
 opGrad "TruncatedNormal" _ _ _ = [Nothing]
 
@@ -814,6 +828,7 @@ numOutputs o =
         "Abs" -> 1
         "Add" -> 1
         "AddN" -> 1
+        "BatchToSpaceND" -> 1
         "Cast" -> 1
         "Const" -> 1
         "Concat" -> 1
@@ -848,6 +863,7 @@ numOutputs o =
         "Select" -> 1
         "Size" -> 1
         "SoftmaxCrossEntropyWithLogits" -> 2
+        "SpaceToBatchND" -> 1
         "Square" -> 1
         "SparseSegmentSum" -> 1
         "Sub" -> 1
