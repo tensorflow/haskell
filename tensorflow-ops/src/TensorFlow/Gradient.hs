@@ -20,6 +20,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE TypeApplications #-}
 
 module TensorFlow.Gradient
     ( GradientCompatible
@@ -693,6 +694,7 @@ opGrad "MaxPool" nodeDef [toT -> x] [dz] =
 
 opGrad "Reshape" _ [toT -> x, _] [dz] = [Just $ reshape dz $ shape (x :: Tensor Build a), Nothing]
 opGrad "ExpandDims" n xs@[toT -> _, _] dzs@[_] = opGrad "Reshape" n xs dzs
+opGrad "Squeeze" _ [toT -> x] [dz] = [Just $ reshape dz $ shape (x :: Tensor Build a)]
 opGrad "Pad" _ [toT -> x, toT -> padPattern] [dz] =
   [Just $ CoreOps.slice dz gradientSliceBegin gradientSliceSize, Nothing]
   where
@@ -864,8 +866,9 @@ numOutputs o =
         "Size" -> 1
         "SoftmaxCrossEntropyWithLogits" -> 2
         "SpaceToBatchND" -> 1
-        "Square" -> 1
         "SparseSegmentSum" -> 1
+        "Square" -> 1
+        "Squeeze" -> 1
         "Sub" -> 1
         "Sum" -> 1
         "Tanh" -> 1

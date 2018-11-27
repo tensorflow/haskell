@@ -32,7 +32,7 @@ import Control.Monad(forM_, replicateM, zipWithM)
 import Control.Monad.IO.Class (liftIO)
 
 import qualified TensorFlow.Core as TF
-import qualified TensorFlow.GenOps.Core as TF (conv2DBackpropInput', max, maximum, tile, pad, batchToSpaceND, spaceToBatchND)
+import qualified TensorFlow.GenOps.Core as TF (conv2DBackpropInput', max, maximum, tile, pad, batchToSpaceND, spaceToBatchND, squeeze)
 import qualified TensorFlow.Gradient as TF
 import qualified TensorFlow.Ops as TF hiding (zeroInitializedVariable)
 import qualified TensorFlow.Output as TF
@@ -350,6 +350,17 @@ testSpaceToBatchND =
     V.fromList [1, 1, 1, 1] @=? dx
     V.fromList [1, 2, 2, 1] @=? s
 
+testSqueeze :: Test
+testSqueeze =
+  testCase "testSqueeze" $ do
+    ([dx], [s]) <-
+      TF.runSession $ do
+        (x :: TF.Tensor TF.Value Float) <- TF.render $ TF.zeros $ TF.Shape [1, 2, 3 :: Int64]
+        let y = TF.squeeze x
+        calculateGradWithShape y x
+    V.fromList [1, 1, 1, 1, 1, 1] @=? dx
+    V.fromList [1, 2, 3] @=? s
+
 calculateGradWithShape :: TF.Tensor TF.Build Float -> TF.Tensor TF.Value Float -> SessionT IO ([V.Vector Float], [V.Vector Int32])
 calculateGradWithShape y x = do
   gs <- TF.gradients y [x]
@@ -508,6 +519,7 @@ main = defaultMain
             , testPad
             , testBatchToSpaceND
             , testSpaceToBatchND
+            , testSqueeze
             , testFillGrad
             , testTileGrad
             , testTile2DGrad
