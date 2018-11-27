@@ -32,7 +32,7 @@ import Control.Monad(forM_, replicateM, zipWithM)
 import Control.Monad.IO.Class (liftIO)
 
 import qualified TensorFlow.Core as TF
-import qualified TensorFlow.GenOps.Core as TF (conv2DBackpropInput', max, maximum, tile)
+import qualified TensorFlow.GenOps.Core as TF (conv2DBackpropInput', max, maximum, tile, pad, batchToSpaceND, spaceToBatchND, squeeze)
 import qualified TensorFlow.Gradient as TF
 import qualified TensorFlow.Ops as TF hiding (zeroInitializedVariable)
 import qualified TensorFlow.Output as TF
@@ -313,6 +313,54 @@ testReshape =
     V.fromList [1, 1, 1, 1] @=? dx
     V.fromList [2, 2] @=? s
 
+testPad :: Test
+testPad =
+  testCase "testPad" $ do
+    ([dx], [s]) <-
+      TF.runSession $ do
+        (x :: TF.Tensor TF.Value Float) <- TF.render $ TF.zeros $ TF.Shape [2, 2, 3 :: Int64]
+        let y = TF.pad x $ TF.constant (TF.Shape [3, 2]) [1, 4, 1, 1, 2, 3 :: Int32]
+        calculateGradWithShape y x
+    V.fromList [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1] @=? dx
+    V.fromList [2, 2, 3] @=? s
+
+testBatchToSpaceND :: Test
+testBatchToSpaceND =
+  testCase "testBatchToSpaceND" $ do
+    ([dx], [s]) <-
+      TF.runSession $ do
+        (x :: TF.Tensor TF.Value Float) <- TF.render $ TF.constant (TF.Shape [4, 1, 1, 1 :: Int64]) [1, 2, 3, 4]
+        shape  <- TF.render $ TF.vector [2, 2 :: Int32]
+        crops  <- TF.render $ TF.constant (TF.Shape [2, 2]) [0, 0, 0, 0 :: Int32]
+        let y = TF.batchToSpaceND x shape crops
+        calculateGradWithShape y x
+    V.fromList [1, 1, 1, 1] @=? dx
+    V.fromList [4, 1, 1, 1] @=? s
+
+testSpaceToBatchND :: Test
+testSpaceToBatchND =
+  testCase "testSpaceToBatchND" $ do
+    ([dx], [s]) <-
+      TF.runSession $ do
+        (x :: TF.Tensor TF.Value Float) <- TF.render $ TF.constant (TF.Shape [1, 2, 2, 1 :: Int64]) [1, 2, 3, 4]
+        shape  <- TF.render $ TF.vector [2, 2 :: Int32]
+        paddings  <- TF.render $ TF.constant (TF.Shape [2, 2]) [0, 0, 0, 0 :: Int32]
+        let y = TF.spaceToBatchND x shape paddings
+        calculateGradWithShape y x
+    V.fromList [1, 1, 1, 1] @=? dx
+    V.fromList [1, 2, 2, 1] @=? s
+
+testSqueeze :: Test
+testSqueeze =
+  testCase "testSqueeze" $ do
+    ([dx], [s]) <-
+      TF.runSession $ do
+        (x :: TF.Tensor TF.Value Float) <- TF.render $ TF.zeros $ TF.Shape [1, 2, 3 :: Int64]
+        let y = TF.squeeze x
+        calculateGradWithShape y x
+    V.fromList [1, 1, 1, 1, 1, 1] @=? dx
+    V.fromList [1, 2, 3] @=? s
+
 calculateGradWithShape :: TF.Tensor TF.Build Float -> TF.Tensor TF.Value Float -> SessionT IO ([V.Vector Float], [V.Vector Int32])
 calculateGradWithShape y x = do
   gs <- TF.gradients y [x]
@@ -468,6 +516,10 @@ main = defaultMain
             , testTanhGrad
             , testExpandDims
             , testReshape
+            , testPad
+            , testBatchToSpaceND
+            , testSpaceToBatchND
+            , testSqueeze
             , testFillGrad
             , testTileGrad
             , testTile2DGrad

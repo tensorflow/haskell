@@ -20,6 +20,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE TypeApplications #-}
 
 module TensorFlow.Gradient
     ( GradientCompatible
@@ -693,6 +694,29 @@ opGrad "MaxPool" nodeDef [toT -> x] [dz] =
 
 opGrad "Reshape" _ [toT -> x, _] [dz] = [Just $ reshape dz $ shape (x :: Tensor Build a), Nothing]
 opGrad "ExpandDims" n xs@[toT -> _, _] dzs@[_] = opGrad "Reshape" n xs dzs
+opGrad "Squeeze" _ [toT -> x] [dz] = [Just $ reshape dz $ shape (x :: Tensor Build a)]
+opGrad "Pad" _ [toT -> x, toT -> padPattern] [dz] =
+  [Just $ CoreOps.slice dz gradientSliceBegin gradientSliceSize, Nothing]
+  where
+    v1 = vector [1]
+     -- For some reason rankx' has an empty shape
+    rankx' = CoreOps.rank (x :: Tensor Build Float)
+    rankx = CoreOps.reshape rankx' v1
+    -- Size of column that is sliced from pad pattern
+    padPatternSliceSize = CoreOps.concat 0 [rankx, v1]
+    padPatternSliceBegin = vector [0, 0]
+    padPatternSliced :: Tensor Build Int32 = CoreOps.slice padPattern padPatternSliceBegin padPatternSliceSize
+    -- The slice of the pad pattern has the same rank as the pad pattern itself
+    gradientSliceBegin = CoreOps.reshape padPatternSliced rankx
+    gradientSliceSize = shape (x :: Tensor Build Float)
+
+-- TODO: This could be either Int32 or Int64.
+opGrad "BatchToSpaceND" _ [_, toT @Int32 -> blockShape, toT @Int32 -> crops] [dz] =
+  [Just $ CoreOps.spaceToBatchND dz blockShape crops, Nothing, Nothing]
+
+-- TODO: This could be either Int32 or Int64.
+opGrad "SpaceToBatchND" _ [_, toT @Int32 -> blockShape, toT @Int32 -> paddings] [dz] =
+  [Just $ CoreOps.batchToSpaceND dz blockShape paddings, Nothing, Nothing]
 
 opGrad "OneHot" _ _ _ = [Nothing, Nothing, Nothing, Nothing]
 opGrad "TruncatedNormal" _ _ _ = [Nothing]
@@ -800,6 +824,7 @@ numOutputs o =
         "Abs" -> 1
         "Add" -> 1
         "AddN" -> 1
+        "BatchToSpaceND" -> 1
         "Cast" -> 1
         "Const" -> 1
         "Concat" -> 1
@@ -823,6 +848,7 @@ numOutputs o =
         "Min" -> 1
         "Mul" -> 1
         "Neg" -> 1
+        "Pad" -> 1
         "Placeholder" -> 1
         "OneHot" -> 1
         "ReadVariableOp" -> 1
@@ -833,8 +859,10 @@ numOutputs o =
         "Select" -> 1
         "Size" -> 1
         "SoftmaxCrossEntropyWithLogits" -> 2
-        "Square" -> 1
+        "SpaceToBatchND" -> 1
         "SparseSegmentSum" -> 1
+        "Square" -> 1
+        "Squeeze" -> 1
         "Sub" -> 1
         "Sum" -> 1
         "Tanh" -> 1
