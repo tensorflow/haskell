@@ -13,8 +13,7 @@
 -- limitations under the License.
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE RankNTypes          #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE MonoLocalBinds #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module TensorFlow.Minimize
   ( Minimizer
@@ -35,15 +34,14 @@ import           Data.Maybe          (fromMaybe)
 
 import qualified TensorFlow.Core     as TF
 import qualified TensorFlow.Gradient as TF
-import qualified TensorFlow.Ops      as TF (scalar, mul, zerosLike)
+import qualified TensorFlow.Ops      as TF (scalar, mul, zerosLike, shape)
 import qualified TensorFlow.Variable as TF
 
 import qualified TensorFlow.Tensor   as TF (Rendered, ToTensor)
 
 import qualified TensorFlow.GenOps.Core as TFO (applyAdam, assignAdd, assign)
 import qualified TensorFlow.Ops         as TFO (assign, initializedVariable,
-                                                initializedVariable', scalar,
-                                                zeroInitializedVariable, zeros, initializedVariable)
+                                                scalar, zeroInitializedVariable)
 
 -- | Functions that minimize a loss w.r.t. a set of 'TF.Variable's or 'TF.Tensor TF.Ref's.
 --
@@ -83,7 +81,7 @@ gradientDescent ::
   -> Minimizer TF.Variable a m
 gradientDescent = minimizer TF.assignAdd
 
--- | Perform one step of the gradient descent algorithm for TF.Tensor TF.Ref
+-- | Perform one step of the gradient descent algorithm for `TF.Tensor TF.Ref`.
 gradientDescentRef ::
     (TF.MonadBuild m,
      TF.GradientCompatible a)
@@ -103,7 +101,7 @@ data AdamConfig = AdamConfig
 instance Default AdamConfig where
   def = AdamConfig 0.001 0.9 0.999 1e-8
 
--- | Perform one step of the adam algorithm.
+-- | Perform one step of the adam algorithm for `TF.Variable`.
 --
 -- See https://arxiv.org/abs/1412.6980.
 --
@@ -117,20 +115,25 @@ adam' config =
       initVal = fromMaybe (error errorMsg) . TF.initializedValue
    in adam''
         config
-        (TF.initializedVariable . TF.zerosLike . initVal)
+        (mapM (TF.initializedVariable . TF.zerosLike . TF.readValue))
         TF.initializedVariable
         TF.resourceApplyAdam
         TF.readValue
         TF.assign
 
-adamRef :: Minimizer (TF.Tensor TF.Ref) Float TF.Build
+adamRef :: [TF.Shape] -> Minimizer (TF.Tensor TF.Ref) Float TF.Build
 adamRef = adamRef' def
 
-adamRef' :: AdamConfig -> Minimizer (TF.Tensor TF.Ref) Float TF.Build
-adamRef' config =
+-- | Perform one step of the adam algorithm for `TF.Tensor TF.Ref`.
+-- |
+--   Similar solution as for `TF.Variable` works sometimes...
+--   Creating initialized variables the same as for `TF.Variable` is `(TFO.initializedVariable . TF.zerosLike . TF.value)`
+--   but gives many times runtime error: "attempting to use uninitialized value variable"
+adamRef' :: AdamConfig -> [TF.Shape] -> Minimizer (TF.Tensor TF.Ref) Float TF.Build
+adamRef' config shapes =
   adam''
     config
-    (TFO.initializedVariable . TF.zerosLike . TF.value)
+    (\_ -> mapM TFO.zeroInitializedVariable shapes)
     TFO.initializedVariable
     TFO.applyAdam
     TF.expr
@@ -138,33 +141,33 @@ adamRef' config =
 
 adam'' :: forall t n . (TF.Nodes n, TF.ToTensor t, TF.Rendered t) =>
      AdamConfig
-  -> (t Float -> TF.Build (t Float))
+  -> ([t Float] -> TF.Build [t Float])
   -> (TF.Tensor TF.Build Float -> TF.Build (t Float))
   -> (t Float -> t Float -> t Float -> TF.Tensor TF.Build Float -> TF.Tensor TF.Build Float -> TF.Tensor TF.Build Float -> TF.Tensor TF.Build Float -> TF.Tensor TF.Build Float -> TF.Tensor TF.Build Float -> TF.Tensor TF.Value Float -> TF.Build n)
   -> (t Float -> TF.Tensor TF.Build Float)
   -> (t Float -> TF.Tensor TF.Build Float -> TF.Build n)
   -> Minimizer t Float TF.Build
-adam'' config initVar initV aGrad rv asi = Minimizer
+adam'' config initVarZero initVar applyAdam readValue assign = Minimizer
   { minimize = \params grads -> TF.withNameScope "adam" $ do
     let lr = TF.scalar (adamLearningRate config)
         beta1 = TF.scalar (adamBeta1 config)
         beta2 = TF.scalar (adamBeta2 config)
         epsilon = TF.scalar (adamEpsilon config)
     -- Create adam state variables.
-    ms <- mapM initVar params
-    vs <- mapM initVar params
-    beta1Power <- initV beta1
-    beta2Power <- initV beta2
+    ms <- initVarZero params
+    vs <- initVarZero params
+    beta1Power <- initVar beta1
+    beta2Power <- initVar beta2
     -- Perform adam update.
-    let applyGrad param m v = aGrad param m v
-                                 (rv beta1Power)
-                                 (rv beta2Power)
+    let applyGrad param m v = applyAdam param m v
+                                 (readValue beta1Power)
+                                 (readValue beta2Power)
                                  lr beta1 beta2 epsilon
     updateVars <- sequence $ zipWith4 applyGrad params ms vs grads
     -- Update beta variables after adam update.
     let updateBeta betaPower beta =
             TF.withControlDependencies updateVars
-                (asi betaPower (rv betaPower `TF.mul` beta))
+                (assign betaPower (readValue betaPower `TF.mul` beta))
     updateBeta1 <- updateBeta beta1Power beta1
     updateBeta2 <- updateBeta beta2Power beta2
     TF.group (updateBeta1:updateBeta2:updateVars)
