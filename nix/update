@@ -7,7 +7,7 @@ set -euo pipefail
 
 cd "$(dirname "$0")" || exit 1
 
-branch=release-17.09
+branch=release-18.04
 
 owner=NixOS
 repo=nixpkgs
