@@ -1,4 +1,4 @@
-resolver: lts-11.9
+resolver: lts-12.26
 
 packages:
 - tensorflow
@@ -14,12 +14,7 @@ packages:
 - tensorflow-test
 
 extra-deps:
-- snappy-framing-0.1.1
-- snappy-0.2.0.2
-- proto-lens-protobuf-types-0.3.0.1
-- proto-lens-protoc-0.3.1.0
-- proto-lens-0.3.1.0
-- lens-labels-0.2.0.1
+- snappy-framing-0.1.2
 
 # For Mac OS X, whose linker doesn't use this path by default
 # unless you run `xcode-select --install`.
