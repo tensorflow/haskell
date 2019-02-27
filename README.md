@@ -124,6 +124,21 @@ After running the script to install system dependencies, build the project with 
 
     stack test
 
+## Build on CentOS (native OS with stack)
+
+1. install `stack` with version >1.4.0
+
+2. run the [install_centos_dependencies.sh](./tools/install_centos_dependencies.sh)
+script in the `tools/` directory to install dependencies.
+- Protocol Buffers (git version to support the latest build with GHC 8.4.4)
+- Snappy (install via `yum`)
+- libtensorflow (deployed to `/usr/lib64/` and `/usr/include`)
+
+3. test with this library repo via `stack test`
+
+4. develop your own project with `resolver: lts-12.26` in the `stack.yaml` file
+   and an `extra-deps` entry pointed to this repo.
+
 ## Build on NixOS
 
 The `shell.nix` provides an environment containing the necessary
