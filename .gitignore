@@ -1,3 +1,6 @@
 **/.stack-work
 .stack/
 tensorflow-mnist-input-data/data/*.gz
+out/
+.idea/
+*.iml
