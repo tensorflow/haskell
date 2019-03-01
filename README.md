@@ -139,6 +139,10 @@ to enter the environment and build the project. Note, that it is an emulation
 of common Linux environment rather than full-featured Nix package expression.
 No exportable Nix package will appear, but local development is possible.
 
+## Installation on CentOS
+
+[Xiaokui Shu (@subbyte)](https://github.com/subbyte) maintains [separate instructions for installation on CentOS](https://github.com/subbyte/haskell-learn/blob/master/tensorflow_setup.md).
+
 # Related Projects
 
 ## Statically validated tensor shapes
