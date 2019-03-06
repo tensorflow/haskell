@@ -710,6 +710,27 @@ opGrad "Pad" _ [toT -> x, toT -> padPattern] [dz] =
     gradientSliceBegin = CoreOps.reshape padPatternSliced rankx
     gradientSliceSize = shape (x :: Tensor Build Float)
 
+-- Gradient for Slice
+-- Create an Nx2 padding where N ist the rank of (grad of) Slice and the first
+-- column represents how many zeros are to be prepended for each dimension, and the second
+-- column indicates how many zeros are appended.
+-- The number of zeros to prepend is the shape of the beginvec.
+-- The number of zeros to append is the shape of the inputvec
+-- elementwise-subtracted by both the beginvec and sizevec.
+-- Some more reshaping is needed to assemble this tensor with the
+-- right dimensions.
+opGrad "Slice" _ [toT -> inputvec, toT -> beginvec, _] [dz] =
+   [Just $ CoreOps.pad dz paddings, Nothing, Nothing]
+  where
+    v1 = vector [1 :: Int32]
+    input_rank' = CoreOps.rank (inputvec :: Tensor Build Float)
+    -- For some reason input_rank' has an empty shape
+    input_rank = CoreOps.reshape input_rank' v1
+    pad_shape = CoreOps.concat 0 [input_rank, v1]
+    beforepad = CoreOps.reshape beginvec pad_shape
+    afterpad = CoreOps.reshape (shape inputvec - shape dz - beginvec) pad_shape
+    paddings = CoreOps.concat 1 [beforepad, afterpad]
+
 -- TODO: This could be either Int32 or Int64.
 opGrad "BatchToSpaceND" _ [_, toT @Int32 -> blockShape, toT @Int32 -> crops] [dz] =
   [Just $ CoreOps.spaceToBatchND dz blockShape crops, Nothing, Nothing]
@@ -862,6 +883,7 @@ numOutputs o =
         "Reshape" -> 1
         "Select" -> 1
         "Size" -> 1
+        "Slice" -> 1
         "SoftmaxCrossEntropyWithLogits" -> 2
         "SpaceToBatchND" -> 1
         "SparseSegmentSum" -> 1
