@@ -834,6 +834,10 @@ opGrad "Placeholder" _ _ _ = []
 opGrad "VarHandleOp" _ _ _ = []
 opGrad "Variable" _ _ _ = []
 
+opGrad "Sqrt" _ [toT -> x] [dz] = [Just $ sq' `CoreOps.mul` dz]
+  where
+    sq' = vector [1] `CoreOps.div` (vector [2] `CoreOps.mul` CoreOps.sqrt x)
+
 opGrad n nodeDef ins grads =
     error $ "no gradient implemented for " ++
             show (n, length ins, length grads, showMessage nodeDef, ins)
@@ -885,6 +889,7 @@ numOutputs o =
         "SparseSegmentSum" -> 1
         "Square" -> 1
         "Squeeze" -> 1
+        "Sqrt" -> 1
         "Sub" -> 1
         "Sum" -> 1
         "Tanh" -> 1
