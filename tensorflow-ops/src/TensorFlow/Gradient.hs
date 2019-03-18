@@ -815,7 +815,7 @@ opGrad "Variable" _ _ _ = []
 
 opGrad "Sqrt" _ [toT -> x] [dz] = [Just $ sq' `CoreOps.mul` dz]
   where
-    sq' = vector [1] `CoreOps.div` (vector [2] `CoreOps.mul` CoreOps.sqrt x)
+    sq' = scalar 1 `CoreOps.div` (scalar 2 `CoreOps.mul` CoreOps.sqrt x)
 
 opGrad n nodeDef ins grads =
     error $ "no gradient implemented for " ++

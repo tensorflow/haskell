@@ -327,10 +327,10 @@ testPad =
 testSqrt :: Test
 testSqrt = testCase "testSqrt" $ do
     [dx] <- TF.runSession $ do
-        x <- TF.render $ TF.vector [0.25 :: Float]
+        x <- TF.render $ TF.vector [0.0625 :: Float]
         let y = TF.sqrt x
         TF.gradients y [x] >>= TF.run
-    V.fromList [1] @=? dx
+    V.fromList [2] @=? dx
 
 testBatchToSpaceND :: Test
 testBatchToSpaceND =
