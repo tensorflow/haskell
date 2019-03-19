@@ -32,7 +32,7 @@ import Control.Monad(forM_, replicateM, zipWithM)
 import Control.Monad.IO.Class (liftIO)
 
 import qualified TensorFlow.Core as TF
-import qualified TensorFlow.GenOps.Core as TF (conv2DBackpropInput', max, maximum, tile, pad, batchToSpaceND, spaceToBatchND, squeeze)
+import qualified TensorFlow.GenOps.Core as TF (conv2DBackpropInput', max, maximum, tile, pad, batchToSpaceND, spaceToBatchND, squeeze, sqrt)
 import qualified TensorFlow.Gradient as TF
 import qualified TensorFlow.Ops as TF hiding (zeroInitializedVariable)
 import qualified TensorFlow.Output as TF
@@ -324,6 +324,14 @@ testPad =
     V.fromList [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1] @=? dx
     V.fromList [2, 2, 3] @=? s
 
+testSqrt :: Test
+testSqrt = testCase "testSqrt" $ do
+    [dx] <- TF.runSession $ do
+        x <- TF.render $ TF.vector [0.0625 :: Float]
+        let y = TF.sqrt x
+        TF.gradients y [x] >>= TF.run
+    V.fromList [2] @=? dx
+
 testBatchToSpaceND :: Test
 testBatchToSpaceND =
   testCase "testBatchToSpaceND" $ do
@@ -517,6 +525,7 @@ main = defaultMain
             , testExpandDims
             , testReshape
             , testPad
+            , testSqrt
             , testBatchToSpaceND
             , testSpaceToBatchND
             , testSqueeze
