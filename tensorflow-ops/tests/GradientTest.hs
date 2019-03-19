@@ -342,7 +342,14 @@ testSlice =
         (z :: TF.Tensor TF.Value Float) <- TF.render $ TF.zeros $ TF.Shape [1, 2, 2 :: Int64]
         let y = TF.slice x (TF.constant (TF.Shape [3]) [1, 1, 1 :: Int32]) (TF.shape z)
         calculateGradWithShape y x
-    V.fromList [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0] @=? dx
+    let expected =
+         [0, 0, 0, 0,
+          0, 0, 0, 0,
+          0, 0, 0, 0,
+          0, 0, 0, 0,
+          0, 1, 1, 0,
+          0, 1, 1, 0]
+    V.fromList expected @=? dx
     V.fromList [2, 3, 4] @=? s
 
 testBatchToSpaceND :: Test

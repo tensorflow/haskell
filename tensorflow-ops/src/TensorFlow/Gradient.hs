@@ -711,7 +711,7 @@ opGrad "Pad" _ [toT -> x, toT -> padPattern] [dz] =
     gradientSliceSize = shape (x :: Tensor Build Float)
 
 -- Gradient for Slice
--- Create an Nx2 padding where N ist the rank of (grad of) Slice and the first
+-- Create an Nx2 padding where N is the rank of (grad of) Slice and the first
 -- column represents how many zeros are to be prepended for each dimension, and the second
 -- column indicates how many zeros are appended.
 -- The number of zeros to prepend is the shape of the beginvec.
@@ -723,13 +723,13 @@ opGrad "Slice" _ [toT -> inputvec, toT -> beginvec, _] [dz] =
    [Just $ CoreOps.pad dz paddings, Nothing, Nothing]
   where
     v1 = vector [1 :: Int32]
-    input_rank' = CoreOps.rank (inputvec :: Tensor Build Float)
-    -- For some reason input_rank' has an empty shape
-    input_rank = CoreOps.reshape input_rank' v1
-    pad_shape = CoreOps.concat 0 [input_rank, v1]
-    beforepad = CoreOps.reshape beginvec pad_shape
-    afterpad = CoreOps.reshape (shape inputvec - shape dz - beginvec) pad_shape
-    paddings = CoreOps.concat 1 [beforepad, afterpad]
+    inputRank' = CoreOps.rank (inputvec :: Tensor Build Float)
+    -- For some reason inputRank' has an empty shape
+    inputRank = CoreOps.reshape inputRank' v1
+    padShape = CoreOps.concat 0 [inputRank, v1]
+    beforePad = CoreOps.reshape beginvec padShape
+    afterPad = CoreOps.reshape (shape inputvec - shape dz - beginvec) padShape
+    paddings = CoreOps.concat 1 [beforePad, afterPad]
 
 -- TODO: This could be either Int32 or Int64.
 opGrad "BatchToSpaceND" _ [_, toT @Int32 -> blockShape, toT @Int32 -> crops] [dz] =
