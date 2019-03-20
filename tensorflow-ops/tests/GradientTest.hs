@@ -16,6 +16,7 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE NoMonadFailDesugaring #-}
 
 import Data.Int (Int32, Int64)
 import Data.List (sort)
