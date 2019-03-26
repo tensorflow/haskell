@@ -32,9 +32,9 @@ import Control.Monad(forM_, replicateM, zipWithM)
 import Control.Monad.IO.Class (liftIO)
 
 import qualified TensorFlow.Core as TF
-import qualified TensorFlow.GenOps.Core as TF (conv2DBackpropInput', max, maximum, tile, pad, batchToSpaceND, spaceToBatchND, squeeze, sqrt)
+import qualified TensorFlow.GenOps.Core as TF (conv2DBackpropInput', max, maximum, tile, pad, batchToSpaceND, spaceToBatchND, squeeze, sqrt, slice, shape)
 import qualified TensorFlow.Gradient as TF
-import qualified TensorFlow.Ops as TF hiding (zeroInitializedVariable)
+import qualified TensorFlow.Ops as TF hiding (zeroInitializedVariable, shape)
 import qualified TensorFlow.Output as TF
 import qualified TensorFlow.Types as TF
 import qualified TensorFlow.Variable as TF
@@ -324,6 +324,7 @@ testPad =
     V.fromList [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1] @=? dx
     V.fromList [2, 2, 3] @=? s
 
+
 testSqrt :: Test
 testSqrt = testCase "testSqrt" $ do
     [dx] <- TF.runSession $ do
@@ -331,6 +332,25 @@ testSqrt = testCase "testSqrt" $ do
         let y = TF.sqrt x
         TF.gradients y [x] >>= TF.run
     V.fromList [2] @=? dx
+
+testSlice :: Test
+testSlice =
+  testCase "testSlice" $ do
+    ([dx], [s]) <-
+      TF.runSession $ do
+        (x :: TF.Tensor TF.Value Float) <- TF.render $ TF.zeros $ TF.Shape [2, 3, 4 :: Int64]
+        (z :: TF.Tensor TF.Value Float) <- TF.render $ TF.zeros $ TF.Shape [1, 2, 2 :: Int64]
+        let y = TF.slice x (TF.constant (TF.Shape [3]) [1, 1, 1 :: Int32]) (TF.shape z)
+        calculateGradWithShape y x
+    let expected =
+         [0, 0, 0, 0,
+          0, 0, 0, 0,
+          0, 0, 0, 0,
+          0, 0, 0, 0,
+          0, 1, 1, 0,
+          0, 1, 1, 0]
+    V.fromList expected @=? dx
+    V.fromList [2, 3, 4] @=? s
 
 testBatchToSpaceND :: Test
 testBatchToSpaceND =
@@ -526,6 +546,7 @@ main = defaultMain
             , testReshape
             , testPad
             , testSqrt
+            , testSlice
             , testBatchToSpaceND
             , testSpaceToBatchND
             , testSqueeze
