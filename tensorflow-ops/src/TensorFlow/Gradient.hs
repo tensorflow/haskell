@@ -676,6 +676,41 @@ opGrad "Conv2DBackpropInput" nodeDef [_, toT -> x, toT -> y] [dz] =
     useCudnnOnGpu = lookupAttr nodeDef "use_cudnn_on_gpu" :: Bool
     dataFormat = lookupAttr nodeDef "data_format" :: ByteString
 
+opGrad "DepthwiseConv2dNative" nodeDef [toT -> x, toT -> y] [dz] =
+    [ Just $ CoreOps.depthwiseConv2dNativeBackpropInput'
+                ((opAttr "strides" .~ strides)
+                    . (opAttr "padding" .~ padding)
+                    . (opAttr "data_format" .~ dataFormat))
+                (shape x) y dz
+    , Just $ CoreOps.depthwiseConv2dNativeBackpropFilter'
+                ((opAttr "strides" .~ strides)
+                    . (opAttr "padding" .~ padding)
+                    . (opAttr "data_format" .~ dataFormat))
+                x (shape y) dz
+    ]
+  where
+    strides = lookupAttr nodeDef "strides" :: [Int64]
+    padding = lookupAttr nodeDef "padding" :: ByteString
+    dataFormat = lookupAttr nodeDef "data_format" :: ByteString
+
+opGrad "DepthwiseConv2dNativeBackpropInput" nodeDef [_, toT -> x, toT -> y] [dz] =
+    [ Nothing
+    , Just $ CoreOps.depthwiseConv2dNativeBackpropFilter'
+                ((opAttr "strides" .~ strides)
+                    . (opAttr "padding" .~ padding)
+                    . (opAttr "data_format" .~ dataFormat))
+                dz (shape x) y
+    , Just $ CoreOps.depthwiseConv2dNative'
+                ((opAttr "strides" .~ strides)
+                    . (opAttr "padding" .~ padding)
+                    . (opAttr "data_format" .~ dataFormat))
+                dz x
+    ]
+  where
+    strides = lookupAttr nodeDef "strides" :: [Int64]
+    padding = lookupAttr nodeDef "padding" :: ByteString
+    dataFormat = lookupAttr nodeDef "data_format" :: ByteString
+
 opGrad "MaxPool" nodeDef [toT -> x] [dz] =
     [ Just $ CoreOps.maxPoolGrad'
                 ((opAttr "ksize" .~ ksize)
@@ -866,6 +901,8 @@ numOutputs o =
         "Concat" -> 1
         "Conv2D" -> 1
         "Conv2DBackpropInput" -> 1
+        "DepthwiseConv2dNative" -> 1
+        "DepthwiseConv2dNativeBackpropInput" -> 1
         "Div" -> 1
         "DynamicStitch" -> 1
         "DynamicPartition" ->
