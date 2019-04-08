@@ -817,6 +817,17 @@ opGrad "Tile" _ [toT -> x, toT -> multiples] [dz] =
     axes = CoreOps.range 0 (CoreOps.size splitShape) (2 :: Tensor Build Int32)
     reshapedDz = CoreOps.reshape dz splitShape
 
+opGrad "ResizeBilinear" nodeDef [toT -> x, _] [dz] =
+    [ Just $ CoreOps.resizeBilinearGrad'
+               (opAttr "align_corners" .~ align)
+               (CoreOps.cast dz)
+               x
+
+    , Nothing
+    ]
+  where
+    align = lookupAttr nodeDef "align_corners" :: Bool
+
 opGrad "ZerosLike" _ _ _ = [Nothing]
 opGrad "Fill" _ _ [dz] = [Nothing, Just $ sum dz rx]
   where
@@ -894,6 +905,7 @@ numOutputs o =
         "Sum" -> 1
         "Tanh" -> 1
         "Tile" -> 1
+        "ResizeBilinear" -> 1
         "Transpose" -> 1
         "TruncatedNormal" -> 1
         "VarHandleOp" -> 1
