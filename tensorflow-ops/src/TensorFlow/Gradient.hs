@@ -556,7 +556,7 @@ opGrad "Sum" _ [toT -> x, toT -> indices] [dz] =
     grad = reshape dz outputShapeKeptDims
 
 opGrad "Mean" u v@[toT -> x, _] w =
-    [Just $ dz `CoreOps.div` CoreOps.cast factor, Nothing]
+    [Just $ dz `CoreOps.div` (CoreOps.stopGradient $ CoreOps.cast $ factor), Nothing]
   where
     [Just dz, Nothing] = opGrad "Sum" u v w
     inputShape = shape (x :: Tensor Build a)
@@ -842,6 +842,7 @@ opGrad "ReadVariableOp" _ _ [dz] = [Just $ expr dz]
 -- TODO(fmayle): These can go away if we properly prune the graph.
 opGrad "Const" _ _ _ = [Nothing, Nothing]
 opGrad "Placeholder" _ _ _ = []
+opGrad "StopGradient" _ _ _ = [Nothing]
 opGrad "VarHandleOp" _ _ _ = []
 opGrad "Variable" _ _ _ = []
 
@@ -886,6 +887,7 @@ numOutputs o =
         "Neg" -> 1
         "Pad" -> 1
         "Placeholder" -> 1
+        "StopGradient" -> 1
         "OneHot" -> 1
         "ReadVariableOp" -> 1
         "RefIdentity" -> 1
