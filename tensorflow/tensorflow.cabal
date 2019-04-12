@@ -36,7 +36,7 @@ library
                   , TensorFlow.Types
   other-modules:    TensorFlow.Internal.Raw
   build-tools:      c2hs
-  build-depends:  proto-lens == 0.3.*
+  build-depends:  proto-lens == 0.4.*
                 , tensorflow-proto == 0.2.*
                 , base >= 4.7 && < 5
                 , async

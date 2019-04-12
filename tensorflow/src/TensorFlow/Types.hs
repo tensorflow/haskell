@@ -64,9 +64,9 @@ module TensorFlow.Types
     , AllTensorTypes
     ) where
 
+import Data.ProtoLens.Message(defMessage)
 import Data.Functor.Identity (Identity(..))
 import Data.Complex (Complex)
-import Data.Default (def)
 import Data.Int (Int8, Int16, Int32, Int64)
 import Data.Maybe (fromMaybe)
 import Data.Monoid ((<>))
@@ -88,8 +88,8 @@ import qualified Data.ByteString.Lazy as L
 import qualified Data.Vector as V
 import qualified Data.Vector.Storable as S
 import Proto.Tensorflow.Core.Framework.AttrValue
-    ( AttrValue(..)
-    , AttrValue'ListValue(..)
+    ( AttrValue
+    , AttrValue'ListValue
     )
 import Proto.Tensorflow.Core.Framework.AttrValue_Fields
     ( b
@@ -105,7 +105,7 @@ import Proto.Tensorflow.Core.Framework.AttrValue_Fields
 import Proto.Tensorflow.Core.Framework.ResourceHandle
     (ResourceHandleProto)
 import Proto.Tensorflow.Core.Framework.Tensor as Tensor
-    (TensorProto(..))
+    (TensorProto)
 import Proto.Tensorflow.Core.Framework.Tensor_Fields as Tensor
     ( boolVal
     , doubleVal
@@ -119,7 +119,7 @@ import Proto.Tensorflow.Core.Framework.Tensor_Fields as Tensor
     )
 
 import Proto.Tensorflow.Core.Framework.TensorShape
-    (TensorShapeProto(..))
+    (TensorShapeProto)
 import Proto.Tensorflow.Core.Framework.TensorShape_Fields
     ( dim
     , size
@@ -400,7 +400,7 @@ protoShape = iso protoToShape shapeToProto
     protoToShape p = fromMaybe (error msg) (view protoMaybeShape p)
       where msg = "Can't convert TensorShapeProto with unknown rank to Shape: "
                   ++ showMessageShort p
-    shapeToProto s' = def & protoMaybeShape .~ Just s'
+    shapeToProto s' = defMessage & protoMaybeShape .~ Just s'
 
 protoMaybeShape :: Lens' TensorShapeProto (Maybe Shape)
 protoMaybeShape = iso protoToShape shapeToProto
@@ -412,9 +412,9 @@ protoMaybeShape = iso protoToShape shapeToProto
             else Just (Shape (p ^.. dim . traverse . size))
     shapeToProto :: Maybe Shape -> TensorShapeProto
     shapeToProto Nothing =
-        def & unknownRank .~ True
+        defMessage & unknownRank .~ True
     shapeToProto (Just (Shape ds)) =
-        def & dim .~ fmap (\d -> def & size .~ d) ds
+        defMessage & dim .~ fmap (\d -> defMessage & size .~ d) ds
 
 
 class Attribute a where
