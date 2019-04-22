@@ -230,6 +230,23 @@ testAddNGradient = testCase "testAddNGradient" $ do
         TF.gradients y [x] >>= TF.run
     V.fromList [2, 2, 2 :: Float] @=? dx
 
+testMeanGradient :: Test
+testMeanGradient = testCase "testMeanGradient" $ do
+    [dx] <- TF.runSession $ do
+        x <- TF.render $ TF.vector [1, 2, 0 :: Float]
+        let y = TF.mean x (TF.vector [0 :: Int32])
+        TF.gradients y [x] >>= TF.run
+    V.fromList [1, 1, 1 :: Float] @=? dx
+
+testMeanGradGrad :: Test
+testMeanGradGrad = testCase "testMeanGradGrad" $ do
+    [ddx] <- TF.runSession $ do
+        x <- TF.render $ TF.vector [1, 2, 0 :: Float]
+        let y = TF.mean x (TF.vector [0 :: Int32])
+        [dx] <- TF.gradients y [x]
+        TF.gradients dx [x] >>= TF.run
+
+    V.fromList [0, 0, 0 :: Float] @=? ddx
 
 testMaxGradient :: Test
 testMaxGradient = testCase "testMaxGradient" $ do
@@ -611,6 +628,8 @@ main = defaultMain
             , testCreateGraphNameScopes
             , testDiamond
             , testAddNGradient
+            , testMeanGradient
+            , testMeanGradGrad
             , testMaxGradient
             , testConcatGradient
             , testConcatGradientSimple
