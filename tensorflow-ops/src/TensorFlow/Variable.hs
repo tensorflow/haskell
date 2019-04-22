@@ -11,6 +11,7 @@
 {-# LANGUAGE RecursiveDo #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE NoMonadFailDesugaring #-}
 module TensorFlow.Variable
     ( Variable
     , variable

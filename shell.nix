@@ -11,8 +11,8 @@ let
   pkgs = import nixpkgs {};
 in
   pkgs.haskell.lib.buildStackProject {
-    # Either use specified GHC or use GHC 8.4.4 (which we need for LTS 12.26)
-    ghc = if isNull ghc then pkgs.haskell.compiler.ghc844 else ghc;
+    # Either use specified GHC or use GHC 8.6.4 (which we need for LTS 13.13)
+    ghc = if isNull ghc then pkgs.haskell.compiler.ghc864 else ghc;
     extraArgs = "--system-ghc";
     name = "tf-env";
     buildInputs = with pkgs; [ snappy zlib protobuf libtensorflow ];

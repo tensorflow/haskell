@@ -16,6 +16,7 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE NoMonadFailDesugaring #-}
 
 import Data.Int (Int32, Int64)
 import Data.List (sort)
@@ -32,7 +33,7 @@ import Control.Monad(forM_, replicateM, zipWithM)
 import Control.Monad.IO.Class (liftIO)
 
 import qualified TensorFlow.Core as TF
-import qualified TensorFlow.GenOps.Core as TF (conv2DBackpropInput', max, maximum, resizeBilinear', tile, pad, batchToSpaceND, spaceToBatchND, squeeze, sqrt, slice, shape)
+import qualified TensorFlow.GenOps.Core as TF (conv2DBackpropInput', max, maximum, resizeBilinear', tile, pad, batchToSpaceND, spaceToBatchND, squeeze, sqrt, slice, shape, diag)
 import qualified TensorFlow.Gradient as TF
 import qualified TensorFlow.Ops as TF hiding (zeroInitializedVariable, shape)
 import qualified TensorFlow.Output as TF
@@ -123,6 +124,65 @@ testGradientDisconnected = testCase "testGradientDisconnected" $ do
                    ]
     sort expected @=? sort ops
 
+testGradientIncidental :: Test
+testGradientIncidental = testCase "testGradientIncidental" $ do
+    let grads = do
+            x <- TF.render $ TF.scalar (3 :: Float)
+            b <- TF.render $ TF.scalar (4 :: Float)
+            w <- TF.render $ TF.diag $ TF.vector [ 1.0 :: Float ]
+            let incidental = b `TF.mul` w
+            let y = (x `TF.mul` b) `TF.add` incidental
+            TF.gradients y [x]
+
+    -- Assert that the gradients are right.
+    [dx] <- TF.runSession $ grads >>= TF.run
+    4 @=? TF.unScalar dx
+    -- Assert that the graph has the expected ops.
+    let graphDef = TF.asGraphDef grads
+    putStrLn $ showMessage graphDef
+    let ops = graphDef ^.. node . traverse . op
+        expected = [ "Add"
+                   , "BroadcastGradientArgs"
+                   , "BroadcastGradientArgs"
+                   , "Const"
+                   , "Const"
+                   , "Const"
+                   , "Const"
+                   , "Diag"
+                   , "Fill"
+                   , "Mul"
+                   , "Mul"
+                   , "Mul"
+                   , "Mul"
+                   , "Reshape"
+                   , "Reshape"
+                   , "Reshape"
+                   , "Reshape"
+                   , "Shape"
+                   , "Shape"
+                   , "Shape"
+                   , "Shape"
+                   , "Shape"
+                   , "Sum"
+                   , "Sum"
+                   , "Sum"
+                   , "Sum"
+                   ]
+    sort expected @=? sort ops
+
+testGradientPruning :: Test
+testGradientPruning = testCase "testGradientPruning" $ do
+    let grads = do
+            x <- TF.render $ TF.scalar (3 :: Float)
+            b <- TF.render $ TF.scalar (4 :: Float)
+            bx <- TF.render $ b `TF.mul` x
+            let y = bx `TF.add` b
+            TF.gradients y [x, bx]
+
+    -- Assert that the gradients are right.
+    [dx, dxb] <- TF.runSession $ grads >>= TF.run
+    4 @=? TF.unScalar dx
+    1 @=? TF.unScalar dxb
 
 -- Test that identical "stateful" ops work with createGraph.
 testCreateGraphStateful :: Test
@@ -562,6 +622,8 @@ main :: IO ()
 main = defaultMain
             [ testGradientSimple
             , testGradientDisconnected
+            , testGradientIncidental
+            , testGradientPruning
             , testCreateGraphStateful
             , testCreateGraphNameScopes
             , testDiamond
