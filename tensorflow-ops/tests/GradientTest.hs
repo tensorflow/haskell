@@ -33,7 +33,7 @@ import Control.Monad(forM_, replicateM, zipWithM)
 import Control.Monad.IO.Class (liftIO)
 
 import qualified TensorFlow.Core as TF
-import qualified TensorFlow.GenOps.Core as TF (conv2DBackpropInput', max, maximum, resizeBilinear', tile, pad, batchToSpaceND, spaceToBatchND, squeeze, sqrt, slice, shape, diag)
+import qualified TensorFlow.GenOps.Core as TF (conv2DBackpropInput', max, maximum, resizeBilinear', tile, pad, batchToSpaceND, spaceToBatchND, squeeze, sqrt, slice, shape, diag, depthwiseConv2dNative', depthwiseConv2dNativeBackpropInput')
 import qualified TensorFlow.Gradient as TF
 import qualified TensorFlow.Ops as TF hiding (zeroInitializedVariable, shape)
 import qualified TensorFlow.Output as TF
@@ -596,6 +596,7 @@ transAttrs :: (TF.Attribute a,
 transAttrs a b =
   (TF.opAttr "transpose_a" .~ a) . (TF.opAttr "transpose_b" .~ b)
 
+-- TODO check gradient with regard to filter also
 testConv2DBackpropInputGrad :: Test
 testConv2DBackpropInputGrad = testCase "testConv2DBackpropInputGrad" $ do
     (dx, shapeDX, shapeX) <- TF.runSession $ do
@@ -617,6 +618,47 @@ testConv2DBackpropInputGrad = testCase "testConv2DBackpropInputGrad" $ do
     shapeX @=? (shapeDX :: V.Vector Int32)
     V.fromList [4::Float] @=? (dx :: V.Vector Float)
 
+testDepthwiseConv2dGrad :: Test
+testDepthwiseConv2dGrad = testCase "testDepthwiseConv2dGrad" $ do
+    (dx, shapeDX, shapeX) <- TF.runSession $ do
+        let conv_input_shape = TF.vector [1, 2, 2, 1 :: Int32]
+        x <- TF.render $ TF.fill conv_input_shape (TF.scalar (2 :: Float))
+
+        let filterShape = TF.vector [2, 2, 1, 1 :: Int32]
+        filter' <- TF.render $ TF.fill filterShape (TF.scalar (1 :: Float))
+        let y = TF.depthwiseConv2dNative'
+                ( (TF.opAttr "strides" .~ [1 :: Int64, 1, 1, 1])
+                . (TF.opAttr "padding" .~ (BS.pack "VALID"))
+                . (TF.opAttr "data_format" .~ (BS.pack "NHWC"))
+                )
+                x filter'
+
+        [dx] <- TF.gradients y [x]
+        TF.run (dx, TF.shape dx, TF.shape x)
+    shapeX @=? (shapeDX :: V.Vector Int32)
+    V.fromList [1, 1, 1, 1 :: Float] @=? (dx :: V.Vector Float)
+
+-- TODO also test filter gradient
+testDepthwiseConv2dBackpropInputGrad :: Test
+testDepthwiseConv2dBackpropInputGrad = testCase "testDepthwiseConv2dBackpropInputGrad" $ do
+    (dx, shapeDX, shapeX) <- TF.runSession $ do
+        let conv_input_shape = TF.vector [1, 2, 2, 1 :: Int32]
+        let conv_out_shape = TF.vector [1, 1, 1, 1 :: Int32]  -- [batch, h, w, out_channels]
+        x <- TF.render $ TF.fill conv_out_shape (TF.scalar (1::Float))
+
+        let filterShape = TF.vector [2, 2, 1, 1 :: Int32]
+        filter' <- TF.render $ TF.fill filterShape (TF.scalar (1 :: Float))
+        let y = TF.depthwiseConv2dNativeBackpropInput'
+                ( (TF.opAttr "strides" .~ [1 :: Int64, 1, 1, 1])
+                . (TF.opAttr "padding" .~ (BS.pack "VALID"))
+                . (TF.opAttr "data_format" .~ (BS.pack "NHWC"))
+                )
+                conv_input_shape filter' x
+
+        [dx] <- TF.gradients y [x]
+        TF.run (dx, TF.shape dx, TF.shape x)
+    shapeX @=? (shapeDX :: V.Vector Int32)
+    V.fromList [4::Float] @=? (dx :: V.Vector Float)
 
 main :: IO ()
 main = defaultMain
@@ -658,4 +700,6 @@ main = defaultMain
             , matMulTransposeGradient (True, False)
             , matMulTransposeGradient (True, True)
             , testConv2DBackpropInputGrad
+            , testDepthwiseConv2dGrad
+            , testDepthwiseConv2dBackpropInputGrad
             ]
