@@ -51,7 +51,8 @@ module TensorFlow.OpGen
 
 import Data.Foldable (toList)
 import Data.Maybe (fromMaybe)
-import Data.ProtoLens (def, showMessage)
+import Data.ProtoLens.Default(def)
+import Data.ProtoLens (showMessage)
 import Data.List (sortOn)
 import Data.List.NonEmpty (NonEmpty)
 import qualified Data.List.NonEmpty as NE

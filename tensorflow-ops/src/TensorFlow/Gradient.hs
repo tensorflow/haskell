@@ -31,11 +31,12 @@ import Control.Monad (forM, zipWithM)
 import Control.Monad.State.Strict (State, evalState, gets, modify)
 import Data.ByteString (ByteString)
 import Data.Complex (Complex)
-import Data.Default (def)
+import Data.ProtoLens.Default(def)
 import Data.Int (Int32, Int64)
 import Data.Foldable (foldlM)
 import Data.List (foldl', sortBy)
 import Data.Map.Strict (Map)
+import qualified Data.IntSet as IntSet
 import Data.Maybe (fromMaybe, maybeToList, mapMaybe)
 import Data.Ord (comparing)
 import Data.ProtoLens.TextFormat (showMessage)
@@ -165,6 +166,11 @@ gradients y xs = build $ do
         (\f x -> fromMaybe (error $ "no NodeDef found for " ++ show x) (f x))
         . flip Map.lookup
     let (gr, nodeMap) = createGraph yName nodeDefLookup
+        xnodes = mapMaybe (\x -> nodeMap ^. (at . outputNodeName . renderedOutput $ x)) xs
+        -- make a set of the nodes reachable from the xnodes
+        -- The xnodes are not part of this set (unless reachable from another xnode)
+        reachableSet = computeReachableSet xnodes gr
+
     -- Set gradient of y to one.
     -- TODO: nicer
     let initPending :: Map.Map FGL.Node (PendingGradients a)
@@ -175,13 +181,20 @@ gradients y xs = build $ do
                                 .~ [yOne]
                                 )
     -- Calculate the gradients of y w.r.t. each node in the graph.
-    gradientMap <- graphGrads gr initPending
+    gradientMap <- graphGrads gr reachableSet initPending
     -- Lookup the gradients for each x.
     forM xs $ \x ->
         let Output i xName = renderedOutput x
         in maybe (render $ zerosLike $ toTensor x) return $ do
             n <- nodeMap ^. at xName
             gradientMap ^. at n . nonEmpty . outputIxAt i
+
+-- | Compute a set of nodes reachable from the start nodes
+--
+-- the start nodes are excluded, unless reachable from another start node
+computeReachableSet :: [FGL.Node] -> Graph -> IntSet.IntSet
+computeReachableSet vs g =
+  IntSet.fromList $ concatMap (drop 1 . FGL.preorder) (FGL.dff vs g)
 
 outputIxAt :: OutputIx -> Lens' (IntMap.IntMap v) (Maybe v)
 outputIxAt = intAt . unOutputIx
@@ -245,16 +258,15 @@ nonEmpty = anon mempty null
 -- | Calculate the gradients for every node in a graph.
 graphGrads :: forall a. GradientCompatible a
            => Graph
+           -> IntSet.IntSet
            -> Map FGL.Node (PendingGradients a)
            -- ^ Initial gradients (usually just 1 for the node of interest).
            -> Build (Map FGL.Node (Gradients a))
-graphGrads gr initPending = view gradientsResult <$> foldlM go initState nodeOrder
+graphGrads gr reachableSet initPending = view gradientsResult <$> foldlM go initState nodeOrder
   where
     initState = GradientsState initPending Map.empty
     -- Reverse topological sort.
-    -- TODO(fmayle): Filter out nodes that are not successors of any x in xs to
-    -- avoid calculating gradients that won't be used.
-    nodeOrder = FGL.topsort $ FGL.grev gr
+    nodeOrder = FGL.topsort . FGL.grev $ gr
     go :: GradientsState a -> Int -> Build (GradientsState a)
     go state node = do
         -- Aggregate the accumulated gradients for this node.
@@ -263,11 +275,17 @@ graphGrads gr initPending = view gradientsResult <$> foldlM go initState nodeOrd
         if null outputGrads
            then pure state
            else do
-              let ctx = FGL.context gr node
-              inputGrads <- calculateInputGrads ctx outputGrads gr
-              -- Calculate the gradients for each of the node's inputs.
               let nextState = state & gradientsResult %~ Map.insert node outputGrads
-              pure $ updatePendingGradients ctx inputGrads nextState
+              -- Only consider nodes that are reachable from the inputs to
+              -- avoid calculating gradients that won't be used.
+              if node `IntSet.member` reachableSet
+                then do
+                  let ctx = FGL.context gr node
+                  inputGrads <- calculateInputGrads ctx outputGrads gr
+                  -- Calculate the gradients for each of the node's inputs.
+                  pure $ updatePendingGradients ctx inputGrads nextState
+                else
+                  pure nextState
 
 -- | Reduce accumulated gradients for each output to one Tensor.
 sumPendingGradient :: GradientCompatible a
@@ -874,11 +892,8 @@ opGrad "Fill" _ _ [dz] = [Nothing, Just $ sum dz rx]
 -- through each read.
 opGrad "ReadVariableOp" _ _ [dz] = [Just $ expr dz]
 
--- TODO(fmayle): These can go away if we properly prune the graph.
 opGrad "Const" _ _ _ = [Nothing, Nothing]
-opGrad "Placeholder" _ _ _ = []
 opGrad "VarHandleOp" _ _ _ = []
-opGrad "Variable" _ _ _ = []
 
 opGrad "Sqrt" _ [toT -> x] [dz] = [Just $ sq' `CoreOps.mul` dz]
   where

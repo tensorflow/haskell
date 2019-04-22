@@ -21,7 +21,7 @@ library
                  , TensorFlow.NN
                  , TensorFlow.Queue
                  , TensorFlow.Variable
-  build-depends:  proto-lens == 0.3.*
+  build-depends:  proto-lens == 0.4.*
                 , base >= 4.7 && < 5
                 , bytestring
                 , fgl

@@ -17,7 +17,7 @@ module Main where
 
 import Control.Monad.Trans.Resource (runResourceT)
 import Data.Conduit ((.|))
-import Data.Default (def)
+import Data.ProtoLens.Message (defMessage)
 import Data.List ((\\))
 import Data.ProtoLens (encodeMessage, decodeMessageOrDie)
 import Lens.Family2 ((^.), (.~), (&))
@@ -45,9 +45,9 @@ testEventWriter :: Test
 testEventWriter = testCase "EventWriter" $
     withSystemTempDirectory "event_writer_logs" $ \dir -> do
         assertEqual "No file before" [] =<< listDirectory dir
-        let expected = [ (def :: Event) & step .~ 10
-                       , def & step .~ 222
-                       , def & step .~ 8
+        let expected = [ (defMessage :: Event) & step .~ 10
+                       , defMessage & step .~ 222
+                       , defMessage & step .~ 8
                        ]
         withEventWriter dir $ \eventWriter ->
             mapM_ (logEvent eventWriter) expected
@@ -66,7 +66,7 @@ testLogGraph = testCase "LogGraph" $
     withSystemTempDirectory "event_writer_logs" $ \dir -> do
         let graphBuild = noOp :: Build ControlNode
             expectedGraph = asGraphDef graphBuild
-            expectedGraphEvent = (def :: Event) & graphDef .~ (encodeMessage expectedGraph)
+            expectedGraphEvent = (defMessage :: Event) & graphDef .~ (encodeMessage expectedGraph)
 
         withEventWriter dir $ \eventWriter ->
             logGraph eventWriter graphBuild

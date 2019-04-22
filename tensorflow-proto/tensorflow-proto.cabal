@@ -97,16 +97,16 @@ library
                      , Proto.Tensorflow.Core.Util.SavedTensorSlice_Fields
                      , Proto.Tensorflow.Core.Util.TestLog
                      , Proto.Tensorflow.Core.Util.TestLog_Fields
-  build-depends:  proto-lens == 0.3.*
-                , proto-lens-protoc == 0.3.*
-                , proto-lens-protobuf-types == 0.3.*
+  build-depends:  proto-lens == 0.4.*
+                , proto-lens-runtime == 0.4.*
+                , proto-lens-protobuf-types == 0.4.*
                 , base >= 4.7 && < 5
   default-language:    Haskell2010
   include-dirs: .
 
 custom-setup
   setup-depends: Cabal
-                , proto-lens-protoc == 0.3.*
+                , proto-lens-setup == 0.4.*
                 , base >= 4.7 && < 5
 source-repository head
   type:     git

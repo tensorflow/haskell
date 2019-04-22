@@ -37,7 +37,9 @@ module TensorFlow.Session (
     asyncProdNodes,
     ) where
 
+import Data.ProtoLens.Message(defMessage)
 import Control.Monad (forever, unless, void)
+import Control.Monad.Fail (MonadFail(..))
 import Control.Monad.Catch (MonadThrow, MonadCatch, MonadMask)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.Trans.Class (MonadTrans, lift)
@@ -78,7 +80,7 @@ data SessionState
 newtype SessionT m a
     = Session (ReaderT SessionState (BuildT m) a)
     deriving (Functor, Applicative, Monad, MonadIO, MonadThrow, MonadCatch,
-              MonadMask)
+              MonadMask, MonadFail)
 
 instance MonadTrans SessionT where
   lift = Session . lift . lift
@@ -100,7 +102,7 @@ data Options = Options
 instance Default Options where
     def = Options
           { _sessionTarget = ""
-          , _sessionConfig = def
+          , _sessionConfig = defMessage
           , _sessionTracer = const (return ())
           }
 
@@ -142,7 +144,7 @@ extend = do
     trace <- Session (asks tracer)
     nodesToExtend <- build flushNodeBuffer
     unless (null nodesToExtend) $ liftIO $ do
-        let graphDef = (def :: GraphDef) & node .~ nodesToExtend
+        let graphDef = (defMessage :: GraphDef) & node .~ nodesToExtend
         trace ("Session.extend " <> Builder.string8 (showMessage graphDef))
         FFI.extendGraph session graphDef
     -- Now that all the nodes are created, run the initializers.

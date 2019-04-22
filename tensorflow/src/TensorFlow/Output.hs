@@ -35,14 +35,14 @@ module TensorFlow.Output
     , PendingNodeName(..)
     )  where
 
+import Data.ProtoLens.Message(defMessage)
 import qualified Data.Map.Strict as Map
 import Data.String (IsString(..))
 import Data.Text (Text)
 import qualified Data.Text as Text
 import Lens.Family2 (Lens')
 import Lens.Family2.Unchecked (lens)
-import Proto.Tensorflow.Core.Framework.AttrValue (AttrValue(..))
-import Data.Default (def)
+import Proto.Tensorflow.Core.Framework.AttrValue (AttrValue)
 import TensorFlow.Types (Attribute, attrLens)
 
 -- | A type of graph node which has no outputs. These nodes are
@@ -108,7 +108,7 @@ opType = lens _opType (\o x -> o { _opType = x})
 
 opAttr :: Attribute a => Text -> Lens' OpDef a
 opAttr n = lens _opAttrs (\o x -> o {_opAttrs = x})
-              . lens (Map.findWithDefault def n) (flip (Map.insert n))
+              . lens (Map.findWithDefault defMessage n) (flip (Map.insert n))
               . attrLens
 
 opInputs :: Lens' OpDef [Output]

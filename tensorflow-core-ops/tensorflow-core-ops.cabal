@@ -15,7 +15,7 @@ cabal-version:       >=1.24
 library
   exposed-modules:  TensorFlow.GenOps.Core
   build-depends:  bytestring
-                , proto-lens == 0.3.*
+                , proto-lens == 0.4.*
                 , tensorflow == 0.2.*
                 , base >= 4.7 && < 5
                 , lens-family
@@ -26,7 +26,7 @@ custom-setup
   setup-depends: Cabal
                 , bytestring
                 , directory
-                , proto-lens == 0.3.*
+                , proto-lens == 0.4.*
                 , tensorflow-opgen == 0.2.*
                 , tensorflow == 0.2.*
                 , base >= 4.7 && < 5
