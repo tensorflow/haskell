@@ -83,12 +83,20 @@ library
                      , Proto.Tensorflow.Core.Protobuf.RewriterConfig_Fields
                      , Proto.Tensorflow.Core.Protobuf.SavedModel
                      , Proto.Tensorflow.Core.Protobuf.SavedModel_Fields
+                     , Proto.Tensorflow.Core.Protobuf.SavedObjectGraph
+                     , Proto.Tensorflow.Core.Protobuf.SavedObjectGraph_Fields
                      , Proto.Tensorflow.Core.Protobuf.Saver
                      , Proto.Tensorflow.Core.Protobuf.Saver_Fields
+                     , Proto.Tensorflow.Core.Protobuf.Struct
+                     , Proto.Tensorflow.Core.Protobuf.Struct_Fields
                      , Proto.Tensorflow.Core.Protobuf.TensorBundle
                      , Proto.Tensorflow.Core.Protobuf.TensorBundle_Fields
                      , Proto.Tensorflow.Core.Protobuf.TensorflowServer
                      , Proto.Tensorflow.Core.Protobuf.TensorflowServer_Fields
+                     , Proto.Tensorflow.Core.Protobuf.TrackableObjectGraph
+                     , Proto.Tensorflow.Core.Protobuf.TrackableObjectGraph_Fields
+                     , Proto.Tensorflow.Core.Protobuf.VerifierConfig
+                     , Proto.Tensorflow.Core.Protobuf.VerifierConfig_Fields
                      , Proto.Tensorflow.Core.Util.Event
                      , Proto.Tensorflow.Core.Util.Event_Fields
                      , Proto.Tensorflow.Core.Util.MemmappedFileSystem
