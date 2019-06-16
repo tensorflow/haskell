@@ -1,6 +1,6 @@
 # Prepare the image with:
 #   docker build -t tensorflow/haskell:v0 docker
-FROM tensorflow/tensorflow:1.9.0
+FROM tensorflow/tensorflow:1.13.1
 LABEL maintainer="TensorFlow authors <tensorflow-haskell@googlegroups.com>"
 
 RUN apt-get update
