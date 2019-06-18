@@ -3,7 +3,7 @@
 # stack to be installed on the host.  This comes at the expense of
 # flexibility.
 
-FROM tensorflow/tensorflow:1.9.0
+FROM tensorflow/tensorflow:1.13.1
 LABEL maintainer="TensorFlow authors <tensorflow-haskell@googlegroups.com>"
 
 # The build context directory is the top of the tensorflow-haskell
@@ -32,8 +32,8 @@ RUN \
     curl -O -L https://github.com/google/protobuf/releases/download/v3.2.0/protoc-3.2.0-linux-x86_64.zip && \
     unzip -d /usr/local protoc-3.2.0-linux-x86_64.zip bin/protoc && \
     chmod 755 /usr/local/bin/protoc && \
-    curl -O https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-cpu-linux-x86_64-1.9.0.tar.gz && \
-    tar zxf libtensorflow-cpu-linux-x86_64-1.9.0.tar.gz -C /usr/local && \
+    curl -O https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-cpu-linux-x86_64-1.13.1.tar.gz && \
+    tar zxf libtensorflow-cpu-linux-x86_64-1.13.1.tar.gz -C /usr/local && \
     ldconfig && \
     stack setup && \
     stack test --only-dependencies
