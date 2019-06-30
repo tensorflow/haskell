@@ -12,6 +12,8 @@ RUN apt-get install -y \
         libncurses5-dev \
         # Makes stack viable in the container
         libgmp-dev \
+        # For fetching dependencies
+        curl \
         # Required for locales configuration.
         locales \
         # Required for tcp connections by stack (See: https://github.com/tensorflow/haskell/issues/182)

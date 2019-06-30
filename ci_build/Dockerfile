@@ -22,6 +22,8 @@ RUN \
         # Makes stack viable in the container
         libgmp-dev \
         libcurl3-dev \
+        # For fetching dependencies
+        curl \
         # Required for tcp connections by stack (See: https://github.com/tensorflow/haskell/issues/182)
         netbase \
         && \
