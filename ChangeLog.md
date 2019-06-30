@@ -1,7 +1,7 @@
 # ChangeLog
 
 ## v0.2.0.1
-- Switch to tensorflow 1.13.1.
+- Switch to tensorflow 1.14.0.
 - Compatibility with stackage LTS-13.13.
 
 ## v0.2.0.0

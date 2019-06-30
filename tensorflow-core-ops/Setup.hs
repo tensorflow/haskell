@@ -92,6 +92,8 @@ blackList =
     [ -- Requires the "func" type:
       "FilterDataset"
     , "BatchFunction"
+    , "Case"
+    , "ChooseFastestBranchDataset"
     , "ExperimentalGroupByReducerDataset"
     , "ExperimentalGroupByWindowDataset"
     , "ExperimentalMapAndBatchDataset"
@@ -135,6 +137,7 @@ blackList =
     , "XlaSelectAndScatter"
     , "XlaWhile"
     , "_If"
+    , "_TPUReplicate"
     , "_While"
     , "_XlaCompile"
     ]
