@@ -85,6 +85,8 @@ import TensorFlow.Ops
     , shape
     , softmaxCrossEntropyWithLogits
     , sum
+    , sigmoid
+    , sigmoidGrad
     , scalarize
     , vector
     , zerosLike
@@ -481,6 +483,7 @@ opGrad "Neg" _ [_] [dz] = [Just $ negate $ expr dz]
 opGrad "Relu" _ [toT -> x] [dz] = [Just $ reluGrad dz x]
 opGrad "ReluGrad" _ [_, toT -> x ] [dz] = [Just $ reluGrad dz x, Just $ CoreOps.zerosLike x]
 opGrad "Tanh" _ [toT -> x] [dz] = [Just $ tanhGrad (tanh x) dz]
+opGrad "Sigmoid" _ [toT -> x] [dz] = [Just $ sigmoidGrad (sigmoid x) dz]
 
 opGrad "Concat" _ _ix [dy]
     -- Concat concatenates input tensors
@@ -947,6 +950,7 @@ numOutputs o =
         "ReluGrad" -> 1
         "Reshape" -> 1
         "Select" -> 1
+        "Sigmoid" -> 1
         "Size" -> 1
         "Slice" -> 1
         "SoftmaxCrossEntropyWithLogits" -> 2
