@@ -614,7 +614,7 @@ batchMatMulGradient = testCase "batchMatMulGradients" $ do
   assertEqual "Shape of gradient must match shape of input" xShape (dxShape :: V.Vector Int32)
 
 
-    -- test that gradient of batchMatMul can be taken gradient of
+-- test that gradient of batchMatMul can be taken gradient of
 batchMatMulGradGrad :: Test
 batchMatMulGradGrad = testCase "batchMatMulGradGrad" $ do
   let width = 2 :: Int64
