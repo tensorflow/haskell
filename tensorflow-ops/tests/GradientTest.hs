@@ -368,6 +368,14 @@ testTanhGrad = testCase "testTanhGrad" $ do
         TF.gradients y [x] >>= TF.run
     V.fromList [1] @=? dx
 
+testSigmoidGrad :: Test
+testSigmoidGrad = testCase "testSigmoidGrad" $ do
+    [dx] <- TF.runSession $ do
+        x <- TF.render $ TF.vector  [0 :: Float]
+        let y = TF.sigmoid x
+        TF.gradients y [x] >>= TF.run
+    V.fromList [0.25] @=? dx
+
 testExpandDims :: Test
 testExpandDims =
   testCase "testExpandDims" $ do
@@ -681,6 +689,7 @@ main = defaultMain
             , testReluGrad
             , testReluGradGrad
             , testTanhGrad
+            , testSigmoidGrad
             , testExpandDims
             , testReshape
             , testPad

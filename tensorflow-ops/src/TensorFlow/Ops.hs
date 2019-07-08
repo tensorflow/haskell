@@ -123,6 +123,8 @@ module TensorFlow.Ops
     , scalar'
     , shape
     , shape'
+    , CoreOps.sigmoid
+    , CoreOps.sigmoidGrad
     , CoreOps.sign
     , CoreOps.sign'
     , CoreOps.size
