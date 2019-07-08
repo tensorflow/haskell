@@ -650,6 +650,25 @@ opGrad "MatMul" nodeDef [toT -> x, toT -> y] [dz] =
            [ Just $ matMul' (transAttrs True True) y dz
            , Just $ matMul' (transAttrs True True) dz x]
 
+opGrad "BatchMatMul" nodeDef [toT -> x, toT -> y] [dz] =
+    let adjX = lookupAttr nodeDef "adj_x"
+        adjY = lookupAttr nodeDef "adj_y"
+        adjAttrs a b =
+            (opAttr "adj_x" .~ a) . (opAttr "adj_y" .~ b)
+    in case (adjX, adjY) of
+        (False, False) ->
+            [ Just $ CoreOps.batchMatMul' (adjAttrs False True) dz y
+            , Just $ CoreOps.batchMatMul' (adjAttrs True False) x dz]
+        (False, True) ->
+            [ Just $ CoreOps.batchMatMul dz y
+            , Just $ CoreOps.batchMatMul' (adjAttrs True False) dz x]
+        (True, False) ->
+            [ Just $ CoreOps.batchMatMul' (adjAttrs False True) y dz
+            , Just $ CoreOps.batchMatMul x dz]
+        (True, True) ->
+            [ Just $ CoreOps.batchMatMul' (adjAttrs True True) y dz
+            , Just $ CoreOps.batchMatMul' (adjAttrs True True) dz x]
+
 opGrad "Transpose" _ [_, toT -> p] [dz] =
     [ Just $ CoreOps.transpose dz
             (CoreOps.invertPermutation p :: Tensor Build Int32)
@@ -915,6 +934,7 @@ numOutputs o =
         "Add" -> 1
         "AddN" -> 1
         "BatchToSpaceND" -> 1
+        "BatchMatMul" -> 1
         "Cast" -> 1
         "Const" -> 1
         "Concat" -> 1
