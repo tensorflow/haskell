@@ -22,8 +22,10 @@ RUN \
         # Makes stack viable in the container
         libgmp-dev \
         libcurl3-dev \
+        zlib1g-dev
         # For fetching dependencies
         curl \
+        unzip \
         # Required for tcp connections by stack (See: https://github.com/tensorflow/haskell/issues/182)
         netbase \
         && \

@@ -14,8 +14,10 @@ RUN apt-get install -y \
         libncurses5-dev \
         # Makes stack viable in the container
         libgmp-dev \
+        zlib1g-dev
         # For fetching dependencies
         curl \
+        unzip \
         # Required for locales configuration.
         locales
 
