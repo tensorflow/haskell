@@ -27,7 +27,7 @@ fi
 TMP_DIR=$(mktemp -d)
 
 echo "Downloading libtensorflow..."
-curl https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-cpu-darwin-x86_64-1.9.0.tar.gz > "$TMP_DIR/libtensorflow.tar.gz"
+curl https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-cpu-darwin-x86_64-1.14.0.tar.gz > "$TMP_DIR/libtensorflow.tar.gz"
 
 echo "Extracting and copying libtensorflow..."
 tar zxf "$TMP_DIR/libtensorflow.tar.gz" -C "$TMP_DIR"

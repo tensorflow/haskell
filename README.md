@@ -91,7 +91,7 @@ stack --docker --docker-image=$IMAGE_NAME build --exec Main
 If you want to use GPU you can do:
 
 ```
-IMAGE_NAME=tensorflow/haskell:1.9.0-gpu
+IMAGE_NAME=tensorflow/haskell:1.14.0-gpu
 docker build -t $IMAGE_NAME docker/gpu
 ```
 
