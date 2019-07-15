@@ -22,7 +22,7 @@ RUN \
         # Makes stack viable in the container
         libgmp-dev \
         libcurl3-dev \
-        zlib1g-dev
+        zlib1g-dev \
         # For fetching dependencies
         curl \
         unzip \
