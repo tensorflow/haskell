@@ -2,7 +2,8 @@
 
 ## v0.2.0.1
 - Switch to tensorflow 1.14.0.
-- Compatibility with stackage LTS-13.13.
+- Compatibility with stackage LTS-14.4.
+- Switch to proto-lens 0.4.
 
 ## v0.2.0.0
 - Switch to tensorflow 1.9.

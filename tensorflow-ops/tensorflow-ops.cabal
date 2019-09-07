@@ -1,5 +1,5 @@
 name:                tensorflow-ops
-version:             0.2.0.0
+version:             0.2.0.1
 synopsis:            Friendly layer around TensorFlow bindings.
 description:         Please see README.md
 homepage:            https://github.com/tensorflow/haskell#readme

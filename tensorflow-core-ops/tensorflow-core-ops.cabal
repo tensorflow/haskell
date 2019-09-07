@@ -1,5 +1,5 @@
 name:                tensorflow-core-ops
-version:             0.2.0.0
+version:             0.2.0.1
 synopsis:            Haskell wrappers for Core Tensorflow Ops.
 description:         Code generated signatures for the Ops in libtensorflow.
 homepage:            https://github.com/tensorflow/haskell#readme
