@@ -30,11 +30,11 @@ RUN \
         netbase \
         && \
     # Installs stack.
-    curl -O -L https://github.com/commercialhaskell/stack/releases/download/v1.7.1/stack-1.7.1-linux-x86_64.tar.gz && \
-    tar zxf stack-1.7.1-linux-x86_64.tar.gz -C /usr/local/bin stack-1.7.1-linux-x86_64/stack --strip 1 && \
+    curl -O -L https://github.com/commercialhaskell/stack/releases/download/v2.1.3/stack-2.1.3-linux-x86_64.tar.gz && \
+    tar zxf stack-2.1.3-linux-x86_64.tar.gz -C /usr/local/bin stack-2.1.3-linux-x86_64/stack --strip 1 && \
     # Installs protoc and the libraries.
-    curl -O -L https://github.com/google/protobuf/releases/download/v3.2.0/protoc-3.2.0-linux-x86_64.zip && \
-    unzip -d /usr/local protoc-3.2.0-linux-x86_64.zip bin/protoc && \
+    curl -O -L https://github.com/google/protobuf/releases/download/v3.9.1/protoc-3.9.1-linux-x86_64.zip && \
+    unzip -d /usr/local protoc-3.9.1-linux-x86_64.zip bin/protoc && \
     chmod 755 /usr/local/bin/protoc && \
     curl -O https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-cpu-linux-x86_64-1.14.0.tar.gz && \
     tar zxf libtensorflow-cpu-linux-x86_64-1.14.0.tar.gz -C /usr/local && \
