@@ -1,5 +1,5 @@
 name:                tensorflow
-version:             0.2.0.0
+version:             0.2.0.1
 synopsis:            TensorFlow bindings.
 description:
     This library provides an interface to the TensorFlow
