@@ -50,11 +50,6 @@ generatingOpsWrappers = hooks
     , haddockHook = \p l h f -> generateSources l >> haddockHook hooks p l h f
     , replHook = \p l h f args -> generateSources l
                                         >> replHook hooks p l h f args
-    , sDistHook = \p maybe_l h f -> case maybe_l of
-        Nothing -> error "Can't run sdist; run 'cabal configure first."
-        Just l -> do
-                    generateSources l
-                    sDistHook hooks (fudgePackageDesc l p) maybe_l h f
     }
   where
     flagsBuilder dir = OpGenFlags
