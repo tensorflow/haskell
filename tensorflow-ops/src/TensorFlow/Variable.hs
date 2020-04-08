@@ -90,7 +90,10 @@ initializedVariable' :: forall a m v . (MonadBuild m, TensorType a)
                     => OpParams -> Tensor v a -> m (Variable a)
 initializedVariable' params initializer = do
     -- The shape is not known initially.
-    (Variable h Nothing :: Variable a) <- variableInternal params Nothing
+    variables <- variableInternal params Nothing
+    h <- pure $ case variables of
+                  (Variable h Nothing :: Variable a) -> h
+                  _ -> error "variableInternal is empty"
     initializer' <- renderValue initializer
     i <- CoreOps.assignVariableOp h initializer'
     addInitializer =<< group i
