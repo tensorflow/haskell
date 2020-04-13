@@ -161,7 +161,8 @@ instance Arbitrary a => Arbitrary (LookupExample a) where
         let maxDim = fromIntegral (ceiling doubleMaxDim :: Int64)
             doubleMaxDim :: Double
             doubleMaxDim = 100 ** (1 / fromIntegral rank)
-        shape@(firstDim : _) <- vectorOf rank (choose (1, maxDim))
+        shape <- vectorOf rank (choose (1, maxDim))
+        let firstDim = head shape
         values <- vectorOf (fromIntegral $ product shape) arbitrary
         numParts <- choose (2, 15)
         indSize <- choose (0, fromIntegral $ firstDim - 1)
