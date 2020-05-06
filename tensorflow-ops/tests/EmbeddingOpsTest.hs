@@ -15,7 +15,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE NoMonadFailDesugaring #-}
 
 -- | Tests for EmbeddingOps.
 module Main where

@@ -65,12 +65,10 @@ import Data.ProtoLens.Message(defMessage)
 import Control.Monad.Catch (MonadThrow, MonadCatch, MonadMask)
 import Control.Monad.Fix (MonadFix(..))
 import Control.Monad.IO.Class (MonadIO(..))
-import Control.Monad.Fail (MonadFail(..))
 import Control.Monad.Trans.Class (MonadTrans(..))
 import Control.Monad.Trans.State.Strict(StateT(..), mapStateT, evalStateT)
 import Data.Functor.Identity (Identity(..))
 import qualified Data.Map.Strict as Map
-import Data.Monoid ((<>))
 import qualified Data.Set as Set
 import Data.Set (Set)
 import Data.String (IsString(..))

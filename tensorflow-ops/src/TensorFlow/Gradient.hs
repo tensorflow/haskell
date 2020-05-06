@@ -43,10 +43,10 @@ import Data.ProtoLens.TextFormat (showMessage)
 import Data.Set (Set)
 import Data.Text (Text)
 import Data.Tuple (swap)
-import Lens.Family2 (Lens', view, (&), (^.), (.~), (%~))
+import Lens.Family2 (Lens', view, (&), (^.), (.~), (%~), under)
 import Lens.Family2.State.Strict (uses)
 import Lens.Family2.Stock (at, intAt)
-import Lens.Family2.Unchecked (lens, iso)
+import Lens.Family2.Unchecked (lens, adapter)
 import Prelude hiding (sum, tanh)
 import Text.Printf (printf)
 import qualified Data.Graph.Inductive.Basic as FGL
@@ -244,7 +244,7 @@ _      `safeIndex` n | n < 0 = Nothing
 
 -- Copy of http://hackage.haskell.org/package/lens-3.9.0.2/docs/Control-Lens-Iso.html#v%3anon
 anon :: a -> (a -> Bool) -> Lens' (Maybe a) a
-anon a p = iso (fromMaybe a) go where
+anon a p = under (adapter (fromMaybe a) go) where
   go b | p b       = Nothing
        | otherwise = Just b
 

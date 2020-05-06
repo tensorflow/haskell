@@ -25,7 +25,6 @@ import Data.Char (toUpper, toLower)
 import Data.List (sortBy)
 import Data.List.NonEmpty (NonEmpty, nonEmpty)
 import Data.Maybe (mapMaybe)
-import Data.Monoid ((<>))
 import Data.Ord (comparing)
 import qualified Data.Set as Set
 import Data.Text (Text)

@@ -26,7 +26,6 @@ module TensorFlow.Nodes where
 import Control.Applicative (liftA2, liftA3)
 import Data.Functor.Identity (Identity)
 import Data.Map.Strict (Map)
-import Data.Monoid ((<>))
 import Data.Set (Set)
 import Data.Text (Text)
 import qualified Data.Map.Strict as Map
