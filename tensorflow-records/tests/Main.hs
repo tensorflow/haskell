@@ -17,7 +17,6 @@ module Main where
 
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Lazy as BL
-import Data.Monoid ((<>))
 import Data.Word (Word8)
 import Data.Serialize (runGet, runPut)
 import Test.Framework (Test, defaultMain)

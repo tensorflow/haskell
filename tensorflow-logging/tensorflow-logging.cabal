@@ -23,8 +23,8 @@ library
                 , exceptions
                 , filepath
                 , hostname
-                , lens-family
-                , proto-lens >= 0.4.0 && < 0.6.0
+                , lens-family == 2.*
+                , proto-lens == 0.6.*
                 , resourcet
                 , stm
                 , stm-chans

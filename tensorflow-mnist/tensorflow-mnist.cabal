@@ -20,12 +20,12 @@ library
   exposed-modules: TensorFlow.Examples.MNIST.Parse
                 ,  TensorFlow.Examples.MNIST.TrainedGraph
   other-modules:  Paths_tensorflow_mnist
-  build-depends: proto-lens >= 0.4.0 && < 0.6.0
+  build-depends: proto-lens == 0.6.*
                 , base >= 4.7 && < 5
                 , binary
                 , bytestring
                 , filepath
-                , lens-family
+                , lens-family >= 2.0
                 , containers
                 , split
                 , tensorflow-proto == 0.2.*

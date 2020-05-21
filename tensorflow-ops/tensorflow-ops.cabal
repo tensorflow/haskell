@@ -21,13 +21,13 @@ library
                  , TensorFlow.NN
                  , TensorFlow.Queue
                  , TensorFlow.Variable
-  build-depends:  proto-lens >= 0.4.0 && < 0.6.0
+  build-depends:  proto-lens == 0.6.*
                 , base >= 4.7 && < 5
                 , bytestring
                 , fgl
                 , mtl
                 , data-default
-                , lens-family
+                , lens-family == 2.*
                 , containers
                 , tensorflow == 0.2.*
                 , tensorflow-proto == 0.2.*

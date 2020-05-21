@@ -69,15 +69,14 @@ import Data.Functor.Identity (Identity(..))
 import Data.Complex (Complex)
 import Data.Int (Int8, Int16, Int32, Int64)
 import Data.Maybe (fromMaybe)
-import Data.Monoid ((<>))
 import Data.ProtoLens.TextFormat (showMessageShort)
 import Data.Proxy (Proxy(..))
 import Data.String (IsString)
 import Data.Word (Word8, Word16, Word32, Word64)
 import Foreign.Storable (Storable)
 import GHC.Exts (Constraint, IsList(..))
-import Lens.Family2 (Lens', view, (&), (.~), (^..))
-import Lens.Family2.Unchecked (iso)
+import Lens.Family2 (Lens', view, (&), (.~), (^..), under)
+import Lens.Family2.Unchecked (adapter)
 import Text.Printf (printf)
 import qualified Data.Attoparsec.ByteString as Atto
 import Data.ByteString (ByteString)
@@ -164,7 +163,7 @@ instance TensorType Int64 where
     tensorVal = int64Val
 
 integral :: Integral a => Lens' [Int32] [a]
-integral = iso (fmap fromIntegral) (fmap fromIntegral)
+integral = under (adapter (fmap fromIntegral) (fmap fromIntegral))
 
 instance TensorType Word8 where
     tensorType _ = DT_UINT8
@@ -395,7 +394,7 @@ instance IsList Shape where
     toList (Shape ss) = toList ss
 
 protoShape :: Lens' TensorShapeProto Shape
-protoShape = iso protoToShape shapeToProto
+protoShape = under (adapter protoToShape shapeToProto)
   where
     protoToShape p = fromMaybe (error msg) (view protoMaybeShape p)
       where msg = "Can't convert TensorShapeProto with unknown rank to Shape: "
@@ -403,7 +402,7 @@ protoShape = iso protoToShape shapeToProto
     shapeToProto s' = defMessage & protoMaybeShape .~ Just s'
 
 protoMaybeShape :: Lens' TensorShapeProto (Maybe Shape)
-protoMaybeShape = iso protoToShape shapeToProto
+protoMaybeShape = under (adapter protoToShape shapeToProto)
   where
     protoToShape :: TensorShapeProto -> Maybe Shape
     protoToShape p =

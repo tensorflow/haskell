@@ -72,7 +72,6 @@ import Proto.Tensorflow.Core.Framework.OpDef_Fields
 import Proto.Tensorflow.Core.Framework.Types (DataType(..))
 import System.FilePath (takeBaseName)
 import TensorFlow.OpGen.ParsedOp
-import Data.Semigroup ((<>))
 import Text.PrettyPrint.Mainland
   ( Doc
   , (<+>)
