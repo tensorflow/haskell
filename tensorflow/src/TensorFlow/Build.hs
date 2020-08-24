@@ -64,6 +64,7 @@ module TensorFlow.Build
 import Data.ProtoLens.Message(defMessage)
 import Control.Monad.Catch (MonadThrow, MonadCatch, MonadMask)
 import Control.Monad.Fix (MonadFix(..))
+import Control.Monad.Fail (MonadFail(..))
 import Control.Monad.IO.Class (MonadIO(..))
 import Control.Monad.Trans.Class (MonadTrans(..))
 import Control.Monad.Trans.State.Strict(StateT(..), mapStateT, evalStateT)

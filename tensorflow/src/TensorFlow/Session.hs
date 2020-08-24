@@ -40,6 +40,7 @@ module TensorFlow.Session (
 import Data.ProtoLens.Message(defMessage)
 import Control.Monad (forever, unless, void)
 import Control.Monad.Catch (MonadThrow, MonadCatch, MonadMask)
+import Control.Monad.Fail (MonadFail(..))
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.Trans.Class (MonadTrans, lift)
 import Control.Monad.Trans.Reader (ReaderT(..), ask, asks)
