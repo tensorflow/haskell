@@ -176,9 +176,9 @@ library
                      , Proto.Tensorflow.Core.Util.SavedTensorSlice_Fields
                      , Proto.Tensorflow.Core.Util.TestLog
                      , Proto.Tensorflow.Core.Util.TestLog_Fields
-  build-depends:  proto-lens == 0.6.*
-                , proto-lens-runtime == 0.6.*
-                , proto-lens-protobuf-types == 0.6.*
+  build-depends:  proto-lens == 0.7.*
+                , proto-lens-runtime == 0.7.*
+                , proto-lens-protobuf-types == 0.7.*
                 , base >= 4.7 && < 5
   default-language:    Haskell2010
   include-dirs: .
