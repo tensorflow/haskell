@@ -257,6 +257,106 @@ instance ( PureResult a1
                <*> pureResult
                <*> pureResult
 
+instance ( PureResult a1
+         , PureResult a2
+         , PureResult a3
+         , PureResult a4
+         , PureResult a5
+         , PureResult a6
+         , PureResult a7
+         , PureResult a8
+         , PureResult a9
+         )
+         => PureResult (a1, a2, a3, a4, a5, a6, a7, a8, a9) where
+    pureResult = (,,,,,,,,)
+               <$> pureResult
+               <*> pureResult
+               <*> pureResult
+               <*> pureResult
+               <*> pureResult
+               <*> pureResult
+               <*> pureResult
+               <*> pureResult
+               <*> pureResult
+
+instance ( PureResult a1
+         , PureResult a2
+         , PureResult a3
+         , PureResult a4
+         , PureResult a5
+         , PureResult a6
+         , PureResult a7
+         , PureResult a8
+         , PureResult a9
+         , PureResult a10
+         )
+         => PureResult (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10) where
+    pureResult = (,,,,,,,,,)
+               <$> pureResult
+               <*> pureResult
+               <*> pureResult
+               <*> pureResult
+               <*> pureResult
+               <*> pureResult
+               <*> pureResult
+               <*> pureResult
+               <*> pureResult
+               <*> pureResult
+
+instance ( PureResult a1
+         , PureResult a2
+         , PureResult a3
+         , PureResult a4
+         , PureResult a5
+         , PureResult a6
+         , PureResult a7
+         , PureResult a8
+         , PureResult a9
+         , PureResult a10
+         , PureResult a11
+         )
+         => PureResult (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11) where
+    pureResult = (,,,,,,,,,,)
+               <$> pureResult
+               <*> pureResult
+               <*> pureResult
+               <*> pureResult
+               <*> pureResult
+               <*> pureResult
+               <*> pureResult
+               <*> pureResult
+               <*> pureResult
+               <*> pureResult
+               <*> pureResult
+
+instance ( PureResult a1
+         , PureResult a2
+         , PureResult a3
+         , PureResult a4
+         , PureResult a5
+         , PureResult a6
+         , PureResult a7
+         , PureResult a8
+         , PureResult a9
+         , PureResult a10
+         , PureResult a11
+         , PureResult a12
+         )
+         => PureResult (a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12) where
+    pureResult = (,,,,,,,,,,,)
+               <$> pureResult
+               <*> pureResult
+               <*> pureResult
+               <*> pureResult
+               <*> pureResult
+               <*> pureResult
+               <*> pureResult
+               <*> pureResult
+               <*> pureResult
+               <*> pureResult
+               <*> pureResult
+               <*> pureResult
+
 instance PureResult a => PureResult [a] where
     pureResult = do
         ResultState i ns <- get

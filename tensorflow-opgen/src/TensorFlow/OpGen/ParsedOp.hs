@@ -98,6 +98,7 @@ data Attr a = Attr
 -- | The type of an attribute.
 data AttrType = AttrSingle AttrBaseType
                 | AttrList AttrBaseType
+                | AttrFunc 
                 deriving Eq
 
 data AttrBaseType = AttrBytes | AttrInt64 | AttrFloat | AttrBool
@@ -341,5 +342,6 @@ parseAttrType o = \case
     "list(type)" -> AttrList AttrType
     "list(shape)" -> AttrList AttrShape
     "list(tensor)" -> AttrList AttrTensor
+    "func" -> AttrFunc
     t -> error $ "parseAttrType: unrecognized type " ++ show t
               ++ " for op " ++ show (o ^. name)

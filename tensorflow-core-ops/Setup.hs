@@ -114,6 +114,7 @@ blackList =
     , "ParallelInterleaveDatasetV2"
     , "ParallelMapDataset"
     , "ParseSequenceExample"
+    , "ParseSequenceExampleV2"
     , "PartitionedCall"
     , "ReduceDataset"
     , "RemoteCall"
