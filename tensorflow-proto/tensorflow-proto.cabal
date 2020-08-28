@@ -73,6 +73,8 @@ library
                      , Proto.Tensorflow.Core.Protobuf.ControlFlow_Fields
                      , Proto.Tensorflow.Core.Protobuf.Debug
                      , Proto.Tensorflow.Core.Protobuf.Debug_Fields
+                     , Proto.Tensorflow.Core.Protobuf.DeviceFilters
+                     , Proto.Tensorflow.Core.Protobuf.ErrorCodes
                      , Proto.Tensorflow.Core.Protobuf.MetaGraph
                      , Proto.Tensorflow.Core.Protobuf.MetaGraph_Fields
                      , Proto.Tensorflow.Core.Protobuf.NamedTensor
@@ -83,12 +85,16 @@ library
                      , Proto.Tensorflow.Core.Protobuf.RewriterConfig_Fields
                      , Proto.Tensorflow.Core.Protobuf.SavedModel
                      , Proto.Tensorflow.Core.Protobuf.SavedModel_Fields
+                     , Proto.Tensorflow.Core.Protobuf.SavedObjectGraph
                      , Proto.Tensorflow.Core.Protobuf.Saver
                      , Proto.Tensorflow.Core.Protobuf.Saver_Fields
+                     , Proto.Tensorflow.Core.Protobuf.Struct
                      , Proto.Tensorflow.Core.Protobuf.TensorBundle
                      , Proto.Tensorflow.Core.Protobuf.TensorBundle_Fields
                      , Proto.Tensorflow.Core.Protobuf.TensorflowServer
                      , Proto.Tensorflow.Core.Protobuf.TensorflowServer_Fields
+                     , Proto.Tensorflow.Core.Protobuf.TrackableObjectGraph
+                     , Proto.Tensorflow.Core.Protobuf.VerifierConfig
                      , Proto.Tensorflow.Core.Util.Event
                      , Proto.Tensorflow.Core.Util.Event_Fields
                      , Proto.Tensorflow.Core.Util.MemmappedFileSystem
@@ -125,6 +131,7 @@ library
                      , Proto.Tensorflow.Core.Framework.OpDef_Fields
                      , Proto.Tensorflow.Core.Framework.ResourceHandle
                      , Proto.Tensorflow.Core.Framework.ResourceHandle_Fields
+                     , Proto.Tensorflow.Core.Protobuf.SavedObjectGraph
                      , Proto.Tensorflow.Core.Framework.StepStats
                      , Proto.Tensorflow.Core.Framework.StepStats_Fields
                      , Proto.Tensorflow.Core.Framework.Summary
@@ -152,6 +159,8 @@ library
                      , Proto.Tensorflow.Core.Protobuf.ControlFlow_Fields
                      , Proto.Tensorflow.Core.Protobuf.Debug
                      , Proto.Tensorflow.Core.Protobuf.Debug_Fields
+                     , Proto.Tensorflow.Core.Protobuf.DeviceFilters
+                     , Proto.Tensorflow.Core.Protobuf.ErrorCodes
                      , Proto.Tensorflow.Core.Protobuf.MetaGraph
                      , Proto.Tensorflow.Core.Protobuf.MetaGraph_Fields
                      , Proto.Tensorflow.Core.Protobuf.NamedTensor
@@ -162,12 +171,16 @@ library
                      , Proto.Tensorflow.Core.Protobuf.RewriterConfig_Fields
                      , Proto.Tensorflow.Core.Protobuf.SavedModel
                      , Proto.Tensorflow.Core.Protobuf.SavedModel_Fields
+                     , Proto.Tensorflow.Core.Protobuf.SavedObjectGraph
                      , Proto.Tensorflow.Core.Protobuf.Saver
                      , Proto.Tensorflow.Core.Protobuf.Saver_Fields
+                     , Proto.Tensorflow.Core.Protobuf.Struct
                      , Proto.Tensorflow.Core.Protobuf.TensorBundle
                      , Proto.Tensorflow.Core.Protobuf.TensorBundle_Fields
                      , Proto.Tensorflow.Core.Protobuf.TensorflowServer
                      , Proto.Tensorflow.Core.Protobuf.TensorflowServer_Fields
+                     , Proto.Tensorflow.Core.Protobuf.TrackableObjectGraph
+                     , Proto.Tensorflow.Core.Protobuf.VerifierConfig
                      , Proto.Tensorflow.Core.Util.Event
                      , Proto.Tensorflow.Core.Util.Event_Fields
                      , Proto.Tensorflow.Core.Util.MemmappedFileSystem
