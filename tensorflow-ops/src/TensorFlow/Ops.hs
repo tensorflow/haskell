@@ -89,8 +89,8 @@ module TensorFlow.Ops
     , CoreOps.identity'
     , CoreOps.matMul
     , CoreOps.matMul'
-    , einsum
-    , einsum'
+    , CoreOps.einsum
+    , CoreOps.einsum'
     , matTranspose
     , matTranspose'
     , CoreOps.mean
@@ -203,13 +203,6 @@ instance ( TensorType a
     fromInteger = scalar . fromInteger
     signum = CoreOps.sign
     negate = CoreOps.neg
-
--- | Einstein summation
-einsum :: TensorType t => ByteString -> [Tensor v t] -> Tensor Build t
-einsum = einsum' id
-
-einsum' :: TensorType t => OpParams -> ByteString -> [Tensor v t] -> Tensor Build t
-einsum' params equation = CoreOps.einsum' (params . (opAttr "equation" .~ equation))
 
 matTranspose :: TensorType a => Tensor e a -> Tensor Build a
 matTranspose = matTranspose' id
