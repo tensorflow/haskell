@@ -30,9 +30,9 @@ module TensorFlow.Minimize
     , adam'
     ) where
 
-import Data.Complex
-import Data.Int
-import Data.Word
+import Data.Complex (Complex)
+import Data.Int (Int8,Int16,Int32,Int64)
+import Data.Word (Word8,Word16,Word32,Word64)
 import Control.Monad (zipWithM)
 import Data.Default (Default(..))
 import Data.List (zipWith4)
