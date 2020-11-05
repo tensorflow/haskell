@@ -16,6 +16,7 @@ library
   hs-source-dirs:   src
   exposed-modules: TensorFlow.Gradient
                  , TensorFlow.Ops
+                 , TensorFlow.Convolution
                  , TensorFlow.EmbeddingOps
                  , TensorFlow.Minimize
                  , TensorFlow.NN

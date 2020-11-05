@@ -32,7 +32,8 @@ import Control.Monad(forM_, replicateM, zipWithM)
 import Control.Monad.IO.Class (liftIO)
 
 import qualified TensorFlow.Core as TF
-import qualified TensorFlow.GenOps.Core as TF (conv2DBackpropInput', max, maximum, resizeBilinear', tile, pad, batchToSpaceND, spaceToBatchND, squeeze, sqrt, slice, shape, diag, depthwiseConv2dNative', depthwiseConv2dNativeBackpropInput', batchMatMul, batchMatMul', conjugateTranspose)
+import qualified TensorFlow.GenOps.Core as TF (max, maximum, resizeBilinear', tile, pad, batchToSpaceND, spaceToBatchND, squeeze, sqrt, slice, shape, diag, batchMatMul, batchMatMul', conjugateTranspose)
+import qualified TensorFlow.Convolution as TF
 import qualified TensorFlow.Gradient as TF
 import qualified TensorFlow.Ops as TF hiding (zeroInitializedVariable, shape)
 import qualified TensorFlow.Output as TF
@@ -715,10 +716,8 @@ testConv2DBackpropInputGrad = testCase "testConv2DBackpropInputGrad" $ do
         let filterShape = TF.vector [2, 2, 1, 1 :: Int32] -- [fh, fw, inc, out]
         filter' <- TF.render $ TF.fill filterShape (TF.scalar (1::Float))
         let y = TF.conv2DBackpropInput'
-                ( (TF.opAttr "strides" .~ [1::Int64, 1, 1, 1])
-                . (TF.opAttr "data_format" .~ (BS.pack "NHWC"))
-                )
-                "VALID" conv_input_shape filter' x
+                (TF.opAttr "strides" .~ [1::Int64, 1, 1, 1])
+                TF.PaddingValid TF.ChannelLast conv_input_shape filter' x
 
         [dx] <- TF.gradients y [x]
         TF.run (dx, TF.shape dx, TF.shape x)
@@ -734,10 +733,8 @@ testDepthwiseConv2dGrad = testCase "testDepthwiseConv2dGrad" $ do
         let filterShape = TF.vector [2, 2, 1, 1 :: Int32]
         filter' <- TF.render $ TF.fill filterShape (TF.scalar (1 :: Float))
         let y = TF.depthwiseConv2dNative'
-                ( (TF.opAttr "strides" .~ [1 :: Int64, 1, 1, 1])
-                . (TF.opAttr "data_format" .~ (BS.pack "NHWC"))
-                )
-                "VALID" x filter'
+                (TF.opAttr "strides" .~ [1 :: Int64, 1, 1, 1])
+                TF.PaddingValid TF.ChannelLast x filter'
 
         [dx] <- TF.gradients y [x]
         TF.run (dx, TF.shape dx, TF.shape x)
@@ -755,10 +752,8 @@ testDepthwiseConv2dBackpropInputGrad = testCase "testDepthwiseConv2dBackpropInpu
         let filterShape = TF.vector [2, 2, 1, 1 :: Int32]
         filter' <- TF.render $ TF.fill filterShape (TF.scalar (1 :: Float))
         let y = TF.depthwiseConv2dNativeBackpropInput'
-                ( (TF.opAttr "strides" .~ [1 :: Int64, 1, 1, 1])
-                . (TF.opAttr "data_format" .~ (BS.pack "NHWC"))
-                )
-                "VALID" conv_input_shape filter' x
+                (TF.opAttr "strides" .~ [1 :: Int64, 1, 1, 1])
+                TF.PaddingValid TF.ChannelLast conv_input_shape filter' x
 
         [dx] <- TF.gradients y [x]
         TF.run (dx, TF.shape dx, TF.shape x)
