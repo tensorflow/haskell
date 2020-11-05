@@ -71,8 +71,6 @@ gradientDescent learningRate params grads = TF.withNameScope "gradientDescent" $
             TF.assignAdd param (TF.scalar (-learningRate) `TF.mul` grad)
     TF.group =<< zipWithM applyGrad params grads
 
--- TODO: Support more than Float in adam.
-
 data AdamConfig t = AdamConfig
     { adamLearningRate :: t
     , adamBeta1        :: t

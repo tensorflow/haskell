@@ -104,7 +104,7 @@ testRereadRef = testCase "testReRunAssign" $ TF.runSession $ do
     f1 <- TF.run w
     liftIO $ (0.0, 0.1) @=? (TF.unScalar f0, TF.unScalar f1)
 
--- | Test einstein summation
+-- | Test Einstein summation.
 testEinsum :: Test
 testEinsum = testCase "testEinsum" $ TF.runSession $ do
     -- Matrix multiply
