@@ -16,12 +16,13 @@ library
   hs-source-dirs:   src
   exposed-modules: TensorFlow.Gradient
                  , TensorFlow.Ops
+                 , TensorFlow.Convolution
                  , TensorFlow.EmbeddingOps
                  , TensorFlow.Minimize
                  , TensorFlow.NN
                  , TensorFlow.Queue
                  , TensorFlow.Variable
-  build-depends:  proto-lens == 0.6.*
+  build-depends:  proto-lens == 0.7.*
                 , base >= 4.7 && < 5
                 , bytestring
                 , fgl

@@ -104,6 +104,20 @@ testRereadRef = testCase "testReRunAssign" $ TF.runSession $ do
     f1 <- TF.run w
     liftIO $ (0.0, 0.1) @=? (TF.unScalar f0, TF.unScalar f1)
 
+-- | Test Einstein summation.
+testEinsum :: Test
+testEinsum = testCase "testEinsum" $ TF.runSession $ do
+    -- Matrix multiply
+    let matA = TF.constant (TF.Shape [3,3]) [1..9 :: Float]
+    let matB = TF.constant (TF.Shape [3,1]) [1..3 :: Float]
+    matMulOut <- TF.run $ TF.matMul matA matB
+    einsumOut <- TF.run $ TF.einsum "ij,jk->ik" [matA,matB]
+    liftIO $ (matMulOut :: V.Vector Float) @=? einsumOut
+    -- Hadamard multiply
+    hadMulOut <- TF.run $ TF.mul matA matA
+    einsumHad <- TF.run $ TF.einsum "ij,ij->ij" [matA,matA]
+    liftIO $ (hadMulOut :: V.Vector Float) @=? einsumHad
+
 main :: IO ()
 main = defaultMain
             [ testSaveRestore
@@ -112,4 +126,5 @@ main = defaultMain
             , testPlaceholderCse
             , testScalarFeedCse
             , testRereadRef
+            , testEinsum
             ]

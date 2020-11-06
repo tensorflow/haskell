@@ -89,6 +89,8 @@ module TensorFlow.Ops
     , CoreOps.identity'
     , CoreOps.matMul
     , CoreOps.matMul'
+    , CoreOps.einsum
+    , CoreOps.einsum'
     , matTranspose
     , matTranspose'
     , CoreOps.mean

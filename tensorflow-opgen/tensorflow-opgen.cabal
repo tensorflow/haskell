@@ -16,7 +16,7 @@ library
   hs-source-dirs:      src
   exposed-modules:     TensorFlow.OpGen.ParsedOp
                      , TensorFlow.OpGen
-  build-depends:  proto-lens == 0.6.*
+  build-depends:  proto-lens == 0.7.*
                 , tensorflow-proto == 0.2.*
                 , base >= 4.7 && < 5
                 , bytestring

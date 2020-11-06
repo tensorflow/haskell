@@ -1,4 +1,4 @@
-resolver: lts-15.11
+resolver: lts-16.18
 
 packages:
 - tensorflow

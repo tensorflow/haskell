@@ -3,7 +3,7 @@
 # stack to be installed on the host.  This comes at the expense of
 # flexibility.
 
-FROM tensorflow/tensorflow:1.14.0
+FROM tensorflow/tensorflow:2.3.0
 LABEL maintainer="TensorFlow authors <tensorflow-haskell@googlegroups.com>"
 
 # The build context directory is the top of the tensorflow-haskell
@@ -30,14 +30,14 @@ RUN \
         netbase \
         && \
     # Installs stack.
-    curl -O -L https://github.com/commercialhaskell/stack/releases/download/v2.1.3/stack-2.1.3-linux-x86_64.tar.gz && \
-    tar zxf stack-2.1.3-linux-x86_64.tar.gz -C /usr/local/bin stack-2.1.3-linux-x86_64/stack --strip 1 && \
+    curl -O -L https://github.com/commercialhaskell/stack/releases/download/v2.5.1/stack-2.5.1-linux-x86_64.tar.gz && \
+    tar zxf stack-2.5.1-linux-x86_64.tar.gz -C /usr/local/bin stack-2.5.1-linux-x86_64/stack --strip 1 && \
     # Installs protoc and the libraries.
-    curl -O -L https://github.com/google/protobuf/releases/download/v3.9.1/protoc-3.9.1-linux-x86_64.zip && \
-    unzip -d /usr/local protoc-3.9.1-linux-x86_64.zip bin/protoc && \
+    curl -O -L https://github.com/google/protobuf/releases/download/v3.13.0/protoc-3.13.0-linux-x86_64.zip && \
+    unzip -d /usr/local protoc-3.13.0-linux-x86_64.zip bin/protoc && \
     chmod 755 /usr/local/bin/protoc && \
-    curl -O https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-cpu-linux-x86_64-1.14.0.tar.gz && \
-    tar zxf libtensorflow-cpu-linux-x86_64-1.14.0.tar.gz -C /usr/local && \
+    curl -O https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-cpu-linux-x86_64-2.3.0.tar.gz && \
+    tar zxf libtensorflow-cpu-linux-x86_64-2.3.0.tar.gz -C /usr/local && \
     ldconfig && \
     stack setup && \
     stack test --only-dependencies

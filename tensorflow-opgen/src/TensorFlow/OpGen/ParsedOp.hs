@@ -266,7 +266,7 @@ getExplicitInputAttr o implicitAttrs a
     , a ^. maybe'defaultValue == Nothing
     , t <- parseAttrType o (a ^. type')
     , t `elem` map AttrSingle
-                    [AttrBool, AttrInt64, AttrFloat, AttrType, AttrShape]
+                    [AttrBool, AttrInt64, AttrFloat, AttrType, AttrShape, AttrBytes]
                 ++ [AttrList AttrType] = Just t
     | otherwise = Nothing
 

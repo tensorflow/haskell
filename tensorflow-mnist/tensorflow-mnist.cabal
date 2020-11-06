@@ -20,7 +20,7 @@ library
   exposed-modules: TensorFlow.Examples.MNIST.Parse
                 ,  TensorFlow.Examples.MNIST.TrainedGraph
   other-modules:  Paths_tensorflow_mnist
-  build-depends: proto-lens == 0.6.*
+  build-depends: proto-lens == 0.7.*
                 , base >= 4.7 && < 5
                 , binary
                 , bytestring

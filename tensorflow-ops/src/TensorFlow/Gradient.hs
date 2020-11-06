@@ -678,16 +678,14 @@ opGrad "Transpose" _ [_, toT -> p] [dz] =
 opGrad "Conv2D" nodeDef [toT -> x, toT -> y] [dz] =
     [ Just $ CoreOps.conv2DBackpropInput'
                 ((opAttr "strides" .~ strides)
-                    . (opAttr "padding" .~ padding)
                     . (opAttr "use_cudnn_on_gpu" .~ useCudnnOnGpu)
                     . (opAttr "data_format" .~ dataFormat))
-                (shape x) y dz
+                padding (shape x) y dz
     , Just $ CoreOps.conv2DBackpropFilter'
                 ((opAttr "strides" .~ strides)
-                    . (opAttr "padding" .~ padding)
                     . (opAttr "use_cudnn_on_gpu" .~ useCudnnOnGpu)
                     . (opAttr "data_format" .~ dataFormat))
-                x (shape y) dz
+                padding x (shape y) dz
     ]
   where
     strides = lookupAttr nodeDef "strides" :: [Int64]
@@ -699,16 +697,14 @@ opGrad "Conv2DBackpropInput" nodeDef [_, toT -> x, toT -> y] [dz] =
     [ Nothing
     , Just $ CoreOps.conv2DBackpropFilter'
                 ((opAttr "strides" .~ strides)
-                    . (opAttr "padding" .~ padding)
                     . (opAttr "use_cudnn_on_gpu" .~ useCudnnOnGpu)
                     . (opAttr "data_format" .~ dataFormat))
-                dz (shape x) y
+                padding dz (shape x) y
     , Just $ CoreOps.conv2D'
                 ((opAttr "strides" .~ strides)
-                    . (opAttr "padding" .~ padding)
                     . (opAttr "use_cudnn_on_gpu" .~ useCudnnOnGpu)
                     . (opAttr "data_format" .~ dataFormat))
-                dz x
+                padding dz x
     ]
   where
     strides = lookupAttr nodeDef "strides" :: [Int64]
@@ -719,14 +715,12 @@ opGrad "Conv2DBackpropInput" nodeDef [_, toT -> x, toT -> y] [dz] =
 opGrad "DepthwiseConv2dNative" nodeDef [toT -> x, toT -> y] [dz] =
     [ Just $ CoreOps.depthwiseConv2dNativeBackpropInput'
                 ((opAttr "strides" .~ strides)
-                    . (opAttr "padding" .~ padding)
                     . (opAttr "data_format" .~ dataFormat))
-                (shape x) y dz
+                padding (shape x) y dz
     , Just $ CoreOps.depthwiseConv2dNativeBackpropFilter'
                 ((opAttr "strides" .~ strides)
-                    . (opAttr "padding" .~ padding)
                     . (opAttr "data_format" .~ dataFormat))
-                x (shape y) dz
+                padding x (shape y) dz
     ]
   where
     strides = lookupAttr nodeDef "strides" :: [Int64]
@@ -737,14 +731,12 @@ opGrad "DepthwiseConv2dNativeBackpropInput" nodeDef [_, toT -> x, toT -> y] [dz]
     [ Nothing
     , Just $ CoreOps.depthwiseConv2dNativeBackpropFilter'
                 ((opAttr "strides" .~ strides)
-                    . (opAttr "padding" .~ padding)
                     . (opAttr "data_format" .~ dataFormat))
-                dz (shape x) y
+                padding dz (shape x) y
     , Just $ CoreOps.depthwiseConv2dNative'
                 ((opAttr "strides" .~ strides)
-                    . (opAttr "padding" .~ padding)
                     . (opAttr "data_format" .~ dataFormat))
-                dz x
+                padding dz x
     ]
   where
     strides = lookupAttr nodeDef "strides" :: [Int64]
@@ -755,9 +747,8 @@ opGrad "MaxPool" nodeDef [toT -> x] [dz] =
     [ Just $ CoreOps.maxPoolGrad'
                 ((opAttr "ksize" .~ ksize)
                     . (opAttr "strides" .~ strides)
-                    . (opAttr "padding" .~ padding)
                     . (opAttr "data_format" .~ dataFormat))
-                x output dz
+                padding x output dz
     ]
   where
     output :: Tensor Build a
