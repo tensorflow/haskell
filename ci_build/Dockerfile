@@ -30,8 +30,8 @@ RUN \
         netbase \
         && \
     # Installs stack.
-    curl -O -L https://github.com/commercialhaskell/stack/releases/download/v2.1.3/stack-2.1.3-linux-x86_64.tar.gz && \
-    tar zxf stack-2.1.3-linux-x86_64.tar.gz -C /usr/local/bin stack-2.1.3-linux-x86_64/stack --strip 1 && \
+    curl -O -L https://github.com/commercialhaskell/stack/releases/download/v2.5.1/stack-2.5.1-linux-x86_64.tar.gz && \
+    tar zxf stack-2.5.1-linux-x86_64.tar.gz -C /usr/local/bin stack-2.5.1-linux-x86_64/stack --strip 1 && \
     # Installs protoc and the libraries.
     curl -O -L https://github.com/google/protobuf/releases/download/v3.13.0/protoc-3.13.0-linux-x86_64.zip && \
     unzip -d /usr/local protoc-3.13.0-linux-x86_64.zip bin/protoc && \
