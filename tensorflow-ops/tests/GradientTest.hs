@@ -43,7 +43,6 @@ import qualified TensorFlow.Variable as TF
 import Proto.Tensorflow.Core.Framework.Graph_Fields (node)
 import Proto.Tensorflow.Core.Framework.NodeDef_Fields (op)
 
-import qualified Data.ByteString.Char8 as BS
 import TensorFlow.Session (SessionT)
 
 testGradientSimple :: Test
