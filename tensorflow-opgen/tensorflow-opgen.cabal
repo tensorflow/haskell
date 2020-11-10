@@ -17,7 +17,11 @@ library
   exposed-modules:     TensorFlow.OpGen.ParsedOp
                      , TensorFlow.OpGen
   build-depends:  proto-lens == 0.7.*
+<<<<<<< HEAD
                 , tensorflow-proto == 0.3.*
+=======
+                , tensorflow-proto == 0.2.*
+>>>>>>> c66c912c327810796b6282ae77c33e336c1dadea
                 , base >= 4.7 && < 5
                 , bytestring
                 , containers
