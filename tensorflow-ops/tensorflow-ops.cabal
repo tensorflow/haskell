@@ -1,5 +1,5 @@
 name:                tensorflow-ops
-version:             0.2.0.1
+version:             0.3.0.0
 synopsis:            Friendly layer around TensorFlow bindings.
 description:         Please see README.md
 homepage:            https://github.com/tensorflow/haskell#readme
@@ -30,9 +30,9 @@ library
                 , data-default
                 , lens-family == 2.*
                 , containers
-                , tensorflow == 0.2.*
-                , tensorflow-proto == 0.2.*
-                , tensorflow-core-ops == 0.2.*
+                , tensorflow == 0.3.*
+                , tensorflow-proto == 0.3.*
+                , tensorflow-core-ops == 0.3.*
                 , text
   default-language:    Haskell2010
 

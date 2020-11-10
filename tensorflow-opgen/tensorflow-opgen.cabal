@@ -1,5 +1,5 @@
 name:                tensorflow-opgen
-version:             0.2.0.1
+version:             0.3.0.0
 synopsis:            Code generation for TensorFlow operations.
 description:         Please see README.md
 homepage:            https://github.com/tensorflow/haskell#readme
@@ -17,7 +17,7 @@ library
   exposed-modules:     TensorFlow.OpGen.ParsedOp
                      , TensorFlow.OpGen
   build-depends:  proto-lens == 0.7.*
-                , tensorflow-proto == 0.2.*
+                , tensorflow-proto == 0.3.*
                 , base >= 4.7 && < 5
                 , bytestring
                 , containers

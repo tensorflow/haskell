@@ -1,5 +1,5 @@
 name:                tensorflow-mnist
-version:             0.1.0.0
+version:             0.1.0.1
 synopsis:            TensorFlow demo application for learning MNIST model.
 description:         Please see README.md
 homepage:            https://github.com/tensorflow/haskell#readme
@@ -28,9 +28,9 @@ library
                 , lens-family >= 2.0
                 , containers
                 , split
-                , tensorflow-proto == 0.2.*
-                , tensorflow-core-ops == 0.2.*
-                , tensorflow == 0.2.*
+                , tensorflow-proto >= 0.2.0
+                , tensorflow-core-ops >= 0.2.0
+                , tensorflow >= 0.2.0
                 , text
                 , vector
                 , zlib
