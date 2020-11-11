@@ -29,11 +29,11 @@ library
                 , stm
                 , stm-chans
                 , stm-conduit
-                , tensorflow == 0.2.*
-                , tensorflow-core-ops == 0.2.*
-                , tensorflow-ops == 0.2.*
-                , tensorflow-proto == 0.2.*
-                , tensorflow-records-conduit == 0.1.*
+                , tensorflow >= 0.2.0
+                , tensorflow-core-ops >= 0.2.0
+                , tensorflow-ops >= 0.2.0
+                , tensorflow-proto >= 0.2.0
+                , tensorflow-records-conduit >= 0.1.0
                 , text
                 , time
                 , transformers

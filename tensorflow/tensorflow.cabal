@@ -1,5 +1,5 @@
 name:                tensorflow
-version:             0.2.0.1
+version:             0.3.0.0
 synopsis:            TensorFlow bindings.
 description:
     This library provides an interface to the TensorFlow
@@ -37,7 +37,7 @@ library
   other-modules:    TensorFlow.Internal.Raw
   build-tools:      c2hs
   build-depends:  proto-lens == 0.7.*
-                , tensorflow-proto == 0.2.*
+                , tensorflow-proto == 0.3.*
                 , base >= 4.7 && < 5
                 , async
                 , attoparsec
