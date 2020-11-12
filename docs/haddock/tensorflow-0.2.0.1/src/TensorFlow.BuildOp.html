@@ -1,0 +1,1471 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">-- Copyright 2016 TensorFlow authors.</span><span>
+</span><span id="line-2"></span><span class="hs-comment">--</span><span>
+</span><span id="line-3"></span><span class="hs-comment">-- Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span><span>
+</span><span id="line-4"></span><span class="hs-comment">-- you may not use this file except in compliance with the License.</span><span>
+</span><span id="line-5"></span><span class="hs-comment">-- You may obtain a copy of the License at</span><span>
+</span><span id="line-6"></span><span class="hs-comment">--</span><span>
+</span><span id="line-7"></span><span class="hs-comment">--     http://www.apache.org/licenses/LICENSE-2.0</span><span>
+</span><span id="line-8"></span><span class="hs-comment">--</span><span>
+</span><span id="line-9"></span><span class="hs-comment">-- Unless required by applicable law or agreed to in writing, software</span><span>
+</span><span id="line-10"></span><span class="hs-comment">-- distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span><span>
+</span><span id="line-11"></span><span class="hs-comment">-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span><span>
+</span><span id="line-12"></span><span class="hs-comment">-- See the License for the specific language governing permissions and</span><span>
+</span><span id="line-13"></span><span class="hs-comment">-- limitations under the License.</span><span>
+</span><span id="line-14"></span><span>
+</span><span id="line-15"></span><span class="hs-pragma">{-# LANGUAGE FlexibleContexts #-}</span><span>
+</span><span id="line-16"></span><span class="hs-pragma">{-# LANGUAGE FlexibleInstances #-}</span><span>
+</span><span id="line-17"></span><span class="hs-pragma">{-# LANGUAGE GADTs #-}</span><span>
+</span><span id="line-18"></span><span class="hs-pragma">{-# LANGUAGE ScopedTypeVariables #-}</span><span>
+</span><span id="line-19"></span><span class="hs-pragma">{-# LANGUAGE TupleSections #-}</span><span>
+</span><span id="line-20"></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">TensorFlow.BuildOp</span><span>
+</span><span id="line-22"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#BuildResult"><span class="hs-identifier">BuildResult</span></a></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-23"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#buildOp"><span class="hs-identifier">buildOp</span></a></span><span>
+</span><span id="line-24"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#PureResult"><span class="hs-identifier">PureResult</span></a></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-25"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#pureOp"><span class="hs-identifier">pureOp</span></a></span><span>
+</span><span id="line-26"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#eqLengthGuard"><span class="hs-identifier">eqLengthGuard</span></a></span><span>
+</span><span id="line-27"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#BuildInputs"><span class="hs-identifier">BuildInputs</span></a></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-28"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#OpParams"><span class="hs-identifier">OpParams</span></a></span><span>
+</span><span id="line-29"></span><span>    </span><span class="hs-special">)</span><span>
+</span><span id="line-30"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-31"></span><span>
+</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Monad</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">liftM2</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">replicateM</span></span><span class="hs-special">)</span><span>
+</span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Monad.Reader</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">ReaderT</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">runReaderT</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">ask</span></span><span class="hs-special">)</span><span>
+</span><span id="line-34"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Monad.State.Strict</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">State</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">evalState</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">get</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">put</span></span><span class="hs-special">)</span><span>
+</span><span id="line-35"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Int</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Int64</span></span><span class="hs-special">)</span><span>
+</span><span id="line-36"></span><span>
+</span><span id="line-37"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="TensorFlow.Build.html"><span class="hs-identifier">TensorFlow.Build</span></a></span><span>
+</span><span id="line-38"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="TensorFlow.Output.html"><span class="hs-identifier">TensorFlow.Output</span></a></span><span>
+</span><span id="line-39"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html"><span class="hs-identifier">TensorFlow.Tensor</span></a></span><span>
+</span><span id="line-40"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="TensorFlow.Types.html"><span class="hs-identifier">TensorFlow.Types</span></a></span><span>
+</span><span id="line-41"></span><span>
+</span><span id="line-42"></span><span class="hs-keyword">data</span><span> </span><span id="ResultState"><span class="annot"><a href="TensorFlow.BuildOp.html#ResultState"><span class="hs-identifier hs-var">ResultState</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ResultState"><span class="annot"><a href="TensorFlow.BuildOp.html#ResultState"><span class="hs-identifier hs-var">ResultState</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="TensorFlow.Output.html#OutputIx"><span class="hs-identifier hs-type">OutputIx</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Int64</span></span><span class="hs-special">]</span><span> </span><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621679167210"><span id="local-6989586621679167212"><span id="local-6989586621679167214"><span class="annot"><span class="annottext">Int -&gt; ResultState -&gt; ShowS
+[ResultState] -&gt; ShowS
+ResultState -&gt; String
+(Int -&gt; ResultState -&gt; ShowS)
+-&gt; (ResultState -&gt; String)
+-&gt; ([ResultState] -&gt; ShowS)
+-&gt; Show ResultState
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [ResultState] -&gt; ShowS
+$cshowList :: [ResultState] -&gt; ShowS
+show :: ResultState -&gt; String
+$cshow :: ResultState -&gt; String
+showsPrec :: Int -&gt; ResultState -&gt; ShowS
+$cshowsPrec :: Int -&gt; ResultState -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span>
+</span><span id="line-43"></span><span>
+</span><span id="line-44"></span><span class="hs-keyword">type</span><span> </span><span id="Result"><span class="annot"><a href="TensorFlow.BuildOp.html#Result"><span class="hs-identifier hs-var">Result</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ReaderT</span></span><span> </span><span class="annot"><a href="TensorFlow.Output.html#NodeName"><span class="hs-identifier hs-type">NodeName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">State</span></span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#ResultState"><span class="hs-identifier hs-type">ResultState</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-45"></span><span>
+</span><span id="line-46"></span><span class="hs-comment">-- | Class of types that can be used as op outputs.</span><span>
+</span><span id="line-47"></span><span class="hs-keyword">class</span><span> </span><span id="BuildResult"><span class="annot"><a href="TensorFlow.BuildOp.html#BuildResult"><span class="hs-identifier hs-var">BuildResult</span></a></span></span><span> </span><span id="local-6989586621679167418"><span class="annot"><a href="#local-6989586621679167418"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-48"></span><span>    </span><span id="buildResult"><span class="annot"><a href="TensorFlow.BuildOp.html#buildResult"><span class="hs-identifier hs-type">buildResult</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#Result"><span class="hs-identifier hs-type">Result</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167418"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-49"></span><span>
+</span><span id="line-50"></span><span id="local-6989586621679167206"><span id="local-6989586621679167207"><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="TensorFlow.BuildOp.html#BuildResult"><span class="hs-identifier hs-type">BuildResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167207"><span class="hs-identifier hs-type">a1</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#BuildResult"><span class="hs-identifier hs-type">BuildResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167206"><span class="hs-identifier hs-type">a2</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#BuildResult"><span class="hs-identifier hs-type">BuildResult</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679167207"><span class="hs-identifier hs-type">a1</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679167206"><span class="hs-identifier hs-type">a2</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-51"></span><span>    </span><span id="local-6989586621679167203"><span class="annot"><span class="annottext">buildResult :: Result (a1, a2)
+</span><a href="#local-6989586621679167203"><span class="hs-identifier hs-var hs-var hs-var hs-var">buildResult</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="hs-special">,</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(a1 -&gt; a2 -&gt; (a1, a2))
+-&gt; ReaderT NodeName (State ResultState) a1
+-&gt; ReaderT NodeName (State ResultState) (a2 -&gt; (a1, a2))
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT NodeName (State ResultState) a1
+forall a. BuildResult a =&gt; Result a
+</span><a href="TensorFlow.BuildOp.html#buildResult"><span class="hs-identifier hs-var">buildResult</span></a></span><span> </span><span class="annot"><span class="annottext">ReaderT NodeName (State ResultState) (a2 -&gt; (a1, a2))
+-&gt; ReaderT NodeName (State ResultState) a2 -&gt; Result (a1, a2)
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT NodeName (State ResultState) a2
+forall a. BuildResult a =&gt; Result a
+</span><a href="TensorFlow.BuildOp.html#buildResult"><span class="hs-identifier hs-var">buildResult</span></a></span></span></span><span>
+</span><span id="line-52"></span><span>
+</span><span id="line-53"></span><span id="local-6989586621679167199"><span id="local-6989586621679167200"><span id="local-6989586621679167201"><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="TensorFlow.BuildOp.html#BuildResult"><span class="hs-identifier hs-type">BuildResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167201"><span class="hs-identifier hs-type">a1</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#BuildResult"><span class="hs-identifier hs-type">BuildResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167200"><span class="hs-identifier hs-type">a2</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#BuildResult"><span class="hs-identifier hs-type">BuildResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167199"><span class="hs-identifier hs-type">a3</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#BuildResult"><span class="hs-identifier hs-type">BuildResult</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679167201"><span class="hs-identifier hs-type">a1</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679167200"><span class="hs-identifier hs-type">a2</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679167199"><span class="hs-identifier hs-type">a3</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-54"></span><span>    </span><span id="local-6989586621679167197"><span class="annot"><span class="annottext">buildResult :: Result (a1, a2, a3)
+</span><a href="#local-6989586621679167197"><span class="hs-identifier hs-var hs-var hs-var hs-var">buildResult</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="hs-special">,</span><span class="hs-special">,</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(a1 -&gt; a2 -&gt; a3 -&gt; (a1, a2, a3))
+-&gt; ReaderT NodeName (State ResultState) a1
+-&gt; ReaderT NodeName (State ResultState) (a2 -&gt; a3 -&gt; (a1, a2, a3))
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT NodeName (State ResultState) a1
+forall a. BuildResult a =&gt; Result a
+</span><a href="TensorFlow.BuildOp.html#buildResult"><span class="hs-identifier hs-var">buildResult</span></a></span><span> </span><span class="annot"><span class="annottext">ReaderT NodeName (State ResultState) (a2 -&gt; a3 -&gt; (a1, a2, a3))
+-&gt; ReaderT NodeName (State ResultState) a2
+-&gt; ReaderT NodeName (State ResultState) (a3 -&gt; (a1, a2, a3))
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT NodeName (State ResultState) a2
+forall a. BuildResult a =&gt; Result a
+</span><a href="TensorFlow.BuildOp.html#buildResult"><span class="hs-identifier hs-var">buildResult</span></a></span><span> </span><span class="annot"><span class="annottext">ReaderT NodeName (State ResultState) (a3 -&gt; (a1, a2, a3))
+-&gt; ReaderT NodeName (State ResultState) a3 -&gt; Result (a1, a2, a3)
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT NodeName (State ResultState) a3
+forall a. BuildResult a =&gt; Result a
+</span><a href="TensorFlow.BuildOp.html#buildResult"><span class="hs-identifier hs-var">buildResult</span></a></span></span></span></span><span>
+</span><span id="line-55"></span><span>
+</span><span id="line-56"></span><span id="local-6989586621679167193"><span id="local-6989586621679167194"><span id="local-6989586621679167195"><span id="local-6989586621679167196"><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="TensorFlow.BuildOp.html#BuildResult"><span class="hs-identifier hs-type">BuildResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167196"><span class="hs-identifier hs-type">a1</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#BuildResult"><span class="hs-identifier hs-type">BuildResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167195"><span class="hs-identifier hs-type">a2</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#BuildResult"><span class="hs-identifier hs-type">BuildResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167194"><span class="hs-identifier hs-type">a3</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#BuildResult"><span class="hs-identifier hs-type">BuildResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167193"><span class="hs-identifier hs-type">a4</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-57"></span><span>         </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#BuildResult"><span class="hs-identifier hs-type">BuildResult</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679167196"><span class="hs-identifier hs-type">a1</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679167195"><span class="hs-identifier hs-type">a2</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679167194"><span class="hs-identifier hs-type">a3</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679167193"><span class="hs-identifier hs-type">a4</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-58"></span><span>    </span><span id="local-6989586621679167191"><span class="annot"><span class="annottext">buildResult :: Result (a1, a2, a3, a4)
+</span><a href="#local-6989586621679167191"><span class="hs-identifier hs-var hs-var hs-var hs-var">buildResult</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="hs-special">,</span><span class="hs-special">,</span><span class="hs-special">,</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(a1 -&gt; a2 -&gt; a3 -&gt; a4 -&gt; (a1, a2, a3, a4))
+-&gt; ReaderT NodeName (State ResultState) a1
+-&gt; ReaderT
+     NodeName (State ResultState) (a2 -&gt; a3 -&gt; a4 -&gt; (a1, a2, a3, a4))
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT NodeName (State ResultState) a1
+forall a. BuildResult a =&gt; Result a
+</span><a href="TensorFlow.BuildOp.html#buildResult"><span class="hs-identifier hs-var">buildResult</span></a></span><span> </span><span class="annot"><span class="annottext">ReaderT
+  NodeName (State ResultState) (a2 -&gt; a3 -&gt; a4 -&gt; (a1, a2, a3, a4))
+-&gt; ReaderT NodeName (State ResultState) a2
+-&gt; ReaderT
+     NodeName (State ResultState) (a3 -&gt; a4 -&gt; (a1, a2, a3, a4))
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT NodeName (State ResultState) a2
+forall a. BuildResult a =&gt; Result a
+</span><a href="TensorFlow.BuildOp.html#buildResult"><span class="hs-identifier hs-var">buildResult</span></a></span><span> </span><span class="annot"><span class="annottext">ReaderT NodeName (State ResultState) (a3 -&gt; a4 -&gt; (a1, a2, a3, a4))
+-&gt; ReaderT NodeName (State ResultState) a3
+-&gt; ReaderT NodeName (State ResultState) (a4 -&gt; (a1, a2, a3, a4))
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT NodeName (State ResultState) a3
+forall a. BuildResult a =&gt; Result a
+</span><a href="TensorFlow.BuildOp.html#buildResult"><span class="hs-identifier hs-var">buildResult</span></a></span><span> </span><span class="annot"><span class="annottext">ReaderT NodeName (State ResultState) (a4 -&gt; (a1, a2, a3, a4))
+-&gt; ReaderT NodeName (State ResultState) a4
+-&gt; Result (a1, a2, a3, a4)
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT NodeName (State ResultState) a4
+forall a. BuildResult a =&gt; Result a
+</span><a href="TensorFlow.BuildOp.html#buildResult"><span class="hs-identifier hs-var">buildResult</span></a></span></span></span></span></span><span>
+</span><span id="line-59"></span><span>
+</span><span id="line-60"></span><span id="local-6989586621679167186"><span id="local-6989586621679167187"><span id="local-6989586621679167188"><span id="local-6989586621679167189"><span id="local-6989586621679167190"><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="TensorFlow.BuildOp.html#BuildResult"><span class="hs-identifier hs-type">BuildResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167190"><span class="hs-identifier hs-type">a1</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#BuildResult"><span class="hs-identifier hs-type">BuildResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167189"><span class="hs-identifier hs-type">a2</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#BuildResult"><span class="hs-identifier hs-type">BuildResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167188"><span class="hs-identifier hs-type">a3</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#BuildResult"><span class="hs-identifier hs-type">BuildResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167187"><span class="hs-identifier hs-type">a4</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#BuildResult"><span class="hs-identifier hs-type">BuildResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167186"><span class="hs-identifier hs-type">a5</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-61"></span><span>         </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#BuildResult"><span class="hs-identifier hs-type">BuildResult</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679167190"><span class="hs-identifier hs-type">a1</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679167189"><span class="hs-identifier hs-type">a2</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679167188"><span class="hs-identifier hs-type">a3</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679167187"><span class="hs-identifier hs-type">a4</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679167186"><span class="hs-identifier hs-type">a5</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-62"></span><span>    </span><span id="local-6989586621679167184"><span class="annot"><span class="annottext">buildResult :: Result (a1, a2, a3, a4, a5)
+</span><a href="#local-6989586621679167184"><span class="hs-identifier hs-var hs-var hs-var hs-var">buildResult</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="hs-special">,</span><span class="hs-special">,</span><span class="hs-special">,</span><span class="hs-special">,</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(a1 -&gt; a2 -&gt; a3 -&gt; a4 -&gt; a5 -&gt; (a1, a2, a3, a4, a5))
+-&gt; ReaderT NodeName (State ResultState) a1
+-&gt; ReaderT
+     NodeName
+     (State ResultState)
+     (a2 -&gt; a3 -&gt; a4 -&gt; a5 -&gt; (a1, a2, a3, a4, a5))
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT NodeName (State ResultState) a1
+forall a. BuildResult a =&gt; Result a
+</span><a href="TensorFlow.BuildOp.html#buildResult"><span class="hs-identifier hs-var">buildResult</span></a></span><span>
+</span><span id="line-63"></span><span>                      </span><span class="annot"><span class="annottext">ReaderT
+  NodeName
+  (State ResultState)
+  (a2 -&gt; a3 -&gt; a4 -&gt; a5 -&gt; (a1, a2, a3, a4, a5))
+-&gt; ReaderT NodeName (State ResultState) a2
+-&gt; ReaderT
+     NodeName
+     (State ResultState)
+     (a3 -&gt; a4 -&gt; a5 -&gt; (a1, a2, a3, a4, a5))
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT NodeName (State ResultState) a2
+forall a. BuildResult a =&gt; Result a
+</span><a href="TensorFlow.BuildOp.html#buildResult"><span class="hs-identifier hs-var">buildResult</span></a></span><span>
+</span><span id="line-64"></span><span>                      </span><span class="annot"><span class="annottext">ReaderT
+  NodeName
+  (State ResultState)
+  (a3 -&gt; a4 -&gt; a5 -&gt; (a1, a2, a3, a4, a5))
+-&gt; ReaderT NodeName (State ResultState) a3
+-&gt; ReaderT
+     NodeName (State ResultState) (a4 -&gt; a5 -&gt; (a1, a2, a3, a4, a5))
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT NodeName (State ResultState) a3
+forall a. BuildResult a =&gt; Result a
+</span><a href="TensorFlow.BuildOp.html#buildResult"><span class="hs-identifier hs-var">buildResult</span></a></span><span>
+</span><span id="line-65"></span><span>                      </span><span class="annot"><span class="annottext">ReaderT
+  NodeName (State ResultState) (a4 -&gt; a5 -&gt; (a1, a2, a3, a4, a5))
+-&gt; ReaderT NodeName (State ResultState) a4
+-&gt; ReaderT
+     NodeName (State ResultState) (a5 -&gt; (a1, a2, a3, a4, a5))
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT NodeName (State ResultState) a4
+forall a. BuildResult a =&gt; Result a
+</span><a href="TensorFlow.BuildOp.html#buildResult"><span class="hs-identifier hs-var">buildResult</span></a></span><span>
+</span><span id="line-66"></span><span>                      </span><span class="annot"><span class="annottext">ReaderT NodeName (State ResultState) (a5 -&gt; (a1, a2, a3, a4, a5))
+-&gt; ReaderT NodeName (State ResultState) a5
+-&gt; Result (a1, a2, a3, a4, a5)
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT NodeName (State ResultState) a5
+forall a. BuildResult a =&gt; Result a
+</span><a href="TensorFlow.BuildOp.html#buildResult"><span class="hs-identifier hs-var">buildResult</span></a></span></span></span></span></span></span><span>
+</span><span id="line-67"></span><span>
+</span><span id="line-68"></span><span id="local-6989586621679167178"><span id="local-6989586621679167179"><span id="local-6989586621679167180"><span id="local-6989586621679167181"><span id="local-6989586621679167182"><span id="local-6989586621679167183"><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#BuildResult"><span class="hs-identifier hs-type">BuildResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167183"><span class="hs-identifier hs-type">a1</span></a></span><span>
+</span><span id="line-69"></span><span>         </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#BuildResult"><span class="hs-identifier hs-type">BuildResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167182"><span class="hs-identifier hs-type">a2</span></a></span><span>
+</span><span id="line-70"></span><span>         </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#BuildResult"><span class="hs-identifier hs-type">BuildResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167181"><span class="hs-identifier hs-type">a3</span></a></span><span>
+</span><span id="line-71"></span><span>         </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#BuildResult"><span class="hs-identifier hs-type">BuildResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167180"><span class="hs-identifier hs-type">a4</span></a></span><span>
+</span><span id="line-72"></span><span>         </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#BuildResult"><span class="hs-identifier hs-type">BuildResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167179"><span class="hs-identifier hs-type">a5</span></a></span><span>
+</span><span id="line-73"></span><span>         </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#BuildResult"><span class="hs-identifier hs-type">BuildResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167178"><span class="hs-identifier hs-type">a6</span></a></span><span>
+</span><span id="line-74"></span><span>         </span><span class="hs-special">)</span><span>
+</span><span id="line-75"></span><span>         </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#BuildResult"><span class="hs-identifier hs-type">BuildResult</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679167183"><span class="hs-identifier hs-type">a1</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679167182"><span class="hs-identifier hs-type">a2</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679167181"><span class="hs-identifier hs-type">a3</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679167180"><span class="hs-identifier hs-type">a4</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679167179"><span class="hs-identifier hs-type">a5</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679167178"><span class="hs-identifier hs-type">a6</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-76"></span><span>    </span><span id="local-6989586621679167176"><span class="annot"><span class="annottext">buildResult :: Result (a1, a2, a3, a4, a5, a6)
+</span><a href="#local-6989586621679167176"><span class="hs-identifier hs-var hs-var hs-var hs-var">buildResult</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="hs-special">,</span><span class="hs-special">,</span><span class="hs-special">,</span><span class="hs-special">,</span><span class="hs-special">,</span><span class="hs-special">)</span><span>
+</span><span id="line-77"></span><span>               </span><span class="annot"><span class="annottext">(a1 -&gt; a2 -&gt; a3 -&gt; a4 -&gt; a5 -&gt; a6 -&gt; (a1, a2, a3, a4, a5, a6))
+-&gt; ReaderT NodeName (State ResultState) a1
+-&gt; ReaderT
+     NodeName
+     (State ResultState)
+     (a2 -&gt; a3 -&gt; a4 -&gt; a5 -&gt; a6 -&gt; (a1, a2, a3, a4, a5, a6))
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT NodeName (State ResultState) a1
+forall a. BuildResult a =&gt; Result a
+</span><a href="TensorFlow.BuildOp.html#buildResult"><span class="hs-identifier hs-var">buildResult</span></a></span><span>
+</span><span id="line-78"></span><span>               </span><span class="annot"><span class="annottext">ReaderT
+  NodeName
+  (State ResultState)
+  (a2 -&gt; a3 -&gt; a4 -&gt; a5 -&gt; a6 -&gt; (a1, a2, a3, a4, a5, a6))
+-&gt; ReaderT NodeName (State ResultState) a2
+-&gt; ReaderT
+     NodeName
+     (State ResultState)
+     (a3 -&gt; a4 -&gt; a5 -&gt; a6 -&gt; (a1, a2, a3, a4, a5, a6))
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT NodeName (State ResultState) a2
+forall a. BuildResult a =&gt; Result a
+</span><a href="TensorFlow.BuildOp.html#buildResult"><span class="hs-identifier hs-var">buildResult</span></a></span><span>
+</span><span id="line-79"></span><span>               </span><span class="annot"><span class="annottext">ReaderT
+  NodeName
+  (State ResultState)
+  (a3 -&gt; a4 -&gt; a5 -&gt; a6 -&gt; (a1, a2, a3, a4, a5, a6))
+-&gt; ReaderT NodeName (State ResultState) a3
+-&gt; ReaderT
+     NodeName
+     (State ResultState)
+     (a4 -&gt; a5 -&gt; a6 -&gt; (a1, a2, a3, a4, a5, a6))
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT NodeName (State ResultState) a3
+forall a. BuildResult a =&gt; Result a
+</span><a href="TensorFlow.BuildOp.html#buildResult"><span class="hs-identifier hs-var">buildResult</span></a></span><span>
+</span><span id="line-80"></span><span>               </span><span class="annot"><span class="annottext">ReaderT
+  NodeName
+  (State ResultState)
+  (a4 -&gt; a5 -&gt; a6 -&gt; (a1, a2, a3, a4, a5, a6))
+-&gt; ReaderT NodeName (State ResultState) a4
+-&gt; ReaderT
+     NodeName (State ResultState) (a5 -&gt; a6 -&gt; (a1, a2, a3, a4, a5, a6))
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT NodeName (State ResultState) a4
+forall a. BuildResult a =&gt; Result a
+</span><a href="TensorFlow.BuildOp.html#buildResult"><span class="hs-identifier hs-var">buildResult</span></a></span><span>
+</span><span id="line-81"></span><span>               </span><span class="annot"><span class="annottext">ReaderT
+  NodeName (State ResultState) (a5 -&gt; a6 -&gt; (a1, a2, a3, a4, a5, a6))
+-&gt; ReaderT NodeName (State ResultState) a5
+-&gt; ReaderT
+     NodeName (State ResultState) (a6 -&gt; (a1, a2, a3, a4, a5, a6))
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT NodeName (State ResultState) a5
+forall a. BuildResult a =&gt; Result a
+</span><a href="TensorFlow.BuildOp.html#buildResult"><span class="hs-identifier hs-var">buildResult</span></a></span><span>
+</span><span id="line-82"></span><span>               </span><span class="annot"><span class="annottext">ReaderT
+  NodeName (State ResultState) (a6 -&gt; (a1, a2, a3, a4, a5, a6))
+-&gt; ReaderT NodeName (State ResultState) a6
+-&gt; Result (a1, a2, a3, a4, a5, a6)
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT NodeName (State ResultState) a6
+forall a. BuildResult a =&gt; Result a
+</span><a href="TensorFlow.BuildOp.html#buildResult"><span class="hs-identifier hs-var">buildResult</span></a></span></span></span></span></span></span></span><span>
+</span><span id="line-83"></span><span>
+</span><span id="line-84"></span><span id="local-6989586621679167169"><span id="local-6989586621679167170"><span id="local-6989586621679167171"><span id="local-6989586621679167172"><span id="local-6989586621679167173"><span id="local-6989586621679167174"><span id="local-6989586621679167175"><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#BuildResult"><span class="hs-identifier hs-type">BuildResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167175"><span class="hs-identifier hs-type">a1</span></a></span><span>
+</span><span id="line-85"></span><span>         </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#BuildResult"><span class="hs-identifier hs-type">BuildResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167174"><span class="hs-identifier hs-type">a2</span></a></span><span>
+</span><span id="line-86"></span><span>         </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#BuildResult"><span class="hs-identifier hs-type">BuildResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167173"><span class="hs-identifier hs-type">a3</span></a></span><span>
+</span><span id="line-87"></span><span>         </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#BuildResult"><span class="hs-identifier hs-type">BuildResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167172"><span class="hs-identifier hs-type">a4</span></a></span><span>
+</span><span id="line-88"></span><span>         </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#BuildResult"><span class="hs-identifier hs-type">BuildResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167171"><span class="hs-identifier hs-type">a5</span></a></span><span>
+</span><span id="line-89"></span><span>         </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#BuildResult"><span class="hs-identifier hs-type">BuildResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167170"><span class="hs-identifier hs-type">a6</span></a></span><span>
+</span><span id="line-90"></span><span>         </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#BuildResult"><span class="hs-identifier hs-type">BuildResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167169"><span class="hs-identifier hs-type">a7</span></a></span><span>
+</span><span id="line-91"></span><span>         </span><span class="hs-special">)</span><span>
+</span><span id="line-92"></span><span>         </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#BuildResult"><span class="hs-identifier hs-type">BuildResult</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679167175"><span class="hs-identifier hs-type">a1</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679167174"><span class="hs-identifier hs-type">a2</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679167173"><span class="hs-identifier hs-type">a3</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679167172"><span class="hs-identifier hs-type">a4</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679167171"><span class="hs-identifier hs-type">a5</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679167170"><span class="hs-identifier hs-type">a6</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679167169"><span class="hs-identifier hs-type">a7</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-93"></span><span>    </span><span id="local-6989586621679167167"><span class="annot"><span class="annottext">buildResult :: Result (a1, a2, a3, a4, a5, a6, a7)
+</span><a href="#local-6989586621679167167"><span class="hs-identifier hs-var hs-var hs-var hs-var">buildResult</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="hs-special">,</span><span class="hs-special">,</span><span class="hs-special">,</span><span class="hs-special">,</span><span class="hs-special">,</span><span class="hs-special">,</span><span class="hs-special">)</span><span>
+</span><span id="line-94"></span><span>               </span><span class="annot"><span class="annottext">(a1
+ -&gt; a2
+ -&gt; a3
+ -&gt; a4
+ -&gt; a5
+ -&gt; a6
+ -&gt; a7
+ -&gt; (a1, a2, a3, a4, a5, a6, a7))
+-&gt; ReaderT NodeName (State ResultState) a1
+-&gt; ReaderT
+     NodeName
+     (State ResultState)
+     (a2 -&gt; a3 -&gt; a4 -&gt; a5 -&gt; a6 -&gt; a7 -&gt; (a1, a2, a3, a4, a5, a6, a7))
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT NodeName (State ResultState) a1
+forall a. BuildResult a =&gt; Result a
+</span><a href="TensorFlow.BuildOp.html#buildResult"><span class="hs-identifier hs-var">buildResult</span></a></span><span>
+</span><span id="line-95"></span><span>               </span><span class="annot"><span class="annottext">ReaderT
+  NodeName
+  (State ResultState)
+  (a2 -&gt; a3 -&gt; a4 -&gt; a5 -&gt; a6 -&gt; a7 -&gt; (a1, a2, a3, a4, a5, a6, a7))
+-&gt; ReaderT NodeName (State ResultState) a2
+-&gt; ReaderT
+     NodeName
+     (State ResultState)
+     (a3 -&gt; a4 -&gt; a5 -&gt; a6 -&gt; a7 -&gt; (a1, a2, a3, a4, a5, a6, a7))
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT NodeName (State ResultState) a2
+forall a. BuildResult a =&gt; Result a
+</span><a href="TensorFlow.BuildOp.html#buildResult"><span class="hs-identifier hs-var">buildResult</span></a></span><span>
+</span><span id="line-96"></span><span>               </span><span class="annot"><span class="annottext">ReaderT
+  NodeName
+  (State ResultState)
+  (a3 -&gt; a4 -&gt; a5 -&gt; a6 -&gt; a7 -&gt; (a1, a2, a3, a4, a5, a6, a7))
+-&gt; ReaderT NodeName (State ResultState) a3
+-&gt; ReaderT
+     NodeName
+     (State ResultState)
+     (a4 -&gt; a5 -&gt; a6 -&gt; a7 -&gt; (a1, a2, a3, a4, a5, a6, a7))
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT NodeName (State ResultState) a3
+forall a. BuildResult a =&gt; Result a
+</span><a href="TensorFlow.BuildOp.html#buildResult"><span class="hs-identifier hs-var">buildResult</span></a></span><span>
+</span><span id="line-97"></span><span>               </span><span class="annot"><span class="annottext">ReaderT
+  NodeName
+  (State ResultState)
+  (a4 -&gt; a5 -&gt; a6 -&gt; a7 -&gt; (a1, a2, a3, a4, a5, a6, a7))
+-&gt; ReaderT NodeName (State ResultState) a4
+-&gt; ReaderT
+     NodeName
+     (State ResultState)
+     (a5 -&gt; a6 -&gt; a7 -&gt; (a1, a2, a3, a4, a5, a6, a7))
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT NodeName (State ResultState) a4
+forall a. BuildResult a =&gt; Result a
+</span><a href="TensorFlow.BuildOp.html#buildResult"><span class="hs-identifier hs-var">buildResult</span></a></span><span>
+</span><span id="line-98"></span><span>               </span><span class="annot"><span class="annottext">ReaderT
+  NodeName
+  (State ResultState)
+  (a5 -&gt; a6 -&gt; a7 -&gt; (a1, a2, a3, a4, a5, a6, a7))
+-&gt; ReaderT NodeName (State ResultState) a5
+-&gt; ReaderT
+     NodeName
+     (State ResultState)
+     (a6 -&gt; a7 -&gt; (a1, a2, a3, a4, a5, a6, a7))
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT NodeName (State ResultState) a5
+forall a. BuildResult a =&gt; Result a
+</span><a href="TensorFlow.BuildOp.html#buildResult"><span class="hs-identifier hs-var">buildResult</span></a></span><span>
+</span><span id="line-99"></span><span>               </span><span class="annot"><span class="annottext">ReaderT
+  NodeName
+  (State ResultState)
+  (a6 -&gt; a7 -&gt; (a1, a2, a3, a4, a5, a6, a7))
+-&gt; ReaderT NodeName (State ResultState) a6
+-&gt; ReaderT
+     NodeName (State ResultState) (a7 -&gt; (a1, a2, a3, a4, a5, a6, a7))
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT NodeName (State ResultState) a6
+forall a. BuildResult a =&gt; Result a
+</span><a href="TensorFlow.BuildOp.html#buildResult"><span class="hs-identifier hs-var">buildResult</span></a></span><span>
+</span><span id="line-100"></span><span>               </span><span class="annot"><span class="annottext">ReaderT
+  NodeName (State ResultState) (a7 -&gt; (a1, a2, a3, a4, a5, a6, a7))
+-&gt; ReaderT NodeName (State ResultState) a7
+-&gt; Result (a1, a2, a3, a4, a5, a6, a7)
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT NodeName (State ResultState) a7
+forall a. BuildResult a =&gt; Result a
+</span><a href="TensorFlow.BuildOp.html#buildResult"><span class="hs-identifier hs-var">buildResult</span></a></span></span></span></span></span></span></span></span><span>
+</span><span id="line-101"></span><span>
+</span><span id="line-102"></span><span id="local-6989586621679167159"><span id="local-6989586621679167160"><span id="local-6989586621679167161"><span id="local-6989586621679167162"><span id="local-6989586621679167163"><span id="local-6989586621679167164"><span id="local-6989586621679167165"><span id="local-6989586621679167166"><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#BuildResult"><span class="hs-identifier hs-type">BuildResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167166"><span class="hs-identifier hs-type">a1</span></a></span><span>
+</span><span id="line-103"></span><span>         </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#BuildResult"><span class="hs-identifier hs-type">BuildResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167165"><span class="hs-identifier hs-type">a2</span></a></span><span>
+</span><span id="line-104"></span><span>         </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#BuildResult"><span class="hs-identifier hs-type">BuildResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167164"><span class="hs-identifier hs-type">a3</span></a></span><span>
+</span><span id="line-105"></span><span>         </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#BuildResult"><span class="hs-identifier hs-type">BuildResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167163"><span class="hs-identifier hs-type">a4</span></a></span><span>
+</span><span id="line-106"></span><span>         </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#BuildResult"><span class="hs-identifier hs-type">BuildResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167162"><span class="hs-identifier hs-type">a5</span></a></span><span>
+</span><span id="line-107"></span><span>         </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#BuildResult"><span class="hs-identifier hs-type">BuildResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167161"><span class="hs-identifier hs-type">a6</span></a></span><span>
+</span><span id="line-108"></span><span>         </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#BuildResult"><span class="hs-identifier hs-type">BuildResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167160"><span class="hs-identifier hs-type">a7</span></a></span><span>
+</span><span id="line-109"></span><span>         </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#BuildResult"><span class="hs-identifier hs-type">BuildResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167159"><span class="hs-identifier hs-type">a8</span></a></span><span>
+</span><span id="line-110"></span><span>         </span><span class="hs-special">)</span><span>
+</span><span id="line-111"></span><span>         </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#BuildResult"><span class="hs-identifier hs-type">BuildResult</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679167166"><span class="hs-identifier hs-type">a1</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679167165"><span class="hs-identifier hs-type">a2</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679167164"><span class="hs-identifier hs-type">a3</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679167163"><span class="hs-identifier hs-type">a4</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679167162"><span class="hs-identifier hs-type">a5</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679167161"><span class="hs-identifier hs-type">a6</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679167160"><span class="hs-identifier hs-type">a7</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679167159"><span class="hs-identifier hs-type">a8</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-112"></span><span>    </span><span id="local-6989586621679167157"><span class="annot"><span class="annottext">buildResult :: Result (a1, a2, a3, a4, a5, a6, a7, a8)
+</span><a href="#local-6989586621679167157"><span class="hs-identifier hs-var hs-var hs-var hs-var">buildResult</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="hs-special">,</span><span class="hs-special">,</span><span class="hs-special">,</span><span class="hs-special">,</span><span class="hs-special">,</span><span class="hs-special">,</span><span class="hs-special">,</span><span class="hs-special">)</span><span>
+</span><span id="line-113"></span><span>               </span><span class="annot"><span class="annottext">(a1
+ -&gt; a2
+ -&gt; a3
+ -&gt; a4
+ -&gt; a5
+ -&gt; a6
+ -&gt; a7
+ -&gt; a8
+ -&gt; (a1, a2, a3, a4, a5, a6, a7, a8))
+-&gt; ReaderT NodeName (State ResultState) a1
+-&gt; ReaderT
+     NodeName
+     (State ResultState)
+     (a2
+      -&gt; a3
+      -&gt; a4
+      -&gt; a5
+      -&gt; a6
+      -&gt; a7
+      -&gt; a8
+      -&gt; (a1, a2, a3, a4, a5, a6, a7, a8))
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT NodeName (State ResultState) a1
+forall a. BuildResult a =&gt; Result a
+</span><a href="TensorFlow.BuildOp.html#buildResult"><span class="hs-identifier hs-var">buildResult</span></a></span><span>
+</span><span id="line-114"></span><span>               </span><span class="annot"><span class="annottext">ReaderT
+  NodeName
+  (State ResultState)
+  (a2
+   -&gt; a3
+   -&gt; a4
+   -&gt; a5
+   -&gt; a6
+   -&gt; a7
+   -&gt; a8
+   -&gt; (a1, a2, a3, a4, a5, a6, a7, a8))
+-&gt; ReaderT NodeName (State ResultState) a2
+-&gt; ReaderT
+     NodeName
+     (State ResultState)
+     (a3
+      -&gt; a4 -&gt; a5 -&gt; a6 -&gt; a7 -&gt; a8 -&gt; (a1, a2, a3, a4, a5, a6, a7, a8))
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT NodeName (State ResultState) a2
+forall a. BuildResult a =&gt; Result a
+</span><a href="TensorFlow.BuildOp.html#buildResult"><span class="hs-identifier hs-var">buildResult</span></a></span><span>
+</span><span id="line-115"></span><span>               </span><span class="annot"><span class="annottext">ReaderT
+  NodeName
+  (State ResultState)
+  (a3
+   -&gt; a4 -&gt; a5 -&gt; a6 -&gt; a7 -&gt; a8 -&gt; (a1, a2, a3, a4, a5, a6, a7, a8))
+-&gt; ReaderT NodeName (State ResultState) a3
+-&gt; ReaderT
+     NodeName
+     (State ResultState)
+     (a4 -&gt; a5 -&gt; a6 -&gt; a7 -&gt; a8 -&gt; (a1, a2, a3, a4, a5, a6, a7, a8))
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT NodeName (State ResultState) a3
+forall a. BuildResult a =&gt; Result a
+</span><a href="TensorFlow.BuildOp.html#buildResult"><span class="hs-identifier hs-var">buildResult</span></a></span><span>
+</span><span id="line-116"></span><span>               </span><span class="annot"><span class="annottext">ReaderT
+  NodeName
+  (State ResultState)
+  (a4 -&gt; a5 -&gt; a6 -&gt; a7 -&gt; a8 -&gt; (a1, a2, a3, a4, a5, a6, a7, a8))
+-&gt; ReaderT NodeName (State ResultState) a4
+-&gt; ReaderT
+     NodeName
+     (State ResultState)
+     (a5 -&gt; a6 -&gt; a7 -&gt; a8 -&gt; (a1, a2, a3, a4, a5, a6, a7, a8))
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT NodeName (State ResultState) a4
+forall a. BuildResult a =&gt; Result a
+</span><a href="TensorFlow.BuildOp.html#buildResult"><span class="hs-identifier hs-var">buildResult</span></a></span><span>
+</span><span id="line-117"></span><span>               </span><span class="annot"><span class="annottext">ReaderT
+  NodeName
+  (State ResultState)
+  (a5 -&gt; a6 -&gt; a7 -&gt; a8 -&gt; (a1, a2, a3, a4, a5, a6, a7, a8))
+-&gt; ReaderT NodeName (State ResultState) a5
+-&gt; ReaderT
+     NodeName
+     (State ResultState)
+     (a6 -&gt; a7 -&gt; a8 -&gt; (a1, a2, a3, a4, a5, a6, a7, a8))
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT NodeName (State ResultState) a5
+forall a. BuildResult a =&gt; Result a
+</span><a href="TensorFlow.BuildOp.html#buildResult"><span class="hs-identifier hs-var">buildResult</span></a></span><span>
+</span><span id="line-118"></span><span>               </span><span class="annot"><span class="annottext">ReaderT
+  NodeName
+  (State ResultState)
+  (a6 -&gt; a7 -&gt; a8 -&gt; (a1, a2, a3, a4, a5, a6, a7, a8))
+-&gt; ReaderT NodeName (State ResultState) a6
+-&gt; ReaderT
+     NodeName
+     (State ResultState)
+     (a7 -&gt; a8 -&gt; (a1, a2, a3, a4, a5, a6, a7, a8))
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT NodeName (State ResultState) a6
+forall a. BuildResult a =&gt; Result a
+</span><a href="TensorFlow.BuildOp.html#buildResult"><span class="hs-identifier hs-var">buildResult</span></a></span><span>
+</span><span id="line-119"></span><span>               </span><span class="annot"><span class="annottext">ReaderT
+  NodeName
+  (State ResultState)
+  (a7 -&gt; a8 -&gt; (a1, a2, a3, a4, a5, a6, a7, a8))
+-&gt; ReaderT NodeName (State ResultState) a7
+-&gt; ReaderT
+     NodeName
+     (State ResultState)
+     (a8 -&gt; (a1, a2, a3, a4, a5, a6, a7, a8))
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT NodeName (State ResultState) a7
+forall a. BuildResult a =&gt; Result a
+</span><a href="TensorFlow.BuildOp.html#buildResult"><span class="hs-identifier hs-var">buildResult</span></a></span><span>
+</span><span id="line-120"></span><span>               </span><span class="annot"><span class="annottext">ReaderT
+  NodeName
+  (State ResultState)
+  (a8 -&gt; (a1, a2, a3, a4, a5, a6, a7, a8))
+-&gt; ReaderT NodeName (State ResultState) a8
+-&gt; Result (a1, a2, a3, a4, a5, a6, a7, a8)
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT NodeName (State ResultState) a8
+forall a. BuildResult a =&gt; Result a
+</span><a href="TensorFlow.BuildOp.html#buildResult"><span class="hs-identifier hs-var">buildResult</span></a></span></span></span></span></span></span></span></span></span><span>
+</span><span id="line-121"></span><span>
+</span><span id="line-122"></span><span class="annot"><a href="TensorFlow.BuildOp.html#recordResult"><span class="hs-identifier hs-type">recordResult</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#Result"><span class="hs-identifier hs-type">Result</span></a></span><span> </span><span class="annot"><a href="TensorFlow.Output.html#Output"><span class="hs-identifier hs-type">Output</span></a></span><span>
+</span><span id="line-123"></span><span id="recordResult"><span class="annot"><span class="annottext">recordResult :: Result Output
+</span><a href="TensorFlow.BuildOp.html#recordResult"><span class="hs-identifier hs-var hs-var">recordResult</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-124"></span><span>    </span><span id="local-6989586621679167155"><span class="annot"><span class="annottext">NodeName
+</span><a href="#local-6989586621679167155"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ReaderT NodeName (State ResultState) NodeName
+forall r (m :: * -&gt; *). MonadReader r m =&gt; m r
+</span><span class="hs-identifier hs-var">ask</span></span><span>
+</span><span id="line-125"></span><span>    </span><span class="annot"><a href="TensorFlow.BuildOp.html#ResultState"><span class="hs-identifier hs-type">ResultState</span></a></span><span> </span><span id="local-6989586621679167154"><span class="annot"><span class="annottext">i :: OutputIx
+</span><a href="#local-6989586621679167154"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span id="local-6989586621679167153"><span class="annot"><span class="annottext">ns :: [Int64]
+</span><a href="#local-6989586621679167153"><span class="hs-identifier hs-var">ns</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ReaderT NodeName (State ResultState) ResultState
+forall s (m :: * -&gt; *). MonadState s m =&gt; m s
+</span><span class="hs-identifier hs-var">get</span></span><span>
+</span><span id="line-126"></span><span>    </span><span class="annot"><span class="annottext">ResultState -&gt; ReaderT NodeName (State ResultState) ()
+forall s (m :: * -&gt; *). MonadState s m =&gt; s -&gt; m ()
+</span><span class="hs-identifier hs-var">put</span></span><span> </span><span class="annot"><span class="annottext">(ResultState -&gt; ReaderT NodeName (State ResultState) ())
+-&gt; ResultState -&gt; ReaderT NodeName (State ResultState) ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$!</span></span><span> </span><span class="annot"><span class="annottext">OutputIx -&gt; [Int64] -&gt; ResultState
+</span><a href="TensorFlow.BuildOp.html#ResultState"><span class="hs-identifier hs-var">ResultState</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OutputIx
+</span><a href="#local-6989586621679167154"><span class="hs-identifier hs-var">i</span></a></span><span class="annot"><span class="annottext">OutputIx -&gt; OutputIx -&gt; OutputIx
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">+</span></span><span class="annot"><span class="hs-number">1</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[Int64]
+</span><a href="#local-6989586621679167153"><span class="hs-identifier hs-var">ns</span></a></span><span>
+</span><span id="line-127"></span><span>    </span><span class="annot"><span class="annottext">Output -&gt; Result Output
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">(Output -&gt; Result Output) -&gt; Output -&gt; Result Output
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$!</span></span><span> </span><span class="annot"><span class="annottext">OutputIx -&gt; NodeName -&gt; Output
+</span><a href="TensorFlow.Output.html#output"><span class="hs-identifier hs-var">output</span></a></span><span> </span><span class="annot"><span class="annottext">OutputIx
+</span><a href="#local-6989586621679167154"><span class="hs-identifier hs-var">i</span></a></span><span> </span><span class="annot"><span class="annottext">NodeName
+</span><a href="#local-6989586621679167155"><span class="hs-identifier hs-var">o</span></a></span><span>
+</span><span id="line-128"></span><span>
+</span><span id="line-129"></span><span id="local-6989586621679167148"><span id="local-6989586621679167149"><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="TensorFlow.Tensor.html#TensorKind"><span class="hs-identifier hs-type">TensorKind</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167149"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html#Rendered"><span class="hs-identifier hs-type">Rendered</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="TensorFlow.Tensor.html#Tensor"><span class="hs-identifier hs-type">Tensor</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167149"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#BuildResult"><span class="hs-identifier hs-type">BuildResult</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="TensorFlow.Tensor.html#Tensor"><span class="hs-identifier hs-type">Tensor</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167149"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167148"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-130"></span><span>    </span><span id="local-6989586621679167146"><span class="annot"><span class="annottext">buildResult :: Result (Tensor v a)
+</span><a href="#local-6989586621679167146"><span class="hs-identifier hs-var hs-var hs-var hs-var">buildResult</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">v Output -&gt; Tensor v a
+forall (v :: * -&gt; *) a. TensorKind v =&gt; v Output -&gt; Tensor v a
+</span><a href="TensorFlow.Tensor.html#Tensor"><span class="hs-identifier hs-var">Tensor</span></a></span><span> </span><span class="annot"><span class="annottext">(v Output -&gt; Tensor v a)
+-&gt; (Output -&gt; v Output) -&gt; Output -&gt; Tensor v a
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Output -&gt; v Output
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Output -&gt; Tensor v a) -&gt; Result Output -&gt; Result (Tensor v a)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Result Output
+</span><a href="TensorFlow.BuildOp.html#recordResult"><span class="hs-identifier hs-var">recordResult</span></a></span></span></span><span>
+</span><span id="line-131"></span><span>
+</span><span id="line-132"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#BuildResult"><span class="hs-identifier hs-type">BuildResult</span></a></span><span> </span><span class="annot"><a href="TensorFlow.Output.html#ControlNode"><span class="hs-identifier hs-type">ControlNode</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-133"></span><span>    </span><span id="local-6989586621679167142"><span class="annot"><span class="annottext">buildResult :: Result ControlNode
+</span><a href="#local-6989586621679167142"><span class="hs-identifier hs-var hs-var hs-var hs-var">buildResult</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NodeName -&gt; ControlNode
+</span><a href="TensorFlow.Output.html#ControlNode"><span class="hs-identifier hs-var">ControlNode</span></a></span><span> </span><span class="annot"><span class="annottext">(NodeName -&gt; ControlNode)
+-&gt; ReaderT NodeName (State ResultState) NodeName
+-&gt; Result ControlNode
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT NodeName (State ResultState) NodeName
+forall r (m :: * -&gt; *). MonadReader r m =&gt; m r
+</span><span class="hs-identifier hs-var">ask</span></span><span>
+</span><span id="line-134"></span><span>
+</span><span id="line-135"></span><span id="local-6989586621679167139"><span id="local-6989586621679167140"><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="TensorFlow.Tensor.html#TensorKind"><span class="hs-identifier hs-type">TensorKind</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167140"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html#Rendered"><span class="hs-identifier hs-type">Rendered</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="TensorFlow.Tensor.html#Tensor"><span class="hs-identifier hs-type">Tensor</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167140"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Types.html#TensorTypes"><span class="hs-identifier hs-type">TensorTypes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167139"><span class="hs-keyword hs-type">as</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#BuildResult"><span class="hs-identifier hs-type">BuildResult</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="TensorFlow.Tensor.html#TensorList"><span class="hs-identifier hs-type">TensorList</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167140"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167139"><span class="hs-keyword hs-type">as</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-136"></span><span>  </span><span id="local-6989586621679167137"><span class="annot"><span class="annottext">buildResult :: Result (TensorList v as)
+</span><a href="#local-6989586621679167137"><span class="hs-identifier hs-var hs-var hs-var hs-var">buildResult</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TensorTypeList as -&gt; Result (TensorList v as)
+forall (bs :: [*]). TensorTypeList bs -&gt; Result (TensorList v bs)
+</span><a href="#local-6989586621679167136"><span class="hs-identifier hs-var">loop</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TensorTypeList as
+forall (ts :: [*]). TensorTypes ts =&gt; TensorTypeList ts
+</span><a href="TensorFlow.Types.html#tensorTypes"><span class="hs-identifier hs-var">tensorTypes</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="TensorFlow.Types.html#TensorTypeList"><span class="hs-identifier hs-type">TensorTypeList</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167139"><span class="hs-keyword hs-type">as</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-137"></span><span>    </span><span class="hs-keyword">where</span><span>
+</span><span id="line-138"></span><span>        </span><span id="local-6989586621679167336"><span class="annot"><a href="#local-6989586621679167136"><span class="hs-identifier hs-type">loop</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="TensorFlow.Types.html#TensorTypeList"><span class="hs-identifier hs-type">TensorTypeList</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167336"><span class="hs-identifier hs-type">bs</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#Result"><span class="hs-identifier hs-type">Result</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="TensorFlow.Tensor.html#TensorList"><span class="hs-identifier hs-type">TensorList</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167140"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167336"><span class="hs-identifier hs-type">bs</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-139"></span><span>        </span><span id="local-6989586621679167136"><span class="annot"><span class="annottext">loop :: TensorTypeList bs -&gt; Result (TensorList v bs)
+</span><a href="#local-6989586621679167136"><span class="hs-identifier hs-var hs-var">loop</span></a></span></span><span> </span><span class="annot"><a href="TensorFlow.Types.html#Nil"><span class="hs-identifier hs-type">Nil</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ListOf (Tensor v) '[]
+-&gt; ReaderT NodeName (State ResultState) (ListOf (Tensor v) '[])
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">ListOf (Tensor v) '[]
+forall (f :: * -&gt; *). ListOf f '[]
+</span><a href="TensorFlow.Types.html#Nil"><span class="hs-identifier hs-var">Nil</span></a></span><span>
+</span><span id="line-140"></span><span>        </span><span class="annot"><a href="#local-6989586621679167136"><span class="hs-identifier hs-var">loop</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="TensorFlow.Types.html#TensorTypeProxy"><span class="hs-identifier hs-type">TensorTypeProxy</span></a></span><span> </span><span class="annot"><a href="TensorFlow.Types.html#%3A%2F"><span class="hs-operator hs-type">:/</span></a></span><span> </span><span id="local-6989586621679167131"><span class="annot"><span class="annottext">ls :: ListOf TensorTypeProxy as
+</span><a href="#local-6989586621679167131"><span class="hs-identifier hs-var">ls</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-141"></span><span>            </span><span id="local-6989586621679167130"><span class="annot"><span class="annottext">Tensor v a
+</span><a href="#local-6989586621679167130"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Result (Tensor v a)
+forall a. BuildResult a =&gt; Result a
+</span><a href="TensorFlow.BuildOp.html#buildResult"><span class="hs-identifier hs-var">buildResult</span></a></span><span>
+</span><span id="line-142"></span><span>            </span><span id="local-6989586621679167129"><span class="annot"><span class="annottext">TensorList v as
+</span><a href="#local-6989586621679167129"><span class="hs-identifier hs-var">ts</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ListOf TensorTypeProxy as -&gt; Result (TensorList v as)
+forall (bs :: [*]). TensorTypeList bs -&gt; Result (TensorList v bs)
+</span><a href="#local-6989586621679167136"><span class="hs-identifier hs-var">loop</span></a></span><span> </span><span class="annot"><span class="annottext">ListOf TensorTypeProxy as
+</span><a href="#local-6989586621679167131"><span class="hs-identifier hs-var">ls</span></a></span><span>
+</span><span id="line-143"></span><span>            </span><span class="annot"><span class="annottext">ListOf (Tensor v) (a : as)
+-&gt; ReaderT
+     NodeName (State ResultState) (ListOf (Tensor v) (a : as))
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Tensor v a
+</span><a href="#local-6989586621679167130"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="annot"><span class="annottext">Tensor v a -&gt; TensorList v as -&gt; ListOf (Tensor v) (a : as)
+forall (f :: * -&gt; *) a (as :: [*]).
+f a -&gt; ListOf f as -&gt; ListOf f (a : as)
+</span><a href="TensorFlow.Types.html#%3A%2F"><span class="hs-operator hs-var">:/</span></a></span><span> </span><span class="annot"><span class="annottext">TensorList v as
+</span><a href="#local-6989586621679167129"><span class="hs-identifier hs-var">ts</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-144"></span><span>
+</span><span id="line-145"></span><span id="local-6989586621679167128"><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#BuildResult"><span class="hs-identifier hs-type">BuildResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167128"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#BuildResult"><span class="hs-identifier hs-type">BuildResult</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621679167128"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-146"></span><span>    </span><span id="local-6989586621679167126"><span class="annot"><span class="annottext">buildResult :: Result [a]
+</span><a href="#local-6989586621679167126"><span class="hs-identifier hs-var hs-var hs-var hs-var">buildResult</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-147"></span><span>        </span><span class="annot"><a href="TensorFlow.BuildOp.html#ResultState"><span class="hs-identifier hs-type">ResultState</span></a></span><span> </span><span id="local-6989586621679167125"><span class="annot"><span class="annottext">i :: OutputIx
+</span><a href="#local-6989586621679167125"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span id="local-6989586621679167124"><span class="annot"><span class="annottext">ns :: [Int64]
+</span><a href="#local-6989586621679167124"><span class="hs-identifier hs-var">ns</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ReaderT NodeName (State ResultState) ResultState
+forall s (m :: * -&gt; *). MonadState s m =&gt; m s
+</span><span class="hs-identifier hs-var">get</span></span><span>
+</span><span id="line-148"></span><span>        </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">[Int64]
+</span><a href="#local-6989586621679167124"><span class="hs-identifier hs-var">ns</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-149"></span><span>            </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Result [a]
+forall a. HasCallStack =&gt; String -&gt; a
+</span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Result [a]) -&gt; String -&gt; Result [a]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="hs-string">&quot;Ran out of counts in buildResult. &quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span>
+</span><span id="line-150"></span><span>                          </span><span class="annot"><span class="hs-string">&quot;Likely misuse of buildOp.&quot;</span></span><span>
+</span><span id="line-151"></span><span>            </span><span class="hs-special">(</span><span id="local-6989586621679167122"><span class="annot"><span class="annottext">n :: Int64
+</span><a href="#local-6989586621679167122"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="annot"><span class="hs-glyph hs-type">:</span></span><span> </span><span id="local-6989586621679167121"><span class="annot"><span class="annottext">rest :: [Int64]
+</span><a href="#local-6989586621679167121"><span class="hs-identifier hs-var">rest</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-152"></span><span>                </span><span class="annot"><span class="annottext">ResultState -&gt; ReaderT NodeName (State ResultState) ()
+forall s (m :: * -&gt; *). MonadState s m =&gt; s -&gt; m ()
+</span><span class="hs-identifier hs-var">put</span></span><span> </span><span class="annot"><span class="annottext">(ResultState -&gt; ReaderT NodeName (State ResultState) ())
+-&gt; ResultState -&gt; ReaderT NodeName (State ResultState) ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$!</span></span><span> </span><span class="annot"><span class="annottext">OutputIx -&gt; [Int64] -&gt; ResultState
+</span><a href="TensorFlow.BuildOp.html#ResultState"><span class="hs-identifier hs-var">ResultState</span></a></span><span> </span><span class="annot"><span class="annottext">OutputIx
+</span><a href="#local-6989586621679167125"><span class="hs-identifier hs-var">i</span></a></span><span> </span><span class="annot"><span class="annottext">[Int64]
+</span><a href="#local-6989586621679167121"><span class="hs-identifier hs-var">rest</span></a></span><span>
+</span><span id="line-153"></span><span>                </span><span class="annot"><span class="annottext">Int -&gt; ReaderT NodeName (State ResultState) a -&gt; Result [a]
+forall (m :: * -&gt; *) a. Applicative m =&gt; Int -&gt; m a -&gt; m [a]
+</span><span class="hs-identifier hs-var">replicateM</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int64 -&gt; Int
+forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">fromIntegral</span></span><span> </span><span class="annot"><span class="annottext">Int64
+</span><a href="#local-6989586621679167122"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ReaderT NodeName (State ResultState) a
+forall a. BuildResult a =&gt; Result a
+</span><a href="TensorFlow.BuildOp.html#buildResult"><span class="hs-identifier hs-var">buildResult</span></a></span></span><span>
+</span><span id="line-154"></span><span>
+</span><span id="line-155"></span><span id="local-6989586621679167120"><span class="annot"><a href="TensorFlow.BuildOp.html#buildOp"><span class="hs-identifier hs-type">buildOp</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#BuildResult"><span class="hs-identifier hs-type">BuildResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167120"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Int64</span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Output.html#OpDef"><span class="hs-identifier hs-type">OpDef</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Build.html#Build"><span class="hs-identifier hs-type">Build</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167120"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-156"></span><span id="buildOp"><span class="annot"><span class="annottext">buildOp :: [Int64] -&gt; OpDef -&gt; Build a
+</span><a href="TensorFlow.BuildOp.html#buildOp"><span class="hs-identifier hs-var hs-var">buildOp</span></a></span></span><span> </span><span id="local-6989586621679167119"><span class="annot"><span class="annottext">sizes :: [Int64]
+</span><a href="#local-6989586621679167119"><span class="hs-identifier hs-var">sizes</span></a></span></span><span> </span><span id="local-6989586621679167118"><span class="annot"><span class="annottext">o :: OpDef
+</span><a href="#local-6989586621679167118"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-157"></span><span>    </span><span id="local-6989586621679167117"><span class="annot"><span class="annottext">NodeName
+</span><a href="#local-6989586621679167117"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">OpDef -&gt; Build NodeName
+</span><a href="TensorFlow.Build.html#addNewOp"><span class="hs-identifier hs-var">addNewOp</span></a></span><span> </span><span class="annot"><span class="annottext">OpDef
+</span><a href="#local-6989586621679167118"><span class="hs-identifier hs-var">o</span></a></span><span>
+</span><span id="line-158"></span><span>    </span><span class="annot"><span class="annottext">a -&gt; Build a
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">(a -&gt; Build a) -&gt; a -&gt; Build a
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(State ResultState a -&gt; ResultState -&gt; a)
+-&gt; ResultState -&gt; State ResultState a -&gt; a
+forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
+</span><span class="hs-identifier hs-var">flip</span></span><span> </span><span class="annot"><span class="annottext">State ResultState a -&gt; ResultState -&gt; a
+forall s a. State s a -&gt; s -&gt; a
+</span><span class="hs-identifier hs-var">evalState</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OutputIx -&gt; [Int64] -&gt; ResultState
+</span><a href="TensorFlow.BuildOp.html#ResultState"><span class="hs-identifier hs-var">ResultState</span></a></span><span> </span><span class="annot"><span class="hs-number">0</span></span><span> </span><span class="annot"><span class="annottext">[Int64]
+</span><a href="#local-6989586621679167119"><span class="hs-identifier hs-var">sizes</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ReaderT NodeName (State ResultState) a
+-&gt; NodeName -&gt; State ResultState a
+forall r (m :: * -&gt; *) a. ReaderT r m a -&gt; r -&gt; m a
+</span><span class="hs-identifier hs-var hs-var">runReaderT</span></span><span> </span><span class="annot"><span class="annottext">ReaderT NodeName (State ResultState) a
+forall a. BuildResult a =&gt; Result a
+</span><a href="TensorFlow.BuildOp.html#buildResult"><span class="hs-identifier hs-var">buildResult</span></a></span><span> </span><span class="annot"><span class="annottext">NodeName
+</span><a href="#local-6989586621679167117"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-159"></span><span>
+</span><span id="line-160"></span><span class="hs-comment">-- | Returns true if all the integers in each tuple are identical.</span><span>
+</span><span id="line-161"></span><span class="hs-comment">-- Throws an error with a descriptive message if not.</span><span>
+</span><span id="line-162"></span><span class="annot"><a href="TensorFlow.BuildOp.html#eqLengthGuard"><span class="hs-identifier hs-type">eqLengthGuard</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">)</span><span class="hs-special">]</span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
+</span><span id="line-163"></span><span id="eqLengthGuard"><span class="annot"><span class="annottext">eqLengthGuard :: [(String, [(String, Int)])] -&gt; Bool
+</span><a href="TensorFlow.BuildOp.html#eqLengthGuard"><span class="hs-identifier hs-var hs-var">eqLengthGuard</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((String, [(String, Int)]) -&gt; Bool)
+-&gt; [(String, [(String, Int)])] -&gt; Bool
+forall (t :: * -&gt; *) a. Foldable t =&gt; (a -&gt; Bool) -&gt; t a -&gt; Bool
+</span><span class="hs-identifier hs-var">all</span></span><span> </span><span class="annot"><span class="annottext">(String, [(String, Int)]) -&gt; Bool
+forall a a. (Eq a, Show a, Show a) =&gt; (String, [(a, a)]) -&gt; Bool
+</span><a href="#local-6989586621679167113"><span class="hs-identifier hs-var">eachOk</span></a></span><span>
+</span><span id="line-164"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-165"></span><span>    </span><span id="local-6989586621679167113"><span class="annot"><span class="annottext">eachOk :: (String, [(a, a)]) -&gt; Bool
+</span><a href="#local-6989586621679167113"><span class="hs-identifier hs-var hs-var">eachOk</span></a></span></span><span> </span><span class="hs-special">(</span><span class="hs-identifier">_</span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">True</span></span><span>
+</span><span id="line-166"></span><span>    </span><span class="hs-comment">-- The next line has (== 1) . length . nub in disguise</span><span>
+</span><span id="line-167"></span><span>    </span><span class="annot"><a href="#local-6989586621679167113"><span class="hs-identifier hs-var">eachOk</span></a></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679167112"><span class="annot"><span class="annottext">numberAttrName :: String
+</span><a href="#local-6989586621679167112"><span class="hs-identifier hs-var">numberAttrName</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679167111"><span class="annot"><span class="annottext">pairs :: [(a, a)]
+</span><a href="#local-6989586621679167111"><span class="hs-identifier hs-var">pairs</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="hs-special">(</span><span class="hs-identifier">_</span><span class="hs-special">,</span><span> </span><span id="local-6989586621679167110"><span class="annot"><span class="annottext">x :: a
+</span><a href="#local-6989586621679167110"><span class="hs-identifier hs-var">x</span></a></span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="hs-glyph hs-type">:</span></span><span> </span><span id="local-6989586621679167109"><span class="annot"><span class="annottext">zs :: [(a, a)]
+</span><a href="#local-6989586621679167109"><span class="hs-identifier hs-var">zs</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((a, a) -&gt; Bool) -&gt; [(a, a)] -&gt; Bool
+forall (t :: * -&gt; *) a. Foldable t =&gt; (a -&gt; Bool) -&gt; t a -&gt; Bool
+</span><span class="hs-identifier hs-var">all</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621679167108"><span class="annot"><span class="annottext">z :: (a, a)
+</span><a href="#local-6989586621679167108"><span class="hs-identifier hs-var">z</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(a, a) -&gt; a
+forall a b. (a, b) -&gt; b
+</span><span class="hs-identifier hs-var">snd</span></span><span> </span><span class="annot"><span class="annottext">(a, a)
+</span><a href="#local-6989586621679167108"><span class="hs-identifier hs-var">z</span></a></span><span> </span><span class="annot"><span class="annottext">a -&gt; a -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679167110"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[(a, a)]
+</span><a href="#local-6989586621679167109"><span class="hs-identifier hs-var">zs</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><span class="hs-operator hs-var">||</span></span><span>
+</span><span id="line-168"></span><span>        </span><span class="annot"><span class="annottext">String -&gt; Bool
+forall a. HasCallStack =&gt; String -&gt; a
+</span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-string">&quot;number_attr &quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679167112"><span class="hs-identifier hs-var">numberAttrName</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span>
+</span><span id="line-169"></span><span>               </span><span class="annot"><span class="hs-string">&quot; contains tensors with different length &quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">[(a, a)] -&gt; String
+forall a. Show a =&gt; a -&gt; String
+</span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="annot"><span class="annottext">[(a, a)]
+</span><a href="#local-6989586621679167111"><span class="hs-identifier hs-var">pairs</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-170"></span><span>
+</span><span id="line-171"></span><span class="hs-comment">-----------</span><span>
+</span><span id="line-172"></span><span>
+</span><span id="line-173"></span><span>
+</span><span id="line-174"></span><span class="hs-comment">-- | Class of types that can be used as op outputs.</span><span>
+</span><span id="line-175"></span><span class="hs-keyword">class</span><span> </span><span id="PureResult"><span class="annot"><a href="TensorFlow.BuildOp.html#PureResult"><span class="hs-identifier hs-var">PureResult</span></a></span></span><span> </span><span id="local-6989586621679167296"><span class="annot"><a href="#local-6989586621679167296"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-176"></span><span>    </span><span id="pureResult"><span class="annot"><a href="TensorFlow.BuildOp.html#pureResult"><span class="hs-identifier hs-type">pureResult</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ReaderT</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="TensorFlow.Build.html#Build"><span class="hs-identifier hs-type">Build</span></a></span><span> </span><span class="annot"><a href="TensorFlow.Output.html#OpDef"><span class="hs-identifier hs-type">OpDef</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">State</span></span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#ResultState"><span class="hs-identifier hs-type">ResultState</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621679167296"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-177"></span><span>
+</span><span id="line-178"></span><span id="local-6989586621679167104"><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#PureResult"><span class="hs-identifier hs-type">PureResult</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="TensorFlow.Tensor.html#Tensor"><span class="hs-identifier hs-type">Tensor</span></a></span><span> </span><span class="annot"><a href="TensorFlow.Build.html#Build"><span class="hs-identifier hs-type">Build</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167104"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-179"></span><span>    </span><span id="local-6989586621679167101"><span class="annot"><span class="annottext">pureResult :: ReaderT (Build OpDef) (State ResultState) (Tensor Build a)
+</span><a href="#local-6989586621679167101"><span class="hs-identifier hs-var hs-var hs-var hs-var">pureResult</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-180"></span><span>        </span><span class="annot"><a href="TensorFlow.BuildOp.html#ResultState"><span class="hs-identifier hs-type">ResultState</span></a></span><span> </span><span id="local-6989586621679167100"><span class="annot"><span class="annottext">i :: OutputIx
+</span><a href="#local-6989586621679167100"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span id="local-6989586621679167099"><span class="annot"><span class="annottext">ns :: [Int64]
+</span><a href="#local-6989586621679167099"><span class="hs-identifier hs-var">ns</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ReaderT (Build OpDef) (State ResultState) ResultState
+forall s (m :: * -&gt; *). MonadState s m =&gt; m s
+</span><span class="hs-identifier hs-var">get</span></span><span>
+</span><span id="line-181"></span><span>        </span><span class="annot"><span class="annottext">ResultState -&gt; ReaderT (Build OpDef) (State ResultState) ()
+forall s (m :: * -&gt; *). MonadState s m =&gt; s -&gt; m ()
+</span><span class="hs-identifier hs-var">put</span></span><span> </span><span class="annot"><span class="annottext">(ResultState -&gt; ReaderT (Build OpDef) (State ResultState) ())
+-&gt; ResultState -&gt; ReaderT (Build OpDef) (State ResultState) ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$!</span></span><span> </span><span class="annot"><span class="annottext">OutputIx -&gt; [Int64] -&gt; ResultState
+</span><a href="TensorFlow.BuildOp.html#ResultState"><span class="hs-identifier hs-var">ResultState</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OutputIx
+</span><a href="#local-6989586621679167100"><span class="hs-identifier hs-var">i</span></a></span><span class="annot"><span class="annottext">OutputIx -&gt; OutputIx -&gt; OutputIx
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">+</span></span><span class="annot"><span class="hs-number">1</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[Int64]
+</span><a href="#local-6989586621679167099"><span class="hs-identifier hs-var">ns</span></a></span><span>
+</span><span id="line-182"></span><span>        </span><span id="local-6989586621679167098"><span class="annot"><span class="annottext">Build OpDef
+</span><a href="#local-6989586621679167098"><span class="hs-identifier hs-var">makeOp</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ReaderT (Build OpDef) (State ResultState) (Build OpDef)
+forall r (m :: * -&gt; *). MonadReader r m =&gt; m r
+</span><span class="hs-identifier hs-var">ask</span></span><span>
+</span><span id="line-183"></span><span>        </span><span class="annot"><span class="annottext">Tensor Build a
+-&gt; ReaderT (Build OpDef) (State ResultState) (Tensor Build a)
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">(Tensor Build a
+ -&gt; ReaderT (Build OpDef) (State ResultState) (Tensor Build a))
+-&gt; Tensor Build a
+-&gt; ReaderT (Build OpDef) (State ResultState) (Tensor Build a)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">BuildT Identity Output -&gt; Tensor Build a
+forall (v :: * -&gt; *) a. TensorKind v =&gt; v Output -&gt; Tensor v a
+</span><a href="TensorFlow.Tensor.html#Tensor"><span class="hs-identifier hs-var">Tensor</span></a></span><span> </span><span class="annot"><span class="annottext">(BuildT Identity Output -&gt; Tensor Build a)
+-&gt; BuildT Identity Output -&gt; Tensor Build a
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-184"></span><span>            </span><span id="local-6989586621679167097"><span class="annot"><span class="annottext">OpDef
+</span><a href="#local-6989586621679167097"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Build OpDef
+</span><a href="#local-6989586621679167098"><span class="hs-identifier hs-var">makeOp</span></a></span><span>
+</span><span id="line-185"></span><span>            </span><span class="hs-comment">-- TODO: unify with BuildResult (Tensor v)</span><span>
+</span><span id="line-186"></span><span>            </span><span class="annot"><span class="annottext">OutputIx -&gt; NodeName -&gt; Output
+</span><a href="TensorFlow.Output.html#output"><span class="hs-identifier hs-var">output</span></a></span><span> </span><span class="annot"><span class="annottext">OutputIx
+</span><a href="#local-6989586621679167100"><span class="hs-identifier hs-var">i</span></a></span><span> </span><span class="annot"><span class="annottext">(NodeName -&gt; Output) -&gt; Build NodeName -&gt; BuildT Identity Output
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">OpDef -&gt; Build NodeName
+</span><a href="TensorFlow.Build.html#getOrAddOp"><span class="hs-identifier hs-var">getOrAddOp</span></a></span><span> </span><span class="annot"><span class="annottext">OpDef
+</span><a href="#local-6989586621679167097"><span class="hs-identifier hs-var">o</span></a></span></span><span>
+</span><span id="line-187"></span><span>
+</span><span id="line-188"></span><span id="local-6989586621679167094"><span id="local-6989586621679167095"><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="TensorFlow.BuildOp.html#PureResult"><span class="hs-identifier hs-type">PureResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167095"><span class="hs-identifier hs-type">a1</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#PureResult"><span class="hs-identifier hs-type">PureResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167094"><span class="hs-identifier hs-type">a2</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#PureResult"><span class="hs-identifier hs-type">PureResult</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679167095"><span class="hs-identifier hs-type">a1</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679167094"><span class="hs-identifier hs-type">a2</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-189"></span><span>    </span><span id="local-6989586621679167092"><span class="annot"><span class="annottext">pureResult :: ReaderT (Build OpDef) (State ResultState) (a1, a2)
+</span><a href="#local-6989586621679167092"><span class="hs-identifier hs-var hs-var hs-var hs-var">pureResult</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="hs-special">,</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(a1 -&gt; a2 -&gt; (a1, a2))
+-&gt; ReaderT (Build OpDef) (State ResultState) a1
+-&gt; ReaderT (Build OpDef) (State ResultState) (a2 -&gt; (a1, a2))
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT (Build OpDef) (State ResultState) a1
+forall a.
+PureResult a =&gt;
+ReaderT (Build OpDef) (State ResultState) a
+</span><a href="TensorFlow.BuildOp.html#pureResult"><span class="hs-identifier hs-var">pureResult</span></a></span><span> </span><span class="annot"><span class="annottext">ReaderT (Build OpDef) (State ResultState) (a2 -&gt; (a1, a2))
+-&gt; ReaderT (Build OpDef) (State ResultState) a2
+-&gt; ReaderT (Build OpDef) (State ResultState) (a1, a2)
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT (Build OpDef) (State ResultState) a2
+forall a.
+PureResult a =&gt;
+ReaderT (Build OpDef) (State ResultState) a
+</span><a href="TensorFlow.BuildOp.html#pureResult"><span class="hs-identifier hs-var">pureResult</span></a></span></span></span><span>
+</span><span id="line-190"></span><span>
+</span><span id="line-191"></span><span id="local-6989586621679167089"><span id="local-6989586621679167090"><span id="local-6989586621679167091"><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="TensorFlow.BuildOp.html#PureResult"><span class="hs-identifier hs-type">PureResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167091"><span class="hs-identifier hs-type">a1</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#PureResult"><span class="hs-identifier hs-type">PureResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167090"><span class="hs-identifier hs-type">a2</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#PureResult"><span class="hs-identifier hs-type">PureResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167089"><span class="hs-identifier hs-type">a3</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#PureResult"><span class="hs-identifier hs-type">PureResult</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679167091"><span class="hs-identifier hs-type">a1</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679167090"><span class="hs-identifier hs-type">a2</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679167089"><span class="hs-identifier hs-type">a3</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-192"></span><span>    </span><span id="local-6989586621679167087"><span class="annot"><span class="annottext">pureResult :: ReaderT (Build OpDef) (State ResultState) (a1, a2, a3)
+</span><a href="#local-6989586621679167087"><span class="hs-identifier hs-var hs-var hs-var hs-var">pureResult</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="hs-special">,</span><span class="hs-special">,</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(a1 -&gt; a2 -&gt; a3 -&gt; (a1, a2, a3))
+-&gt; ReaderT (Build OpDef) (State ResultState) a1
+-&gt; ReaderT
+     (Build OpDef) (State ResultState) (a2 -&gt; a3 -&gt; (a1, a2, a3))
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT (Build OpDef) (State ResultState) a1
+forall a.
+PureResult a =&gt;
+ReaderT (Build OpDef) (State ResultState) a
+</span><a href="TensorFlow.BuildOp.html#pureResult"><span class="hs-identifier hs-var">pureResult</span></a></span><span> </span><span class="annot"><span class="annottext">ReaderT
+  (Build OpDef) (State ResultState) (a2 -&gt; a3 -&gt; (a1, a2, a3))
+-&gt; ReaderT (Build OpDef) (State ResultState) a2
+-&gt; ReaderT (Build OpDef) (State ResultState) (a3 -&gt; (a1, a2, a3))
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT (Build OpDef) (State ResultState) a2
+forall a.
+PureResult a =&gt;
+ReaderT (Build OpDef) (State ResultState) a
+</span><a href="TensorFlow.BuildOp.html#pureResult"><span class="hs-identifier hs-var">pureResult</span></a></span><span> </span><span class="annot"><span class="annottext">ReaderT (Build OpDef) (State ResultState) (a3 -&gt; (a1, a2, a3))
+-&gt; ReaderT (Build OpDef) (State ResultState) a3
+-&gt; ReaderT (Build OpDef) (State ResultState) (a1, a2, a3)
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT (Build OpDef) (State ResultState) a3
+forall a.
+PureResult a =&gt;
+ReaderT (Build OpDef) (State ResultState) a
+</span><a href="TensorFlow.BuildOp.html#pureResult"><span class="hs-identifier hs-var">pureResult</span></a></span></span></span></span><span>
+</span><span id="line-193"></span><span>
+</span><span id="line-194"></span><span id="local-6989586621679167083"><span id="local-6989586621679167084"><span id="local-6989586621679167085"><span id="local-6989586621679167086"><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="TensorFlow.BuildOp.html#PureResult"><span class="hs-identifier hs-type">PureResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167086"><span class="hs-identifier hs-type">a1</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#PureResult"><span class="hs-identifier hs-type">PureResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167085"><span class="hs-identifier hs-type">a2</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#PureResult"><span class="hs-identifier hs-type">PureResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167084"><span class="hs-identifier hs-type">a3</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#PureResult"><span class="hs-identifier hs-type">PureResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167083"><span class="hs-identifier hs-type">a4</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-195"></span><span>         </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#PureResult"><span class="hs-identifier hs-type">PureResult</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679167086"><span class="hs-identifier hs-type">a1</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679167085"><span class="hs-identifier hs-type">a2</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679167084"><span class="hs-identifier hs-type">a3</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679167083"><span class="hs-identifier hs-type">a4</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-196"></span><span>    </span><span id="local-6989586621679167081"><span class="annot"><span class="annottext">pureResult :: ReaderT (Build OpDef) (State ResultState) (a1, a2, a3, a4)
+</span><a href="#local-6989586621679167081"><span class="hs-identifier hs-var hs-var hs-var hs-var">pureResult</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="hs-special">,</span><span class="hs-special">,</span><span class="hs-special">,</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(a1 -&gt; a2 -&gt; a3 -&gt; a4 -&gt; (a1, a2, a3, a4))
+-&gt; ReaderT (Build OpDef) (State ResultState) a1
+-&gt; ReaderT
+     (Build OpDef)
+     (State ResultState)
+     (a2 -&gt; a3 -&gt; a4 -&gt; (a1, a2, a3, a4))
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT (Build OpDef) (State ResultState) a1
+forall a.
+PureResult a =&gt;
+ReaderT (Build OpDef) (State ResultState) a
+</span><a href="TensorFlow.BuildOp.html#pureResult"><span class="hs-identifier hs-var">pureResult</span></a></span><span> </span><span class="annot"><span class="annottext">ReaderT
+  (Build OpDef)
+  (State ResultState)
+  (a2 -&gt; a3 -&gt; a4 -&gt; (a1, a2, a3, a4))
+-&gt; ReaderT (Build OpDef) (State ResultState) a2
+-&gt; ReaderT
+     (Build OpDef) (State ResultState) (a3 -&gt; a4 -&gt; (a1, a2, a3, a4))
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT (Build OpDef) (State ResultState) a2
+forall a.
+PureResult a =&gt;
+ReaderT (Build OpDef) (State ResultState) a
+</span><a href="TensorFlow.BuildOp.html#pureResult"><span class="hs-identifier hs-var">pureResult</span></a></span><span> </span><span class="annot"><span class="annottext">ReaderT
+  (Build OpDef) (State ResultState) (a3 -&gt; a4 -&gt; (a1, a2, a3, a4))
+-&gt; ReaderT (Build OpDef) (State ResultState) a3
+-&gt; ReaderT
+     (Build OpDef) (State ResultState) (a4 -&gt; (a1, a2, a3, a4))
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT (Build OpDef) (State ResultState) a3
+forall a.
+PureResult a =&gt;
+ReaderT (Build OpDef) (State ResultState) a
+</span><a href="TensorFlow.BuildOp.html#pureResult"><span class="hs-identifier hs-var">pureResult</span></a></span><span> </span><span class="annot"><span class="annottext">ReaderT (Build OpDef) (State ResultState) (a4 -&gt; (a1, a2, a3, a4))
+-&gt; ReaderT (Build OpDef) (State ResultState) a4
+-&gt; ReaderT (Build OpDef) (State ResultState) (a1, a2, a3, a4)
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT (Build OpDef) (State ResultState) a4
+forall a.
+PureResult a =&gt;
+ReaderT (Build OpDef) (State ResultState) a
+</span><a href="TensorFlow.BuildOp.html#pureResult"><span class="hs-identifier hs-var">pureResult</span></a></span></span></span></span></span><span>
+</span><span id="line-197"></span><span>
+</span><span id="line-198"></span><span id="local-6989586621679167076"><span id="local-6989586621679167077"><span id="local-6989586621679167078"><span id="local-6989586621679167079"><span id="local-6989586621679167080"><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="TensorFlow.BuildOp.html#PureResult"><span class="hs-identifier hs-type">PureResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167080"><span class="hs-identifier hs-type">a1</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#PureResult"><span class="hs-identifier hs-type">PureResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167079"><span class="hs-identifier hs-type">a2</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#PureResult"><span class="hs-identifier hs-type">PureResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167078"><span class="hs-identifier hs-type">a3</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#PureResult"><span class="hs-identifier hs-type">PureResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167077"><span class="hs-identifier hs-type">a4</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#PureResult"><span class="hs-identifier hs-type">PureResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167076"><span class="hs-identifier hs-type">a5</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-199"></span><span>         </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#PureResult"><span class="hs-identifier hs-type">PureResult</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679167080"><span class="hs-identifier hs-type">a1</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679167079"><span class="hs-identifier hs-type">a2</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679167078"><span class="hs-identifier hs-type">a3</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679167077"><span class="hs-identifier hs-type">a4</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679167076"><span class="hs-identifier hs-type">a5</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-200"></span><span>    </span><span id="local-6989586621679167074"><span class="annot"><span class="annottext">pureResult :: ReaderT (Build OpDef) (State ResultState) (a1, a2, a3, a4, a5)
+</span><a href="#local-6989586621679167074"><span class="hs-identifier hs-var hs-var hs-var hs-var">pureResult</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="hs-special">,</span><span class="hs-special">,</span><span class="hs-special">,</span><span class="hs-special">,</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(a1 -&gt; a2 -&gt; a3 -&gt; a4 -&gt; a5 -&gt; (a1, a2, a3, a4, a5))
+-&gt; ReaderT (Build OpDef) (State ResultState) a1
+-&gt; ReaderT
+     (Build OpDef)
+     (State ResultState)
+     (a2 -&gt; a3 -&gt; a4 -&gt; a5 -&gt; (a1, a2, a3, a4, a5))
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT (Build OpDef) (State ResultState) a1
+forall a.
+PureResult a =&gt;
+ReaderT (Build OpDef) (State ResultState) a
+</span><a href="TensorFlow.BuildOp.html#pureResult"><span class="hs-identifier hs-var">pureResult</span></a></span><span>
+</span><span id="line-201"></span><span>                      </span><span class="annot"><span class="annottext">ReaderT
+  (Build OpDef)
+  (State ResultState)
+  (a2 -&gt; a3 -&gt; a4 -&gt; a5 -&gt; (a1, a2, a3, a4, a5))
+-&gt; ReaderT (Build OpDef) (State ResultState) a2
+-&gt; ReaderT
+     (Build OpDef)
+     (State ResultState)
+     (a3 -&gt; a4 -&gt; a5 -&gt; (a1, a2, a3, a4, a5))
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT (Build OpDef) (State ResultState) a2
+forall a.
+PureResult a =&gt;
+ReaderT (Build OpDef) (State ResultState) a
+</span><a href="TensorFlow.BuildOp.html#pureResult"><span class="hs-identifier hs-var">pureResult</span></a></span><span>
+</span><span id="line-202"></span><span>                      </span><span class="annot"><span class="annottext">ReaderT
+  (Build OpDef)
+  (State ResultState)
+  (a3 -&gt; a4 -&gt; a5 -&gt; (a1, a2, a3, a4, a5))
+-&gt; ReaderT (Build OpDef) (State ResultState) a3
+-&gt; ReaderT
+     (Build OpDef)
+     (State ResultState)
+     (a4 -&gt; a5 -&gt; (a1, a2, a3, a4, a5))
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT (Build OpDef) (State ResultState) a3
+forall a.
+PureResult a =&gt;
+ReaderT (Build OpDef) (State ResultState) a
+</span><a href="TensorFlow.BuildOp.html#pureResult"><span class="hs-identifier hs-var">pureResult</span></a></span><span>
+</span><span id="line-203"></span><span>                      </span><span class="annot"><span class="annottext">ReaderT
+  (Build OpDef)
+  (State ResultState)
+  (a4 -&gt; a5 -&gt; (a1, a2, a3, a4, a5))
+-&gt; ReaderT (Build OpDef) (State ResultState) a4
+-&gt; ReaderT
+     (Build OpDef) (State ResultState) (a5 -&gt; (a1, a2, a3, a4, a5))
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT (Build OpDef) (State ResultState) a4
+forall a.
+PureResult a =&gt;
+ReaderT (Build OpDef) (State ResultState) a
+</span><a href="TensorFlow.BuildOp.html#pureResult"><span class="hs-identifier hs-var">pureResult</span></a></span><span>
+</span><span id="line-204"></span><span>                      </span><span class="annot"><span class="annottext">ReaderT
+  (Build OpDef) (State ResultState) (a5 -&gt; (a1, a2, a3, a4, a5))
+-&gt; ReaderT (Build OpDef) (State ResultState) a5
+-&gt; ReaderT (Build OpDef) (State ResultState) (a1, a2, a3, a4, a5)
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT (Build OpDef) (State ResultState) a5
+forall a.
+PureResult a =&gt;
+ReaderT (Build OpDef) (State ResultState) a
+</span><a href="TensorFlow.BuildOp.html#pureResult"><span class="hs-identifier hs-var">pureResult</span></a></span></span></span></span></span></span><span>
+</span><span id="line-205"></span><span>
+</span><span id="line-206"></span><span id="local-6989586621679167068"><span id="local-6989586621679167069"><span id="local-6989586621679167070"><span id="local-6989586621679167071"><span id="local-6989586621679167072"><span id="local-6989586621679167073"><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#PureResult"><span class="hs-identifier hs-type">PureResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167073"><span class="hs-identifier hs-type">a1</span></a></span><span>
+</span><span id="line-207"></span><span>         </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#PureResult"><span class="hs-identifier hs-type">PureResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167072"><span class="hs-identifier hs-type">a2</span></a></span><span>
+</span><span id="line-208"></span><span>         </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#PureResult"><span class="hs-identifier hs-type">PureResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167071"><span class="hs-identifier hs-type">a3</span></a></span><span>
+</span><span id="line-209"></span><span>         </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#PureResult"><span class="hs-identifier hs-type">PureResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167070"><span class="hs-identifier hs-type">a4</span></a></span><span>
+</span><span id="line-210"></span><span>         </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#PureResult"><span class="hs-identifier hs-type">PureResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167069"><span class="hs-identifier hs-type">a5</span></a></span><span>
+</span><span id="line-211"></span><span>         </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#PureResult"><span class="hs-identifier hs-type">PureResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167068"><span class="hs-identifier hs-type">a6</span></a></span><span>
+</span><span id="line-212"></span><span>         </span><span class="hs-special">)</span><span>
+</span><span id="line-213"></span><span>         </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#PureResult"><span class="hs-identifier hs-type">PureResult</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679167073"><span class="hs-identifier hs-type">a1</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679167072"><span class="hs-identifier hs-type">a2</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679167071"><span class="hs-identifier hs-type">a3</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679167070"><span class="hs-identifier hs-type">a4</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679167069"><span class="hs-identifier hs-type">a5</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679167068"><span class="hs-identifier hs-type">a6</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-214"></span><span>    </span><span id="local-6989586621679167066"><span class="annot"><span class="annottext">pureResult :: ReaderT (Build OpDef) (State ResultState) (a1, a2, a3, a4, a5, a6)
+</span><a href="#local-6989586621679167066"><span class="hs-identifier hs-var hs-var hs-var hs-var">pureResult</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="hs-special">,</span><span class="hs-special">,</span><span class="hs-special">,</span><span class="hs-special">,</span><span class="hs-special">,</span><span class="hs-special">)</span><span>
+</span><span id="line-215"></span><span>               </span><span class="annot"><span class="annottext">(a1 -&gt; a2 -&gt; a3 -&gt; a4 -&gt; a5 -&gt; a6 -&gt; (a1, a2, a3, a4, a5, a6))
+-&gt; ReaderT (Build OpDef) (State ResultState) a1
+-&gt; ReaderT
+     (Build OpDef)
+     (State ResultState)
+     (a2 -&gt; a3 -&gt; a4 -&gt; a5 -&gt; a6 -&gt; (a1, a2, a3, a4, a5, a6))
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT (Build OpDef) (State ResultState) a1
+forall a.
+PureResult a =&gt;
+ReaderT (Build OpDef) (State ResultState) a
+</span><a href="TensorFlow.BuildOp.html#pureResult"><span class="hs-identifier hs-var">pureResult</span></a></span><span>
+</span><span id="line-216"></span><span>               </span><span class="annot"><span class="annottext">ReaderT
+  (Build OpDef)
+  (State ResultState)
+  (a2 -&gt; a3 -&gt; a4 -&gt; a5 -&gt; a6 -&gt; (a1, a2, a3, a4, a5, a6))
+-&gt; ReaderT (Build OpDef) (State ResultState) a2
+-&gt; ReaderT
+     (Build OpDef)
+     (State ResultState)
+     (a3 -&gt; a4 -&gt; a5 -&gt; a6 -&gt; (a1, a2, a3, a4, a5, a6))
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT (Build OpDef) (State ResultState) a2
+forall a.
+PureResult a =&gt;
+ReaderT (Build OpDef) (State ResultState) a
+</span><a href="TensorFlow.BuildOp.html#pureResult"><span class="hs-identifier hs-var">pureResult</span></a></span><span>
+</span><span id="line-217"></span><span>               </span><span class="annot"><span class="annottext">ReaderT
+  (Build OpDef)
+  (State ResultState)
+  (a3 -&gt; a4 -&gt; a5 -&gt; a6 -&gt; (a1, a2, a3, a4, a5, a6))
+-&gt; ReaderT (Build OpDef) (State ResultState) a3
+-&gt; ReaderT
+     (Build OpDef)
+     (State ResultState)
+     (a4 -&gt; a5 -&gt; a6 -&gt; (a1, a2, a3, a4, a5, a6))
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT (Build OpDef) (State ResultState) a3
+forall a.
+PureResult a =&gt;
+ReaderT (Build OpDef) (State ResultState) a
+</span><a href="TensorFlow.BuildOp.html#pureResult"><span class="hs-identifier hs-var">pureResult</span></a></span><span>
+</span><span id="line-218"></span><span>               </span><span class="annot"><span class="annottext">ReaderT
+  (Build OpDef)
+  (State ResultState)
+  (a4 -&gt; a5 -&gt; a6 -&gt; (a1, a2, a3, a4, a5, a6))
+-&gt; ReaderT (Build OpDef) (State ResultState) a4
+-&gt; ReaderT
+     (Build OpDef)
+     (State ResultState)
+     (a5 -&gt; a6 -&gt; (a1, a2, a3, a4, a5, a6))
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT (Build OpDef) (State ResultState) a4
+forall a.
+PureResult a =&gt;
+ReaderT (Build OpDef) (State ResultState) a
+</span><a href="TensorFlow.BuildOp.html#pureResult"><span class="hs-identifier hs-var">pureResult</span></a></span><span>
+</span><span id="line-219"></span><span>               </span><span class="annot"><span class="annottext">ReaderT
+  (Build OpDef)
+  (State ResultState)
+  (a5 -&gt; a6 -&gt; (a1, a2, a3, a4, a5, a6))
+-&gt; ReaderT (Build OpDef) (State ResultState) a5
+-&gt; ReaderT
+     (Build OpDef) (State ResultState) (a6 -&gt; (a1, a2, a3, a4, a5, a6))
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT (Build OpDef) (State ResultState) a5
+forall a.
+PureResult a =&gt;
+ReaderT (Build OpDef) (State ResultState) a
+</span><a href="TensorFlow.BuildOp.html#pureResult"><span class="hs-identifier hs-var">pureResult</span></a></span><span>
+</span><span id="line-220"></span><span>               </span><span class="annot"><span class="annottext">ReaderT
+  (Build OpDef) (State ResultState) (a6 -&gt; (a1, a2, a3, a4, a5, a6))
+-&gt; ReaderT (Build OpDef) (State ResultState) a6
+-&gt; ReaderT
+     (Build OpDef) (State ResultState) (a1, a2, a3, a4, a5, a6)
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT (Build OpDef) (State ResultState) a6
+forall a.
+PureResult a =&gt;
+ReaderT (Build OpDef) (State ResultState) a
+</span><a href="TensorFlow.BuildOp.html#pureResult"><span class="hs-identifier hs-var">pureResult</span></a></span></span></span></span></span></span></span><span>
+</span><span id="line-221"></span><span>
+</span><span id="line-222"></span><span id="local-6989586621679167059"><span id="local-6989586621679167060"><span id="local-6989586621679167061"><span id="local-6989586621679167062"><span id="local-6989586621679167063"><span id="local-6989586621679167064"><span id="local-6989586621679167065"><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#PureResult"><span class="hs-identifier hs-type">PureResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167065"><span class="hs-identifier hs-type">a1</span></a></span><span>
+</span><span id="line-223"></span><span>         </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#PureResult"><span class="hs-identifier hs-type">PureResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167064"><span class="hs-identifier hs-type">a2</span></a></span><span>
+</span><span id="line-224"></span><span>         </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#PureResult"><span class="hs-identifier hs-type">PureResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167063"><span class="hs-identifier hs-type">a3</span></a></span><span>
+</span><span id="line-225"></span><span>         </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#PureResult"><span class="hs-identifier hs-type">PureResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167062"><span class="hs-identifier hs-type">a4</span></a></span><span>
+</span><span id="line-226"></span><span>         </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#PureResult"><span class="hs-identifier hs-type">PureResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167061"><span class="hs-identifier hs-type">a5</span></a></span><span>
+</span><span id="line-227"></span><span>         </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#PureResult"><span class="hs-identifier hs-type">PureResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167060"><span class="hs-identifier hs-type">a6</span></a></span><span>
+</span><span id="line-228"></span><span>         </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#PureResult"><span class="hs-identifier hs-type">PureResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167059"><span class="hs-identifier hs-type">a7</span></a></span><span>
+</span><span id="line-229"></span><span>         </span><span class="hs-special">)</span><span>
+</span><span id="line-230"></span><span>         </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#PureResult"><span class="hs-identifier hs-type">PureResult</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679167065"><span class="hs-identifier hs-type">a1</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679167064"><span class="hs-identifier hs-type">a2</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679167063"><span class="hs-identifier hs-type">a3</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679167062"><span class="hs-identifier hs-type">a4</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679167061"><span class="hs-identifier hs-type">a5</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679167060"><span class="hs-identifier hs-type">a6</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679167059"><span class="hs-identifier hs-type">a7</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-231"></span><span>    </span><span id="local-6989586621679167057"><span class="annot"><span class="annottext">pureResult :: ReaderT
+  (Build OpDef) (State ResultState) (a1, a2, a3, a4, a5, a6, a7)
+</span><a href="#local-6989586621679167057"><span class="hs-identifier hs-var hs-var hs-var hs-var">pureResult</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="hs-special">,</span><span class="hs-special">,</span><span class="hs-special">,</span><span class="hs-special">,</span><span class="hs-special">,</span><span class="hs-special">,</span><span class="hs-special">)</span><span>
+</span><span id="line-232"></span><span>               </span><span class="annot"><span class="annottext">(a1
+ -&gt; a2
+ -&gt; a3
+ -&gt; a4
+ -&gt; a5
+ -&gt; a6
+ -&gt; a7
+ -&gt; (a1, a2, a3, a4, a5, a6, a7))
+-&gt; ReaderT (Build OpDef) (State ResultState) a1
+-&gt; ReaderT
+     (Build OpDef)
+     (State ResultState)
+     (a2 -&gt; a3 -&gt; a4 -&gt; a5 -&gt; a6 -&gt; a7 -&gt; (a1, a2, a3, a4, a5, a6, a7))
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT (Build OpDef) (State ResultState) a1
+forall a.
+PureResult a =&gt;
+ReaderT (Build OpDef) (State ResultState) a
+</span><a href="TensorFlow.BuildOp.html#pureResult"><span class="hs-identifier hs-var">pureResult</span></a></span><span>
+</span><span id="line-233"></span><span>               </span><span class="annot"><span class="annottext">ReaderT
+  (Build OpDef)
+  (State ResultState)
+  (a2 -&gt; a3 -&gt; a4 -&gt; a5 -&gt; a6 -&gt; a7 -&gt; (a1, a2, a3, a4, a5, a6, a7))
+-&gt; ReaderT (Build OpDef) (State ResultState) a2
+-&gt; ReaderT
+     (Build OpDef)
+     (State ResultState)
+     (a3 -&gt; a4 -&gt; a5 -&gt; a6 -&gt; a7 -&gt; (a1, a2, a3, a4, a5, a6, a7))
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT (Build OpDef) (State ResultState) a2
+forall a.
+PureResult a =&gt;
+ReaderT (Build OpDef) (State ResultState) a
+</span><a href="TensorFlow.BuildOp.html#pureResult"><span class="hs-identifier hs-var">pureResult</span></a></span><span>
+</span><span id="line-234"></span><span>               </span><span class="annot"><span class="annottext">ReaderT
+  (Build OpDef)
+  (State ResultState)
+  (a3 -&gt; a4 -&gt; a5 -&gt; a6 -&gt; a7 -&gt; (a1, a2, a3, a4, a5, a6, a7))
+-&gt; ReaderT (Build OpDef) (State ResultState) a3
+-&gt; ReaderT
+     (Build OpDef)
+     (State ResultState)
+     (a4 -&gt; a5 -&gt; a6 -&gt; a7 -&gt; (a1, a2, a3, a4, a5, a6, a7))
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT (Build OpDef) (State ResultState) a3
+forall a.
+PureResult a =&gt;
+ReaderT (Build OpDef) (State ResultState) a
+</span><a href="TensorFlow.BuildOp.html#pureResult"><span class="hs-identifier hs-var">pureResult</span></a></span><span>
+</span><span id="line-235"></span><span>               </span><span class="annot"><span class="annottext">ReaderT
+  (Build OpDef)
+  (State ResultState)
+  (a4 -&gt; a5 -&gt; a6 -&gt; a7 -&gt; (a1, a2, a3, a4, a5, a6, a7))
+-&gt; ReaderT (Build OpDef) (State ResultState) a4
+-&gt; ReaderT
+     (Build OpDef)
+     (State ResultState)
+     (a5 -&gt; a6 -&gt; a7 -&gt; (a1, a2, a3, a4, a5, a6, a7))
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT (Build OpDef) (State ResultState) a4
+forall a.
+PureResult a =&gt;
+ReaderT (Build OpDef) (State ResultState) a
+</span><a href="TensorFlow.BuildOp.html#pureResult"><span class="hs-identifier hs-var">pureResult</span></a></span><span>
+</span><span id="line-236"></span><span>               </span><span class="annot"><span class="annottext">ReaderT
+  (Build OpDef)
+  (State ResultState)
+  (a5 -&gt; a6 -&gt; a7 -&gt; (a1, a2, a3, a4, a5, a6, a7))
+-&gt; ReaderT (Build OpDef) (State ResultState) a5
+-&gt; ReaderT
+     (Build OpDef)
+     (State ResultState)
+     (a6 -&gt; a7 -&gt; (a1, a2, a3, a4, a5, a6, a7))
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT (Build OpDef) (State ResultState) a5
+forall a.
+PureResult a =&gt;
+ReaderT (Build OpDef) (State ResultState) a
+</span><a href="TensorFlow.BuildOp.html#pureResult"><span class="hs-identifier hs-var">pureResult</span></a></span><span>
+</span><span id="line-237"></span><span>               </span><span class="annot"><span class="annottext">ReaderT
+  (Build OpDef)
+  (State ResultState)
+  (a6 -&gt; a7 -&gt; (a1, a2, a3, a4, a5, a6, a7))
+-&gt; ReaderT (Build OpDef) (State ResultState) a6
+-&gt; ReaderT
+     (Build OpDef)
+     (State ResultState)
+     (a7 -&gt; (a1, a2, a3, a4, a5, a6, a7))
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT (Build OpDef) (State ResultState) a6
+forall a.
+PureResult a =&gt;
+ReaderT (Build OpDef) (State ResultState) a
+</span><a href="TensorFlow.BuildOp.html#pureResult"><span class="hs-identifier hs-var">pureResult</span></a></span><span>
+</span><span id="line-238"></span><span>               </span><span class="annot"><span class="annottext">ReaderT
+  (Build OpDef)
+  (State ResultState)
+  (a7 -&gt; (a1, a2, a3, a4, a5, a6, a7))
+-&gt; ReaderT (Build OpDef) (State ResultState) a7
+-&gt; ReaderT
+     (Build OpDef) (State ResultState) (a1, a2, a3, a4, a5, a6, a7)
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT (Build OpDef) (State ResultState) a7
+forall a.
+PureResult a =&gt;
+ReaderT (Build OpDef) (State ResultState) a
+</span><a href="TensorFlow.BuildOp.html#pureResult"><span class="hs-identifier hs-var">pureResult</span></a></span></span></span></span></span></span></span></span><span>
+</span><span id="line-239"></span><span>
+</span><span id="line-240"></span><span id="local-6989586621679167049"><span id="local-6989586621679167050"><span id="local-6989586621679167051"><span id="local-6989586621679167052"><span id="local-6989586621679167053"><span id="local-6989586621679167054"><span id="local-6989586621679167055"><span id="local-6989586621679167056"><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#PureResult"><span class="hs-identifier hs-type">PureResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167056"><span class="hs-identifier hs-type">a1</span></a></span><span>
+</span><span id="line-241"></span><span>         </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#PureResult"><span class="hs-identifier hs-type">PureResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167055"><span class="hs-identifier hs-type">a2</span></a></span><span>
+</span><span id="line-242"></span><span>         </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#PureResult"><span class="hs-identifier hs-type">PureResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167054"><span class="hs-identifier hs-type">a3</span></a></span><span>
+</span><span id="line-243"></span><span>         </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#PureResult"><span class="hs-identifier hs-type">PureResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167053"><span class="hs-identifier hs-type">a4</span></a></span><span>
+</span><span id="line-244"></span><span>         </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#PureResult"><span class="hs-identifier hs-type">PureResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167052"><span class="hs-identifier hs-type">a5</span></a></span><span>
+</span><span id="line-245"></span><span>         </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#PureResult"><span class="hs-identifier hs-type">PureResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167051"><span class="hs-identifier hs-type">a6</span></a></span><span>
+</span><span id="line-246"></span><span>         </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#PureResult"><span class="hs-identifier hs-type">PureResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167050"><span class="hs-identifier hs-type">a7</span></a></span><span>
+</span><span id="line-247"></span><span>         </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#PureResult"><span class="hs-identifier hs-type">PureResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167049"><span class="hs-identifier hs-type">a8</span></a></span><span>
+</span><span id="line-248"></span><span>         </span><span class="hs-special">)</span><span>
+</span><span id="line-249"></span><span>         </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#PureResult"><span class="hs-identifier hs-type">PureResult</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679167056"><span class="hs-identifier hs-type">a1</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679167055"><span class="hs-identifier hs-type">a2</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679167054"><span class="hs-identifier hs-type">a3</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679167053"><span class="hs-identifier hs-type">a4</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679167052"><span class="hs-identifier hs-type">a5</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679167051"><span class="hs-identifier hs-type">a6</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679167050"><span class="hs-identifier hs-type">a7</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679167049"><span class="hs-identifier hs-type">a8</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-250"></span><span>    </span><span id="local-6989586621679167047"><span class="annot"><span class="annottext">pureResult :: ReaderT
+  (Build OpDef) (State ResultState) (a1, a2, a3, a4, a5, a6, a7, a8)
+</span><a href="#local-6989586621679167047"><span class="hs-identifier hs-var hs-var hs-var hs-var">pureResult</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="hs-special">,</span><span class="hs-special">,</span><span class="hs-special">,</span><span class="hs-special">,</span><span class="hs-special">,</span><span class="hs-special">,</span><span class="hs-special">,</span><span class="hs-special">)</span><span>
+</span><span id="line-251"></span><span>               </span><span class="annot"><span class="annottext">(a1
+ -&gt; a2
+ -&gt; a3
+ -&gt; a4
+ -&gt; a5
+ -&gt; a6
+ -&gt; a7
+ -&gt; a8
+ -&gt; (a1, a2, a3, a4, a5, a6, a7, a8))
+-&gt; ReaderT (Build OpDef) (State ResultState) a1
+-&gt; ReaderT
+     (Build OpDef)
+     (State ResultState)
+     (a2
+      -&gt; a3
+      -&gt; a4
+      -&gt; a5
+      -&gt; a6
+      -&gt; a7
+      -&gt; a8
+      -&gt; (a1, a2, a3, a4, a5, a6, a7, a8))
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT (Build OpDef) (State ResultState) a1
+forall a.
+PureResult a =&gt;
+ReaderT (Build OpDef) (State ResultState) a
+</span><a href="TensorFlow.BuildOp.html#pureResult"><span class="hs-identifier hs-var">pureResult</span></a></span><span>
+</span><span id="line-252"></span><span>               </span><span class="annot"><span class="annottext">ReaderT
+  (Build OpDef)
+  (State ResultState)
+  (a2
+   -&gt; a3
+   -&gt; a4
+   -&gt; a5
+   -&gt; a6
+   -&gt; a7
+   -&gt; a8
+   -&gt; (a1, a2, a3, a4, a5, a6, a7, a8))
+-&gt; ReaderT (Build OpDef) (State ResultState) a2
+-&gt; ReaderT
+     (Build OpDef)
+     (State ResultState)
+     (a3
+      -&gt; a4 -&gt; a5 -&gt; a6 -&gt; a7 -&gt; a8 -&gt; (a1, a2, a3, a4, a5, a6, a7, a8))
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT (Build OpDef) (State ResultState) a2
+forall a.
+PureResult a =&gt;
+ReaderT (Build OpDef) (State ResultState) a
+</span><a href="TensorFlow.BuildOp.html#pureResult"><span class="hs-identifier hs-var">pureResult</span></a></span><span>
+</span><span id="line-253"></span><span>               </span><span class="annot"><span class="annottext">ReaderT
+  (Build OpDef)
+  (State ResultState)
+  (a3
+   -&gt; a4 -&gt; a5 -&gt; a6 -&gt; a7 -&gt; a8 -&gt; (a1, a2, a3, a4, a5, a6, a7, a8))
+-&gt; ReaderT (Build OpDef) (State ResultState) a3
+-&gt; ReaderT
+     (Build OpDef)
+     (State ResultState)
+     (a4 -&gt; a5 -&gt; a6 -&gt; a7 -&gt; a8 -&gt; (a1, a2, a3, a4, a5, a6, a7, a8))
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT (Build OpDef) (State ResultState) a3
+forall a.
+PureResult a =&gt;
+ReaderT (Build OpDef) (State ResultState) a
+</span><a href="TensorFlow.BuildOp.html#pureResult"><span class="hs-identifier hs-var">pureResult</span></a></span><span>
+</span><span id="line-254"></span><span>               </span><span class="annot"><span class="annottext">ReaderT
+  (Build OpDef)
+  (State ResultState)
+  (a4 -&gt; a5 -&gt; a6 -&gt; a7 -&gt; a8 -&gt; (a1, a2, a3, a4, a5, a6, a7, a8))
+-&gt; ReaderT (Build OpDef) (State ResultState) a4
+-&gt; ReaderT
+     (Build OpDef)
+     (State ResultState)
+     (a5 -&gt; a6 -&gt; a7 -&gt; a8 -&gt; (a1, a2, a3, a4, a5, a6, a7, a8))
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT (Build OpDef) (State ResultState) a4
+forall a.
+PureResult a =&gt;
+ReaderT (Build OpDef) (State ResultState) a
+</span><a href="TensorFlow.BuildOp.html#pureResult"><span class="hs-identifier hs-var">pureResult</span></a></span><span>
+</span><span id="line-255"></span><span>               </span><span class="annot"><span class="annottext">ReaderT
+  (Build OpDef)
+  (State ResultState)
+  (a5 -&gt; a6 -&gt; a7 -&gt; a8 -&gt; (a1, a2, a3, a4, a5, a6, a7, a8))
+-&gt; ReaderT (Build OpDef) (State ResultState) a5
+-&gt; ReaderT
+     (Build OpDef)
+     (State ResultState)
+     (a6 -&gt; a7 -&gt; a8 -&gt; (a1, a2, a3, a4, a5, a6, a7, a8))
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT (Build OpDef) (State ResultState) a5
+forall a.
+PureResult a =&gt;
+ReaderT (Build OpDef) (State ResultState) a
+</span><a href="TensorFlow.BuildOp.html#pureResult"><span class="hs-identifier hs-var">pureResult</span></a></span><span>
+</span><span id="line-256"></span><span>               </span><span class="annot"><span class="annottext">ReaderT
+  (Build OpDef)
+  (State ResultState)
+  (a6 -&gt; a7 -&gt; a8 -&gt; (a1, a2, a3, a4, a5, a6, a7, a8))
+-&gt; ReaderT (Build OpDef) (State ResultState) a6
+-&gt; ReaderT
+     (Build OpDef)
+     (State ResultState)
+     (a7 -&gt; a8 -&gt; (a1, a2, a3, a4, a5, a6, a7, a8))
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT (Build OpDef) (State ResultState) a6
+forall a.
+PureResult a =&gt;
+ReaderT (Build OpDef) (State ResultState) a
+</span><a href="TensorFlow.BuildOp.html#pureResult"><span class="hs-identifier hs-var">pureResult</span></a></span><span>
+</span><span id="line-257"></span><span>               </span><span class="annot"><span class="annottext">ReaderT
+  (Build OpDef)
+  (State ResultState)
+  (a7 -&gt; a8 -&gt; (a1, a2, a3, a4, a5, a6, a7, a8))
+-&gt; ReaderT (Build OpDef) (State ResultState) a7
+-&gt; ReaderT
+     (Build OpDef)
+     (State ResultState)
+     (a8 -&gt; (a1, a2, a3, a4, a5, a6, a7, a8))
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT (Build OpDef) (State ResultState) a7
+forall a.
+PureResult a =&gt;
+ReaderT (Build OpDef) (State ResultState) a
+</span><a href="TensorFlow.BuildOp.html#pureResult"><span class="hs-identifier hs-var">pureResult</span></a></span><span>
+</span><span id="line-258"></span><span>               </span><span class="annot"><span class="annottext">ReaderT
+  (Build OpDef)
+  (State ResultState)
+  (a8 -&gt; (a1, a2, a3, a4, a5, a6, a7, a8))
+-&gt; ReaderT (Build OpDef) (State ResultState) a8
+-&gt; ReaderT
+     (Build OpDef) (State ResultState) (a1, a2, a3, a4, a5, a6, a7, a8)
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">ReaderT (Build OpDef) (State ResultState) a8
+forall a.
+PureResult a =&gt;
+ReaderT (Build OpDef) (State ResultState) a
+</span><a href="TensorFlow.BuildOp.html#pureResult"><span class="hs-identifier hs-var">pureResult</span></a></span></span></span></span></span></span></span></span></span><span>
+</span><span id="line-259"></span><span>
+</span><span id="line-260"></span><span id="local-6989586621679167046"><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#PureResult"><span class="hs-identifier hs-type">PureResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167046"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#PureResult"><span class="hs-identifier hs-type">PureResult</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621679167046"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-261"></span><span>    </span><span id="local-6989586621679167044"><span class="annot"><span class="annottext">pureResult :: ReaderT (Build OpDef) (State ResultState) [a]
+</span><a href="#local-6989586621679167044"><span class="hs-identifier hs-var hs-var hs-var hs-var">pureResult</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-262"></span><span>        </span><span class="annot"><a href="TensorFlow.BuildOp.html#ResultState"><span class="hs-identifier hs-type">ResultState</span></a></span><span> </span><span id="local-6989586621679167043"><span class="annot"><span class="annottext">i :: OutputIx
+</span><a href="#local-6989586621679167043"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span id="local-6989586621679167042"><span class="annot"><span class="annottext">ns :: [Int64]
+</span><a href="#local-6989586621679167042"><span class="hs-identifier hs-var">ns</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ReaderT (Build OpDef) (State ResultState) ResultState
+forall s (m :: * -&gt; *). MonadState s m =&gt; m s
+</span><span class="hs-identifier hs-var">get</span></span><span>
+</span><span id="line-263"></span><span>        </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">[Int64]
+</span><a href="#local-6989586621679167042"><span class="hs-identifier hs-var">ns</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-264"></span><span>            </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; ReaderT (Build OpDef) (State ResultState) [a]
+forall a. HasCallStack =&gt; String -&gt; a
+</span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; ReaderT (Build OpDef) (State ResultState) [a])
+-&gt; String -&gt; ReaderT (Build OpDef) (State ResultState) [a]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="hs-string">&quot;Ran out of counts in pureResult. &quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span>
+</span><span id="line-265"></span><span>                          </span><span class="annot"><span class="hs-string">&quot;Likely misuse of pureOp with output lists.&quot;</span></span><span>
+</span><span id="line-266"></span><span>            </span><span id="local-6989586621679167041"><span class="annot"><span class="annottext">n :: Int64
+</span><a href="#local-6989586621679167041"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="annot"><span class="hs-glyph hs-type">:</span></span><span> </span><span id="local-6989586621679167040"><span class="annot"><span class="annottext">rest :: [Int64]
+</span><a href="#local-6989586621679167040"><span class="hs-identifier hs-var">rest</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-267"></span><span>                </span><span class="annot"><span class="annottext">ResultState -&gt; ReaderT (Build OpDef) (State ResultState) ()
+forall s (m :: * -&gt; *). MonadState s m =&gt; s -&gt; m ()
+</span><span class="hs-identifier hs-var">put</span></span><span> </span><span class="annot"><span class="annottext">(ResultState -&gt; ReaderT (Build OpDef) (State ResultState) ())
+-&gt; ResultState -&gt; ReaderT (Build OpDef) (State ResultState) ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$!</span></span><span> </span><span class="annot"><span class="annottext">OutputIx -&gt; [Int64] -&gt; ResultState
+</span><a href="TensorFlow.BuildOp.html#ResultState"><span class="hs-identifier hs-var">ResultState</span></a></span><span> </span><span class="annot"><span class="annottext">OutputIx
+</span><a href="#local-6989586621679167043"><span class="hs-identifier hs-var">i</span></a></span><span> </span><span class="annot"><span class="annottext">[Int64]
+</span><a href="#local-6989586621679167040"><span class="hs-identifier hs-var">rest</span></a></span><span>
+</span><span id="line-268"></span><span>                </span><span class="annot"><span class="annottext">Int
+-&gt; ReaderT (Build OpDef) (State ResultState) a
+-&gt; ReaderT (Build OpDef) (State ResultState) [a]
+forall (m :: * -&gt; *) a. Applicative m =&gt; Int -&gt; m a -&gt; m [a]
+</span><span class="hs-identifier hs-var">replicateM</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int64 -&gt; Int
+forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">fromIntegral</span></span><span> </span><span class="annot"><span class="annottext">Int64
+</span><a href="#local-6989586621679167041"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ReaderT (Build OpDef) (State ResultState) a
+forall a.
+PureResult a =&gt;
+ReaderT (Build OpDef) (State ResultState) a
+</span><a href="TensorFlow.BuildOp.html#pureResult"><span class="hs-identifier hs-var">pureResult</span></a></span></span><span>
+</span><span id="line-269"></span><span>
+</span><span id="line-270"></span><span id="local-6989586621679167039"><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="TensorFlow.Types.html#TensorTypes"><span class="hs-identifier hs-type">TensorTypes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167039"><span class="hs-keyword hs-type">as</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#PureResult"><span class="hs-identifier hs-type">PureResult</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="TensorFlow.Tensor.html#TensorList"><span class="hs-identifier hs-type">TensorList</span></a></span><span> </span><span class="annot"><a href="TensorFlow.Build.html#Build"><span class="hs-identifier hs-type">Build</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167039"><span class="hs-keyword hs-type">as</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-271"></span><span>    </span><span id="local-6989586621679167037"><span class="annot"><span class="annottext">pureResult :: ReaderT (Build OpDef) (State ResultState) (TensorList Build as)
+</span><a href="#local-6989586621679167037"><span class="hs-identifier hs-var hs-var hs-var hs-var">pureResult</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TensorTypeList as
+-&gt; ReaderT (Build OpDef) (State ResultState) (TensorList Build as)
+forall (bs :: [*]).
+TensorTypeList bs
+-&gt; ReaderT (Build OpDef) (State ResultState) (TensorList Build bs)
+</span><a href="#local-6989586621679167036"><span class="hs-identifier hs-var">loop</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TensorTypeList as
+forall (ts :: [*]). TensorTypes ts =&gt; TensorTypeList ts
+</span><a href="TensorFlow.Types.html#tensorTypes"><span class="hs-identifier hs-var">tensorTypes</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="TensorFlow.Types.html#TensorTypeList"><span class="hs-identifier hs-type">TensorTypeList</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167039"><span class="hs-keyword hs-type">as</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-272"></span><span>      </span><span class="hs-keyword">where</span><span>
+</span><span id="line-273"></span><span>        </span><span id="local-6989586621679167256"><span class="annot"><a href="#local-6989586621679167036"><span class="hs-identifier hs-type">loop</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="TensorFlow.Types.html#TensorTypeList"><span class="hs-identifier hs-type">TensorTypeList</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167256"><span class="hs-identifier hs-type">bs</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ReaderT</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="TensorFlow.Build.html#Build"><span class="hs-identifier hs-type">Build</span></a></span><span> </span><span class="annot"><a href="TensorFlow.Output.html#OpDef"><span class="hs-identifier hs-type">OpDef</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">State</span></span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#ResultState"><span class="hs-identifier hs-type">ResultState</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-274"></span><span>                                        </span><span class="hs-special">(</span><span class="annot"><a href="TensorFlow.Tensor.html#TensorList"><span class="hs-identifier hs-type">TensorList</span></a></span><span> </span><span class="annot"><a href="TensorFlow.Build.html#Build"><span class="hs-identifier hs-type">Build</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167256"><span class="hs-identifier hs-type">bs</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-275"></span><span>        </span><span id="local-6989586621679167036"><span class="annot"><span class="annottext">loop :: TensorTypeList bs
+-&gt; ReaderT (Build OpDef) (State ResultState) (TensorList Build bs)
+</span><a href="#local-6989586621679167036"><span class="hs-identifier hs-var hs-var">loop</span></a></span></span><span> </span><span class="annot"><a href="TensorFlow.Types.html#Nil"><span class="hs-identifier hs-type">Nil</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ListOf (Tensor Build) '[]
+-&gt; ReaderT
+     (Build OpDef) (State ResultState) (ListOf (Tensor Build) '[])
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">ListOf (Tensor Build) '[]
+forall (f :: * -&gt; *). ListOf f '[]
+</span><a href="TensorFlow.Types.html#Nil"><span class="hs-identifier hs-var">Nil</span></a></span><span>
+</span><span id="line-276"></span><span>        </span><span class="annot"><a href="#local-6989586621679167036"><span class="hs-identifier hs-var">loop</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="TensorFlow.Types.html#TensorTypeProxy"><span class="hs-identifier hs-type">TensorTypeProxy</span></a></span><span> </span><span class="annot"><a href="TensorFlow.Types.html#%3A%2F"><span class="hs-operator hs-type">:/</span></a></span><span> </span><span id="local-6989586621679167035"><span class="annot"><span class="annottext">ls :: ListOf TensorTypeProxy as
+</span><a href="#local-6989586621679167035"><span class="hs-identifier hs-var">ls</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-277"></span><span>            </span><span id="local-6989586621679167034"><span class="annot"><span class="annottext">Tensor Build a
+</span><a href="#local-6989586621679167034"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ReaderT (Build OpDef) (State ResultState) (Tensor Build a)
+forall a.
+PureResult a =&gt;
+ReaderT (Build OpDef) (State ResultState) a
+</span><a href="TensorFlow.BuildOp.html#pureResult"><span class="hs-identifier hs-var">pureResult</span></a></span><span>
+</span><span id="line-278"></span><span>            </span><span id="local-6989586621679167033"><span class="annot"><span class="annottext">TensorList Build as
+</span><a href="#local-6989586621679167033"><span class="hs-identifier hs-var">ts</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ListOf TensorTypeProxy as
+-&gt; ReaderT (Build OpDef) (State ResultState) (TensorList Build as)
+forall (bs :: [*]).
+TensorTypeList bs
+-&gt; ReaderT (Build OpDef) (State ResultState) (TensorList Build bs)
+</span><a href="#local-6989586621679167036"><span class="hs-identifier hs-var">loop</span></a></span><span> </span><span class="annot"><span class="annottext">ListOf TensorTypeProxy as
+</span><a href="#local-6989586621679167035"><span class="hs-identifier hs-var">ls</span></a></span><span>
+</span><span id="line-279"></span><span>            </span><span class="annot"><span class="annottext">ListOf (Tensor Build) (a : as)
+-&gt; ReaderT
+     (Build OpDef) (State ResultState) (ListOf (Tensor Build) (a : as))
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Tensor Build a
+</span><a href="#local-6989586621679167034"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="annot"><span class="annottext">Tensor Build a
+-&gt; TensorList Build as -&gt; ListOf (Tensor Build) (a : as)
+forall (f :: * -&gt; *) a (as :: [*]).
+f a -&gt; ListOf f as -&gt; ListOf f (a : as)
+</span><a href="TensorFlow.Types.html#%3A%2F"><span class="hs-operator hs-var">:/</span></a></span><span> </span><span class="annot"><span class="annottext">TensorList Build as
+</span><a href="#local-6989586621679167033"><span class="hs-identifier hs-var">ts</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-280"></span><span>
+</span><span id="line-281"></span><span id="local-6989586621679167032"><span class="annot"><a href="TensorFlow.BuildOp.html#pureOp"><span class="hs-identifier hs-type">pureOp</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#PureResult"><span class="hs-identifier hs-type">PureResult</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167032"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Int64</span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Build.html#Build"><span class="hs-identifier hs-type">Build</span></a></span><span> </span><span class="annot"><a href="TensorFlow.Output.html#OpDef"><span class="hs-identifier hs-type">OpDef</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679167032"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-282"></span><span id="pureOp"><span class="annot"><span class="annottext">pureOp :: [Int64] -&gt; Build OpDef -&gt; a
+</span><a href="TensorFlow.BuildOp.html#pureOp"><span class="hs-identifier hs-var hs-var">pureOp</span></a></span></span><span> </span><span id="local-6989586621679167031"><span class="annot"><span class="annottext">sizes :: [Int64]
+</span><a href="#local-6989586621679167031"><span class="hs-identifier hs-var">sizes</span></a></span></span><span> </span><span id="local-6989586621679167030"><span class="annot"><span class="annottext">o :: Build OpDef
+</span><a href="#local-6989586621679167030"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(State ResultState a -&gt; ResultState -&gt; a)
+-&gt; ResultState -&gt; State ResultState a -&gt; a
+forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
+</span><span class="hs-identifier hs-var">flip</span></span><span> </span><span class="annot"><span class="annottext">State ResultState a -&gt; ResultState -&gt; a
+forall s a. State s a -&gt; s -&gt; a
+</span><span class="hs-identifier hs-var">evalState</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OutputIx -&gt; [Int64] -&gt; ResultState
+</span><a href="TensorFlow.BuildOp.html#ResultState"><span class="hs-identifier hs-var">ResultState</span></a></span><span> </span><span class="annot"><span class="hs-number">0</span></span><span> </span><span class="annot"><span class="annottext">[Int64]
+</span><a href="#local-6989586621679167031"><span class="hs-identifier hs-var">sizes</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ReaderT (Build OpDef) (State ResultState) a
+-&gt; Build OpDef -&gt; State ResultState a
+forall r (m :: * -&gt; *) a. ReaderT r m a -&gt; r -&gt; m a
+</span><span class="hs-identifier hs-var hs-var">runReaderT</span></span><span> </span><span class="annot"><span class="annottext">ReaderT (Build OpDef) (State ResultState) a
+forall a.
+PureResult a =&gt;
+ReaderT (Build OpDef) (State ResultState) a
+</span><a href="TensorFlow.BuildOp.html#pureResult"><span class="hs-identifier hs-var">pureResult</span></a></span><span> </span><span class="annot"><span class="annottext">Build OpDef
+</span><a href="#local-6989586621679167030"><span class="hs-identifier hs-var">o</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-283"></span><span>
+</span><span id="line-284"></span><span class="hs-comment">-----</span><span>
+</span><span id="line-285"></span><span class="hs-comment">-- Class of types that can be used as arguments</span><span>
+</span><span id="line-286"></span><span>
+</span><span id="line-287"></span><span class="hs-keyword">class</span><span> </span><span id="BuildInputs"><span class="annot"><a href="TensorFlow.BuildOp.html#BuildInputs"><span class="hs-identifier hs-var">BuildInputs</span></a></span></span><span> </span><span id="local-6989586621679167249"><span class="annot"><a href="#local-6989586621679167249"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-288"></span><span>    </span><span id="buildInputs"><span class="annot"><a href="TensorFlow.BuildOp.html#buildInputs"><span class="hs-identifier hs-type">buildInputs</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621679167249"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Build.html#Build"><span class="hs-identifier hs-type">Build</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="TensorFlow.Output.html#Output"><span class="hs-identifier hs-type">Output</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-289"></span><span>
+</span><span id="line-290"></span><span id="local-6989586621679167028"><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#BuildInputs"><span class="hs-identifier hs-type">BuildInputs</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167028"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#BuildInputs"><span class="hs-identifier hs-type">BuildInputs</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621679167028"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-291"></span><span>    </span><span id="local-6989586621679167025"><span class="annot"><span class="annottext">buildInputs :: [a] -&gt; Build [Output]
+</span><a href="#local-6989586621679167025"><span class="hs-identifier hs-var hs-var hs-var hs-var">buildInputs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">([[Output]] -&gt; [Output])
+-&gt; BuildT Identity [[Output]] -&gt; Build [Output]
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">[[Output]] -&gt; [Output]
+forall (t :: * -&gt; *) a. Foldable t =&gt; t [a] -&gt; [a]
+</span><span class="hs-identifier hs-var">concat</span></span><span> </span><span class="annot"><span class="annottext">(BuildT Identity [[Output]] -&gt; Build [Output])
+-&gt; ([a] -&gt; BuildT Identity [[Output]]) -&gt; [a] -&gt; Build [Output]
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">(a -&gt; Build [Output]) -&gt; [a] -&gt; BuildT Identity [[Output]]
+forall (t :: * -&gt; *) (m :: * -&gt; *) a b.
+(Traversable t, Monad m) =&gt;
+(a -&gt; m b) -&gt; t a -&gt; m (t b)
+</span><span class="hs-identifier hs-var">mapM</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; Build [Output]
+forall a. BuildInputs a =&gt; a -&gt; Build [Output]
+</span><a href="TensorFlow.BuildOp.html#buildInputs"><span class="hs-identifier hs-var">buildInputs</span></a></span></span><span>
+</span><span id="line-292"></span><span>
+</span><span id="line-293"></span><span id="local-6989586621679167021"><span id="local-6989586621679167022"><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#BuildInputs"><span class="hs-identifier hs-type">BuildInputs</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="TensorFlow.Tensor.html#Tensor"><span class="hs-identifier hs-type">Tensor</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167022"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167021"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-294"></span><span>    </span><span id="local-6989586621679167019"><span class="annot"><span class="annottext">buildInputs :: Tensor v a -&gt; Build [Output]
+</span><a href="#local-6989586621679167019"><span class="hs-identifier hs-var hs-var hs-var hs-var">buildInputs</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="TensorFlow.Tensor.html#Tensor"><span class="hs-identifier hs-type">Tensor</span></a></span><span> </span><span id="local-6989586621679167018"><span class="annot"><span class="annottext">t :: v Output
+</span><a href="#local-6989586621679167018"><span class="hs-identifier hs-var">t</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-295"></span><span>        </span><span id="local-6989586621679167017"><span class="annot"><span class="annottext">Output
+</span><a href="#local-6989586621679167017"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">v Output -&gt; BuildT Identity Output
+forall (v :: * -&gt; *) a. TensorKind v =&gt; v a -&gt; Build a
+</span><a href="TensorFlow.Tensor.html#toBuild"><span class="hs-identifier hs-var">toBuild</span></a></span><span> </span><span class="annot"><span class="annottext">v Output
+</span><a href="#local-6989586621679167018"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><span id="line-296"></span><span>        </span><span class="annot"><span class="annottext">[Output] -&gt; Build [Output]
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Output
+</span><a href="#local-6989586621679167017"><span class="hs-identifier hs-var">o</span></a></span><span class="hs-special">]</span></span></span><span>
+</span><span id="line-297"></span><span>
+</span><span id="line-298"></span><span id="local-6989586621679167014"><span id="local-6989586621679167015"><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="TensorFlow.BuildOp.html#BuildInputs"><span class="hs-identifier hs-type">BuildInputs</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="TensorFlow.Types.html#ListOf"><span class="hs-identifier hs-type">ListOf</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="TensorFlow.Tensor.html#Tensor"><span class="hs-identifier hs-type">Tensor</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679167015"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621679167014"><span class="hs-keyword hs-type">as</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-299"></span><span>    </span><span id="local-6989586621679167012"><span class="annot"><span class="annottext">buildInputs :: ListOf (Tensor v) as -&gt; Build [Output]
+</span><a href="#local-6989586621679167012"><span class="hs-identifier hs-var hs-var hs-var hs-var">buildInputs</span></a></span></span><span> </span><span class="annot"><a href="TensorFlow.Types.html#Nil"><span class="hs-identifier hs-type">Nil</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Output] -&gt; Build [Output]
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
+</span><span id="line-300"></span><span>    </span><span class="annot"><a href="TensorFlow.BuildOp.html#buildInputs"><span class="hs-identifier hs-var">buildInputs</span></a></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679167011"><span class="annot"><span class="annottext">t :: Tensor v a
+</span><a href="#local-6989586621679167011"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="annot"><a href="TensorFlow.Types.html#%3A%2F"><span class="hs-operator hs-type">:/</span></a></span><span> </span><span id="local-6989586621679167010"><span class="annot"><span class="annottext">ts :: ListOf (Tensor v) as
+</span><a href="#local-6989586621679167010"><span class="hs-identifier hs-var">ts</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">([Output] -&gt; [Output] -&gt; [Output])
+-&gt; Build [Output] -&gt; Build [Output] -&gt; Build [Output]
+forall (m :: * -&gt; *) a1 a2 r.
+Monad m =&gt;
+(a1 -&gt; a2 -&gt; r) -&gt; m a1 -&gt; m a2 -&gt; m r
+</span><span class="hs-identifier hs-var">liftM2</span></span><span> </span><span class="annot"><span class="annottext">[Output] -&gt; [Output] -&gt; [Output]
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">(++)</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Tensor v a -&gt; Build [Output]
+forall a. BuildInputs a =&gt; a -&gt; Build [Output]
+</span><a href="TensorFlow.BuildOp.html#buildInputs"><span class="hs-identifier hs-var">buildInputs</span></a></span><span> </span><span class="annot"><span class="annottext">Tensor v a
+</span><a href="#local-6989586621679167011"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ListOf (Tensor v) as -&gt; Build [Output]
+forall a. BuildInputs a =&gt; a -&gt; Build [Output]
+</span><a href="TensorFlow.BuildOp.html#buildInputs"><span class="hs-identifier hs-var">buildInputs</span></a></span><span> </span><span class="annot"><span class="annottext">ListOf (Tensor v) as
+</span><a href="#local-6989586621679167010"><span class="hs-identifier hs-var">ts</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-301"></span><span>
+</span><span id="line-302"></span><span class="hs-comment">----</span><span>
+</span><span id="line-303"></span><span>
+</span><span id="line-304"></span><span class="hs-comment">-- | Parameters to build an op (for example, the node name or optional attributes).</span><span>
+</span><span id="line-305"></span><span class="hs-comment">-- TODO: be more type safe.</span><span>
+</span><span id="line-306"></span><span class="hs-keyword">type</span><span> </span><span id="OpParams"><span class="annot"><a href="TensorFlow.BuildOp.html#OpParams"><span class="hs-identifier hs-var">OpParams</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="TensorFlow.Output.html#OpDef"><span class="hs-identifier hs-type">OpDef</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Output.html#OpDef"><span class="hs-identifier hs-type">OpDef</span></a></span><span>
+</span><span id="line-307"></span></pre></body></html>

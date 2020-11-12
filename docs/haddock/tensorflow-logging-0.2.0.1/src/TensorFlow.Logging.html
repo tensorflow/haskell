@@ -1,0 +1,487 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">-- Copyright 2016 TensorFlow authors.</span><span>
+</span><span id="line-2"></span><span class="hs-comment">--</span><span>
+</span><span id="line-3"></span><span class="hs-comment">-- Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span><span>
+</span><span id="line-4"></span><span class="hs-comment">-- you may not use this file except in compliance with the License.</span><span>
+</span><span id="line-5"></span><span class="hs-comment">-- You may obtain a copy of the License at</span><span>
+</span><span id="line-6"></span><span class="hs-comment">--</span><span>
+</span><span id="line-7"></span><span class="hs-comment">--     http://www.apache.org/licenses/LICENSE-2.0</span><span>
+</span><span id="line-8"></span><span class="hs-comment">--</span><span>
+</span><span id="line-9"></span><span class="hs-comment">-- Unless required by applicable law or agreed to in writing, software</span><span>
+</span><span id="line-10"></span><span class="hs-comment">-- distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span><span>
+</span><span id="line-11"></span><span class="hs-comment">-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span><span>
+</span><span id="line-12"></span><span class="hs-comment">-- See the License for the specific language governing permissions and</span><span>
+</span><span id="line-13"></span><span class="hs-comment">-- limitations under the License.</span><span>
+</span><span id="line-14"></span><span>
+</span><span id="line-15"></span><span class="hs-comment">-- | TensorBoard Summary generation. Provides type safe wrappers around raw</span><span>
+</span><span id="line-16"></span><span class="hs-comment">-- string emitting CoreOps.</span><span>
+</span><span id="line-17"></span><span class="hs-comment">--</span><span>
+</span><span id="line-18"></span><span class="hs-comment">-- Example use:</span><span>
+</span><span id="line-19"></span><span class="hs-comment">--</span><span>
+</span><span id="line-20"></span><span class="hs-comment">-- &gt; -- Call summary functions while constructing the graph.</span><span>
+</span><span id="line-21"></span><span class="hs-comment">-- &gt; createModel = do</span><span>
+</span><span id="line-22"></span><span class="hs-comment">-- &gt;   loss &lt;- -- ...</span><span>
+</span><span id="line-23"></span><span class="hs-comment">-- &gt;   TF.scalarSummary loss</span><span>
+</span><span id="line-24"></span><span class="hs-comment">-- &gt;</span><span>
+</span><span id="line-25"></span><span class="hs-comment">-- &gt; -- Write summaries to an EventWriter.</span><span>
+</span><span id="line-26"></span><span class="hs-comment">-- &gt; train = TF.withEventWriter &quot;/path/to/logs&quot; $ \eventWriter -&gt; do</span><span>
+</span><span id="line-27"></span><span class="hs-comment">-- &gt;     summaryTensor &lt;- TF.build TF.allSummaries</span><span>
+</span><span id="line-28"></span><span class="hs-comment">-- &gt;     forM_ [1..] $ \step -&gt; do</span><span>
+</span><span id="line-29"></span><span class="hs-comment">-- &gt;         if (step % 100 == 0)</span><span>
+</span><span id="line-30"></span><span class="hs-comment">-- &gt;             then do</span><span>
+</span><span id="line-31"></span><span class="hs-comment">-- &gt;                 ((), summaryBytes) &lt;- TF.run (trainStep, summaryTensor)</span><span>
+</span><span id="line-32"></span><span class="hs-comment">-- &gt;                 let summary = decodeMessageOrDie (TF.unScalar summaryBytes)</span><span>
+</span><span id="line-33"></span><span class="hs-comment">-- &gt;                 TF.logSummary eventWriter step summary</span><span>
+</span><span id="line-34"></span><span class="hs-comment">-- &gt;             else TF.run_ trainStep</span><span>
+</span><span id="line-35"></span><span>
+</span><span id="line-36"></span><span class="hs-pragma">{-# LANGUAGE DataKinds #-}</span><span>
+</span><span id="line-37"></span><span class="hs-pragma">{-# LANGUAGE TypeOperators #-}</span><span>
+</span><span id="line-38"></span><span>
+</span><span id="line-39"></span><span>
+</span><span id="line-40"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">TensorFlow.Logging</span><span>
+</span><span id="line-41"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="TensorFlow.Logging.html#EventWriter"><span class="hs-identifier">EventWriter</span></a></span><span>
+</span><span id="line-42"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Logging.html#withEventWriter"><span class="hs-identifier">withEventWriter</span></a></span><span>
+</span><span id="line-43"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Logging.html#logEvent"><span class="hs-identifier">logEvent</span></a></span><span>
+</span><span id="line-44"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Logging.html#logGraph"><span class="hs-identifier">logGraph</span></a></span><span>
+</span><span id="line-45"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Logging.html#logSummary"><span class="hs-identifier">logSummary</span></a></span><span>
+</span><span id="line-46"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">SummaryTensor</span></span><span>
+</span><span id="line-47"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Logging.html#histogramSummary"><span class="hs-identifier">histogramSummary</span></a></span><span>
+</span><span id="line-48"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Logging.html#imageSummary"><span class="hs-identifier">imageSummary</span></a></span><span>
+</span><span id="line-49"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Logging.html#scalarSummary"><span class="hs-identifier">scalarSummary</span></a></span><span>
+</span><span id="line-50"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Logging.html#mergeAllSummaries"><span class="hs-identifier">mergeAllSummaries</span></a></span><span>
+</span><span id="line-51"></span><span>    </span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-52"></span><span>
+</span><span id="line-53"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Concurrent</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">forkFinally</span></span><span class="hs-special">)</span><span>
+</span><span id="line-54"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Concurrent.MVar</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">MVar</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">newEmptyMVar</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">readMVar</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">putMVar</span></span><span class="hs-special">)</span><span>
+</span><span id="line-55"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Concurrent.STM</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">atomically</span></span><span class="hs-special">)</span><span>
+</span><span id="line-56"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Concurrent.STM.TBMQueue</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">TBMQueue</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">newTBMQueueIO</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">closeTBMQueue</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">writeTBMQueue</span></span><span class="hs-special">)</span><span>
+</span><span id="line-57"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Monad.Catch</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">MonadMask</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">bracket</span></span><span class="hs-special">)</span><span>
+</span><span id="line-58"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Monad.IO.Class</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">MonadIO</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">liftIO</span></span><span class="hs-special">)</span><span>
+</span><span id="line-59"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Monad.Trans.Resource</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">runResourceT</span></span><span class="hs-special">)</span><span>
+</span><span id="line-60"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.ByteString</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">ByteString</span></span><span class="hs-special">)</span><span>
+</span><span id="line-61"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Conduit</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-operator">(.|)</span></span><span class="hs-special">)</span><span>
+</span><span id="line-62"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Conduit.TQueue</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">sourceTBMQueue</span></span><span class="hs-special">)</span><span>
+</span><span id="line-63"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Default</span></span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">def</span></span><span class="hs-special">)</span><span>
+</span><span id="line-64"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Int</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Int64</span></span><span class="hs-special">)</span><span>
+</span><span id="line-65"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Word</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Word8</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">Word16</span></span><span class="hs-special">)</span><span>
+</span><span id="line-66"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">encodeMessage</span></span><span class="hs-special">)</span><span>
+</span><span id="line-67"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Time.Clock</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">getCurrentTime</span></span><span class="hs-special">)</span><span>
+</span><span id="line-68"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Time.Clock.POSIX</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">utcTimeToPOSIXSeconds</span></span><span class="hs-special">)</span><span>
+</span><span id="line-69"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Lens.Family2</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-operator">(.~)</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-operator">(&amp;)</span></span><span class="hs-special">)</span><span>
+</span><span id="line-70"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Network.HostName</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">getHostName</span></span><span class="hs-special">)</span><span>
+</span><span id="line-71"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Proto.Tensorflow.Core.Framework.Summary</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Summary</span></span><span class="hs-special">)</span><span>
+</span><span id="line-72"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Proto.Tensorflow.Core.Util.Event</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Event</span></span><span class="hs-special">)</span><span>
+</span><span id="line-73"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Proto.Tensorflow.Core.Util.Event_Fields</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">fileVersion</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">graphDef</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">step</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">summary</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">wallTime</span></span><span class="hs-special">)</span><span>
+</span><span id="line-74"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">System.Directory</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">createDirectoryIfMissing</span></span><span class="hs-special">)</span><span>
+</span><span id="line-75"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">System.FilePath</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-operator">(&lt;/&gt;)</span></span><span class="hs-special">)</span><span>
+</span><span id="line-76"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">TensorFlow.Build</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">MonadBuild</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">Build</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">asGraphDef</span></span><span class="hs-special">)</span><span>
+</span><span id="line-77"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">TensorFlow.Ops</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">scalar</span></span><span class="hs-special">)</span><span>
+</span><span id="line-78"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">TensorFlow.Records.Conduit</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">sinkTFRecords</span></span><span class="hs-special">)</span><span>
+</span><span id="line-79"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">TensorFlow.Tensor</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Tensor</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">render</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">SummaryTensor</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">addSummary</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">collectAllSummaries</span></span><span class="hs-special">)</span><span>
+</span><span id="line-80"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">TensorFlow.Types</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">TensorType</span></span><span class="hs-special">,</span><span> </span><span class="hs-keyword">type</span><span class="annot"><span class="hs-operator">(/=)</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">OneOf</span></span><span class="hs-special">)</span><span>
+</span><span id="line-81"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Text.Printf</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">printf</span></span><span class="hs-special">)</span><span>
+</span><span id="line-82"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ByteString.Lazy</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">L</span></span><span>
+</span><span id="line-83"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.Conduit</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Conduit</span></span><span>
+</span><span id="line-84"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.Conduit.List</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Conduit</span></span><span>
+</span><span id="line-85"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">T</span></span><span>
+</span><span id="line-86"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">TensorFlow.GenOps.Core</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">CoreOps</span></span><span>
+</span><span id="line-87"></span><span>
+</span><span id="line-88"></span><span class="hs-comment">-- | Handle for logging TensorBoard events safely from multiple threads.</span><span>
+</span><span id="line-89"></span><span class="hs-keyword">data</span><span> </span><span id="EventWriter"><span class="annot"><a href="TensorFlow.Logging.html#EventWriter"><span class="hs-identifier hs-var">EventWriter</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="EventWriter"><span class="annot"><a href="TensorFlow.Logging.html#EventWriter"><span class="hs-identifier hs-var">EventWriter</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">TBMQueue</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Event</span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MVar</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-90"></span><span>
+</span><span id="line-91"></span><span class="hs-comment">-- | Writes Event protocol buffers to event files.</span><span>
+</span><span id="line-92"></span><span id="local-6989586621679144298"><span id="local-6989586621679144299"><span class="annot"><a href="TensorFlow.Logging.html#withEventWriter"><span class="hs-identifier hs-type">withEventWriter</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-93"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621679144299"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadMask</span></span><span> </span><span class="annot"><a href="#local-6989586621679144299"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-94"></span><span>    </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">FilePath</span></span><span>
+</span><span id="line-95"></span><span>    </span><span class="hs-comment">-- ^ logdir. Local filesystem directory where event file will be written.</span><span>
+</span><span id="line-96"></span><span>    </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="TensorFlow.Logging.html#EventWriter"><span class="hs-identifier hs-type">EventWriter</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679144299"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679144298"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-97"></span><span>    </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679144299"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679144298"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
+</span><span id="line-98"></span><span id="withEventWriter"><span class="annot"><span class="annottext">withEventWriter :: FilePath -&gt; (EventWriter -&gt; m a) -&gt; m a
+</span><a href="TensorFlow.Logging.html#withEventWriter"><span class="hs-identifier hs-var hs-var">withEventWriter</span></a></span></span><span> </span><span id="local-6989586621679144297"><span class="annot"><span class="annottext">logdir :: FilePath
+</span><a href="#local-6989586621679144297"><span class="hs-identifier hs-var">logdir</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-99"></span><span>    </span><span class="annot"><span class="annottext">m EventWriter
+-&gt; (EventWriter -&gt; m ()) -&gt; (EventWriter -&gt; m a) -&gt; m a
+forall (m :: * -&gt; *) a c b.
+MonadMask m =&gt;
+m a -&gt; (a -&gt; m c) -&gt; (a -&gt; m b) -&gt; m b
+</span><span class="hs-identifier hs-var">bracket</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">IO EventWriter -&gt; m EventWriter
+forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FilePath -&gt; IO EventWriter
+</span><a href="TensorFlow.Logging.html#newEventWriter"><span class="hs-identifier hs-var">newEventWriter</span></a></span><span> </span><span class="annot"><span class="annottext">FilePath
+</span><a href="#local-6989586621679144297"><span class="hs-identifier hs-var">logdir</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">IO () -&gt; m ()
+forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; m ()) -&gt; (EventWriter -&gt; IO ()) -&gt; EventWriter -&gt; m ()
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">EventWriter -&gt; IO ()
+</span><a href="TensorFlow.Logging.html#closeEventWriter"><span class="hs-identifier hs-var">closeEventWriter</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-100"></span><span>
+</span><span id="line-101"></span><span class="annot"><a href="TensorFlow.Logging.html#newEventWriter"><span class="hs-identifier hs-type">newEventWriter</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">FilePath</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="TensorFlow.Logging.html#EventWriter"><span class="hs-identifier hs-type">EventWriter</span></a></span><span>
+</span><span id="line-102"></span><span id="newEventWriter"><span class="annot"><span class="annottext">newEventWriter :: FilePath -&gt; IO EventWriter
+</span><a href="TensorFlow.Logging.html#newEventWriter"><span class="hs-identifier hs-var hs-var">newEventWriter</span></a></span></span><span> </span><span id="local-6989586621679144293"><span class="annot"><span class="annottext">logdir :: FilePath
+</span><a href="#local-6989586621679144293"><span class="hs-identifier hs-var">logdir</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-103"></span><span>    </span><span class="annot"><span class="annottext">Bool -&gt; FilePath -&gt; IO ()
+</span><span class="hs-identifier hs-var">createDirectoryIfMissing</span></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">True</span></span><span> </span><span class="annot"><span class="annottext">FilePath
+</span><a href="#local-6989586621679144293"><span class="hs-identifier hs-var">logdir</span></a></span><span>
+</span><span id="line-104"></span><span>    </span><span id="local-6989586621679144292"><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679144292"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Double
+</span><a href="TensorFlow.Logging.html#doubleWallTime"><span class="hs-identifier hs-var">doubleWallTime</span></a></span><span>
+</span><span id="line-105"></span><span>    </span><span id="local-6989586621679144290"><span class="annot"><span class="annottext">FilePath
+</span><a href="#local-6989586621679144290"><span class="hs-identifier hs-var">hostname</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO FilePath
+</span><span class="hs-identifier hs-var">getHostName</span></span><span>
+</span><span id="line-106"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679144289"><span class="annot"><span class="annottext">filename :: FilePath
+</span><a href="#local-6989586621679144289"><span class="hs-identifier hs-var hs-var">filename</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">FilePath -&gt; Integer -&gt; FilePath -&gt; FilePath
+forall r. PrintfType r =&gt; FilePath -&gt; r
+</span><span class="hs-identifier hs-var">printf</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FilePath
+</span><a href="#local-6989586621679144293"><span class="hs-identifier hs-var">logdir</span></a></span><span> </span><span class="annot"><span class="annottext">FilePath -&gt; FilePath -&gt; FilePath
+</span><span class="hs-operator hs-var">&lt;/&gt;</span></span><span> </span><span class="annot"><span class="hs-string">&quot;events.out.tfevents.%010d.%s&quot;</span></span><span class="hs-special">)</span><span>
+</span><span id="line-107"></span><span>                          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Double -&gt; Integer
+forall a b. (RealFrac a, Integral b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">truncate</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679144292"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Integer</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">FilePath
+</span><a href="#local-6989586621679144290"><span class="hs-identifier hs-var">hostname</span></a></span><span>
+</span><span id="line-108"></span><span>    </span><span class="hs-comment">-- Asynchronously consume events from a queue.</span><span>
+</span><span id="line-109"></span><span>    </span><span class="hs-comment">-- We use a bounded queue to ensure the producer doesn't get too far ahead</span><span>
+</span><span id="line-110"></span><span>    </span><span class="hs-comment">-- of the consumer. The buffer size was picked arbitrarily.</span><span>
+</span><span id="line-111"></span><span>    </span><span id="local-6989586621679144287"><span class="annot"><span class="annottext">TBMQueue Event
+</span><a href="#local-6989586621679144287"><span class="hs-identifier hs-var">q</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Int -&gt; IO (TBMQueue Event)
+forall a. Int -&gt; IO (TBMQueue a)
+</span><span class="hs-identifier hs-var">newTBMQueueIO</span></span><span> </span><span class="annot"><span class="hs-number">1024</span></span><span>
+</span><span id="line-112"></span><span>    </span><span class="hs-comment">-- Use an MVar to signal that the worker thread has completed.</span><span>
+</span><span id="line-113"></span><span>    </span><span id="local-6989586621679144286"><span class="annot"><span class="annottext">MVar ()
+</span><a href="#local-6989586621679144286"><span class="hs-identifier hs-var">done</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (MVar ())
+forall a. IO (MVar a)
+</span><span class="hs-identifier hs-var">newEmptyMVar</span></span><span>
+</span><span id="line-114"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679144285"><span class="annot"><span class="annottext">writer :: EventWriter
+</span><a href="#local-6989586621679144285"><span class="hs-identifier hs-var hs-var">writer</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TBMQueue Event -&gt; MVar () -&gt; EventWriter
+</span><a href="TensorFlow.Logging.html#EventWriter"><span class="hs-identifier hs-var">EventWriter</span></a></span><span> </span><span class="annot"><span class="annottext">TBMQueue Event
+</span><a href="#local-6989586621679144287"><span class="hs-identifier hs-var">q</span></a></span><span> </span><span class="annot"><span class="annottext">MVar ()
+</span><a href="#local-6989586621679144286"><span class="hs-identifier hs-var">done</span></a></span><span>
+</span><span id="line-115"></span><span>        </span><span id="local-6989586621679144284"><span class="annot"><span class="annottext">consumeQueue :: IO ()
+</span><a href="#local-6989586621679144284"><span class="hs-identifier hs-var hs-var">consumeQueue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ResourceT IO () -&gt; IO ()
+forall (m :: * -&gt; *) a. MonadUnliftIO m =&gt; ResourceT m a -&gt; m a
+</span><span class="hs-identifier hs-var">runResourceT</span></span><span> </span><span class="annot"><span class="annottext">(ResourceT IO () -&gt; IO ()) -&gt; ResourceT IO () -&gt; IO ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ConduitT () Void (ResourceT IO) () -&gt; ResourceT IO ()
+forall (m :: * -&gt; *) r. Monad m =&gt; ConduitT () Void m r -&gt; m r
+</span><span class="hs-identifier hs-var">Conduit.runConduit</span></span><span> </span><span class="annot"><span class="annottext">(ConduitT () Void (ResourceT IO) () -&gt; ResourceT IO ())
+-&gt; ConduitT () Void (ResourceT IO) () -&gt; ResourceT IO ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-116"></span><span>            </span><span class="annot"><span class="annottext">TBMQueue Event -&gt; ConduitT () Event (ResourceT IO) ()
+forall (m :: * -&gt; *) a z.
+MonadIO m =&gt;
+TBMQueue a -&gt; ConduitT z a m ()
+</span><span class="hs-identifier hs-var">sourceTBMQueue</span></span><span> </span><span class="annot"><span class="annottext">TBMQueue Event
+</span><a href="#local-6989586621679144287"><span class="hs-identifier hs-var">q</span></a></span><span>
+</span><span id="line-117"></span><span>            </span><span class="annot"><span class="annottext">ConduitT () Event (ResourceT IO) ()
+-&gt; ConduitM Event Void (ResourceT IO) ()
+-&gt; ConduitT () Void (ResourceT IO) ()
+forall (m :: * -&gt; *) a b c r.
+Monad m =&gt;
+ConduitM a b m () -&gt; ConduitM b c m r -&gt; ConduitM a c m r
+</span><span class="hs-operator hs-var">.|</span></span><span> </span><span class="annot"><span class="annottext">(Event -&gt; ByteString)
+-&gt; ConduitT Event ByteString (ResourceT IO) ()
+forall (m :: * -&gt; *) a b. Monad m =&gt; (a -&gt; b) -&gt; ConduitT a b m ()
+</span><span class="hs-identifier hs-var">Conduit.map</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; ByteString
+</span><span class="hs-identifier hs-var">L.fromStrict</span></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; ByteString)
+-&gt; (Event -&gt; ByteString) -&gt; Event -&gt; ByteString
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Event -&gt; ByteString
+forall msg. Message msg =&gt; msg -&gt; ByteString
+</span><span class="hs-identifier hs-var">encodeMessage</span></span><span class="hs-special">)</span><span>
+</span><span id="line-118"></span><span>            </span><span class="annot"><span class="annottext">ConduitT Event ByteString (ResourceT IO) ()
+-&gt; ConduitM ByteString Void (ResourceT IO) ()
+-&gt; ConduitM Event Void (ResourceT IO) ()
+forall (m :: * -&gt; *) a b c r.
+Monad m =&gt;
+ConduitM a b m () -&gt; ConduitM b c m r -&gt; ConduitM a c m r
+</span><span class="hs-operator hs-var">.|</span></span><span> </span><span class="annot"><span class="annottext">FilePath -&gt; ConduitM ByteString Void (ResourceT IO) ()
+forall (m :: * -&gt; *) o.
+MonadResource m =&gt;
+FilePath -&gt; ConduitT ByteString o m ()
+</span><span class="hs-identifier hs-var">sinkTFRecords</span></span><span> </span><span class="annot"><span class="annottext">FilePath
+</span><a href="#local-6989586621679144289"><span class="hs-identifier hs-var">filename</span></a></span><span>
+</span><span id="line-119"></span><span>    </span><span class="annot"><span class="annottext">ThreadId
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO () -&gt; (Either SomeException () -&gt; IO ()) -&gt; IO ThreadId
+forall a. IO a -&gt; (Either SomeException a -&gt; IO ()) -&gt; IO ThreadId
+</span><span class="hs-identifier hs-var">forkFinally</span></span><span> </span><span class="annot"><span class="annottext">IO ()
+</span><a href="#local-6989586621679144284"><span class="hs-identifier hs-var">consumeQueue</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span class="hs-identifier">_</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">MVar () -&gt; () -&gt; IO ()
+forall a. MVar a -&gt; a -&gt; IO ()
+</span><span class="hs-identifier hs-var">putMVar</span></span><span> </span><span class="annot"><span class="annottext">MVar ()
+</span><a href="#local-6989586621679144286"><span class="hs-identifier hs-var">done</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-120"></span><span>    </span><span class="annot"><span class="annottext">EventWriter -&gt; Event -&gt; IO ()
+forall (m :: * -&gt; *). MonadIO m =&gt; EventWriter -&gt; Event -&gt; m ()
+</span><a href="TensorFlow.Logging.html#logEvent"><span class="hs-identifier hs-var">logEvent</span></a></span><span> </span><span class="annot"><span class="annottext">EventWriter
+</span><a href="#local-6989586621679144285"><span class="hs-identifier hs-var">writer</span></a></span><span> </span><span class="annot"><span class="annottext">(Event -&gt; IO ()) -&gt; Event -&gt; IO ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Event
+forall a. Message a =&gt; a
+</span><span class="hs-identifier hs-var">def</span></span><span> </span><span class="annot"><span class="annottext">Event -&gt; (Event -&gt; Event) -&gt; Event
+forall s t. s -&gt; (s -&gt; t) -&gt; t
+</span><span class="hs-operator hs-var">&amp;</span></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Identical f =&gt; LensLike' f Event Double
+forall (f :: * -&gt; *) s a.
+(Functor f, HasField s &quot;wallTime&quot; a) =&gt;
+LensLike' f s a
+</span><span class="hs-identifier hs-var">wallTime</span></span><span> </span><span class="annot"><span class="annottext">(forall (f :: * -&gt; *). Identical f =&gt; LensLike' f Event Double)
+-&gt; Double -&gt; Event -&gt; Event
+forall s t a b. Setter s t a b -&gt; b -&gt; s -&gt; t
+</span><span class="hs-operator hs-var">.~</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679144292"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><span id="line-121"></span><span>                          </span><span class="annot"><span class="annottext">Event -&gt; (Event -&gt; Event) -&gt; Event
+forall s t. s -&gt; (s -&gt; t) -&gt; t
+</span><span class="hs-operator hs-var">&amp;</span></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Identical f =&gt; LensLike' f Event Text
+forall (f :: * -&gt; *) s a.
+(Functor f, HasField s &quot;fileVersion&quot; a) =&gt;
+LensLike' f s a
+</span><span class="hs-identifier hs-var">fileVersion</span></span><span> </span><span class="annot"><span class="annottext">(forall (f :: * -&gt; *). Identical f =&gt; LensLike' f Event Text)
+-&gt; Text -&gt; Event -&gt; Event
+forall s t a b. Setter s t a b -&gt; b -&gt; s -&gt; t
+</span><span class="hs-operator hs-var">.~</span></span><span> </span><span class="annot"><span class="annottext">FilePath -&gt; Text
+</span><span class="hs-identifier hs-var">T.pack</span></span><span> </span><span class="annot"><span class="hs-string">&quot;brain.Event:2&quot;</span></span><span>
+</span><span id="line-122"></span><span>    </span><span class="annot"><span class="annottext">EventWriter -&gt; IO EventWriter
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">EventWriter
+</span><a href="#local-6989586621679144285"><span class="hs-identifier hs-var">writer</span></a></span><span>
+</span><span id="line-123"></span><span>
+</span><span id="line-124"></span><span class="annot"><a href="TensorFlow.Logging.html#closeEventWriter"><span class="hs-identifier hs-type">closeEventWriter</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="TensorFlow.Logging.html#EventWriter"><span class="hs-identifier hs-type">EventWriter</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-125"></span><span id="closeEventWriter"><span class="annot"><span class="annottext">closeEventWriter :: EventWriter -&gt; IO ()
+</span><a href="TensorFlow.Logging.html#closeEventWriter"><span class="hs-identifier hs-var hs-var">closeEventWriter</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="TensorFlow.Logging.html#EventWriter"><span class="hs-identifier hs-type">EventWriter</span></a></span><span> </span><span id="local-6989586621679144279"><span class="annot"><span class="annottext">q :: TBMQueue Event
+</span><a href="#local-6989586621679144279"><span class="hs-identifier hs-var">q</span></a></span></span><span> </span><span id="local-6989586621679144278"><span class="annot"><span class="annottext">done :: MVar ()
+</span><a href="#local-6989586621679144278"><span class="hs-identifier hs-var">done</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-126"></span><span>    </span><span class="annot"><span class="annottext">STM () -&gt; IO ()
+forall a. STM a -&gt; IO a
+</span><span class="hs-identifier hs-var">atomically</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TBMQueue Event -&gt; STM ()
+forall a. TBMQueue a -&gt; STM ()
+</span><span class="hs-identifier hs-var">closeTBMQueue</span></span><span> </span><span class="annot"><span class="annottext">TBMQueue Event
+</span><a href="#local-6989586621679144279"><span class="hs-identifier hs-var">q</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">IO () -&gt; IO () -&gt; IO ()
+forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; m b -&gt; m b
+</span><span class="hs-operator hs-var">&gt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">MVar () -&gt; IO ()
+forall a. MVar a -&gt; IO a
+</span><span class="hs-identifier hs-var">readMVar</span></span><span> </span><span class="annot"><span class="annottext">MVar ()
+</span><a href="#local-6989586621679144278"><span class="hs-identifier hs-var">done</span></a></span><span>
+</span><span id="line-127"></span><span>
+</span><span id="line-128"></span><span class="hs-comment">-- | Logs the given Event protocol buffer.</span><span>
+</span><span id="line-129"></span><span id="local-6989586621679144433"><span class="annot"><a href="TensorFlow.Logging.html#logEvent"><span class="hs-identifier hs-type">logEvent</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621679144433"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Logging.html#EventWriter"><span class="hs-identifier hs-type">EventWriter</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Event</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679144433"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
+</span><span id="line-130"></span><span id="logEvent"><span class="annot"><span class="annottext">logEvent :: EventWriter -&gt; Event -&gt; m ()
+</span><a href="TensorFlow.Logging.html#logEvent"><span class="hs-identifier hs-var hs-var">logEvent</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="TensorFlow.Logging.html#EventWriter"><span class="hs-identifier hs-type">EventWriter</span></a></span><span> </span><span id="local-6989586621679144277"><span class="annot"><span class="annottext">q :: TBMQueue Event
+</span><a href="#local-6989586621679144277"><span class="hs-identifier hs-var">q</span></a></span></span><span> </span><span class="hs-identifier">_</span><span class="hs-special">)</span><span> </span><span id="local-6989586621679144276"><span class="annot"><span class="annottext">pb :: Event
+</span><a href="#local-6989586621679144276"><span class="hs-identifier hs-var">pb</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">IO () -&gt; m ()
+forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">STM () -&gt; IO ()
+forall a. STM a -&gt; IO a
+</span><span class="hs-identifier hs-var">atomically</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TBMQueue Event -&gt; Event -&gt; STM ()
+forall a. TBMQueue a -&gt; a -&gt; STM ()
+</span><span class="hs-identifier hs-var">writeTBMQueue</span></span><span> </span><span class="annot"><span class="annottext">TBMQueue Event
+</span><a href="#local-6989586621679144277"><span class="hs-identifier hs-var">q</span></a></span><span> </span><span class="annot"><span class="annottext">Event
+</span><a href="#local-6989586621679144276"><span class="hs-identifier hs-var">pb</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-131"></span><span>
+</span><span id="line-132"></span><span class="hs-comment">-- | Logs the graph for the given 'Build' action.</span><span>
+</span><span id="line-133"></span><span id="local-6989586621679144274"><span id="local-6989586621679144275"><span class="annot"><a href="TensorFlow.Logging.html#logGraph"><span class="hs-identifier hs-type">logGraph</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621679144275"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Logging.html#EventWriter"><span class="hs-identifier hs-type">EventWriter</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Build</span></span><span> </span><span class="annot"><a href="#local-6989586621679144274"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679144275"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-134"></span><span id="logGraph"><span class="annot"><span class="annottext">logGraph :: EventWriter -&gt; Build a -&gt; m ()
+</span><a href="TensorFlow.Logging.html#logGraph"><span class="hs-identifier hs-var hs-var">logGraph</span></a></span></span><span> </span><span id="local-6989586621679144273"><span class="annot"><span class="annottext">writer :: EventWriter
+</span><a href="#local-6989586621679144273"><span class="hs-identifier hs-var">writer</span></a></span></span><span> </span><span id="local-6989586621679144272"><span class="annot"><span class="annottext">build :: Build a
+</span><a href="#local-6989586621679144272"><span class="hs-identifier hs-var">build</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-135"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679144271"><span class="annot"><span class="annottext">graph :: GraphDef
+</span><a href="#local-6989586621679144271"><span class="hs-identifier hs-var hs-var">graph</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Build a -&gt; GraphDef
+forall a. Build a -&gt; GraphDef
+</span><span class="hs-identifier hs-var">asGraphDef</span></span><span> </span><span class="annot"><span class="annottext">Build a
+</span><a href="#local-6989586621679144272"><span class="hs-identifier hs-var">build</span></a></span><span>
+</span><span id="line-136"></span><span>      </span><span id="local-6989586621679144270"><span class="annot"><span class="annottext">graphBytes :: ByteString
+</span><a href="#local-6989586621679144270"><span class="hs-identifier hs-var hs-var">graphBytes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">GraphDef -&gt; ByteString
+forall msg. Message msg =&gt; msg -&gt; ByteString
+</span><span class="hs-identifier hs-var">encodeMessage</span></span><span> </span><span class="annot"><span class="annottext">GraphDef
+</span><a href="#local-6989586621679144271"><span class="hs-identifier hs-var">graph</span></a></span><span>
+</span><span id="line-137"></span><span>      </span><span id="local-6989586621679144269"><span class="annot"><span class="annottext">graphEvent :: Event
+</span><a href="#local-6989586621679144269"><span class="hs-identifier hs-var hs-var">graphEvent</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Event
+forall a. Message a =&gt; a
+</span><span class="hs-identifier hs-var">def</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Event</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Event -&gt; (Event -&gt; Event) -&gt; Event
+forall s t. s -&gt; (s -&gt; t) -&gt; t
+</span><span class="hs-operator hs-var">&amp;</span></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Identical f =&gt; LensLike' f Event ByteString
+forall (f :: * -&gt; *) s a.
+(Functor f, HasField s &quot;graphDef&quot; a) =&gt;
+LensLike' f s a
+</span><span class="hs-identifier hs-var">graphDef</span></span><span> </span><span class="annot"><span class="annottext">(forall (f :: * -&gt; *). Identical f =&gt; LensLike' f Event ByteString)
+-&gt; ByteString -&gt; Event -&gt; Event
+forall s t a b. Setter s t a b -&gt; b -&gt; s -&gt; t
+</span><span class="hs-operator hs-var">.~</span></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679144270"><span class="hs-identifier hs-var">graphBytes</span></a></span><span>
+</span><span id="line-138"></span><span>  </span><span class="annot"><span class="annottext">EventWriter -&gt; Event -&gt; m ()
+forall (m :: * -&gt; *). MonadIO m =&gt; EventWriter -&gt; Event -&gt; m ()
+</span><a href="TensorFlow.Logging.html#logEvent"><span class="hs-identifier hs-var">logEvent</span></a></span><span> </span><span class="annot"><span class="annottext">EventWriter
+</span><a href="#local-6989586621679144273"><span class="hs-identifier hs-var">writer</span></a></span><span> </span><span class="annot"><span class="annottext">Event
+</span><a href="#local-6989586621679144269"><span class="hs-identifier hs-var">graphEvent</span></a></span><span>
+</span><span id="line-139"></span><span>
+</span><span id="line-140"></span><span class="hs-comment">-- | Logs the given Summary event with an optional global step (use 0 if not</span><span>
+</span><span id="line-141"></span><span class="hs-comment">-- applicable).</span><span>
+</span><span id="line-142"></span><span id="local-6989586621679144268"><span class="annot"><a href="TensorFlow.Logging.html#logSummary"><span class="hs-identifier hs-type">logSummary</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621679144268"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Logging.html#EventWriter"><span class="hs-identifier hs-type">EventWriter</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int64</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Summary</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679144268"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
+</span><span id="line-143"></span><span id="logSummary"><span class="annot"><span class="annottext">logSummary :: EventWriter -&gt; Int64 -&gt; Summary -&gt; m ()
+</span><a href="TensorFlow.Logging.html#logSummary"><span class="hs-identifier hs-var hs-var">logSummary</span></a></span></span><span> </span><span id="local-6989586621679144267"><span class="annot"><span class="annottext">writer :: EventWriter
+</span><a href="#local-6989586621679144267"><span class="hs-identifier hs-var">writer</span></a></span></span><span> </span><span id="local-6989586621679144266"><span class="annot"><span class="annottext">step' :: Int64
+</span><a href="#local-6989586621679144266"><span class="hs-identifier hs-var">step'</span></a></span></span><span> </span><span id="local-6989586621679144265"><span class="annot"><span class="annottext">summaryProto :: Summary
+</span><a href="#local-6989586621679144265"><span class="hs-identifier hs-var">summaryProto</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-144"></span><span>    </span><span id="local-6989586621679144264"><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679144264"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Double -&gt; m Double
+forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">IO Double
+</span><a href="TensorFlow.Logging.html#doubleWallTime"><span class="hs-identifier hs-var">doubleWallTime</span></a></span><span>
+</span><span id="line-145"></span><span>    </span><span class="annot"><span class="annottext">EventWriter -&gt; Event -&gt; m ()
+forall (m :: * -&gt; *). MonadIO m =&gt; EventWriter -&gt; Event -&gt; m ()
+</span><a href="TensorFlow.Logging.html#logEvent"><span class="hs-identifier hs-var">logEvent</span></a></span><span> </span><span class="annot"><span class="annottext">EventWriter
+</span><a href="#local-6989586621679144267"><span class="hs-identifier hs-var">writer</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Event
+forall a. Message a =&gt; a
+</span><span class="hs-identifier hs-var">def</span></span><span> </span><span class="annot"><span class="annottext">Event -&gt; (Event -&gt; Event) -&gt; Event
+forall s t. s -&gt; (s -&gt; t) -&gt; t
+</span><span class="hs-operator hs-var">&amp;</span></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Identical f =&gt; LensLike' f Event Double
+forall (f :: * -&gt; *) s a.
+(Functor f, HasField s &quot;wallTime&quot; a) =&gt;
+LensLike' f s a
+</span><span class="hs-identifier hs-var">wallTime</span></span><span> </span><span class="annot"><span class="annottext">(forall (f :: * -&gt; *). Identical f =&gt; LensLike' f Event Double)
+-&gt; Double -&gt; Event -&gt; Event
+forall s t a b. Setter s t a b -&gt; b -&gt; s -&gt; t
+</span><span class="hs-operator hs-var">.~</span></span><span> </span><span class="annot"><span class="annottext">Double
+</span><a href="#local-6989586621679144264"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><span id="line-146"></span><span>                         </span><span class="annot"><span class="annottext">Event -&gt; (Event -&gt; Event) -&gt; Event
+forall s t. s -&gt; (s -&gt; t) -&gt; t
+</span><span class="hs-operator hs-var">&amp;</span></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Identical f =&gt; LensLike' f Event Int64
+forall (f :: * -&gt; *) s a.
+(Functor f, HasField s &quot;step&quot; a) =&gt;
+LensLike' f s a
+</span><span class="hs-identifier hs-var">step</span></span><span> </span><span class="annot"><span class="annottext">(forall (f :: * -&gt; *). Identical f =&gt; LensLike' f Event Int64)
+-&gt; Int64 -&gt; Event -&gt; Event
+forall s t a b. Setter s t a b -&gt; b -&gt; s -&gt; t
+</span><span class="hs-operator hs-var">.~</span></span><span> </span><span class="annot"><span class="annottext">Int64
+</span><a href="#local-6989586621679144266"><span class="hs-identifier hs-var">step'</span></a></span><span>
+</span><span id="line-147"></span><span>                         </span><span class="annot"><span class="annottext">Event -&gt; (Event -&gt; Event) -&gt; Event
+forall s t. s -&gt; (s -&gt; t) -&gt; t
+</span><span class="hs-operator hs-var">&amp;</span></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Identical f =&gt; LensLike' f Event Summary
+forall (f :: * -&gt; *) s a.
+(Functor f, HasField s &quot;summary&quot; a) =&gt;
+LensLike' f s a
+</span><span class="hs-identifier hs-var">summary</span></span><span> </span><span class="annot"><span class="annottext">(forall (f :: * -&gt; *). Identical f =&gt; LensLike' f Event Summary)
+-&gt; Summary -&gt; Event -&gt; Event
+forall s t a b. Setter s t a b -&gt; b -&gt; s -&gt; t
+</span><span class="hs-operator hs-var">.~</span></span><span> </span><span class="annot"><span class="annottext">Summary
+</span><a href="#local-6989586621679144265"><span class="hs-identifier hs-var">summaryProto</span></a></span><span>
+</span><span id="line-148"></span><span>                    </span><span class="hs-special">)</span><span>
+</span><span id="line-149"></span><span>
+</span><span id="line-150"></span><span class="hs-comment">-- Number of seconds since epoch.</span><span>
+</span><span id="line-151"></span><span class="annot"><a href="TensorFlow.Logging.html#doubleWallTime"><span class="hs-identifier hs-type">doubleWallTime</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span>
+</span><span id="line-152"></span><span id="doubleWallTime"><span class="annot"><span class="annottext">doubleWallTime :: IO Double
+</span><a href="TensorFlow.Logging.html#doubleWallTime"><span class="hs-identifier hs-var hs-var">doubleWallTime</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UTCTime -&gt; Double
+forall a. Fractional a =&gt; UTCTime -&gt; a
+</span><a href="#local-6989586621679144263"><span class="hs-identifier hs-var">asDouble</span></a></span><span> </span><span class="annot"><span class="annottext">(UTCTime -&gt; Double) -&gt; IO UTCTime -&gt; IO Double
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">IO UTCTime
+</span><span class="hs-identifier hs-var">getCurrentTime</span></span><span>
+</span><span id="line-153"></span><span>    </span><span class="hs-keyword">where</span><span> </span><span id="local-6989586621679144263"><span class="annot"><span class="annottext">asDouble :: UTCTime -&gt; a
+</span><a href="#local-6989586621679144263"><span class="hs-identifier hs-var hs-var">asDouble</span></a></span></span><span> </span><span id="local-6989586621679144261"><span class="annot"><span class="annottext">t :: UTCTime
+</span><a href="#local-6989586621679144261"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Rational -&gt; a
+forall a. Fractional a =&gt; Rational -&gt; a
+</span><span class="hs-identifier hs-var">fromRational</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">POSIXTime -&gt; Rational
+forall a. Real a =&gt; a -&gt; Rational
+</span><span class="hs-identifier hs-var">toRational</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">UTCTime -&gt; POSIXTime
+</span><span class="hs-identifier hs-var">utcTimeToPOSIXSeconds</span></span><span> </span><span class="annot"><span class="annottext">UTCTime
+</span><a href="#local-6989586621679144261"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-154"></span><span>
+</span><span id="line-155"></span><span class="hs-comment">-- | Adds a 'CoreOps.histogramSummary' node. The tag argument is intentionally</span><span>
+</span><span id="line-156"></span><span class="hs-comment">-- limited to a single value for simplicity.</span><span>
+</span><span id="line-157"></span><span id="local-6989586621679144258"><span id="local-6989586621679144259"><span id="local-6989586621679144260"><span class="annot"><a href="TensorFlow.Logging.html#histogramSummary"><span class="hs-identifier hs-type">histogramSummary</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-158"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadBuild</span></span><span> </span><span class="annot"><a href="#local-6989586621679144260"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TensorType</span></span><span> </span><span class="annot"><a href="#local-6989586621679144259"><span class="hs-identifier hs-type">t</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679144259"><span class="hs-identifier hs-type">t</span></a></span><span> </span><span class="annot"><span class="hs-operator hs-type">/=</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679144259"><span class="hs-identifier hs-type">t</span></a></span><span> </span><span class="annot"><span class="hs-operator hs-type">/=</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span class="hs-special">)</span><span>
+</span><span id="line-159"></span><span>     </span><span class="hs-comment">-- OneOf '[Int16, Int32, Int64, Int8, Word16, Word8, Double, Float] t)</span><span>
+</span><span id="line-160"></span><span>    </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679144258"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679144259"><span class="hs-identifier hs-type">t</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679144260"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-161"></span><span id="histogramSummary"><span class="annot"><span class="annottext">histogramSummary :: ByteString -&gt; Tensor v t -&gt; m ()
+</span><a href="TensorFlow.Logging.html#histogramSummary"><span class="hs-identifier hs-var hs-var">histogramSummary</span></a></span></span><span> </span><span id="local-6989586621679144257"><span class="annot"><span class="annottext">tag :: ByteString
+</span><a href="#local-6989586621679144257"><span class="hs-identifier hs-var">tag</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Tensor Build ByteString -&gt; m ()
+forall (m :: * -&gt; *) (v :: * -&gt; *).
+(MonadBuild m, TensorKind v) =&gt;
+Tensor v ByteString -&gt; m ()
+</span><span class="hs-identifier hs-var">addSummary</span></span><span> </span><span class="annot"><span class="annottext">(Tensor Build ByteString -&gt; m ())
+-&gt; (Tensor v t -&gt; Tensor Build ByteString) -&gt; Tensor v t -&gt; m ()
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Tensor Build ByteString -&gt; Tensor v t -&gt; Tensor Build ByteString
+forall (v'1 :: * -&gt; *) (v'2 :: * -&gt; *) t.
+OneOf
+  '[Int16, Int32, Int64, Int8, Word16, Word32, Word64, Word8, Double,
+    Float]
+  t =&gt;
+Tensor v'1 ByteString -&gt; Tensor v'2 t -&gt; Tensor Build ByteString
+</span><span class="hs-identifier hs-var">CoreOps.histogramSummary</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; Tensor Build ByteString
+forall a. TensorType a =&gt; a -&gt; Tensor Build a
+</span><span class="hs-identifier hs-var">scalar</span></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679144257"><span class="hs-identifier hs-var">tag</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-162"></span><span>
+</span><span id="line-163"></span><span class="hs-comment">-- | Adds a 'CoreOps.imageSummary' node. The tag argument is intentionally</span><span>
+</span><span id="line-164"></span><span class="hs-comment">-- limited to a single value for simplicity.</span><span>
+</span><span id="line-165"></span><span id="local-6989586621679144253"><span id="local-6989586621679144254"><span id="local-6989586621679144255"><span class="annot"><a href="TensorFlow.Logging.html#imageSummary"><span class="hs-identifier hs-type">imageSummary</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-166"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">OneOf</span></span><span> </span><span class="hs-special">'</span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word16</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Float</span></span><span class="hs-special">]</span><span> </span><span class="annot"><a href="#local-6989586621679144255"><span class="hs-identifier hs-type">t</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadBuild</span></span><span> </span><span class="annot"><a href="#local-6989586621679144254"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-167"></span><span>    </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span>
+</span><span id="line-168"></span><span>    </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679144253"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679144255"><span class="hs-identifier hs-type">t</span></a></span><span>
+</span><span id="line-169"></span><span>    </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679144254"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-170"></span><span>
+</span><span id="line-171"></span><span id="imageSummary"><span class="annot"><span class="annottext">imageSummary :: ByteString -&gt; Tensor v t -&gt; m ()
+</span><a href="TensorFlow.Logging.html#imageSummary"><span class="hs-identifier hs-var hs-var">imageSummary</span></a></span></span><span> </span><span id="local-6989586621679144252"><span class="annot"><span class="annottext">tag :: ByteString
+</span><a href="#local-6989586621679144252"><span class="hs-identifier hs-var">tag</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Tensor Build ByteString -&gt; m ()
+forall (m :: * -&gt; *) (v :: * -&gt; *).
+(MonadBuild m, TensorKind v) =&gt;
+Tensor v ByteString -&gt; m ()
+</span><span class="hs-identifier hs-var">addSummary</span></span><span> </span><span class="annot"><span class="annottext">(Tensor Build ByteString -&gt; m ())
+-&gt; (Tensor v t -&gt; Tensor Build ByteString) -&gt; Tensor v t -&gt; m ()
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Tensor Build ByteString -&gt; Tensor v t -&gt; Tensor Build ByteString
+forall (v'1 :: * -&gt; *) (v'2 :: * -&gt; *) t.
+OneOf '[Word16, Word8, Double, Float] t =&gt;
+Tensor v'1 ByteString -&gt; Tensor v'2 t -&gt; Tensor Build ByteString
+</span><span class="hs-identifier hs-var">CoreOps.imageSummary</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; Tensor Build ByteString
+forall a. TensorType a =&gt; a -&gt; Tensor Build a
+</span><span class="hs-identifier hs-var">scalar</span></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679144252"><span class="hs-identifier hs-var">tag</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-172"></span><span>
+</span><span id="line-173"></span><span class="hs-comment">-- | Adds a 'CoreOps.scalarSummary' node.</span><span>
+</span><span id="line-174"></span><span id="local-6989586621679144248"><span id="local-6989586621679144249"><span id="local-6989586621679144250"><span class="annot"><a href="TensorFlow.Logging.html#scalarSummary"><span class="hs-identifier hs-type">scalarSummary</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-175"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">TensorType</span></span><span> </span><span class="annot"><a href="#local-6989586621679144250"><span class="hs-identifier hs-type">t</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679144250"><span class="hs-identifier hs-type">t</span></a></span><span> </span><span class="annot"><span class="hs-operator hs-type">/=</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="#local-6989586621679144250"><span class="hs-identifier hs-type">t</span></a></span><span> </span><span class="annot"><span class="hs-operator hs-type">/=</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadBuild</span></span><span> </span><span class="annot"><a href="#local-6989586621679144249"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-176"></span><span>    </span><span class="hs-comment">-- (TensorType t,</span><span>
+</span><span id="line-177"></span><span>    </span><span class="hs-comment">--  OneOf '[Int16, Int32, Int64, Int8, Word16, Word8, Double, Float] t)</span><span>
+</span><span id="line-178"></span><span>    </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679144248"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679144250"><span class="hs-identifier hs-type">t</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679144249"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-179"></span><span id="scalarSummary"><span class="annot"><span class="annottext">scalarSummary :: ByteString -&gt; Tensor v t -&gt; m ()
+</span><a href="TensorFlow.Logging.html#scalarSummary"><span class="hs-identifier hs-var hs-var">scalarSummary</span></a></span></span><span> </span><span id="local-6989586621679144247"><span class="annot"><span class="annottext">tag :: ByteString
+</span><a href="#local-6989586621679144247"><span class="hs-identifier hs-var">tag</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Tensor Build ByteString -&gt; m ()
+forall (m :: * -&gt; *) (v :: * -&gt; *).
+(MonadBuild m, TensorKind v) =&gt;
+Tensor v ByteString -&gt; m ()
+</span><span class="hs-identifier hs-var">addSummary</span></span><span> </span><span class="annot"><span class="annottext">(Tensor Build ByteString -&gt; m ())
+-&gt; (Tensor v t -&gt; Tensor Build ByteString) -&gt; Tensor v t -&gt; m ()
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Tensor Build ByteString -&gt; Tensor v t -&gt; Tensor Build ByteString
+forall (v'1 :: * -&gt; *) (v'2 :: * -&gt; *) t.
+OneOf
+  '[Int16, Int32, Int64, Int8, Word16, Word32, Word64, Word8, Double,
+    Float]
+  t =&gt;
+Tensor v'1 ByteString -&gt; Tensor v'2 t -&gt; Tensor Build ByteString
+</span><span class="hs-identifier hs-var">CoreOps.scalarSummary</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; Tensor Build ByteString
+forall a. TensorType a =&gt; a -&gt; Tensor Build a
+</span><span class="hs-identifier hs-var">scalar</span></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679144247"><span class="hs-identifier hs-var">tag</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-180"></span><span>
+</span><span id="line-181"></span><span class="hs-comment">-- | Merge all summaries accumulated in the 'Build' into one summary.</span><span>
+</span><span id="line-182"></span><span id="local-6989586621679144245"><span class="annot"><a href="TensorFlow.Logging.html#mergeAllSummaries"><span class="hs-identifier hs-type">mergeAllSummaries</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadBuild</span></span><span> </span><span class="annot"><a href="#local-6989586621679144245"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679144245"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">SummaryTensor</span></span></span><span>
+</span><span id="line-183"></span><span id="mergeAllSummaries"><span class="annot"><span class="annottext">mergeAllSummaries :: m SummaryTensor
+</span><a href="TensorFlow.Logging.html#mergeAllSummaries"><span class="hs-identifier hs-var hs-var">mergeAllSummaries</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">m [SummaryTensor]
+forall (m :: * -&gt; *). MonadBuild m =&gt; m [SummaryTensor]
+</span><span class="hs-identifier hs-var">collectAllSummaries</span></span><span> </span><span class="annot"><span class="annottext">m [SummaryTensor]
+-&gt; ([SummaryTensor] -&gt; m SummaryTensor) -&gt; m SummaryTensor
+forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
+</span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="annot"><span class="annottext">Tensor Build ByteString -&gt; m SummaryTensor
+forall (m :: * -&gt; *) a.
+MonadBuild m =&gt;
+Tensor Build a -&gt; m (Tensor Value a)
+</span><span class="hs-identifier hs-var">render</span></span><span> </span><span class="annot"><span class="annottext">(Tensor Build ByteString -&gt; m SummaryTensor)
+-&gt; ([SummaryTensor] -&gt; Tensor Build ByteString)
+-&gt; [SummaryTensor]
+-&gt; m SummaryTensor
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">[SummaryTensor] -&gt; Tensor Build ByteString
+forall (v'1 :: * -&gt; *).
+[Tensor v'1 ByteString] -&gt; Tensor Build ByteString
+</span><span class="hs-identifier hs-var">CoreOps.mergeSummary</span></span><span>
+</span><span id="line-184"></span></pre></body></html>

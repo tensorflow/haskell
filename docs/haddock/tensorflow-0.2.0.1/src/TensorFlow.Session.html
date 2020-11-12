@@ -1,0 +1,906 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">-- Copyright 2016 TensorFlow authors.</span><span>
+</span><span id="line-2"></span><span class="hs-comment">--</span><span>
+</span><span id="line-3"></span><span class="hs-comment">-- Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span><span>
+</span><span id="line-4"></span><span class="hs-comment">-- you may not use this file except in compliance with the License.</span><span>
+</span><span id="line-5"></span><span class="hs-comment">-- You may obtain a copy of the License at</span><span>
+</span><span id="line-6"></span><span class="hs-comment">--</span><span>
+</span><span id="line-7"></span><span class="hs-comment">--     http://www.apache.org/licenses/LICENSE-2.0</span><span>
+</span><span id="line-8"></span><span class="hs-comment">--</span><span>
+</span><span id="line-9"></span><span class="hs-comment">-- Unless required by applicable law or agreed to in writing, software</span><span>
+</span><span id="line-10"></span><span class="hs-comment">-- distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span><span>
+</span><span id="line-11"></span><span class="hs-comment">-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span><span>
+</span><span id="line-12"></span><span class="hs-comment">-- See the License for the specific language governing permissions and</span><span>
+</span><span id="line-13"></span><span class="hs-comment">-- limitations under the License.</span><span>
+</span><span id="line-14"></span><span>
+</span><span id="line-15"></span><span class="hs-pragma">{-# LANGUAGE GeneralizedNewtypeDeriving #-}</span><span>
+</span><span id="line-16"></span><span class="hs-pragma">{-# LANGUAGE OverloadedStrings #-}</span><span>
+</span><span id="line-17"></span><span class="hs-pragma">{-# LANGUAGE Rank2Types #-}</span><span>
+</span><span id="line-18"></span><span class="hs-pragma">{-# LANGUAGE ScopedTypeVariables #-}</span><span>
+</span><span id="line-19"></span><span class="hs-pragma">{-# LANGUAGE TupleSections #-}</span><span>
+</span><span id="line-20"></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">TensorFlow.Session</span><span> </span><span class="hs-special">(</span><span>
+</span><span id="line-22"></span><span>    </span><span class="annot"><a href="TensorFlow.Session.html#Session"><span class="hs-identifier">Session</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-23"></span><span>    </span><span class="annot"><a href="TensorFlow.Session.html#SessionT"><span class="hs-identifier">SessionT</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-24"></span><span>    </span><span class="annot"><a href="TensorFlow.Session.html#Options"><span class="hs-identifier">Options</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-25"></span><span>    </span><span class="annot"><a href="TensorFlow.Session.html#sessionConfig"><span class="hs-identifier">sessionConfig</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-26"></span><span>    </span><span class="annot"><a href="TensorFlow.Session.html#sessionTarget"><span class="hs-identifier">sessionTarget</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-27"></span><span>    </span><span class="annot"><a href="TensorFlow.Session.html#sessionTracer"><span class="hs-identifier">sessionTracer</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-28"></span><span>    </span><span class="annot"><a href="TensorFlow.Session.html#runSession"><span class="hs-identifier">runSession</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-29"></span><span>    </span><span class="annot"><a href="TensorFlow.Session.html#runSessionWithOptions"><span class="hs-identifier">runSessionWithOptions</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-30"></span><span>    </span><span class="annot"><a href="TensorFlow.Build.html#MonadBuild"><span class="hs-identifier">MonadBuild</span></a></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-31"></span><span>    </span><span class="annot"><a href="TensorFlow.Session.html#extend"><span class="hs-identifier">extend</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-32"></span><span>    </span><span class="annot"><a href="TensorFlow.Build.html#addGraphDef"><span class="hs-identifier">addGraphDef</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-33"></span><span>    </span><span class="annot"><a href="TensorFlow.Session.html#run"><span class="hs-identifier">run</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-34"></span><span>    </span><span class="annot"><a href="TensorFlow.Session.html#runWithFeeds"><span class="hs-identifier">runWithFeeds</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-35"></span><span>    </span><span class="annot"><a href="TensorFlow.Session.html#run_"><span class="hs-identifier">run_</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-36"></span><span>    </span><span class="annot"><a href="TensorFlow.Session.html#runWithFeeds_"><span class="hs-identifier">runWithFeeds_</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-37"></span><span>    </span><span class="annot"><a href="TensorFlow.Session.html#asyncProdNodes"><span class="hs-identifier">asyncProdNodes</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-38"></span><span>    </span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-39"></span><span>
+</span><span id="line-40"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Message</span></span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">defMessage</span></span><span class="hs-special">)</span><span>
+</span><span id="line-41"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Monad</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">forever</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">unless</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">void</span></span><span class="hs-special">)</span><span>
+</span><span id="line-42"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Monad.Catch</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">MonadThrow</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">MonadCatch</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">MonadMask</span></span><span class="hs-special">)</span><span>
+</span><span id="line-43"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Monad.IO.Class</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">MonadIO</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">liftIO</span></span><span class="hs-special">)</span><span>
+</span><span id="line-44"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Monad.Trans.Class</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">MonadTrans</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">lift</span></span><span class="hs-special">)</span><span>
+</span><span id="line-45"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Monad.Trans.Reader</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">ReaderT</span></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">ask</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">asks</span></span><span class="hs-special">)</span><span>
+</span><span id="line-46"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.ByteString</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">ByteString</span></span><span class="hs-special">)</span><span>
+</span><span id="line-47"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Default</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Default</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">def</span></span><span class="hs-special">)</span><span>
+</span><span id="line-48"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">showMessage</span></span><span class="hs-special">)</span><span>
+</span><span id="line-49"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Set</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Set</span></span><span class="hs-special">)</span><span>
+</span><span id="line-50"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text.Encoding</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">encodeUtf8</span></span><span class="hs-special">)</span><span>
+</span><span id="line-51"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Lens.Family2</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Lens'</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-operator">(^.)</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-operator">(&amp;)</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-operator">(.~)</span></span><span class="hs-special">)</span><span>
+</span><span id="line-52"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Lens.Family2.Unchecked</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">lens</span></span><span class="hs-special">)</span><span>
+</span><span id="line-53"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Proto.Tensorflow.Core.Framework.Graph</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">GraphDef</span></span><span class="hs-special">)</span><span>
+</span><span id="line-54"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Proto.Tensorflow.Core.Framework.Graph_Fields</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">node</span></span><span class="hs-special">)</span><span>
+</span><span id="line-55"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Proto.Tensorflow.Core.Protobuf.Config</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">ConfigProto</span></span><span class="hs-special">)</span><span>
+</span><span id="line-56"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="TensorFlow.Build.html"><span class="hs-identifier">TensorFlow.Build</span></a></span><span>
+</span><span id="line-57"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="TensorFlow.Nodes.html"><span class="hs-identifier">TensorFlow.Nodes</span></a></span><span>
+</span><span id="line-58"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="TensorFlow.Output.html"><span class="hs-identifier">TensorFlow.Output</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="TensorFlow.Output.html#NodeName"><span class="hs-identifier">NodeName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Output.html#unNodeName"><span class="hs-identifier">unNodeName</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-59"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html"><span class="hs-identifier">TensorFlow.Tensor</span></a></span><span>
+</span><span id="line-60"></span><span>
+</span><span id="line-61"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ByteString.Builder</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Builder</span></span><span>
+</span><span id="line-62"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.Map.Strict</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Map</span></span><span>
+</span><span id="line-63"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.Set</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Set</span></span><span>
+</span><span id="line-64"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><a href="TensorFlow.Internal.FFI.html"><span class="hs-identifier">TensorFlow.Internal.FFI</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">FFI</span></span><span>
+</span><span id="line-65"></span><span>
+</span><span id="line-66"></span><span class="hs-comment">-- | An action for logging.</span><span>
+</span><span id="line-67"></span><span class="hs-keyword">type</span><span> </span><span id="Tracer"><span class="annot"><a href="TensorFlow.Session.html#Tracer"><span class="hs-identifier hs-var">Tracer</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Builder.Builder</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-68"></span><span>
+</span><span id="line-69"></span><span class="hs-comment">-- Common state threaded through the session.</span><span>
+</span><span id="line-70"></span><span class="hs-keyword">data</span><span> </span><span id="SessionState"><span class="annot"><a href="TensorFlow.Session.html#SessionState"><span class="hs-identifier hs-var">SessionState</span></a></span></span><span>
+</span><span id="line-71"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span id="SessionState"><span class="annot"><a href="TensorFlow.Session.html#SessionState"><span class="hs-identifier hs-var">SessionState</span></a></span></span><span> </span><span class="hs-special">{</span><span>
+</span><span id="line-72"></span><span>          </span><span id="rawSession"><span class="annot"><span class="annottext">SessionState -&gt; Session
+</span><a href="TensorFlow.Session.html#rawSession"><span class="hs-identifier hs-var hs-var">rawSession</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="TensorFlow.Internal.Raw.html#Session"><span class="hs-identifier hs-type">FFI.Session</span></a></span><span>
+</span><span id="line-73"></span><span>        </span><span class="hs-special">,</span><span> </span><span id="asyncCollector"><span class="annot"><span class="annottext">SessionState -&gt; IO () -&gt; IO ()
+</span><a href="TensorFlow.Session.html#asyncCollector"><span class="hs-identifier hs-var hs-var">asyncCollector</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-74"></span><span>          </span><span class="hs-comment">-- ^ Starts the given action concurrently.</span><span>
+</span><span id="line-75"></span><span>        </span><span class="hs-special">,</span><span> </span><span id="tracer"><span class="annot"><span class="annottext">SessionState -&gt; Tracer
+</span><a href="TensorFlow.Session.html#tracer"><span class="hs-identifier hs-var hs-var">tracer</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="TensorFlow.Session.html#Tracer"><span class="hs-identifier hs-type">Tracer</span></a></span><span>
+</span><span id="line-76"></span><span>        </span><span class="hs-special">}</span><span>
+</span><span id="line-77"></span><span>
+</span><span id="line-78"></span><span class="hs-keyword">newtype</span><span> </span><span id="SessionT"><span class="annot"><a href="TensorFlow.Session.html#SessionT"><span class="hs-identifier hs-var">SessionT</span></a></span></span><span> </span><span id="local-6989586621679166914"><span class="annot"><a href="#local-6989586621679166914"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621679166913"><span class="annot"><a href="#local-6989586621679166913"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-79"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span id="Session"><span class="annot"><a href="TensorFlow.Session.html#Session"><span class="hs-identifier hs-var">Session</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ReaderT</span></span><span> </span><span class="annot"><a href="TensorFlow.Session.html#SessionState"><span class="hs-identifier hs-type">SessionState</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="TensorFlow.Build.html#BuildT"><span class="hs-identifier hs-type">BuildT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679166914"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621679166913"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-80"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679166744"><span id="local-6989586621679166746"><span class="annot"><span class="annottext">a -&gt; SessionT m b -&gt; SessionT m a
+(a -&gt; b) -&gt; SessionT m a -&gt; SessionT m b
+(forall a b. (a -&gt; b) -&gt; SessionT m a -&gt; SessionT m b)
+-&gt; (forall a b. a -&gt; SessionT m b -&gt; SessionT m a)
+-&gt; Functor (SessionT m)
+forall a b. a -&gt; SessionT m b -&gt; SessionT m a
+forall a b. (a -&gt; b) -&gt; SessionT m a -&gt; SessionT m b
+forall (m :: * -&gt; *) a b.
+Functor m =&gt;
+a -&gt; SessionT m b -&gt; SessionT m a
+forall (m :: * -&gt; *) a b.
+Functor m =&gt;
+(a -&gt; b) -&gt; SessionT m a -&gt; SessionT m b
+forall (f :: * -&gt; *).
+(forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
+&lt;$ :: a -&gt; SessionT m b -&gt; SessionT m a
+$c&lt;$ :: forall (m :: * -&gt; *) a b.
+Functor m =&gt;
+a -&gt; SessionT m b -&gt; SessionT m a
+fmap :: (a -&gt; b) -&gt; SessionT m a -&gt; SessionT m b
+$cfmap :: forall (m :: * -&gt; *) a b.
+Functor m =&gt;
+(a -&gt; b) -&gt; SessionT m a -&gt; SessionT m b
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679166732"><span id="local-6989586621679166734"><span id="local-6989586621679166736"><span id="local-6989586621679166738"><span id="local-6989586621679166740"><span class="annot"><span class="annottext">Functor (SessionT m)
+a -&gt; SessionT m a
+Functor (SessionT m) =&gt;
+(forall a. a -&gt; SessionT m a)
+-&gt; (forall a b.
+    SessionT m (a -&gt; b) -&gt; SessionT m a -&gt; SessionT m b)
+-&gt; (forall a b c.
+    (a -&gt; b -&gt; c) -&gt; SessionT m a -&gt; SessionT m b -&gt; SessionT m c)
+-&gt; (forall a b. SessionT m a -&gt; SessionT m b -&gt; SessionT m b)
+-&gt; (forall a b. SessionT m a -&gt; SessionT m b -&gt; SessionT m a)
+-&gt; Applicative (SessionT m)
+SessionT m a -&gt; SessionT m b -&gt; SessionT m b
+SessionT m a -&gt; SessionT m b -&gt; SessionT m a
+SessionT m (a -&gt; b) -&gt; SessionT m a -&gt; SessionT m b
+(a -&gt; b -&gt; c) -&gt; SessionT m a -&gt; SessionT m b -&gt; SessionT m c
+forall a. a -&gt; SessionT m a
+forall a b. SessionT m a -&gt; SessionT m b -&gt; SessionT m a
+forall a b. SessionT m a -&gt; SessionT m b -&gt; SessionT m b
+forall a b. SessionT m (a -&gt; b) -&gt; SessionT m a -&gt; SessionT m b
+forall a b c.
+(a -&gt; b -&gt; c) -&gt; SessionT m a -&gt; SessionT m b -&gt; SessionT m c
+forall (m :: * -&gt; *). Monad m =&gt; Functor (SessionT m)
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; SessionT m a
+forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+SessionT m a -&gt; SessionT m b -&gt; SessionT m a
+forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+SessionT m a -&gt; SessionT m b -&gt; SessionT m b
+forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+SessionT m (a -&gt; b) -&gt; SessionT m a -&gt; SessionT m b
+forall (m :: * -&gt; *) a b c.
+Monad m =&gt;
+(a -&gt; b -&gt; c) -&gt; SessionT m a -&gt; SessionT m b -&gt; SessionT m c
+forall (f :: * -&gt; *).
+Functor f =&gt;
+(forall a. a -&gt; f a)
+-&gt; (forall a b. f (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b c. (a -&gt; b -&gt; c) -&gt; f a -&gt; f b -&gt; f c)
+-&gt; (forall a b. f a -&gt; f b -&gt; f b)
+-&gt; (forall a b. f a -&gt; f b -&gt; f a)
+-&gt; Applicative f
+&lt;* :: SessionT m a -&gt; SessionT m b -&gt; SessionT m a
+$c&lt;* :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+SessionT m a -&gt; SessionT m b -&gt; SessionT m a
+*&gt; :: SessionT m a -&gt; SessionT m b -&gt; SessionT m b
+$c*&gt; :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+SessionT m a -&gt; SessionT m b -&gt; SessionT m b
+liftA2 :: (a -&gt; b -&gt; c) -&gt; SessionT m a -&gt; SessionT m b -&gt; SessionT m c
+$cliftA2 :: forall (m :: * -&gt; *) a b c.
+Monad m =&gt;
+(a -&gt; b -&gt; c) -&gt; SessionT m a -&gt; SessionT m b -&gt; SessionT m c
+&lt;*&gt; :: SessionT m (a -&gt; b) -&gt; SessionT m a -&gt; SessionT m b
+$c&lt;*&gt; :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+SessionT m (a -&gt; b) -&gt; SessionT m a -&gt; SessionT m b
+pure :: a -&gt; SessionT m a
+$cpure :: forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; SessionT m a
+$cp1Applicative :: forall (m :: * -&gt; *). Monad m =&gt; Functor (SessionT m)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Applicative</span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679166724"><span id="local-6989586621679166726"><span id="local-6989586621679166728"><span class="annot"><span class="annottext">Applicative (SessionT m)
+a -&gt; SessionT m a
+Applicative (SessionT m) =&gt;
+(forall a b. SessionT m a -&gt; (a -&gt; SessionT m b) -&gt; SessionT m b)
+-&gt; (forall a b. SessionT m a -&gt; SessionT m b -&gt; SessionT m b)
+-&gt; (forall a. a -&gt; SessionT m a)
+-&gt; Monad (SessionT m)
+SessionT m a -&gt; (a -&gt; SessionT m b) -&gt; SessionT m b
+SessionT m a -&gt; SessionT m b -&gt; SessionT m b
+forall a. a -&gt; SessionT m a
+forall a b. SessionT m a -&gt; SessionT m b -&gt; SessionT m b
+forall a b. SessionT m a -&gt; (a -&gt; SessionT m b) -&gt; SessionT m b
+forall (m :: * -&gt; *). Monad m =&gt; Applicative (SessionT m)
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; SessionT m a
+forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+SessionT m a -&gt; SessionT m b -&gt; SessionT m b
+forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+SessionT m a -&gt; (a -&gt; SessionT m b) -&gt; SessionT m b
+forall (m :: * -&gt; *).
+Applicative m =&gt;
+(forall a b. m a -&gt; (a -&gt; m b) -&gt; m b)
+-&gt; (forall a b. m a -&gt; m b -&gt; m b)
+-&gt; (forall a. a -&gt; m a)
+-&gt; Monad m
+return :: a -&gt; SessionT m a
+$creturn :: forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; SessionT m a
+&gt;&gt; :: SessionT m a -&gt; SessionT m b -&gt; SessionT m b
+$c&gt;&gt; :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+SessionT m a -&gt; SessionT m b -&gt; SessionT m b
+&gt;&gt;= :: SessionT m a -&gt; (a -&gt; SessionT m b) -&gt; SessionT m b
+$c&gt;&gt;= :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+SessionT m a -&gt; (a -&gt; SessionT m b) -&gt; SessionT m b
+$cp1Monad :: forall (m :: * -&gt; *). Monad m =&gt; Applicative (SessionT m)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Monad</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679166720"><span class="annot"><span class="annottext">Monad (SessionT m)
+Monad (SessionT m) =&gt;
+(forall a. IO a -&gt; SessionT m a) -&gt; MonadIO (SessionT m)
+IO a -&gt; SessionT m a
+forall a. IO a -&gt; SessionT m a
+forall (m :: * -&gt; *).
+Monad m =&gt;
+(forall a. IO a -&gt; m a) -&gt; MonadIO m
+forall (m :: * -&gt; *). MonadIO m =&gt; Monad (SessionT m)
+forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; SessionT m a
+liftIO :: IO a -&gt; SessionT m a
+$cliftIO :: forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; SessionT m a
+$cp1MonadIO :: forall (m :: * -&gt; *). MonadIO m =&gt; Monad (SessionT m)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">MonadIO</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679166716"><span class="annot"><span class="annottext">Monad (SessionT m)
+e -&gt; SessionT m a
+Monad (SessionT m) =&gt;
+(forall e a. Exception e =&gt; e -&gt; SessionT m a)
+-&gt; MonadThrow (SessionT m)
+forall e a. Exception e =&gt; e -&gt; SessionT m a
+forall (m :: * -&gt; *).
+Monad m =&gt;
+(forall e a. Exception e =&gt; e -&gt; m a) -&gt; MonadThrow m
+forall (m :: * -&gt; *). MonadThrow m =&gt; Monad (SessionT m)
+forall (m :: * -&gt; *) e a.
+(MonadThrow m, Exception e) =&gt;
+e -&gt; SessionT m a
+throwM :: e -&gt; SessionT m a
+$cthrowM :: forall (m :: * -&gt; *) e a.
+(MonadThrow m, Exception e) =&gt;
+e -&gt; SessionT m a
+$cp1MonadThrow :: forall (m :: * -&gt; *). MonadThrow m =&gt; Monad (SessionT m)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">MonadThrow</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679166712"><span class="annot"><span class="annottext">MonadThrow (SessionT m)
+MonadThrow (SessionT m) =&gt;
+(forall e a.
+ Exception e =&gt;
+ SessionT m a -&gt; (e -&gt; SessionT m a) -&gt; SessionT m a)
+-&gt; MonadCatch (SessionT m)
+SessionT m a -&gt; (e -&gt; SessionT m a) -&gt; SessionT m a
+forall e a.
+Exception e =&gt;
+SessionT m a -&gt; (e -&gt; SessionT m a) -&gt; SessionT m a
+forall (m :: * -&gt; *). MonadCatch m =&gt; MonadThrow (SessionT m)
+forall (m :: * -&gt; *) e a.
+(MonadCatch m, Exception e) =&gt;
+SessionT m a -&gt; (e -&gt; SessionT m a) -&gt; SessionT m a
+forall (m :: * -&gt; *).
+MonadThrow m =&gt;
+(forall e a. Exception e =&gt; m a -&gt; (e -&gt; m a) -&gt; m a)
+-&gt; MonadCatch m
+catch :: SessionT m a -&gt; (e -&gt; SessionT m a) -&gt; SessionT m a
+$ccatch :: forall (m :: * -&gt; *) e a.
+(MonadCatch m, Exception e) =&gt;
+SessionT m a -&gt; (e -&gt; SessionT m a) -&gt; SessionT m a
+$cp1MonadCatch :: forall (m :: * -&gt; *). MonadCatch m =&gt; MonadThrow (SessionT m)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">MonadCatch</span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-81"></span><span>              </span><span id="local-6989586621679166704"><span id="local-6989586621679166706"><span id="local-6989586621679166708"><span class="annot"><span class="annottext">MonadCatch (SessionT m)
+MonadCatch (SessionT m) =&gt;
+(forall b.
+ ((forall a. SessionT m a -&gt; SessionT m a) -&gt; SessionT m b)
+ -&gt; SessionT m b)
+-&gt; (forall b.
+    ((forall a. SessionT m a -&gt; SessionT m a) -&gt; SessionT m b)
+    -&gt; SessionT m b)
+-&gt; (forall a b c.
+    SessionT m a
+    -&gt; (a -&gt; ExitCase b -&gt; SessionT m c)
+    -&gt; (a -&gt; SessionT m b)
+    -&gt; SessionT m (b, c))
+-&gt; MonadMask (SessionT m)
+SessionT m a
+-&gt; (a -&gt; ExitCase b -&gt; SessionT m c)
+-&gt; (a -&gt; SessionT m b)
+-&gt; SessionT m (b, c)
+((forall a. SessionT m a -&gt; SessionT m a) -&gt; SessionT m b)
+-&gt; SessionT m b
+((forall a. SessionT m a -&gt; SessionT m a) -&gt; SessionT m b)
+-&gt; SessionT m b
+forall b.
+((forall a. SessionT m a -&gt; SessionT m a) -&gt; SessionT m b)
+-&gt; SessionT m b
+forall a b c.
+SessionT m a
+-&gt; (a -&gt; ExitCase b -&gt; SessionT m c)
+-&gt; (a -&gt; SessionT m b)
+-&gt; SessionT m (b, c)
+forall (m :: * -&gt; *).
+MonadCatch m =&gt;
+(forall b. ((forall a. m a -&gt; m a) -&gt; m b) -&gt; m b)
+-&gt; (forall b. ((forall a. m a -&gt; m a) -&gt; m b) -&gt; m b)
+-&gt; (forall a b c.
+    m a -&gt; (a -&gt; ExitCase b -&gt; m c) -&gt; (a -&gt; m b) -&gt; m (b, c))
+-&gt; MonadMask m
+forall (m :: * -&gt; *). MonadMask m =&gt; MonadCatch (SessionT m)
+forall (m :: * -&gt; *) b.
+MonadMask m =&gt;
+((forall a. SessionT m a -&gt; SessionT m a) -&gt; SessionT m b)
+-&gt; SessionT m b
+forall (m :: * -&gt; *) a b c.
+MonadMask m =&gt;
+SessionT m a
+-&gt; (a -&gt; ExitCase b -&gt; SessionT m c)
+-&gt; (a -&gt; SessionT m b)
+-&gt; SessionT m (b, c)
+generalBracket :: SessionT m a
+-&gt; (a -&gt; ExitCase b -&gt; SessionT m c)
+-&gt; (a -&gt; SessionT m b)
+-&gt; SessionT m (b, c)
+$cgeneralBracket :: forall (m :: * -&gt; *) a b c.
+MonadMask m =&gt;
+SessionT m a
+-&gt; (a -&gt; ExitCase b -&gt; SessionT m c)
+-&gt; (a -&gt; SessionT m b)
+-&gt; SessionT m (b, c)
+uninterruptibleMask :: ((forall a. SessionT m a -&gt; SessionT m a) -&gt; SessionT m b)
+-&gt; SessionT m b
+$cuninterruptibleMask :: forall (m :: * -&gt; *) b.
+MonadMask m =&gt;
+((forall a. SessionT m a -&gt; SessionT m a) -&gt; SessionT m b)
+-&gt; SessionT m b
+mask :: ((forall a. SessionT m a -&gt; SessionT m a) -&gt; SessionT m b)
+-&gt; SessionT m b
+$cmask :: forall (m :: * -&gt; *) b.
+MonadMask m =&gt;
+((forall a. SessionT m a -&gt; SessionT m a) -&gt; SessionT m b)
+-&gt; SessionT m b
+$cp1MonadMask :: forall (m :: * -&gt; *). MonadMask m =&gt; MonadCatch (SessionT m)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">MonadMask</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679166700"><span class="annot"><span class="annottext">Monad (SessionT m)
+Monad (SessionT m) =&gt;
+(forall a. String -&gt; SessionT m a) -&gt; MonadFail (SessionT m)
+String -&gt; SessionT m a
+forall a. String -&gt; SessionT m a
+forall (m :: * -&gt; *).
+Monad m =&gt;
+(forall a. String -&gt; m a) -&gt; MonadFail m
+forall (m :: * -&gt; *). MonadFail m =&gt; Monad (SessionT m)
+forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; SessionT m a
+fail :: String -&gt; SessionT m a
+$cfail :: forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; SessionT m a
+$cp1MonadFail :: forall (m :: * -&gt; *). MonadFail m =&gt; Monad (SessionT m)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">MonadFail</span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-82"></span><span>
+</span><span id="line-83"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadTrans</span></span><span> </span><span class="annot"><a href="TensorFlow.Session.html#SessionT"><span class="hs-identifier hs-type">SessionT</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-84"></span><span>  </span><span id="local-6989586621679166696"><span class="annot"><span class="annottext">lift :: m a -&gt; SessionT m a
+</span><a href="#local-6989586621679166696"><span class="hs-identifier hs-var hs-var hs-var hs-var">lift</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ReaderT SessionState (BuildT m) a -&gt; SessionT m a
+forall (m :: * -&gt; *) a.
+ReaderT SessionState (BuildT m) a -&gt; SessionT m a
+</span><a href="TensorFlow.Session.html#Session"><span class="hs-identifier hs-var">Session</span></a></span><span> </span><span class="annot"><span class="annottext">(ReaderT SessionState (BuildT m) a -&gt; SessionT m a)
+-&gt; (m a -&gt; ReaderT SessionState (BuildT m) a)
+-&gt; m a
+-&gt; SessionT m a
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">BuildT m a -&gt; ReaderT SessionState (BuildT m) a
+forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
+(MonadTrans t, Monad m) =&gt;
+m a -&gt; t m a
+</span><span class="hs-identifier hs-var">lift</span></span><span> </span><span class="annot"><span class="annottext">(BuildT m a -&gt; ReaderT SessionState (BuildT m) a)
+-&gt; (m a -&gt; BuildT m a) -&gt; m a -&gt; ReaderT SessionState (BuildT m) a
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">m a -&gt; BuildT m a
+forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
+(MonadTrans t, Monad m) =&gt;
+m a -&gt; t m a
+</span><span class="hs-identifier hs-var">lift</span></span><span>
+</span><span id="line-85"></span><span>
+</span><span id="line-86"></span><span class="hs-keyword">type</span><span> </span><span id="Session"><span class="annot"><a href="TensorFlow.Session.html#Session"><span class="hs-identifier hs-var">Session</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="TensorFlow.Session.html#SessionT"><span class="hs-identifier hs-type">SessionT</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span>
+</span><span id="line-87"></span><span>
+</span><span id="line-88"></span><span class="hs-comment">-- | Run 'Session' actions in a new TensorFlow session.</span><span>
+</span><span id="line-89"></span><span id="local-6989586621679166693"><span id="local-6989586621679166694"><span class="annot"><a href="TensorFlow.Session.html#runSession"><span class="hs-identifier hs-type">runSession</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadMask</span></span><span> </span><span class="annot"><a href="#local-6989586621679166694"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621679166694"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Session.html#SessionT"><span class="hs-identifier hs-type">SessionT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679166694"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679166693"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679166694"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679166693"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
+</span><span id="line-90"></span><span id="runSession"><span class="annot"><span class="annottext">runSession :: SessionT m a -&gt; m a
+</span><a href="TensorFlow.Session.html#runSession"><span class="hs-identifier hs-var hs-var">runSession</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options -&gt; SessionT m a -&gt; m a
+forall (m :: * -&gt; *) a.
+(MonadMask m, MonadIO m) =&gt;
+Options -&gt; SessionT m a -&gt; m a
+</span><a href="TensorFlow.Session.html#runSessionWithOptions"><span class="hs-identifier hs-var">runSessionWithOptions</span></a></span><span> </span><span class="annot"><span class="annottext">Options
+forall a. Default a =&gt; a
+</span><span class="hs-identifier hs-var">def</span></span><span>
+</span><span id="line-91"></span><span>
+</span><span id="line-92"></span><span class="hs-comment">-- | Customization for session. Use the lenses to update:</span><span>
+</span><span id="line-93"></span><span class="hs-comment">-- 'sessionTarget', 'sessionTracer', 'sessionConfig'.</span><span>
+</span><span id="line-94"></span><span class="hs-keyword">data</span><span> </span><span id="Options"><span class="annot"><a href="TensorFlow.Session.html#Options"><span class="hs-identifier hs-var">Options</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Options"><span class="annot"><a href="TensorFlow.Session.html#Options"><span class="hs-identifier hs-var">Options</span></a></span></span><span>
+</span><span id="line-95"></span><span>    </span><span class="hs-special">{</span><span> </span><span id="_sessionTarget"><span class="annot"><span class="annottext">Options -&gt; ByteString
+</span><a href="TensorFlow.Session.html#_sessionTarget"><span class="hs-identifier hs-var hs-var">_sessionTarget</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span>
+</span><span id="line-96"></span><span>    </span><span class="hs-special">,</span><span> </span><span id="_sessionConfig"><span class="annot"><span class="annottext">Options -&gt; ConfigProto
+</span><a href="TensorFlow.Session.html#_sessionConfig"><span class="hs-identifier hs-var hs-var">_sessionConfig</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ConfigProto</span></span><span>
+</span><span id="line-97"></span><span>    </span><span class="hs-special">,</span><span> </span><span id="_sessionTracer"><span class="annot"><span class="annottext">Options -&gt; Tracer
+</span><a href="TensorFlow.Session.html#_sessionTracer"><span class="hs-identifier hs-var hs-var">_sessionTracer</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="TensorFlow.Session.html#Tracer"><span class="hs-identifier hs-type">Tracer</span></a></span><span>
+</span><span id="line-98"></span><span>    </span><span class="hs-special">}</span><span>
+</span><span id="line-99"></span><span>
+</span><span id="line-100"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Default</span></span><span> </span><span class="annot"><a href="TensorFlow.Session.html#Options"><span class="hs-identifier hs-type">Options</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-101"></span><span>    </span><span id="local-6989586621679166686"><span class="annot"><span class="annottext">def :: Options
+</span><a href="#local-6989586621679166686"><span class="hs-identifier hs-var hs-var hs-var hs-var">def</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Options :: ByteString -&gt; ConfigProto -&gt; Tracer -&gt; Options
+</span><a href="TensorFlow.Session.html#Options"><span class="hs-identifier hs-type hs-type">Options</span></a></span><span>
+</span><span id="line-102"></span><span>          </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_sessionTarget :: ByteString
+</span><a href="TensorFlow.Session.html#_sessionTarget"><span class="hs-identifier hs-var">_sessionTarget</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-string">&quot;&quot;</span></span><span>
+</span><span id="line-103"></span><span>          </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">_sessionConfig :: ConfigProto
+</span><a href="TensorFlow.Session.html#_sessionConfig"><span class="hs-identifier hs-var">_sessionConfig</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ConfigProto
+forall msg. Message msg =&gt; msg
+</span><span class="hs-identifier hs-var">defMessage</span></span><span>
+</span><span id="line-104"></span><span>          </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">_sessionTracer :: Tracer
+</span><a href="TensorFlow.Session.html#_sessionTracer"><span class="hs-identifier hs-var">_sessionTracer</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">IO () -&gt; Tracer
+forall a b. a -&gt; b -&gt; a
+</span><span class="hs-identifier hs-var">const</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">() -&gt; IO ()
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-105"></span><span>          </span><span class="hs-special">}</span><span>
+</span><span id="line-106"></span><span>
+</span><span id="line-107"></span><span class="hs-comment">-- | Target can be: &quot;local&quot;, ip:port, host:port.</span><span>
+</span><span id="line-108"></span><span class="hs-comment">-- The set of supported factories depends on the linked in libraries.</span><span>
+</span><span id="line-109"></span><span class="annot"><a href="TensorFlow.Session.html#sessionTarget"><span class="hs-identifier hs-type">sessionTarget</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Lens'</span></span><span> </span><span class="annot"><a href="TensorFlow.Session.html#Options"><span class="hs-identifier hs-type">Options</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span>
+</span><span id="line-110"></span><span id="sessionTarget"><span class="annot"><span class="annottext">sessionTarget :: LensLike' f Options ByteString
+</span><a href="TensorFlow.Session.html#sessionTarget"><span class="hs-identifier hs-var hs-var">sessionTarget</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Options -&gt; ByteString)
+-&gt; (Options -&gt; ByteString -&gt; Options)
+-&gt; Lens Options Options ByteString ByteString
+forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span class="hs-identifier hs-var">lens</span></span><span> </span><span class="annot"><span class="annottext">Options -&gt; ByteString
+</span><a href="TensorFlow.Session.html#_sessionTarget"><span class="hs-identifier hs-var hs-var">_sessionTarget</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621679166683"><span class="annot"><span class="annottext">g :: Options
+</span><a href="#local-6989586621679166683"><span class="hs-identifier hs-var">g</span></a></span></span><span> </span><span id="local-6989586621679166682"><span class="annot"><span class="annottext">x :: ByteString
+</span><a href="#local-6989586621679166682"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Options
+</span><a href="#local-6989586621679166683"><span class="hs-identifier hs-var">g</span></a></span><span> </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_sessionTarget :: ByteString
+</span><a href="TensorFlow.Session.html#_sessionTarget"><span class="hs-identifier hs-var">_sessionTarget</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679166682"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="hs-special">}</span><span class="hs-special">)</span><span>
+</span><span id="line-111"></span><span>
+</span><span id="line-112"></span><span class="hs-comment">-- | Uses the specified config for the created session.</span><span>
+</span><span id="line-113"></span><span class="annot"><a href="TensorFlow.Session.html#sessionConfig"><span class="hs-identifier hs-type">sessionConfig</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Lens'</span></span><span> </span><span class="annot"><a href="TensorFlow.Session.html#Options"><span class="hs-identifier hs-type">Options</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">ConfigProto</span></span><span>
+</span><span id="line-114"></span><span id="sessionConfig"><span class="annot"><span class="annottext">sessionConfig :: LensLike' f Options ConfigProto
+</span><a href="TensorFlow.Session.html#sessionConfig"><span class="hs-identifier hs-var hs-var">sessionConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Options -&gt; ConfigProto)
+-&gt; (Options -&gt; ConfigProto -&gt; Options)
+-&gt; Lens Options Options ConfigProto ConfigProto
+forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span class="hs-identifier hs-var">lens</span></span><span> </span><span class="annot"><span class="annottext">Options -&gt; ConfigProto
+</span><a href="TensorFlow.Session.html#_sessionConfig"><span class="hs-identifier hs-var hs-var">_sessionConfig</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621679166681"><span class="annot"><span class="annottext">g :: Options
+</span><a href="#local-6989586621679166681"><span class="hs-identifier hs-var">g</span></a></span></span><span> </span><span id="local-6989586621679166680"><span class="annot"><span class="annottext">x :: ConfigProto
+</span><a href="#local-6989586621679166680"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Options
+</span><a href="#local-6989586621679166681"><span class="hs-identifier hs-var">g</span></a></span><span> </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_sessionConfig :: ConfigProto
+</span><a href="TensorFlow.Session.html#_sessionConfig"><span class="hs-identifier hs-var">_sessionConfig</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ConfigProto
+</span><a href="#local-6989586621679166680"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="hs-special">}</span><span class="hs-special">)</span><span>
+</span><span id="line-115"></span><span>
+</span><span id="line-116"></span><span class="hs-comment">-- | Uses the given logger to monitor session progress.</span><span>
+</span><span id="line-117"></span><span class="annot"><a href="TensorFlow.Session.html#sessionTracer"><span class="hs-identifier hs-type">sessionTracer</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Lens'</span></span><span> </span><span class="annot"><a href="TensorFlow.Session.html#Options"><span class="hs-identifier hs-type">Options</span></a></span><span> </span><span class="annot"><a href="TensorFlow.Session.html#Tracer"><span class="hs-identifier hs-type">Tracer</span></a></span><span>
+</span><span id="line-118"></span><span id="sessionTracer"><span class="annot"><span class="annottext">sessionTracer :: LensLike' f Options Tracer
+</span><a href="TensorFlow.Session.html#sessionTracer"><span class="hs-identifier hs-var hs-var">sessionTracer</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Options -&gt; Tracer)
+-&gt; (Options -&gt; Tracer -&gt; Options)
+-&gt; Lens Options Options Tracer Tracer
+forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span class="hs-identifier hs-var">lens</span></span><span> </span><span class="annot"><span class="annottext">Options -&gt; Tracer
+</span><a href="TensorFlow.Session.html#_sessionTracer"><span class="hs-identifier hs-var hs-var">_sessionTracer</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621679166679"><span class="annot"><span class="annottext">g :: Options
+</span><a href="#local-6989586621679166679"><span class="hs-identifier hs-var">g</span></a></span></span><span> </span><span id="local-6989586621679166678"><span class="annot"><span class="annottext">x :: Tracer
+</span><a href="#local-6989586621679166678"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Options
+</span><a href="#local-6989586621679166679"><span class="hs-identifier hs-var">g</span></a></span><span> </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_sessionTracer :: Tracer
+</span><a href="TensorFlow.Session.html#_sessionTracer"><span class="hs-identifier hs-var">_sessionTracer</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Tracer
+</span><a href="#local-6989586621679166678"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="hs-special">}</span><span class="hs-special">)</span><span>
+</span><span id="line-119"></span><span>
+</span><span id="line-120"></span><span class="hs-comment">-- | Run 'Session' actions in a new TensorFlow session created with</span><span>
+</span><span id="line-121"></span><span class="hs-comment">-- the given option setter actions ('sessionTarget', 'sessionConfig').</span><span>
+</span><span id="line-122"></span><span id="local-6989586621679166905"><span id="local-6989586621679166906"><span class="annot"><a href="TensorFlow.Session.html#runSessionWithOptions"><span class="hs-identifier hs-type">runSessionWithOptions</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadMask</span></span><span> </span><span class="annot"><a href="#local-6989586621679166906"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621679166906"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Session.html#Options"><span class="hs-identifier hs-type">Options</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Session.html#SessionT"><span class="hs-identifier hs-type">SessionT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679166906"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679166905"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679166906"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679166905"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
+</span><span id="line-123"></span><span id="runSessionWithOptions"><span class="annot"><span class="annottext">runSessionWithOptions :: Options -&gt; SessionT m a -&gt; m a
+</span><a href="TensorFlow.Session.html#runSessionWithOptions"><span class="hs-identifier hs-var hs-var">runSessionWithOptions</span></a></span></span><span> </span><span id="local-6989586621679166677"><span class="annot"><span class="annottext">options :: Options
+</span><a href="#local-6989586621679166677"><span class="hs-identifier hs-var">options</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="TensorFlow.Session.html#Session"><span class="hs-identifier hs-type">Session</span></a></span><span> </span><span id="local-6989586621679166676"><span class="annot"><span class="annottext">m :: ReaderT SessionState (BuildT m) a
+</span><a href="#local-6989586621679166676"><span class="hs-identifier hs-var">m</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-124"></span><span>    </span><span class="annot"><span class="annottext">(SessionOptions -&gt; IO ())
+-&gt; ((IO () -&gt; IO ()) -&gt; Session -&gt; m a) -&gt; m a
+forall (m :: * -&gt; *) a.
+(MonadIO m, MonadMask m) =&gt;
+(SessionOptions -&gt; IO ())
+-&gt; ((IO () -&gt; IO ()) -&gt; Session -&gt; m a) -&gt; m a
+</span><a href="TensorFlow.Internal.FFI.html#withSession"><span class="hs-identifier hs-var">FFI.withSession</span></a></span><span> </span><span class="annot"><span class="annottext">SessionOptions -&gt; IO ()
+</span><a href="#local-6989586621679166674"><span class="hs-identifier hs-var">applyOptions</span></a></span><span> </span><span class="annot"><span class="annottext">(((IO () -&gt; IO ()) -&gt; Session -&gt; m a) -&gt; m a)
+-&gt; ((IO () -&gt; IO ()) -&gt; Session -&gt; m a) -&gt; m a
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-125"></span><span>        </span><span class="hs-glyph">\</span><span id="local-6989586621679166673"><span class="annot"><span class="annottext">as :: IO () -&gt; IO ()
+</span><a href="#local-6989586621679166673"><span class="hs-keyword hs-var">as</span></a></span></span><span> </span><span id="local-6989586621679166672"><span class="annot"><span class="annottext">rs :: Session
+</span><a href="#local-6989586621679166672"><span class="hs-identifier hs-var">rs</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-126"></span><span>            </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679166671"><span class="annot"><span class="annottext">initState :: SessionState
+</span><a href="#local-6989586621679166671"><span class="hs-identifier hs-var hs-var">initState</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Session -&gt; (IO () -&gt; IO ()) -&gt; Tracer -&gt; SessionState
+</span><a href="TensorFlow.Session.html#SessionState"><span class="hs-identifier hs-var">SessionState</span></a></span><span> </span><span class="annot"><span class="annottext">Session
+</span><a href="#local-6989586621679166672"><span class="hs-identifier hs-var">rs</span></a></span><span> </span><span class="annot"><span class="annottext">IO () -&gt; IO ()
+</span><a href="#local-6989586621679166673"><span class="hs-keyword hs-var">as</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Options
+</span><a href="#local-6989586621679166677"><span class="hs-identifier hs-var">options</span></a></span><span> </span><span class="annot"><span class="annottext">Options -&gt; FoldLike Tracer Options Options Tracer Tracer -&gt; Tracer
+forall s a t b. s -&gt; FoldLike a s t a b -&gt; a
+</span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">FoldLike Tracer Options Options Tracer Tracer
+Lens Options Options Tracer Tracer
+</span><a href="TensorFlow.Session.html#sessionTracer"><span class="hs-identifier hs-var">sessionTracer</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-127"></span><span>            </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">BuildT m a -&gt; m a
+forall (m :: * -&gt; *) a. Monad m =&gt; BuildT m a -&gt; m a
+</span><a href="TensorFlow.Build.html#evalBuildT"><span class="hs-identifier hs-var">evalBuildT</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ReaderT SessionState (BuildT m) a -&gt; SessionState -&gt; BuildT m a
+forall r (m :: * -&gt; *) a. ReaderT r m a -&gt; r -&gt; m a
+</span><span class="hs-identifier hs-var hs-var">runReaderT</span></span><span> </span><span class="annot"><span class="annottext">ReaderT SessionState (BuildT m) a
+</span><a href="#local-6989586621679166676"><span class="hs-identifier hs-var">m</span></a></span><span> </span><span class="annot"><span class="annottext">SessionState
+</span><a href="#local-6989586621679166671"><span class="hs-identifier hs-var">initState</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-128"></span><span>  </span><span class="hs-keyword">where</span><span> </span><span id="local-6989586621679166674"><span class="annot"><span class="annottext">applyOptions :: SessionOptions -&gt; IO ()
+</span><a href="#local-6989586621679166674"><span class="hs-identifier hs-var hs-var">applyOptions</span></a></span></span><span> </span><span id="local-6989586621679166668"><span class="annot"><span class="annottext">opt :: SessionOptions
+</span><a href="#local-6989586621679166668"><span class="hs-identifier hs-var">opt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-129"></span><span>            </span><span class="annot"><span class="annottext">ByteString -&gt; SessionOptions -&gt; IO ()
+</span><a href="TensorFlow.Internal.FFI.html#setSessionTarget"><span class="hs-identifier hs-var">FFI.setSessionTarget</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Options
+</span><a href="#local-6989586621679166677"><span class="hs-identifier hs-var">options</span></a></span><span> </span><span class="annot"><span class="annottext">Options
+-&gt; FoldLike ByteString Options Options ByteString ByteString
+-&gt; ByteString
+forall s a t b. s -&gt; FoldLike a s t a b -&gt; a
+</span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">FoldLike ByteString Options Options ByteString ByteString
+Lens Options Options ByteString ByteString
+</span><a href="TensorFlow.Session.html#sessionTarget"><span class="hs-identifier hs-var">sessionTarget</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">SessionOptions
+</span><a href="#local-6989586621679166668"><span class="hs-identifier hs-var">opt</span></a></span><span>
+</span><span id="line-130"></span><span>            </span><span class="annot"><span class="annottext">ConfigProto -&gt; SessionOptions -&gt; IO ()
+</span><a href="TensorFlow.Internal.FFI.html#setSessionConfig"><span class="hs-identifier hs-var">FFI.setSessionConfig</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Options
+</span><a href="#local-6989586621679166677"><span class="hs-identifier hs-var">options</span></a></span><span> </span><span class="annot"><span class="annottext">Options
+-&gt; FoldLike ConfigProto Options Options ConfigProto ConfigProto
+-&gt; ConfigProto
+forall s a t b. s -&gt; FoldLike a s t a b -&gt; a
+</span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">FoldLike ConfigProto Options Options ConfigProto ConfigProto
+Lens Options Options ConfigProto ConfigProto
+</span><a href="TensorFlow.Session.html#sessionConfig"><span class="hs-identifier hs-var">sessionConfig</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">SessionOptions
+</span><a href="#local-6989586621679166668"><span class="hs-identifier hs-var">opt</span></a></span><span>
+</span><span id="line-131"></span><span>
+</span><span id="line-132"></span><span id="local-6989586621679166665"><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Monad</span></span><span> </span><span class="annot"><a href="#local-6989586621679166665"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Build.html#MonadBuild"><span class="hs-identifier hs-type">MonadBuild</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="TensorFlow.Session.html#SessionT"><span class="hs-identifier hs-type">SessionT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679166665"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-133"></span><span>    </span><span id="local-6989586621679166661"><span class="annot"><span class="annottext">build :: Build a -&gt; SessionT m a
+</span><a href="TensorFlow.Build.html#build"><span class="hs-identifier hs-var hs-var hs-var hs-var">build</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ReaderT SessionState (BuildT m) a -&gt; SessionT m a
+forall (m :: * -&gt; *) a.
+ReaderT SessionState (BuildT m) a -&gt; SessionT m a
+</span><a href="TensorFlow.Session.html#Session"><span class="hs-identifier hs-var">Session</span></a></span><span> </span><span class="annot"><span class="annottext">(ReaderT SessionState (BuildT m) a -&gt; SessionT m a)
+-&gt; (Build a -&gt; ReaderT SessionState (BuildT m) a)
+-&gt; Build a
+-&gt; SessionT m a
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">BuildT m a -&gt; ReaderT SessionState (BuildT m) a
+forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
+(MonadTrans t, Monad m) =&gt;
+m a -&gt; t m a
+</span><span class="hs-identifier hs-var">lift</span></span><span> </span><span class="annot"><span class="annottext">(BuildT m a -&gt; ReaderT SessionState (BuildT m) a)
+-&gt; (Build a -&gt; BuildT m a)
+-&gt; Build a
+-&gt; ReaderT SessionState (BuildT m) a
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Build a -&gt; BuildT m a
+forall (m :: * -&gt; *) a. MonadBuild m =&gt; Build a -&gt; m a
+</span><a href="TensorFlow.Build.html#build"><span class="hs-identifier hs-var">build</span></a></span></span><span>
+</span><span id="line-134"></span><span>
+</span><span id="line-135"></span><span class="hs-comment">-- | Add all pending rendered nodes to the TensorFlow graph and runs</span><span>
+</span><span id="line-136"></span><span class="hs-comment">-- any pending initializers.</span><span>
+</span><span id="line-137"></span><span class="hs-comment">--</span><span>
+</span><span id="line-138"></span><span class="hs-comment">-- Note that run, runWithFeeds, etc. will all call this function implicitly.</span><span>
+</span><span id="line-139"></span><span id="local-6989586621679166809"><span class="annot"><a href="TensorFlow.Session.html#extend"><span class="hs-identifier hs-type">extend</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621679166809"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Session.html#SessionT"><span class="hs-identifier hs-type">SessionT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679166809"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
+</span><span id="line-140"></span><span id="extend"><span class="annot"><span class="annottext">extend :: SessionT m ()
+</span><a href="TensorFlow.Session.html#extend"><span class="hs-identifier hs-var hs-var">extend</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-141"></span><span>    </span><span id="local-6989586621679166659"><span class="annot"><span class="annottext">Session
+</span><a href="#local-6989586621679166659"><span class="hs-identifier hs-var">session</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ReaderT SessionState (BuildT m) Session -&gt; SessionT m Session
+forall (m :: * -&gt; *) a.
+ReaderT SessionState (BuildT m) a -&gt; SessionT m a
+</span><a href="TensorFlow.Session.html#Session"><span class="hs-identifier hs-var">Session</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(SessionState -&gt; Session)
+-&gt; ReaderT SessionState (BuildT m) Session
+forall (m :: * -&gt; *) r a. Monad m =&gt; (r -&gt; a) -&gt; ReaderT r m a
+</span><span class="hs-identifier hs-var">asks</span></span><span> </span><span class="annot"><span class="annottext">SessionState -&gt; Session
+</span><a href="TensorFlow.Session.html#rawSession"><span class="hs-identifier hs-var hs-var">rawSession</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-142"></span><span>    </span><span id="local-6989586621679166658"><span class="annot"><span class="annottext">Tracer
+</span><a href="#local-6989586621679166658"><span class="hs-identifier hs-var">trace</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ReaderT SessionState (BuildT m) Tracer -&gt; SessionT m Tracer
+forall (m :: * -&gt; *) a.
+ReaderT SessionState (BuildT m) a -&gt; SessionT m a
+</span><a href="TensorFlow.Session.html#Session"><span class="hs-identifier hs-var">Session</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(SessionState -&gt; Tracer) -&gt; ReaderT SessionState (BuildT m) Tracer
+forall (m :: * -&gt; *) r a. Monad m =&gt; (r -&gt; a) -&gt; ReaderT r m a
+</span><span class="hs-identifier hs-var">asks</span></span><span> </span><span class="annot"><span class="annottext">SessionState -&gt; Tracer
+</span><a href="TensorFlow.Session.html#tracer"><span class="hs-identifier hs-var hs-var">tracer</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-143"></span><span>    </span><span id="local-6989586621679166657"><span class="annot"><span class="annottext">[NodeDef]
+</span><a href="#local-6989586621679166657"><span class="hs-identifier hs-var">nodesToExtend</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Build [NodeDef] -&gt; SessionT m [NodeDef]
+forall (m :: * -&gt; *) a. MonadBuild m =&gt; Build a -&gt; m a
+</span><a href="TensorFlow.Build.html#build"><span class="hs-identifier hs-var">build</span></a></span><span> </span><span class="annot"><span class="annottext">Build [NodeDef]
+forall (m :: * -&gt; *). MonadBuild m =&gt; m [NodeDef]
+</span><a href="TensorFlow.Build.html#flushNodeBuffer"><span class="hs-identifier hs-var">flushNodeBuffer</span></a></span><span>
+</span><span id="line-144"></span><span>    </span><span class="annot"><span class="annottext">Bool -&gt; SessionT m () -&gt; SessionT m ()
+forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
+</span><span class="hs-identifier hs-var">unless</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[NodeDef] -&gt; Bool
+forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
+</span><span class="hs-identifier hs-var">null</span></span><span> </span><span class="annot"><span class="annottext">[NodeDef]
+</span><a href="#local-6989586621679166657"><span class="hs-identifier hs-var">nodesToExtend</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(SessionT m () -&gt; SessionT m ()) -&gt; SessionT m () -&gt; SessionT m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">IO () -&gt; SessionT m ()
+forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; SessionT m ()) -&gt; IO () -&gt; SessionT m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-145"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679166654"><span class="annot"><span class="annottext">graphDef :: GraphDef
+</span><a href="#local-6989586621679166654"><span class="hs-identifier hs-var hs-var">graphDef</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">GraphDef
+forall msg. Message msg =&gt; msg
+</span><span class="hs-identifier hs-var">defMessage</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">GraphDef</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">GraphDef -&gt; (GraphDef -&gt; GraphDef) -&gt; GraphDef
+forall s t. s -&gt; (s -&gt; t) -&gt; t
+</span><span class="hs-operator hs-var">&amp;</span></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Identical f =&gt; LensLike' f GraphDef [NodeDef]
+forall (f :: * -&gt; *) s a.
+(Functor f, HasField s &quot;node&quot; a) =&gt;
+LensLike' f s a
+</span><span class="hs-identifier hs-var">node</span></span><span> </span><span class="annot"><span class="annottext">(forall (f :: * -&gt; *).
+ Identical f =&gt;
+ LensLike' f GraphDef [NodeDef])
+-&gt; [NodeDef] -&gt; GraphDef -&gt; GraphDef
+forall s t a b. Setter s t a b -&gt; b -&gt; s -&gt; t
+</span><span class="hs-operator hs-var">.~</span></span><span> </span><span class="annot"><span class="annottext">[NodeDef]
+</span><a href="#local-6989586621679166657"><span class="hs-identifier hs-var">nodesToExtend</span></a></span><span>
+</span><span id="line-146"></span><span>        </span><span class="annot"><span class="annottext">Tracer
+</span><a href="#local-6989586621679166658"><span class="hs-identifier hs-var">trace</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-string">&quot;Session.extend &quot;</span></span><span> </span><span class="annot"><span class="annottext">Builder -&gt; Builder -&gt; Builder
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Builder
+</span><span class="hs-identifier hs-var">Builder.string8</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">GraphDef -&gt; String
+forall msg. Message msg =&gt; msg -&gt; String
+</span><span class="hs-identifier hs-var">showMessage</span></span><span> </span><span class="annot"><span class="annottext">GraphDef
+</span><a href="#local-6989586621679166654"><span class="hs-identifier hs-var">graphDef</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-147"></span><span>        </span><span class="annot"><span class="annottext">Session -&gt; GraphDef -&gt; IO ()
+</span><a href="TensorFlow.Internal.FFI.html#extendGraph"><span class="hs-identifier hs-var">FFI.extendGraph</span></a></span><span> </span><span class="annot"><span class="annottext">Session
+</span><a href="#local-6989586621679166659"><span class="hs-identifier hs-var">session</span></a></span><span> </span><span class="annot"><span class="annottext">GraphDef
+</span><a href="#local-6989586621679166654"><span class="hs-identifier hs-var">graphDef</span></a></span><span>
+</span><span id="line-148"></span><span>    </span><span class="hs-comment">-- Now that all the nodes are created, run the initializers.</span><span>
+</span><span id="line-149"></span><span>    </span><span id="local-6989586621679166651"><span class="annot"><span class="annottext">[NodeName]
+</span><a href="#local-6989586621679166651"><span class="hs-identifier hs-var">initializers</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Build [NodeName] -&gt; SessionT m [NodeName]
+forall (m :: * -&gt; *) a. MonadBuild m =&gt; Build a -&gt; m a
+</span><a href="TensorFlow.Build.html#build"><span class="hs-identifier hs-var">build</span></a></span><span> </span><span class="annot"><span class="annottext">Build [NodeName]
+forall (m :: * -&gt; *). Monad m =&gt; BuildT m [NodeName]
+</span><a href="TensorFlow.Build.html#flushInitializers"><span class="hs-identifier hs-var">flushInitializers</span></a></span><span>
+</span><span id="line-150"></span><span>    </span><span class="annot"><span class="annottext">Bool -&gt; SessionT m () -&gt; SessionT m ()
+forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
+</span><span class="hs-identifier hs-var">unless</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[NodeName] -&gt; Bool
+forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
+</span><span class="hs-identifier hs-var">null</span></span><span> </span><span class="annot"><span class="annottext">[NodeName]
+</span><a href="#local-6989586621679166651"><span class="hs-identifier hs-var">initializers</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(SessionT m () -&gt; SessionT m ()) -&gt; SessionT m () -&gt; SessionT m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-151"></span><span>        </span><span class="annot"><span class="annottext">SessionT m [TensorData] -&gt; SessionT m ()
+forall (f :: * -&gt; *) a. Functor f =&gt; f a -&gt; f ()
+</span><span class="hs-identifier hs-var">void</span></span><span> </span><span class="annot"><span class="annottext">(SessionT m [TensorData] -&gt; SessionT m ())
+-&gt; SessionT m [TensorData] -&gt; SessionT m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">IO [TensorData] -&gt; SessionT m [TensorData]
+forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO [TensorData] -&gt; SessionT m [TensorData])
+-&gt; IO [TensorData] -&gt; SessionT m [TensorData]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Session
+-&gt; [(ByteString, TensorData)]
+-&gt; [ByteString]
+-&gt; [ByteString]
+-&gt; IO [TensorData]
+</span><a href="TensorFlow.Internal.FFI.html#run"><span class="hs-identifier hs-var">FFI.run</span></a></span><span> </span><span class="annot"><span class="annottext">Session
+</span><a href="#local-6989586621679166659"><span class="hs-identifier hs-var">session</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[NodeName] -&gt; [ByteString]
+</span><a href="TensorFlow.Session.html#toNodeNames"><span class="hs-identifier hs-var">toNodeNames</span></a></span><span> </span><span class="annot"><span class="annottext">[NodeName]
+</span><a href="#local-6989586621679166651"><span class="hs-identifier hs-var">initializers</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-152"></span><span>
+</span><span id="line-153"></span><span class="hs-comment">-- | Run a subgraph 't', rendering any dependent nodes that aren't already</span><span>
+</span><span id="line-154"></span><span class="hs-comment">-- rendered, and fetch the corresponding values for 'a'.</span><span>
+</span><span id="line-155"></span><span id="local-6989586621679166645"><span id="local-6989586621679166646"><span id="local-6989586621679166647"><span class="annot"><a href="TensorFlow.Session.html#run"><span class="hs-identifier hs-type">run</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621679166647"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Nodes.html#Fetchable"><span class="hs-identifier hs-type">Fetchable</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679166646"><span class="hs-identifier hs-type">t</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679166645"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679166646"><span class="hs-identifier hs-type">t</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Session.html#SessionT"><span class="hs-identifier hs-type">SessionT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679166647"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679166645"><span class="hs-identifier hs-type">a</span></a></span></span></span></span><span>
+</span><span id="line-156"></span><span id="run"><span class="annot"><span class="annottext">run :: t -&gt; SessionT m a
+</span><a href="TensorFlow.Session.html#run"><span class="hs-identifier hs-var hs-var">run</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Feed] -&gt; t -&gt; SessionT m a
+forall (m :: * -&gt; *) t a.
+(MonadIO m, Fetchable t a) =&gt;
+[Feed] -&gt; t -&gt; SessionT m a
+</span><a href="TensorFlow.Session.html#runWithFeeds"><span class="hs-identifier hs-var">runWithFeeds</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
+</span><span id="line-157"></span><span>
+</span><span id="line-158"></span><span class="hs-comment">-- | Run a subgraph 't', rendering any dependent nodes that aren't already</span><span>
+</span><span id="line-159"></span><span class="hs-comment">-- rendered, feed the given input values, and fetch the corresponding result</span><span>
+</span><span id="line-160"></span><span class="hs-comment">-- values for 'a'.</span><span>
+</span><span id="line-161"></span><span id="local-6989586621679166826"><span id="local-6989586621679166827"><span id="local-6989586621679166828"><span class="annot"><a href="TensorFlow.Session.html#runWithFeeds"><span class="hs-identifier hs-type">runWithFeeds</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621679166828"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Nodes.html#Fetchable"><span class="hs-identifier hs-type">Fetchable</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679166827"><span class="hs-identifier hs-type">t</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679166826"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="TensorFlow.Tensor.html#Feed"><span class="hs-identifier hs-type">Feed</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679166827"><span class="hs-identifier hs-type">t</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Session.html#SessionT"><span class="hs-identifier hs-type">SessionT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679166828"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679166826"><span class="hs-identifier hs-type">a</span></a></span></span></span></span><span>
+</span><span id="line-162"></span><span id="runWithFeeds"><span class="annot"><span class="annottext">runWithFeeds :: [Feed] -&gt; t -&gt; SessionT m a
+</span><a href="TensorFlow.Session.html#runWithFeeds"><span class="hs-identifier hs-var hs-var">runWithFeeds</span></a></span></span><span> </span><span id="local-6989586621679166644"><span class="annot"><span class="annottext">feeds :: [Feed]
+</span><a href="#local-6989586621679166644"><span class="hs-identifier hs-var">feeds</span></a></span></span><span> </span><span id="local-6989586621679166643"><span class="annot"><span class="annottext">t :: t
+</span><a href="#local-6989586621679166643"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-163"></span><span>    </span><span id="local-6989586621679166642"><span class="annot"><span class="annottext">Set NodeName
+</span><a href="#local-6989586621679166642"><span class="hs-identifier hs-var">ns</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Build (Set NodeName) -&gt; SessionT m (Set NodeName)
+forall (m :: * -&gt; *) a. MonadBuild m =&gt; Build a -&gt; m a
+</span><a href="TensorFlow.Build.html#build"><span class="hs-identifier hs-var">build</span></a></span><span> </span><span class="annot"><span class="annottext">(Build (Set NodeName) -&gt; SessionT m (Set NodeName))
+-&gt; Build (Set NodeName) -&gt; SessionT m (Set NodeName)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">t -&gt; Build (Set NodeName)
+forall t. Nodes t =&gt; t -&gt; Build (Set NodeName)
+</span><a href="TensorFlow.Nodes.html#getNodes"><span class="hs-identifier hs-var">getNodes</span></a></span><span> </span><span class="annot"><span class="annottext">t
+</span><a href="#local-6989586621679166643"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><span id="line-164"></span><span>    </span><span class="hs-comment">-- Note that this call to &quot;fetch&quot; shouldn't affect the following &quot;extend&quot;</span><span>
+</span><span id="line-165"></span><span>    </span><span class="hs-comment">-- call, since all nodes in t and its inputs/deps will be rendered by the</span><span>
+</span><span id="line-166"></span><span>    </span><span class="hs-comment">-- above call to getNodes.</span><span>
+</span><span id="line-167"></span><span>    </span><span id="local-6989586621679166640"><span class="annot"><span class="annottext">Fetch a
+</span><a href="#local-6989586621679166640"><span class="hs-identifier hs-var">fetch</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Build (Fetch a) -&gt; SessionT m (Fetch a)
+forall (m :: * -&gt; *) a. MonadBuild m =&gt; Build a -&gt; m a
+</span><a href="TensorFlow.Build.html#build"><span class="hs-identifier hs-var">build</span></a></span><span> </span><span class="annot"><span class="annottext">(Build (Fetch a) -&gt; SessionT m (Fetch a))
+-&gt; Build (Fetch a) -&gt; SessionT m (Fetch a)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">t -&gt; Build (Fetch a)
+forall t a. Fetchable t a =&gt; t -&gt; Build (Fetch a)
+</span><a href="TensorFlow.Nodes.html#getFetch"><span class="hs-identifier hs-var">getFetch</span></a></span><span> </span><span class="annot"><span class="annottext">t
+</span><a href="#local-6989586621679166643"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><span id="line-168"></span><span>    </span><span class="annot"><span class="annottext">[Feed] -&gt; Set NodeName -&gt; Fetch a -&gt; SessionT m a
+forall (m :: * -&gt; *) a.
+MonadIO m =&gt;
+[Feed] -&gt; Set NodeName -&gt; Fetch a -&gt; SessionT m a
+</span><a href="TensorFlow.Session.html#runFetchWithFeeds"><span class="hs-identifier hs-var">runFetchWithFeeds</span></a></span><span> </span><span class="annot"><span class="annottext">[Feed]
+</span><a href="#local-6989586621679166644"><span class="hs-identifier hs-var">feeds</span></a></span><span> </span><span class="annot"><span class="annottext">Set NodeName
+</span><a href="#local-6989586621679166642"><span class="hs-identifier hs-var">ns</span></a></span><span> </span><span class="annot"><span class="annottext">Fetch a
+</span><a href="#local-6989586621679166640"><span class="hs-identifier hs-var">fetch</span></a></span><span>
+</span><span id="line-169"></span><span>
+</span><span id="line-170"></span><span id="local-6989586621679166814"><span id="local-6989586621679166815"><span class="annot"><a href="TensorFlow.Session.html#runFetchWithFeeds"><span class="hs-identifier hs-type">runFetchWithFeeds</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621679166815"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="TensorFlow.Tensor.html#Feed"><span class="hs-identifier hs-type">Feed</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Set</span></span><span> </span><span class="annot"><a href="TensorFlow.Output.html#NodeName"><span class="hs-identifier hs-type">NodeName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Nodes.html#Fetch"><span class="hs-identifier hs-type">Fetch</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679166814"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Session.html#SessionT"><span class="hs-identifier hs-type">SessionT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679166815"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679166814"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
+</span><span id="line-171"></span><span id="runFetchWithFeeds"><span class="annot"><span class="annottext">runFetchWithFeeds :: [Feed] -&gt; Set NodeName -&gt; Fetch a -&gt; SessionT m a
+</span><a href="TensorFlow.Session.html#runFetchWithFeeds"><span class="hs-identifier hs-var hs-var">runFetchWithFeeds</span></a></span></span><span> </span><span id="local-6989586621679166637"><span class="annot"><span class="annottext">feeds :: [Feed]
+</span><a href="#local-6989586621679166637"><span class="hs-identifier hs-var">feeds</span></a></span></span><span> </span><span id="local-6989586621679166636"><span class="annot"><span class="annottext">target :: Set NodeName
+</span><a href="#local-6989586621679166636"><span class="hs-identifier hs-var">target</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="TensorFlow.Nodes.html#Fetch"><span class="hs-identifier hs-type">Fetch</span></a></span><span> </span><span id="local-6989586621679166634"><span class="annot"><span class="annottext">fetch :: Set Text
+</span><a href="#local-6989586621679166634"><span class="hs-identifier hs-var">fetch</span></a></span></span><span> </span><span id="local-6989586621679166633"><span class="annot"><span class="annottext">restore :: Map Text TensorData -&gt; a
+</span><a href="#local-6989586621679166633"><span class="hs-identifier hs-var">restore</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-172"></span><span>    </span><span class="annot"><span class="annottext">SessionT m ()
+forall (m :: * -&gt; *). MonadIO m =&gt; SessionT m ()
+</span><a href="TensorFlow.Session.html#extend"><span class="hs-identifier hs-var">extend</span></a></span><span>
+</span><span id="line-173"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679166632"><span class="annot"><span class="annottext">feeds' :: [(ByteString, TensorData)]
+</span><a href="#local-6989586621679166632"><span class="hs-identifier hs-var hs-var">feeds'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Feed] -&gt; [(ByteString, TensorData)]
+</span><a href="TensorFlow.Session.html#fixFeeds"><span class="hs-identifier hs-var">fixFeeds</span></a></span><span> </span><span class="annot"><span class="annottext">[Feed]
+</span><a href="#local-6989586621679166637"><span class="hs-identifier hs-var">feeds</span></a></span><span>
+</span><span id="line-174"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679166630"><span class="annot"><span class="annottext">fetchNames :: [ByteString]
+</span><a href="#local-6989586621679166630"><span class="hs-identifier hs-var hs-var">fetchNames</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; ByteString
+</span><span class="hs-identifier hs-var">encodeUtf8</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; ByteString) -&gt; [Text] -&gt; [ByteString]
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Set Text -&gt; [Text]
+forall a. Set a -&gt; [a]
+</span><span class="hs-identifier hs-var">Set.toList</span></span><span> </span><span class="annot"><span class="annottext">Set Text
+</span><a href="#local-6989586621679166634"><span class="hs-identifier hs-var">fetch</span></a></span><span>
+</span><span id="line-175"></span><span>        </span><span id="local-6989586621679166627"><span class="annot"><span class="annottext">targetNames :: [ByteString]
+</span><a href="#local-6989586621679166627"><span class="hs-identifier hs-var hs-var">targetNames</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[NodeName] -&gt; [ByteString]
+</span><a href="TensorFlow.Session.html#toNodeNames"><span class="hs-identifier hs-var">toNodeNames</span></a></span><span> </span><span class="annot"><span class="annottext">([NodeName] -&gt; [ByteString]) -&gt; [NodeName] -&gt; [ByteString]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Set NodeName -&gt; [NodeName]
+forall a. Set a -&gt; [a]
+</span><span class="hs-identifier hs-var">Set.toList</span></span><span> </span><span class="annot"><span class="annottext">Set NodeName
+</span><a href="#local-6989586621679166636"><span class="hs-identifier hs-var">target</span></a></span><span>
+</span><span id="line-176"></span><span>    </span><span id="local-6989586621679166626"><span class="annot"><span class="annottext">Session
+</span><a href="#local-6989586621679166626"><span class="hs-identifier hs-var">session</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ReaderT SessionState (BuildT m) Session -&gt; SessionT m Session
+forall (m :: * -&gt; *) a.
+ReaderT SessionState (BuildT m) a -&gt; SessionT m a
+</span><a href="TensorFlow.Session.html#Session"><span class="hs-identifier hs-var">Session</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(SessionState -&gt; Session)
+-&gt; ReaderT SessionState (BuildT m) Session
+forall (m :: * -&gt; *) r a. Monad m =&gt; (r -&gt; a) -&gt; ReaderT r m a
+</span><span class="hs-identifier hs-var">asks</span></span><span> </span><span class="annot"><span class="annottext">SessionState -&gt; Session
+</span><a href="TensorFlow.Session.html#rawSession"><span class="hs-identifier hs-var hs-var">rawSession</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-177"></span><span>    </span><span id="local-6989586621679166625"><span class="annot"><span class="annottext">[TensorData]
+</span><a href="#local-6989586621679166625"><span class="hs-identifier hs-var">runResult</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO [TensorData] -&gt; SessionT m [TensorData]
+forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO [TensorData] -&gt; SessionT m [TensorData])
+-&gt; IO [TensorData] -&gt; SessionT m [TensorData]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Session
+-&gt; [(ByteString, TensorData)]
+-&gt; [ByteString]
+-&gt; [ByteString]
+-&gt; IO [TensorData]
+</span><a href="TensorFlow.Internal.FFI.html#run"><span class="hs-identifier hs-var">FFI.run</span></a></span><span> </span><span class="annot"><span class="annottext">Session
+</span><a href="#local-6989586621679166626"><span class="hs-identifier hs-var">session</span></a></span><span>
+</span><span id="line-178"></span><span>                                  </span><span class="annot"><span class="annottext">[(ByteString, TensorData)]
+</span><a href="#local-6989586621679166632"><span class="hs-identifier hs-var">feeds'</span></a></span><span>
+</span><span id="line-179"></span><span>                                  </span><span class="annot"><span class="annottext">[ByteString]
+</span><a href="#local-6989586621679166630"><span class="hs-identifier hs-var">fetchNames</span></a></span><span>
+</span><span id="line-180"></span><span>                                  </span><span class="annot"><span class="annottext">[ByteString]
+</span><a href="#local-6989586621679166627"><span class="hs-identifier hs-var">targetNames</span></a></span><span>
+</span><span id="line-181"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679166624"><span class="annot"><span class="annottext">resultTensorsMap :: Map Text TensorData
+</span><a href="#local-6989586621679166624"><span class="hs-identifier hs-var hs-var">resultTensorsMap</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[(Text, TensorData)] -&gt; Map Text TensorData
+forall k a. Ord k =&gt; [(k, a)] -&gt; Map k a
+</span><span class="hs-identifier hs-var">Map.fromList</span></span><span> </span><span class="annot"><span class="annottext">([(Text, TensorData)] -&gt; Map Text TensorData)
+-&gt; [(Text, TensorData)] -&gt; Map Text TensorData
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[Text] -&gt; [TensorData] -&gt; [(Text, TensorData)]
+forall a b. [a] -&gt; [b] -&gt; [(a, b)]
+</span><span class="hs-identifier hs-var">zip</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Set Text -&gt; [Text]
+forall a. Set a -&gt; [a]
+</span><span class="hs-identifier hs-var">Set.toList</span></span><span> </span><span class="annot"><span class="annottext">Set Text
+</span><a href="#local-6989586621679166634"><span class="hs-identifier hs-var">fetch</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[TensorData]
+</span><a href="#local-6989586621679166625"><span class="hs-identifier hs-var">runResult</span></a></span><span>
+</span><span id="line-182"></span><span>    </span><span class="annot"><span class="annottext">a -&gt; SessionT m a
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">(a -&gt; SessionT m a) -&gt; a -&gt; SessionT m a
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Map Text TensorData -&gt; a
+</span><a href="#local-6989586621679166633"><span class="hs-identifier hs-var">restore</span></a></span><span> </span><span class="annot"><span class="annottext">Map Text TensorData
+</span><a href="#local-6989586621679166624"><span class="hs-identifier hs-var">resultTensorsMap</span></a></span><span>
+</span><span id="line-183"></span><span>
+</span><span id="line-184"></span><span class="annot"><a href="TensorFlow.Session.html#toNodeNames"><span class="hs-identifier hs-type">toNodeNames</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="TensorFlow.Output.html#NodeName"><span class="hs-identifier hs-type">NodeName</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span class="hs-special">]</span><span>
+</span><span id="line-185"></span><span id="toNodeNames"><span class="annot"><span class="annottext">toNodeNames :: [NodeName] -&gt; [ByteString]
+</span><a href="TensorFlow.Session.html#toNodeNames"><span class="hs-identifier hs-var hs-var">toNodeNames</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(NodeName -&gt; ByteString) -&gt; [NodeName] -&gt; [ByteString]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; ByteString
+</span><span class="hs-identifier hs-var">encodeUtf8</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; ByteString)
+-&gt; (NodeName -&gt; Text) -&gt; NodeName -&gt; ByteString
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">NodeName -&gt; Text
+</span><a href="TensorFlow.Output.html#unNodeName"><span class="hs-identifier hs-var hs-var">unNodeName</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-186"></span><span>
+</span><span id="line-187"></span><span class="hs-comment">-- | Run a subgraph 't', rendering and extending any dependent nodes that aren't</span><span>
+</span><span id="line-188"></span><span class="hs-comment">-- already rendered.  This behaves like 'run' except that it doesn't do any</span><span>
+</span><span id="line-189"></span><span class="hs-comment">-- fetches.</span><span>
+</span><span id="line-190"></span><span id="local-6989586621679166621"><span id="local-6989586621679166622"><span class="annot"><a href="TensorFlow.Session.html#run_"><span class="hs-identifier hs-type">run_</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621679166622"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Nodes.html#Nodes"><span class="hs-identifier hs-type">Nodes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679166621"><span class="hs-identifier hs-type">t</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679166621"><span class="hs-identifier hs-type">t</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Session.html#SessionT"><span class="hs-identifier hs-type">SessionT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679166622"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-191"></span><span id="run_"><span class="annot"><span class="annottext">run_ :: t -&gt; SessionT m ()
+</span><a href="TensorFlow.Session.html#run_"><span class="hs-identifier hs-var hs-var">run_</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Feed] -&gt; t -&gt; SessionT m ()
+forall (m :: * -&gt; *) t.
+(MonadIO m, Nodes t) =&gt;
+[Feed] -&gt; t -&gt; SessionT m ()
+</span><a href="TensorFlow.Session.html#runWithFeeds_"><span class="hs-identifier hs-var">runWithFeeds_</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
+</span><span id="line-192"></span><span>
+</span><span id="line-193"></span><span class="hs-comment">-- | Run a subgraph 't', rendering any dependent nodes that aren't already</span><span>
+</span><span id="line-194"></span><span class="hs-comment">-- rendered, feed the given input values, and fetch the corresponding result</span><span>
+</span><span id="line-195"></span><span class="hs-comment">-- values for 'a'.  This behaves like 'runWithFeeds' except that it doesn't do</span><span>
+</span><span id="line-196"></span><span class="hs-comment">-- any fetches.</span><span>
+</span><span id="line-197"></span><span id="local-6989586621679166795"><span id="local-6989586621679166796"><span class="annot"><a href="TensorFlow.Session.html#runWithFeeds_"><span class="hs-identifier hs-type">runWithFeeds_</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621679166796"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Nodes.html#Nodes"><span class="hs-identifier hs-type">Nodes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679166795"><span class="hs-identifier hs-type">t</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="TensorFlow.Tensor.html#Feed"><span class="hs-identifier hs-type">Feed</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679166795"><span class="hs-identifier hs-type">t</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Session.html#SessionT"><span class="hs-identifier hs-type">SessionT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679166796"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-198"></span><span id="runWithFeeds_"><span class="annot"><span class="annottext">runWithFeeds_ :: [Feed] -&gt; t -&gt; SessionT m ()
+</span><a href="TensorFlow.Session.html#runWithFeeds_"><span class="hs-identifier hs-var hs-var">runWithFeeds_</span></a></span></span><span> </span><span id="local-6989586621679166620"><span class="annot"><span class="annottext">feeds :: [Feed]
+</span><a href="#local-6989586621679166620"><span class="hs-identifier hs-var">feeds</span></a></span></span><span> </span><span id="local-6989586621679166619"><span class="annot"><span class="annottext">t :: t
+</span><a href="#local-6989586621679166619"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-199"></span><span>    </span><span id="local-6989586621679166618"><span class="annot"><span class="annottext">Set NodeName
+</span><a href="#local-6989586621679166618"><span class="hs-identifier hs-var">ns</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Build (Set NodeName) -&gt; SessionT m (Set NodeName)
+forall (m :: * -&gt; *) a. MonadBuild m =&gt; Build a -&gt; m a
+</span><a href="TensorFlow.Build.html#build"><span class="hs-identifier hs-var">build</span></a></span><span> </span><span class="annot"><span class="annottext">(Build (Set NodeName) -&gt; SessionT m (Set NodeName))
+-&gt; Build (Set NodeName) -&gt; SessionT m (Set NodeName)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">t -&gt; Build (Set NodeName)
+forall t. Nodes t =&gt; t -&gt; Build (Set NodeName)
+</span><a href="TensorFlow.Nodes.html#getNodes"><span class="hs-identifier hs-var">getNodes</span></a></span><span> </span><span class="annot"><span class="annottext">t
+</span><a href="#local-6989586621679166619"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><span id="line-200"></span><span>    </span><span class="annot"><span class="annottext">[Feed] -&gt; Set NodeName -&gt; Fetch () -&gt; SessionT m ()
+forall (m :: * -&gt; *) a.
+MonadIO m =&gt;
+[Feed] -&gt; Set NodeName -&gt; Fetch a -&gt; SessionT m a
+</span><a href="TensorFlow.Session.html#runFetchWithFeeds"><span class="hs-identifier hs-var">runFetchWithFeeds</span></a></span><span> </span><span class="annot"><span class="annottext">[Feed]
+</span><a href="#local-6989586621679166620"><span class="hs-identifier hs-var">feeds</span></a></span><span> </span><span class="annot"><span class="annottext">Set NodeName
+</span><a href="#local-6989586621679166618"><span class="hs-identifier hs-var">ns</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">() -&gt; Fetch ()
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-201"></span><span>
+</span><span id="line-202"></span><span class="annot"><a href="TensorFlow.Session.html#fixFeeds"><span class="hs-identifier hs-type">fixFeeds</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="TensorFlow.Tensor.html#Feed"><span class="hs-identifier hs-type">Feed</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Internal.FFI.html#TensorData"><span class="hs-identifier hs-type">FFI.TensorData</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
+</span><span id="line-203"></span><span id="fixFeeds"><span class="annot"><span class="annottext">fixFeeds :: [Feed] -&gt; [(ByteString, TensorData)]
+</span><a href="TensorFlow.Session.html#fixFeeds"><span class="hs-identifier hs-var hs-var">fixFeeds</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Feed -&gt; (ByteString, TensorData))
+-&gt; [Feed] -&gt; [(ByteString, TensorData)]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">((Feed -&gt; (ByteString, TensorData))
+ -&gt; [Feed] -&gt; [(ByteString, TensorData)])
+-&gt; (Feed -&gt; (ByteString, TensorData))
+-&gt; [Feed]
+-&gt; [(ByteString, TensorData)]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="annot"><a href="TensorFlow.Tensor.html#Feed"><span class="hs-identifier hs-type">Feed</span></a></span><span> </span><span id="local-6989586621679166616"><span class="annot"><span class="annottext">o :: Output
+</span><a href="#local-6989586621679166616"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span id="local-6989586621679166615"><span class="annot"><span class="annottext">d :: TensorData
+</span><a href="#local-6989586621679166615"><span class="hs-identifier hs-var">d</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; ByteString
+</span><span class="hs-identifier hs-var">encodeUtf8</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; ByteString) -&gt; Text -&gt; ByteString
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Output -&gt; Text
+</span><a href="TensorFlow.Build.html#encodeOutput"><span class="hs-identifier hs-var">encodeOutput</span></a></span><span> </span><span class="annot"><span class="annottext">Output
+</span><a href="#local-6989586621679166616"><span class="hs-identifier hs-var">o</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">TensorData
+</span><a href="#local-6989586621679166615"><span class="hs-identifier hs-var">d</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-204"></span><span>
+</span><span id="line-205"></span><span class="hs-comment">-- | Starts a concurrent thread which evaluates the given Nodes</span><span>
+</span><span id="line-206"></span><span class="hs-comment">-- forever until runSession exits or an exception occurs. Graph</span><span>
+</span><span id="line-207"></span><span class="hs-comment">-- extension happens synchronously, but the resultant run proceeds as</span><span>
+</span><span id="line-208"></span><span class="hs-comment">-- a separate thread.</span><span>
+</span><span id="line-209"></span><span id="local-6989586621679166612"><span id="local-6989586621679166613"><span class="annot"><a href="TensorFlow.Session.html#asyncProdNodes"><span class="hs-identifier hs-type">asyncProdNodes</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621679166613"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Nodes.html#Nodes"><span class="hs-identifier hs-type">Nodes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679166612"><span class="hs-identifier hs-type">t</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-210"></span><span>                  </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679166612"><span class="hs-identifier hs-type">t</span></a></span><span>  </span><span class="hs-comment">-- ^ Node to evaluate concurrently.</span><span>
+</span><span id="line-211"></span><span>                  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Session.html#SessionT"><span class="hs-identifier hs-type">SessionT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679166613"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-212"></span><span id="asyncProdNodes"><span class="annot"><span class="annottext">asyncProdNodes :: t -&gt; SessionT m ()
+</span><a href="TensorFlow.Session.html#asyncProdNodes"><span class="hs-identifier hs-var hs-var">asyncProdNodes</span></a></span></span><span> </span><span id="local-6989586621679166611"><span class="annot"><span class="annottext">nodes :: t
+</span><a href="#local-6989586621679166611"><span class="hs-identifier hs-var">nodes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-213"></span><span>    </span><span id="local-6989586621679166610"><span class="annot"><span class="annottext">Set NodeName
+</span><a href="#local-6989586621679166610"><span class="hs-identifier hs-var">target</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Build (Set NodeName) -&gt; SessionT m (Set NodeName)
+forall (m :: * -&gt; *) a. MonadBuild m =&gt; Build a -&gt; m a
+</span><a href="TensorFlow.Build.html#build"><span class="hs-identifier hs-var">build</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">t -&gt; Build (Set NodeName)
+forall t. Nodes t =&gt; t -&gt; Build (Set NodeName)
+</span><a href="TensorFlow.Nodes.html#getNodes"><span class="hs-identifier hs-var">getNodes</span></a></span><span> </span><span class="annot"><span class="annottext">t
+</span><a href="#local-6989586621679166611"><span class="hs-identifier hs-var">nodes</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-214"></span><span>    </span><span class="annot"><span class="annottext">SessionT m ()
+forall (m :: * -&gt; *). MonadIO m =&gt; SessionT m ()
+</span><a href="TensorFlow.Session.html#extend"><span class="hs-identifier hs-var">extend</span></a></span><span>
+</span><span id="line-215"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679166609"><span class="annot"><span class="annottext">targetNames :: [ByteString]
+</span><a href="#local-6989586621679166609"><span class="hs-identifier hs-var hs-var">targetNames</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[NodeName] -&gt; [ByteString]
+</span><a href="TensorFlow.Session.html#toNodeNames"><span class="hs-identifier hs-var">toNodeNames</span></a></span><span> </span><span class="annot"><span class="annottext">([NodeName] -&gt; [ByteString]) -&gt; [NodeName] -&gt; [ByteString]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Set NodeName -&gt; [NodeName]
+forall a. Set a -&gt; [a]
+</span><span class="hs-identifier hs-var">Set.toList</span></span><span> </span><span class="annot"><span class="annottext">Set NodeName
+</span><a href="#local-6989586621679166610"><span class="hs-identifier hs-var">target</span></a></span><span>
+</span><span id="line-216"></span><span>    </span><span id="local-6989586621679166608"><span class="annot"><span class="annottext">SessionState
+</span><a href="#local-6989586621679166608"><span class="hs-identifier hs-var">state</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ReaderT SessionState (BuildT m) SessionState
+-&gt; SessionT m SessionState
+forall (m :: * -&gt; *) a.
+ReaderT SessionState (BuildT m) a -&gt; SessionT m a
+</span><a href="TensorFlow.Session.html#Session"><span class="hs-identifier hs-var">Session</span></a></span><span> </span><span class="annot"><span class="annottext">ReaderT SessionState (BuildT m) SessionState
+forall (m :: * -&gt; *) r. Monad m =&gt; ReaderT r m r
+</span><span class="hs-identifier hs-var">ask</span></span><span>
+</span><span id="line-217"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679166607"><span class="annot"><span class="annottext">loop :: IO b
+</span><a href="#local-6989586621679166607"><span class="hs-identifier hs-var hs-var">loop</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">IO () -&gt; IO b
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">forever</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">IO [TensorData] -&gt; IO ()
+forall (f :: * -&gt; *) a. Functor f =&gt; f a -&gt; f ()
+</span><span class="hs-identifier hs-var">void</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Session
+-&gt; [(ByteString, TensorData)]
+-&gt; [ByteString]
+-&gt; [ByteString]
+-&gt; IO [TensorData]
+</span><a href="TensorFlow.Internal.FFI.html#run"><span class="hs-identifier hs-var">FFI.run</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SessionState -&gt; Session
+</span><a href="TensorFlow.Session.html#rawSession"><span class="hs-identifier hs-var hs-var">rawSession</span></a></span><span> </span><span class="annot"><span class="annottext">SessionState
+</span><a href="#local-6989586621679166608"><span class="hs-identifier hs-var">state</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">[ByteString]
+</span><a href="#local-6989586621679166609"><span class="hs-identifier hs-var">targetNames</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-218"></span><span>    </span><span class="annot"><span class="annottext">IO () -&gt; SessionT m ()
+forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SessionState -&gt; IO () -&gt; IO ()
+</span><a href="TensorFlow.Session.html#asyncCollector"><span class="hs-identifier hs-var hs-var">asyncCollector</span></a></span><span> </span><span class="annot"><span class="annottext">SessionState
+</span><a href="#local-6989586621679166608"><span class="hs-identifier hs-var">state</span></a></span><span> </span><span class="annot"><span class="annottext">IO ()
+forall b. IO b
+</span><a href="#local-6989586621679166607"><span class="hs-identifier hs-var">loop</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-219"></span></pre></body></html>

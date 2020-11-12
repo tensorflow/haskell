@@ -1,0 +1,746 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span id="%24con2tag_Bp6jmXbpzmZ81mCjn61Ma4"></span><span class="hs-comment">-- Copyright 2016 TensorFlow authors.</span><span>
+</span><span id="line-2"></span><span class="hs-comment">--</span><span>
+</span><span id="line-3"></span><span class="hs-comment">-- Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span><span>
+</span><span id="line-4"></span><span class="hs-comment">-- you may not use this file except in compliance with the License.</span><span>
+</span><span id="line-5"></span><span class="hs-comment">-- You may obtain a copy of the License at</span><span>
+</span><span id="line-6"></span><span class="hs-comment">--</span><span>
+</span><span id="line-7"></span><span class="hs-comment">--     http://www.apache.org/licenses/LICENSE-2.0</span><span>
+</span><span id="line-8"></span><span class="hs-comment">--</span><span>
+</span><span id="line-9"></span><span class="hs-comment">-- Unless required by applicable law or agreed to in writing, software</span><span>
+</span><span id="line-10"></span><span class="hs-comment">-- distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span><span>
+</span><span id="line-11"></span><span class="hs-comment">-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span><span>
+</span><span id="line-12"></span><span class="hs-comment">-- See the License for the specific language governing permissions and</span><span>
+</span><span id="line-13"></span><span class="hs-comment">-- limitations under the License.</span><span>
+</span><span id="line-14"></span><span>
+</span><span id="line-15"></span><span class="hs-pragma">{-# LANGUAGE GeneralizedNewtypeDeriving #-}</span><span>
+</span><span id="line-16"></span><span class="hs-pragma">{-# LANGUAGE OverloadedStrings #-}</span><span>
+</span><span id="line-17"></span><span class="hs-pragma">{-# LANGUAGE Rank2Types #-}</span><span>
+</span><span id="line-18"></span><span class="hs-pragma">{-# LANGUAGE ScopedTypeVariables #-}</span><span>
+</span><span id="line-19"></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">TensorFlow.Output</span><span>
+</span><span id="line-21"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="TensorFlow.Output.html#ControlNode"><span class="hs-identifier">ControlNode</span></a></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-22"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Output.html#Device"><span class="hs-identifier">Device</span></a></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-23"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Ops</span></span><span>
+</span><span id="line-24"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Output.html#NodeName"><span class="hs-identifier">NodeName</span></a></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-25"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Output.html#OpDef"><span class="hs-identifier">OpDef</span></a></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-26"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Output.html#opName"><span class="hs-identifier">opName</span></a></span><span>
+</span><span id="line-27"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Output.html#opType"><span class="hs-identifier">opType</span></a></span><span>
+</span><span id="line-28"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Output.html#opAttr"><span class="hs-identifier">opAttr</span></a></span><span>
+</span><span id="line-29"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Output.html#opInputs"><span class="hs-identifier">opInputs</span></a></span><span>
+</span><span id="line-30"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Output.html#opControlInputs"><span class="hs-identifier">opControlInputs</span></a></span><span>
+</span><span id="line-31"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Output.html#OpType"><span class="hs-identifier">OpType</span></a></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-32"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Output.html#OutputIx"><span class="hs-identifier">OutputIx</span></a></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-33"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Output.html#Output"><span class="hs-identifier">Output</span></a></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-34"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Output.html#output"><span class="hs-identifier">output</span></a></span><span>
+</span><span id="line-35"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Output.html#PendingNodeName"><span class="hs-identifier">PendingNodeName</span></a></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-36"></span><span>    </span><span class="hs-special">)</span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-37"></span><span>
+</span><span id="line-38"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Message</span></span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">defMessage</span></span><span class="hs-special">)</span><span>
+</span><span id="line-39"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.Map.Strict</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Map</span></span><span>
+</span><span id="line-40"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.String</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">IsString</span></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-41"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Text</span></span><span class="hs-special">)</span><span>
+</span><span id="line-42"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Text</span></span><span>
+</span><span id="line-43"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Lens.Family2</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Lens'</span></span><span class="hs-special">)</span><span>
+</span><span id="line-44"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Lens.Family2.Unchecked</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">lens</span></span><span class="hs-special">)</span><span>
+</span><span id="line-45"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Proto.Tensorflow.Core.Framework.AttrValue</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">AttrValue</span></span><span class="hs-special">)</span><span>
+</span><span id="line-46"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="TensorFlow.Types.html"><span class="hs-identifier">TensorFlow.Types</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="TensorFlow.Types.html#Attribute"><span class="hs-identifier">Attribute</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Types.html#attrLens"><span class="hs-identifier">attrLens</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-47"></span><span>
+</span><span id="line-48"></span><span class="hs-comment">-- | A type of graph node which has no outputs. These nodes are</span><span>
+</span><span id="line-49"></span><span class="hs-comment">-- valuable for causing side effects when they are run.</span><span>
+</span><span id="line-50"></span><span class="hs-keyword">newtype</span><span> </span><span id="ControlNode"><span class="annot"><a href="TensorFlow.Output.html#ControlNode"><span class="hs-identifier hs-var">ControlNode</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ControlNode"><span class="annot"><a href="TensorFlow.Output.html#ControlNode"><span class="hs-identifier hs-var">ControlNode</span></a></span></span><span> </span><span class="hs-special">{</span><span> </span><span id="unControlNode"><span class="annot"><span class="annottext">ControlNode -&gt; NodeName
+</span><a href="TensorFlow.Output.html#unControlNode"><span class="hs-identifier hs-var hs-var">unControlNode</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="TensorFlow.Output.html#NodeName"><span class="hs-identifier hs-type">NodeName</span></a></span><span> </span><span class="hs-special">}</span><span>
+</span><span id="line-51"></span><span>
+</span><span id="line-52"></span><span class="hs-comment">-- | The type of op of a node in the graph.  This corresponds to the proto field</span><span>
+</span><span id="line-53"></span><span class="hs-comment">-- NodeDef.op.</span><span>
+</span><span id="line-54"></span><span class="hs-keyword">newtype</span><span> </span><span id="OpType"><span class="annot"><a href="TensorFlow.Output.html#OpType"><span class="hs-identifier hs-var">OpType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="OpType"><span class="annot"><a href="TensorFlow.Output.html#OpType"><span class="hs-identifier hs-var">OpType</span></a></span></span><span> </span><span class="hs-special">{</span><span> </span><span id="unOpType"><span class="annot"><span class="annottext">OpType -&gt; Text
+</span><a href="TensorFlow.Output.html#unOpType"><span class="hs-identifier hs-var hs-var">unOpType</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-special">}</span><span>
+</span><span id="line-55"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679165230"><span id="local-6989586621679165232"><span class="annot"><span class="annottext">OpType -&gt; OpType -&gt; Bool
+(OpType -&gt; OpType -&gt; Bool)
+-&gt; (OpType -&gt; OpType -&gt; Bool) -&gt; Eq OpType
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: OpType -&gt; OpType -&gt; Bool
+$c/= :: OpType -&gt; OpType -&gt; Bool
+== :: OpType -&gt; OpType -&gt; Bool
+$c== :: OpType -&gt; OpType -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679165214"><span id="local-6989586621679165216"><span id="local-6989586621679165218"><span id="local-6989586621679165220"><span id="local-6989586621679165222"><span id="local-6989586621679165224"><span id="local-6989586621679165226"><span class="annot"><span class="annottext">Eq OpType
+Eq OpType =&gt;
+(OpType -&gt; OpType -&gt; Ordering)
+-&gt; (OpType -&gt; OpType -&gt; Bool)
+-&gt; (OpType -&gt; OpType -&gt; Bool)
+-&gt; (OpType -&gt; OpType -&gt; Bool)
+-&gt; (OpType -&gt; OpType -&gt; Bool)
+-&gt; (OpType -&gt; OpType -&gt; OpType)
+-&gt; (OpType -&gt; OpType -&gt; OpType)
+-&gt; Ord OpType
+OpType -&gt; OpType -&gt; Bool
+OpType -&gt; OpType -&gt; Ordering
+OpType -&gt; OpType -&gt; OpType
+forall a.
+Eq a =&gt;
+(a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+min :: OpType -&gt; OpType -&gt; OpType
+$cmin :: OpType -&gt; OpType -&gt; OpType
+max :: OpType -&gt; OpType -&gt; OpType
+$cmax :: OpType -&gt; OpType -&gt; OpType
+&gt;= :: OpType -&gt; OpType -&gt; Bool
+$c&gt;= :: OpType -&gt; OpType -&gt; Bool
+&gt; :: OpType -&gt; OpType -&gt; Bool
+$c&gt; :: OpType -&gt; OpType -&gt; Bool
+&lt;= :: OpType -&gt; OpType -&gt; Bool
+$c&lt;= :: OpType -&gt; OpType -&gt; Bool
+&lt; :: OpType -&gt; OpType -&gt; Bool
+$c&lt; :: OpType -&gt; OpType -&gt; Bool
+compare :: OpType -&gt; OpType -&gt; Ordering
+$ccompare :: OpType -&gt; OpType -&gt; Ordering
+$cp1Ord :: Eq OpType
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679165207"><span id="local-6989586621679165209"><span id="local-6989586621679165211"><span class="annot"><span class="annottext">Int -&gt; OpType -&gt; ShowS
+[OpType] -&gt; ShowS
+OpType -&gt; String
+(Int -&gt; OpType -&gt; ShowS)
+-&gt; (OpType -&gt; String) -&gt; ([OpType] -&gt; ShowS) -&gt; Show OpType
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [OpType] -&gt; ShowS
+$cshowList :: [OpType] -&gt; ShowS
+show :: OpType -&gt; String
+$cshow :: OpType -&gt; String
+showsPrec :: Int -&gt; OpType -&gt; ShowS
+$cshowsPrec :: Int -&gt; OpType -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-56"></span><span>
+</span><span id="line-57"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IsString</span></span><span> </span><span class="annot"><a href="TensorFlow.Output.html#OpType"><span class="hs-identifier hs-type">OpType</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-58"></span><span>    </span><span id="local-6989586621679165203"><span class="annot"><span class="annottext">fromString :: String -&gt; OpType
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">fromString</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; OpType
+</span><a href="TensorFlow.Output.html#OpType"><span class="hs-identifier hs-var">OpType</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; OpType) -&gt; (String -&gt; Text) -&gt; String -&gt; OpType
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Text
+</span><span class="hs-identifier hs-var">Text.pack</span></span><span>
+</span><span id="line-59"></span><span>
+</span><span id="line-60"></span><span class="hs-comment">-- | An output of a TensorFlow node.</span><span>
+</span><span id="line-61"></span><span class="hs-keyword">data</span><span> </span><span id="Output"><span class="annot"><a href="TensorFlow.Output.html#Output"><span class="hs-identifier hs-var">Output</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Output"><span class="annot"><a href="TensorFlow.Output.html#Output"><span class="hs-identifier hs-var">Output</span></a></span></span><span> </span><span class="hs-special">{</span><span id="outputIndex"><span class="annot"><span class="annottext">Output -&gt; OutputIx
+</span><a href="TensorFlow.Output.html#outputIndex"><span class="hs-identifier hs-var hs-var">outputIndex</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="TensorFlow.Output.html#OutputIx"><span class="hs-identifier hs-type">OutputIx</span></a></span><span class="hs-special">,</span><span> </span><span id="outputNodeName"><span class="annot"><span class="annottext">Output -&gt; NodeName
+</span><a href="TensorFlow.Output.html#outputNodeName"><span class="hs-identifier hs-var hs-var">outputNodeName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="TensorFlow.Output.html#NodeName"><span class="hs-identifier hs-type">NodeName</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-62"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679165194"><span id="local-6989586621679165196"><span class="annot"><span class="annottext">Output -&gt; Output -&gt; Bool
+(Output -&gt; Output -&gt; Bool)
+-&gt; (Output -&gt; Output -&gt; Bool) -&gt; Eq Output
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: Output -&gt; Output -&gt; Bool
+$c/= :: Output -&gt; Output -&gt; Bool
+== :: Output -&gt; Output -&gt; Bool
+$c== :: Output -&gt; Output -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679165179"><span id="local-6989586621679165181"><span id="local-6989586621679165183"><span id="local-6989586621679165185"><span id="local-6989586621679165187"><span id="local-6989586621679165189"><span id="local-6989586621679165191"><span class="annot"><span class="annottext">Eq Output
+Eq Output =&gt;
+(Output -&gt; Output -&gt; Ordering)
+-&gt; (Output -&gt; Output -&gt; Bool)
+-&gt; (Output -&gt; Output -&gt; Bool)
+-&gt; (Output -&gt; Output -&gt; Bool)
+-&gt; (Output -&gt; Output -&gt; Bool)
+-&gt; (Output -&gt; Output -&gt; Output)
+-&gt; (Output -&gt; Output -&gt; Output)
+-&gt; Ord Output
+Output -&gt; Output -&gt; Bool
+Output -&gt; Output -&gt; Ordering
+Output -&gt; Output -&gt; Output
+forall a.
+Eq a =&gt;
+(a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+min :: Output -&gt; Output -&gt; Output
+$cmin :: Output -&gt; Output -&gt; Output
+max :: Output -&gt; Output -&gt; Output
+$cmax :: Output -&gt; Output -&gt; Output
+&gt;= :: Output -&gt; Output -&gt; Bool
+$c&gt;= :: Output -&gt; Output -&gt; Bool
+&gt; :: Output -&gt; Output -&gt; Bool
+$c&gt; :: Output -&gt; Output -&gt; Bool
+&lt;= :: Output -&gt; Output -&gt; Bool
+$c&lt;= :: Output -&gt; Output -&gt; Bool
+&lt; :: Output -&gt; Output -&gt; Bool
+$c&lt; :: Output -&gt; Output -&gt; Bool
+compare :: Output -&gt; Output -&gt; Ordering
+$ccompare :: Output -&gt; Output -&gt; Ordering
+$cp1Ord :: Eq Output
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679165173"><span id="local-6989586621679165175"><span id="local-6989586621679165177"><span class="annot"><span class="annottext">Int -&gt; Output -&gt; ShowS
+[Output] -&gt; ShowS
+Output -&gt; String
+(Int -&gt; Output -&gt; ShowS)
+-&gt; (Output -&gt; String) -&gt; ([Output] -&gt; ShowS) -&gt; Show Output
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [Output] -&gt; ShowS
+$cshowList :: [Output] -&gt; ShowS
+show :: Output -&gt; String
+$cshow :: Output -&gt; String
+showsPrec :: Int -&gt; Output -&gt; ShowS
+$cshowsPrec :: Int -&gt; Output -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-63"></span><span>
+</span><span id="line-64"></span><span class="annot"><a href="TensorFlow.Output.html#output"><span class="hs-identifier hs-type">output</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="TensorFlow.Output.html#OutputIx"><span class="hs-identifier hs-type">OutputIx</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Output.html#NodeName"><span class="hs-identifier hs-type">NodeName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Output.html#Output"><span class="hs-identifier hs-type">Output</span></a></span><span>
+</span><span id="line-65"></span><span id="output"><span class="annot"><span class="annottext">output :: OutputIx -&gt; NodeName -&gt; Output
+</span><a href="TensorFlow.Output.html#output"><span class="hs-identifier hs-var hs-var">output</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OutputIx -&gt; NodeName -&gt; Output
+</span><a href="TensorFlow.Output.html#Output"><span class="hs-identifier hs-var">Output</span></a></span><span>
+</span><span id="line-66"></span><span>
+</span><span id="line-67"></span><span class="hs-keyword">newtype</span><span> </span><span id="OutputIx"><span class="annot"><a href="TensorFlow.Output.html#OutputIx"><span class="hs-identifier hs-var">OutputIx</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="OutputIx"><span class="annot"><a href="TensorFlow.Output.html#OutputIx"><span class="hs-identifier hs-var">OutputIx</span></a></span></span><span> </span><span class="hs-special">{</span><span> </span><span id="unOutputIx"><span class="annot"><span class="annottext">OutputIx -&gt; Int
+</span><a href="TensorFlow.Output.html#unOutputIx"><span class="hs-identifier hs-var hs-var">unOutputIx</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span> </span><span class="hs-special">}</span><span>
+</span><span id="line-68"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679165167"><span id="local-6989586621679165169"><span class="annot"><span class="annottext">OutputIx -&gt; OutputIx -&gt; Bool
+(OutputIx -&gt; OutputIx -&gt; Bool)
+-&gt; (OutputIx -&gt; OutputIx -&gt; Bool) -&gt; Eq OutputIx
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: OutputIx -&gt; OutputIx -&gt; Bool
+$c/= :: OutputIx -&gt; OutputIx -&gt; Bool
+== :: OutputIx -&gt; OutputIx -&gt; Bool
+$c== :: OutputIx -&gt; OutputIx -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679165152"><span id="local-6989586621679165154"><span id="local-6989586621679165156"><span id="local-6989586621679165158"><span id="local-6989586621679165160"><span id="local-6989586621679165162"><span id="local-6989586621679165164"><span class="annot"><span class="annottext">Eq OutputIx
+Eq OutputIx =&gt;
+(OutputIx -&gt; OutputIx -&gt; Ordering)
+-&gt; (OutputIx -&gt; OutputIx -&gt; Bool)
+-&gt; (OutputIx -&gt; OutputIx -&gt; Bool)
+-&gt; (OutputIx -&gt; OutputIx -&gt; Bool)
+-&gt; (OutputIx -&gt; OutputIx -&gt; Bool)
+-&gt; (OutputIx -&gt; OutputIx -&gt; OutputIx)
+-&gt; (OutputIx -&gt; OutputIx -&gt; OutputIx)
+-&gt; Ord OutputIx
+OutputIx -&gt; OutputIx -&gt; Bool
+OutputIx -&gt; OutputIx -&gt; Ordering
+OutputIx -&gt; OutputIx -&gt; OutputIx
+forall a.
+Eq a =&gt;
+(a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+min :: OutputIx -&gt; OutputIx -&gt; OutputIx
+$cmin :: OutputIx -&gt; OutputIx -&gt; OutputIx
+max :: OutputIx -&gt; OutputIx -&gt; OutputIx
+$cmax :: OutputIx -&gt; OutputIx -&gt; OutputIx
+&gt;= :: OutputIx -&gt; OutputIx -&gt; Bool
+$c&gt;= :: OutputIx -&gt; OutputIx -&gt; Bool
+&gt; :: OutputIx -&gt; OutputIx -&gt; Bool
+$c&gt; :: OutputIx -&gt; OutputIx -&gt; Bool
+&lt;= :: OutputIx -&gt; OutputIx -&gt; Bool
+$c&lt;= :: OutputIx -&gt; OutputIx -&gt; Bool
+&lt; :: OutputIx -&gt; OutputIx -&gt; Bool
+$c&lt; :: OutputIx -&gt; OutputIx -&gt; Bool
+compare :: OutputIx -&gt; OutputIx -&gt; Ordering
+$ccompare :: OutputIx -&gt; OutputIx -&gt; Ordering
+$cp1Ord :: Eq OutputIx
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679165138"><span id="local-6989586621679165140"><span id="local-6989586621679165142"><span id="local-6989586621679165144"><span id="local-6989586621679165146"><span id="local-6989586621679165148"><span id="local-6989586621679165150"><span class="annot"><span class="annottext">Integer -&gt; OutputIx
+OutputIx -&gt; OutputIx
+OutputIx -&gt; OutputIx -&gt; OutputIx
+(OutputIx -&gt; OutputIx -&gt; OutputIx)
+-&gt; (OutputIx -&gt; OutputIx -&gt; OutputIx)
+-&gt; (OutputIx -&gt; OutputIx -&gt; OutputIx)
+-&gt; (OutputIx -&gt; OutputIx)
+-&gt; (OutputIx -&gt; OutputIx)
+-&gt; (OutputIx -&gt; OutputIx)
+-&gt; (Integer -&gt; OutputIx)
+-&gt; Num OutputIx
+forall a.
+(a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a)
+-&gt; (a -&gt; a)
+-&gt; (a -&gt; a)
+-&gt; (Integer -&gt; a)
+-&gt; Num a
+fromInteger :: Integer -&gt; OutputIx
+$cfromInteger :: Integer -&gt; OutputIx
+signum :: OutputIx -&gt; OutputIx
+$csignum :: OutputIx -&gt; OutputIx
+abs :: OutputIx -&gt; OutputIx
+$cabs :: OutputIx -&gt; OutputIx
+negate :: OutputIx -&gt; OutputIx
+$cnegate :: OutputIx -&gt; OutputIx
+* :: OutputIx -&gt; OutputIx -&gt; OutputIx
+$c* :: OutputIx -&gt; OutputIx -&gt; OutputIx
+- :: OutputIx -&gt; OutputIx -&gt; OutputIx
+$c- :: OutputIx -&gt; OutputIx -&gt; OutputIx
++ :: OutputIx -&gt; OutputIx -&gt; OutputIx
+$c+ :: OutputIx -&gt; OutputIx -&gt; OutputIx
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Num</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679165121"><span id="local-6989586621679165123"><span id="local-6989586621679165125"><span id="local-6989586621679165127"><span id="local-6989586621679165129"><span id="local-6989586621679165131"><span id="local-6989586621679165133"><span id="local-6989586621679165135"><span class="annot"><span class="annottext">Int -&gt; OutputIx
+OutputIx -&gt; Int
+OutputIx -&gt; [OutputIx]
+OutputIx -&gt; OutputIx
+OutputIx -&gt; OutputIx -&gt; [OutputIx]
+OutputIx -&gt; OutputIx -&gt; OutputIx -&gt; [OutputIx]
+(OutputIx -&gt; OutputIx)
+-&gt; (OutputIx -&gt; OutputIx)
+-&gt; (Int -&gt; OutputIx)
+-&gt; (OutputIx -&gt; Int)
+-&gt; (OutputIx -&gt; [OutputIx])
+-&gt; (OutputIx -&gt; OutputIx -&gt; [OutputIx])
+-&gt; (OutputIx -&gt; OutputIx -&gt; [OutputIx])
+-&gt; (OutputIx -&gt; OutputIx -&gt; OutputIx -&gt; [OutputIx])
+-&gt; Enum OutputIx
+forall a.
+(a -&gt; a)
+-&gt; (a -&gt; a)
+-&gt; (Int -&gt; a)
+-&gt; (a -&gt; Int)
+-&gt; (a -&gt; [a])
+-&gt; (a -&gt; a -&gt; [a])
+-&gt; (a -&gt; a -&gt; [a])
+-&gt; (a -&gt; a -&gt; a -&gt; [a])
+-&gt; Enum a
+enumFromThenTo :: OutputIx -&gt; OutputIx -&gt; OutputIx -&gt; [OutputIx]
+$cenumFromThenTo :: OutputIx -&gt; OutputIx -&gt; OutputIx -&gt; [OutputIx]
+enumFromTo :: OutputIx -&gt; OutputIx -&gt; [OutputIx]
+$cenumFromTo :: OutputIx -&gt; OutputIx -&gt; [OutputIx]
+enumFromThen :: OutputIx -&gt; OutputIx -&gt; [OutputIx]
+$cenumFromThen :: OutputIx -&gt; OutputIx -&gt; [OutputIx]
+enumFrom :: OutputIx -&gt; [OutputIx]
+$cenumFrom :: OutputIx -&gt; [OutputIx]
+fromEnum :: OutputIx -&gt; Int
+$cfromEnum :: OutputIx -&gt; Int
+toEnum :: Int -&gt; OutputIx
+$ctoEnum :: Int -&gt; OutputIx
+pred :: OutputIx -&gt; OutputIx
+$cpred :: OutputIx -&gt; OutputIx
+succ :: OutputIx -&gt; OutputIx
+$csucc :: OutputIx -&gt; OutputIx
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Enum</span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679165114"><span id="local-6989586621679165116"><span id="local-6989586621679165118"><span class="annot"><span class="annottext">Int -&gt; OutputIx -&gt; ShowS
+[OutputIx] -&gt; ShowS
+OutputIx -&gt; String
+(Int -&gt; OutputIx -&gt; ShowS)
+-&gt; (OutputIx -&gt; String) -&gt; ([OutputIx] -&gt; ShowS) -&gt; Show OutputIx
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [OutputIx] -&gt; ShowS
+$cshowList :: [OutputIx] -&gt; ShowS
+show :: OutputIx -&gt; String
+$cshow :: OutputIx -&gt; String
+showsPrec :: Int -&gt; OutputIx -&gt; ShowS
+$cshowsPrec :: Int -&gt; OutputIx -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-69"></span><span>
+</span><span id="line-70"></span><span class="hs-comment">-- | A device that a node can be assigned to.</span><span>
+</span><span id="line-71"></span><span class="hs-comment">-- There's a naming convention where the device names</span><span>
+</span><span id="line-72"></span><span class="hs-comment">-- are constructed from job and replica names.</span><span>
+</span><span id="line-73"></span><span class="hs-keyword">newtype</span><span> </span><span id="Device"><span class="annot"><a href="TensorFlow.Output.html#Device"><span class="hs-identifier hs-var">Device</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Device"><span class="annot"><a href="TensorFlow.Output.html#Device"><span class="hs-identifier hs-var">Device</span></a></span></span><span> </span><span class="hs-special">{</span><span id="deviceName"><span class="annot"><span class="annottext">Device -&gt; Text
+</span><a href="TensorFlow.Output.html#deviceName"><span class="hs-identifier hs-var hs-var">deviceName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">}</span><span>
+</span><span id="line-74"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679165108"><span id="local-6989586621679165110"><span class="annot"><span class="annottext">Device -&gt; Device -&gt; Bool
+(Device -&gt; Device -&gt; Bool)
+-&gt; (Device -&gt; Device -&gt; Bool) -&gt; Eq Device
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: Device -&gt; Device -&gt; Bool
+$c/= :: Device -&gt; Device -&gt; Bool
+== :: Device -&gt; Device -&gt; Bool
+$c== :: Device -&gt; Device -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679165093"><span id="local-6989586621679165095"><span id="local-6989586621679165097"><span id="local-6989586621679165099"><span id="local-6989586621679165101"><span id="local-6989586621679165103"><span id="local-6989586621679165105"><span class="annot"><span class="annottext">Eq Device
+Eq Device =&gt;
+(Device -&gt; Device -&gt; Ordering)
+-&gt; (Device -&gt; Device -&gt; Bool)
+-&gt; (Device -&gt; Device -&gt; Bool)
+-&gt; (Device -&gt; Device -&gt; Bool)
+-&gt; (Device -&gt; Device -&gt; Bool)
+-&gt; (Device -&gt; Device -&gt; Device)
+-&gt; (Device -&gt; Device -&gt; Device)
+-&gt; Ord Device
+Device -&gt; Device -&gt; Bool
+Device -&gt; Device -&gt; Ordering
+Device -&gt; Device -&gt; Device
+forall a.
+Eq a =&gt;
+(a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+min :: Device -&gt; Device -&gt; Device
+$cmin :: Device -&gt; Device -&gt; Device
+max :: Device -&gt; Device -&gt; Device
+$cmax :: Device -&gt; Device -&gt; Device
+&gt;= :: Device -&gt; Device -&gt; Bool
+$c&gt;= :: Device -&gt; Device -&gt; Bool
+&gt; :: Device -&gt; Device -&gt; Bool
+$c&gt; :: Device -&gt; Device -&gt; Bool
+&lt;= :: Device -&gt; Device -&gt; Bool
+$c&lt;= :: Device -&gt; Device -&gt; Bool
+&lt; :: Device -&gt; Device -&gt; Bool
+$c&lt; :: Device -&gt; Device -&gt; Bool
+compare :: Device -&gt; Device -&gt; Ordering
+$ccompare :: Device -&gt; Device -&gt; Ordering
+$cp1Ord :: Eq Device
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679165091"><span class="annot"><span class="annottext">String -&gt; Device
+(String -&gt; Device) -&gt; IsString Device
+forall a. (String -&gt; a) -&gt; IsString a
+fromString :: String -&gt; Device
+$cfromString :: String -&gt; Device
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">IsString</span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-75"></span><span>
+</span><span id="line-76"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679165086"><span id="local-6989586621679165089"><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="TensorFlow.Output.html#Device"><span class="hs-identifier hs-type">Device</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-77"></span><span>    </span><span id="local-6989586621679165085"><span class="annot"><span class="annottext">show :: Device -&gt; String
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">show</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="TensorFlow.Output.html#Device"><span class="hs-identifier hs-type">Device</span></a></span><span> </span><span id="local-6989586621679165083"><span class="annot"><span class="annottext">d :: Text
+</span><a href="#local-6989586621679165083"><span class="hs-identifier hs-var">d</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
+forall a. Show a =&gt; a -&gt; String
+</span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679165083"><span class="hs-identifier hs-var">d</span></a></span><span>
+</span><span id="line-78"></span><span>
+</span><span id="line-79"></span><span class="hs-comment">-- | Op definition. This corresponds somewhat to the 'NodeDef' proto.</span><span>
+</span><span id="line-80"></span><span class="hs-keyword">data</span><span> </span><span id="OpDef"><span class="annot"><a href="TensorFlow.Output.html#OpDef"><span class="hs-identifier hs-var">OpDef</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="OpDef"><span class="annot"><a href="TensorFlow.Output.html#OpDef"><span class="hs-identifier hs-var">OpDef</span></a></span></span><span>
+</span><span id="line-81"></span><span>    </span><span class="hs-special">{</span><span> </span><span id="_opName"><span class="annot"><span class="annottext">OpDef -&gt; PendingNodeName
+</span><a href="TensorFlow.Output.html#_opName"><span class="hs-identifier hs-var hs-var">_opName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="TensorFlow.Output.html#PendingNodeName"><span class="hs-identifier hs-type">PendingNodeName</span></a></span><span>
+</span><span id="line-82"></span><span>    </span><span class="hs-special">,</span><span> </span><span id="_opType"><span class="annot"><span class="annottext">OpDef -&gt; OpType
+</span><a href="TensorFlow.Output.html#_opType"><span class="hs-identifier hs-var hs-var">_opType</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="TensorFlow.Output.html#OpType"><span class="hs-identifier hs-type">OpType</span></a></span><span>
+</span><span id="line-83"></span><span>    </span><span class="hs-special">,</span><span> </span><span id="_opAttrs"><span class="annot"><span class="annottext">OpDef -&gt; Map Text AttrValue
+</span><a href="TensorFlow.Output.html#_opAttrs"><span class="hs-identifier hs-var hs-var">_opAttrs</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Map.Map</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">AttrValue</span></span><span class="hs-special">)</span><span>
+</span><span id="line-84"></span><span>    </span><span class="hs-special">,</span><span> </span><span id="_opInputs"><span class="annot"><span class="annottext">OpDef -&gt; [Output]
+</span><a href="TensorFlow.Output.html#_opInputs"><span class="hs-identifier hs-var hs-var">_opInputs</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="TensorFlow.Output.html#Output"><span class="hs-identifier hs-type">Output</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-85"></span><span>    </span><span class="hs-special">,</span><span> </span><span id="_opControlInputs"><span class="annot"><span class="annottext">OpDef -&gt; [NodeName]
+</span><a href="TensorFlow.Output.html#_opControlInputs"><span class="hs-identifier hs-var hs-var">_opControlInputs</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="TensorFlow.Output.html#NodeName"><span class="hs-identifier hs-type">NodeName</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-86"></span><span>    </span><span class="hs-special">}</span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679165073"><span id="local-6989586621679165075"><span class="annot"><span class="annottext">OpDef -&gt; OpDef -&gt; Bool
+(OpDef -&gt; OpDef -&gt; Bool) -&gt; (OpDef -&gt; OpDef -&gt; Bool) -&gt; Eq OpDef
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: OpDef -&gt; OpDef -&gt; Bool
+$c/= :: OpDef -&gt; OpDef -&gt; Bool
+== :: OpDef -&gt; OpDef -&gt; Bool
+$c== :: OpDef -&gt; OpDef -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679165058"><span id="local-6989586621679165060"><span id="local-6989586621679165062"><span id="local-6989586621679165064"><span id="local-6989586621679165066"><span id="local-6989586621679165068"><span id="local-6989586621679165070"><span class="annot"><span class="annottext">Eq OpDef
+Eq OpDef =&gt;
+(OpDef -&gt; OpDef -&gt; Ordering)
+-&gt; (OpDef -&gt; OpDef -&gt; Bool)
+-&gt; (OpDef -&gt; OpDef -&gt; Bool)
+-&gt; (OpDef -&gt; OpDef -&gt; Bool)
+-&gt; (OpDef -&gt; OpDef -&gt; Bool)
+-&gt; (OpDef -&gt; OpDef -&gt; OpDef)
+-&gt; (OpDef -&gt; OpDef -&gt; OpDef)
+-&gt; Ord OpDef
+OpDef -&gt; OpDef -&gt; Bool
+OpDef -&gt; OpDef -&gt; Ordering
+OpDef -&gt; OpDef -&gt; OpDef
+forall a.
+Eq a =&gt;
+(a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+min :: OpDef -&gt; OpDef -&gt; OpDef
+$cmin :: OpDef -&gt; OpDef -&gt; OpDef
+max :: OpDef -&gt; OpDef -&gt; OpDef
+$cmax :: OpDef -&gt; OpDef -&gt; OpDef
+&gt;= :: OpDef -&gt; OpDef -&gt; Bool
+$c&gt;= :: OpDef -&gt; OpDef -&gt; Bool
+&gt; :: OpDef -&gt; OpDef -&gt; Bool
+$c&gt; :: OpDef -&gt; OpDef -&gt; Bool
+&lt;= :: OpDef -&gt; OpDef -&gt; Bool
+$c&lt;= :: OpDef -&gt; OpDef -&gt; Bool
+&lt; :: OpDef -&gt; OpDef -&gt; Bool
+$c&lt; :: OpDef -&gt; OpDef -&gt; Bool
+compare :: OpDef -&gt; OpDef -&gt; Ordering
+$ccompare :: OpDef -&gt; OpDef -&gt; Ordering
+$cp1Ord :: Eq OpDef
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-87"></span><span>
+</span><span id="line-88"></span><span class="hs-comment">-- | The name specified for an unrendered Op.  If an Op has an</span><span>
+</span><span id="line-89"></span><span class="hs-comment">-- ImplicitName, it will be assigned based on the opType plus a</span><span>
+</span><span id="line-90"></span><span class="hs-comment">-- unique identifier.  Does not contain the &quot;scope&quot; prefix.</span><span>
+</span><span id="line-91"></span><span class="hs-keyword">data</span><span> </span><span id="PendingNodeName"><span class="annot"><a href="TensorFlow.Output.html#PendingNodeName"><span class="hs-identifier hs-var">PendingNodeName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ExplicitName"><span class="annot"><a href="TensorFlow.Output.html#ExplicitName"><span class="hs-identifier hs-var">ExplicitName</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="ImplicitName"><span class="annot"><a href="TensorFlow.Output.html#ImplicitName"><span class="hs-identifier hs-var">ImplicitName</span></a></span></span><span>
+</span><span id="line-92"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679165052"><span id="local-6989586621679165054"><span class="annot"><span class="annottext">PendingNodeName -&gt; PendingNodeName -&gt; Bool
+(PendingNodeName -&gt; PendingNodeName -&gt; Bool)
+-&gt; (PendingNodeName -&gt; PendingNodeName -&gt; Bool)
+-&gt; Eq PendingNodeName
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: PendingNodeName -&gt; PendingNodeName -&gt; Bool
+$c/= :: PendingNodeName -&gt; PendingNodeName -&gt; Bool
+== :: PendingNodeName -&gt; PendingNodeName -&gt; Bool
+$c== :: PendingNodeName -&gt; PendingNodeName -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679165037"><span id="local-6989586621679165039"><span id="local-6989586621679165041"><span id="local-6989586621679165043"><span id="local-6989586621679165045"><span id="local-6989586621679165047"><span id="local-6989586621679165049"><span class="annot"><span class="annottext">Eq PendingNodeName
+Eq PendingNodeName =&gt;
+(PendingNodeName -&gt; PendingNodeName -&gt; Ordering)
+-&gt; (PendingNodeName -&gt; PendingNodeName -&gt; Bool)
+-&gt; (PendingNodeName -&gt; PendingNodeName -&gt; Bool)
+-&gt; (PendingNodeName -&gt; PendingNodeName -&gt; Bool)
+-&gt; (PendingNodeName -&gt; PendingNodeName -&gt; Bool)
+-&gt; (PendingNodeName -&gt; PendingNodeName -&gt; PendingNodeName)
+-&gt; (PendingNodeName -&gt; PendingNodeName -&gt; PendingNodeName)
+-&gt; Ord PendingNodeName
+PendingNodeName -&gt; PendingNodeName -&gt; Bool
+PendingNodeName -&gt; PendingNodeName -&gt; Ordering
+PendingNodeName -&gt; PendingNodeName -&gt; PendingNodeName
+forall a.
+Eq a =&gt;
+(a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+min :: PendingNodeName -&gt; PendingNodeName -&gt; PendingNodeName
+$cmin :: PendingNodeName -&gt; PendingNodeName -&gt; PendingNodeName
+max :: PendingNodeName -&gt; PendingNodeName -&gt; PendingNodeName
+$cmax :: PendingNodeName -&gt; PendingNodeName -&gt; PendingNodeName
+&gt;= :: PendingNodeName -&gt; PendingNodeName -&gt; Bool
+$c&gt;= :: PendingNodeName -&gt; PendingNodeName -&gt; Bool
+&gt; :: PendingNodeName -&gt; PendingNodeName -&gt; Bool
+$c&gt; :: PendingNodeName -&gt; PendingNodeName -&gt; Bool
+&lt;= :: PendingNodeName -&gt; PendingNodeName -&gt; Bool
+$c&lt;= :: PendingNodeName -&gt; PendingNodeName -&gt; Bool
+&lt; :: PendingNodeName -&gt; PendingNodeName -&gt; Bool
+$c&lt; :: PendingNodeName -&gt; PendingNodeName -&gt; Bool
+compare :: PendingNodeName -&gt; PendingNodeName -&gt; Ordering
+$ccompare :: PendingNodeName -&gt; PendingNodeName -&gt; Ordering
+$cp1Ord :: Eq PendingNodeName
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679165031"><span id="local-6989586621679165033"><span id="local-6989586621679165035"><span class="annot"><span class="annottext">Int -&gt; PendingNodeName -&gt; ShowS
+[PendingNodeName] -&gt; ShowS
+PendingNodeName -&gt; String
+(Int -&gt; PendingNodeName -&gt; ShowS)
+-&gt; (PendingNodeName -&gt; String)
+-&gt; ([PendingNodeName] -&gt; ShowS)
+-&gt; Show PendingNodeName
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [PendingNodeName] -&gt; ShowS
+$cshowList :: [PendingNodeName] -&gt; ShowS
+show :: PendingNodeName -&gt; String
+$cshow :: PendingNodeName -&gt; String
+showsPrec :: Int -&gt; PendingNodeName -&gt; ShowS
+$cshowsPrec :: Int -&gt; PendingNodeName -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-93"></span><span>
+</span><span id="line-94"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IsString</span></span><span> </span><span class="annot"><a href="TensorFlow.Output.html#PendingNodeName"><span class="hs-identifier hs-type">PendingNodeName</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-95"></span><span>    </span><span id="local-6989586621679165029"><span class="annot"><span class="annottext">fromString :: String -&gt; PendingNodeName
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">fromString</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; PendingNodeName
+</span><a href="TensorFlow.Output.html#ExplicitName"><span class="hs-identifier hs-var">ExplicitName</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; PendingNodeName)
+-&gt; (String -&gt; Text) -&gt; String -&gt; PendingNodeName
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Text
+forall a. IsString a =&gt; String -&gt; a
+</span><span class="hs-identifier hs-var">fromString</span></span><span>
+</span><span id="line-96"></span><span>
+</span><span id="line-97"></span><span class="hs-comment">-- | The name of a node in the graph.  This corresponds to the proto field</span><span>
+</span><span id="line-98"></span><span class="hs-comment">-- NodeDef.name.  Includes the scope prefix (if any) and a unique identifier</span><span>
+</span><span id="line-99"></span><span class="hs-comment">-- (if the node was implicitly named).</span><span>
+</span><span id="line-100"></span><span class="hs-keyword">newtype</span><span> </span><span id="NodeName"><span class="annot"><a href="TensorFlow.Output.html#NodeName"><span class="hs-identifier hs-var">NodeName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="NodeName"><span class="annot"><a href="TensorFlow.Output.html#NodeName"><span class="hs-identifier hs-var">NodeName</span></a></span></span><span> </span><span class="hs-special">{</span><span> </span><span id="unNodeName"><span class="annot"><span class="annottext">NodeName -&gt; Text
+</span><a href="TensorFlow.Output.html#unNodeName"><span class="hs-identifier hs-var hs-var">unNodeName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-special">}</span><span>
+</span><span id="line-101"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679165023"><span id="local-6989586621679165025"><span class="annot"><span class="annottext">NodeName -&gt; NodeName -&gt; Bool
+(NodeName -&gt; NodeName -&gt; Bool)
+-&gt; (NodeName -&gt; NodeName -&gt; Bool) -&gt; Eq NodeName
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: NodeName -&gt; NodeName -&gt; Bool
+$c/= :: NodeName -&gt; NodeName -&gt; Bool
+== :: NodeName -&gt; NodeName -&gt; Bool
+$c== :: NodeName -&gt; NodeName -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679165008"><span id="local-6989586621679165010"><span id="local-6989586621679165012"><span id="local-6989586621679165014"><span id="local-6989586621679165016"><span id="local-6989586621679165018"><span id="local-6989586621679165020"><span class="annot"><span class="annottext">Eq NodeName
+Eq NodeName =&gt;
+(NodeName -&gt; NodeName -&gt; Ordering)
+-&gt; (NodeName -&gt; NodeName -&gt; Bool)
+-&gt; (NodeName -&gt; NodeName -&gt; Bool)
+-&gt; (NodeName -&gt; NodeName -&gt; Bool)
+-&gt; (NodeName -&gt; NodeName -&gt; Bool)
+-&gt; (NodeName -&gt; NodeName -&gt; NodeName)
+-&gt; (NodeName -&gt; NodeName -&gt; NodeName)
+-&gt; Ord NodeName
+NodeName -&gt; NodeName -&gt; Bool
+NodeName -&gt; NodeName -&gt; Ordering
+NodeName -&gt; NodeName -&gt; NodeName
+forall a.
+Eq a =&gt;
+(a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+min :: NodeName -&gt; NodeName -&gt; NodeName
+$cmin :: NodeName -&gt; NodeName -&gt; NodeName
+max :: NodeName -&gt; NodeName -&gt; NodeName
+$cmax :: NodeName -&gt; NodeName -&gt; NodeName
+&gt;= :: NodeName -&gt; NodeName -&gt; Bool
+$c&gt;= :: NodeName -&gt; NodeName -&gt; Bool
+&gt; :: NodeName -&gt; NodeName -&gt; Bool
+$c&gt; :: NodeName -&gt; NodeName -&gt; Bool
+&lt;= :: NodeName -&gt; NodeName -&gt; Bool
+$c&lt;= :: NodeName -&gt; NodeName -&gt; Bool
+&lt; :: NodeName -&gt; NodeName -&gt; Bool
+$c&lt; :: NodeName -&gt; NodeName -&gt; Bool
+compare :: NodeName -&gt; NodeName -&gt; Ordering
+$ccompare :: NodeName -&gt; NodeName -&gt; Ordering
+$cp1Ord :: Eq NodeName
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679165002"><span id="local-6989586621679165004"><span id="local-6989586621679165006"><span class="annot"><span class="annottext">Int -&gt; NodeName -&gt; ShowS
+[NodeName] -&gt; ShowS
+NodeName -&gt; String
+(Int -&gt; NodeName -&gt; ShowS)
+-&gt; (NodeName -&gt; String) -&gt; ([NodeName] -&gt; ShowS) -&gt; Show NodeName
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [NodeName] -&gt; ShowS
+$cshowList :: [NodeName] -&gt; ShowS
+show :: NodeName -&gt; String
+$cshow :: NodeName -&gt; String
+showsPrec :: Int -&gt; NodeName -&gt; ShowS
+$cshowsPrec :: Int -&gt; NodeName -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-102"></span><span>
+</span><span id="line-103"></span><span class="annot"><a href="TensorFlow.Output.html#opName"><span class="hs-identifier hs-type">opName</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Lens'</span></span><span> </span><span class="annot"><a href="TensorFlow.Output.html#OpDef"><span class="hs-identifier hs-type">OpDef</span></a></span><span> </span><span class="annot"><a href="TensorFlow.Output.html#PendingNodeName"><span class="hs-identifier hs-type">PendingNodeName</span></a></span><span>
+</span><span id="line-104"></span><span id="opName"><span class="annot"><span class="annottext">opName :: LensLike' f OpDef PendingNodeName
+</span><a href="TensorFlow.Output.html#opName"><span class="hs-identifier hs-var hs-var">opName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(OpDef -&gt; PendingNodeName)
+-&gt; (OpDef -&gt; PendingNodeName -&gt; OpDef)
+-&gt; Lens OpDef OpDef PendingNodeName PendingNodeName
+forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span class="hs-identifier hs-var">lens</span></span><span> </span><span class="annot"><span class="annottext">OpDef -&gt; PendingNodeName
+</span><a href="TensorFlow.Output.html#_opName"><span class="hs-identifier hs-var hs-var">_opName</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621679165001"><span class="annot"><span class="annottext">o :: OpDef
+</span><a href="#local-6989586621679165001"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span id="local-6989586621679165000"><span class="annot"><span class="annottext">x :: PendingNodeName
+</span><a href="#local-6989586621679165000"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">OpDef
+</span><a href="#local-6989586621679165001"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_opName :: PendingNodeName
+</span><a href="TensorFlow.Output.html#_opName"><span class="hs-identifier hs-var">_opName</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">PendingNodeName
+</span><a href="#local-6989586621679165000"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">}</span><span class="hs-special">)</span><span>
+</span><span id="line-105"></span><span>
+</span><span id="line-106"></span><span class="annot"><a href="TensorFlow.Output.html#opType"><span class="hs-identifier hs-type">opType</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Lens'</span></span><span> </span><span class="annot"><a href="TensorFlow.Output.html#OpDef"><span class="hs-identifier hs-type">OpDef</span></a></span><span> </span><span class="annot"><a href="TensorFlow.Output.html#OpType"><span class="hs-identifier hs-type">OpType</span></a></span><span>
+</span><span id="line-107"></span><span id="opType"><span class="annot"><span class="annottext">opType :: LensLike' f OpDef OpType
+</span><a href="TensorFlow.Output.html#opType"><span class="hs-identifier hs-var hs-var">opType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(OpDef -&gt; OpType)
+-&gt; (OpDef -&gt; OpType -&gt; OpDef) -&gt; Lens OpDef OpDef OpType OpType
+forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span class="hs-identifier hs-var">lens</span></span><span> </span><span class="annot"><span class="annottext">OpDef -&gt; OpType
+</span><a href="TensorFlow.Output.html#_opType"><span class="hs-identifier hs-var hs-var">_opType</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621679164999"><span class="annot"><span class="annottext">o :: OpDef
+</span><a href="#local-6989586621679164999"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span id="local-6989586621679164998"><span class="annot"><span class="annottext">x :: OpType
+</span><a href="#local-6989586621679164998"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">OpDef
+</span><a href="#local-6989586621679164999"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_opType :: OpType
+</span><a href="TensorFlow.Output.html#_opType"><span class="hs-identifier hs-var">_opType</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OpType
+</span><a href="#local-6989586621679164998"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">}</span><span class="hs-special">)</span><span>
+</span><span id="line-108"></span><span>
+</span><span id="line-109"></span><span id="local-6989586621679164997"><span class="annot"><a href="TensorFlow.Output.html#opAttr"><span class="hs-identifier hs-type">opAttr</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="TensorFlow.Types.html#Attribute"><span class="hs-identifier hs-type">Attribute</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679164997"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Lens'</span></span><span> </span><span class="annot"><a href="TensorFlow.Output.html#OpDef"><span class="hs-identifier hs-type">OpDef</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679164997"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-110"></span><span id="opAttr"><span class="annot"><span class="annottext">opAttr :: Text -&gt; Lens' OpDef a
+</span><a href="TensorFlow.Output.html#opAttr"><span class="hs-identifier hs-var hs-var">opAttr</span></a></span></span><span> </span><span id="local-6989586621679164996"><span class="annot"><span class="annottext">n :: Text
+</span><a href="#local-6989586621679164996"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(OpDef -&gt; Map Text AttrValue)
+-&gt; (OpDef -&gt; Map Text AttrValue -&gt; OpDef)
+-&gt; Lens OpDef OpDef (Map Text AttrValue) (Map Text AttrValue)
+forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span class="hs-identifier hs-var">lens</span></span><span> </span><span class="annot"><span class="annottext">OpDef -&gt; Map Text AttrValue
+</span><a href="TensorFlow.Output.html#_opAttrs"><span class="hs-identifier hs-var hs-var">_opAttrs</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621679164995"><span class="annot"><span class="annottext">o :: OpDef
+</span><a href="#local-6989586621679164995"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span id="local-6989586621679164994"><span class="annot"><span class="annottext">x :: Map Text AttrValue
+</span><a href="#local-6989586621679164994"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">OpDef
+</span><a href="#local-6989586621679164995"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_opAttrs :: Map Text AttrValue
+</span><a href="TensorFlow.Output.html#_opAttrs"><span class="hs-identifier hs-var">_opAttrs</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Map Text AttrValue
+</span><a href="#local-6989586621679164994"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">}</span><span class="hs-special">)</span><span>
+</span><span id="line-111"></span><span>              </span><span class="annot"><span class="annottext">LensLike f OpDef OpDef (Map Text AttrValue) (Map Text AttrValue)
+-&gt; ((a -&gt; f a) -&gt; Map Text AttrValue -&gt; f (Map Text AttrValue))
+-&gt; (a -&gt; f a)
+-&gt; OpDef
+-&gt; f OpDef
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">(Map Text AttrValue -&gt; AttrValue)
+-&gt; (Map Text AttrValue -&gt; AttrValue -&gt; Map Text AttrValue)
+-&gt; Lens
+     (Map Text AttrValue) (Map Text AttrValue) AttrValue AttrValue
+forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span class="hs-identifier hs-var">lens</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AttrValue -&gt; Text -&gt; Map Text AttrValue -&gt; AttrValue
+forall k a. Ord k =&gt; a -&gt; k -&gt; Map k a -&gt; a
+</span><span class="hs-identifier hs-var">Map.findWithDefault</span></span><span> </span><span class="annot"><span class="annottext">AttrValue
+forall msg. Message msg =&gt; msg
+</span><span class="hs-identifier hs-var">defMessage</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679164996"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(AttrValue -&gt; Map Text AttrValue -&gt; Map Text AttrValue)
+-&gt; Map Text AttrValue -&gt; AttrValue -&gt; Map Text AttrValue
+forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
+</span><span class="hs-identifier hs-var">flip</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; AttrValue -&gt; Map Text AttrValue -&gt; Map Text AttrValue
+forall k a. Ord k =&gt; k -&gt; a -&gt; Map k a -&gt; Map k a
+</span><span class="hs-identifier hs-var">Map.insert</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679164996"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-112"></span><span>              </span><span class="annot"><span class="annottext">LensLike
+  f (Map Text AttrValue) (Map Text AttrValue) AttrValue AttrValue
+-&gt; ((a -&gt; f a) -&gt; AttrValue -&gt; f AttrValue)
+-&gt; (a -&gt; f a)
+-&gt; Map Text AttrValue
+-&gt; f (Map Text AttrValue)
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">(a -&gt; f a) -&gt; AttrValue -&gt; f AttrValue
+forall a. Attribute a =&gt; Lens' AttrValue a
+</span><a href="TensorFlow.Types.html#attrLens"><span class="hs-identifier hs-var">attrLens</span></a></span><span>
+</span><span id="line-113"></span><span>
+</span><span id="line-114"></span><span class="annot"><a href="TensorFlow.Output.html#opInputs"><span class="hs-identifier hs-type">opInputs</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Lens'</span></span><span> </span><span class="annot"><a href="TensorFlow.Output.html#OpDef"><span class="hs-identifier hs-type">OpDef</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="TensorFlow.Output.html#Output"><span class="hs-identifier hs-type">Output</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-115"></span><span id="opInputs"><span class="annot"><span class="annottext">opInputs :: LensLike' f OpDef [Output]
+</span><a href="TensorFlow.Output.html#opInputs"><span class="hs-identifier hs-var hs-var">opInputs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(OpDef -&gt; [Output])
+-&gt; (OpDef -&gt; [Output] -&gt; OpDef)
+-&gt; Lens OpDef OpDef [Output] [Output]
+forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span class="hs-identifier hs-var">lens</span></span><span> </span><span class="annot"><span class="annottext">OpDef -&gt; [Output]
+</span><a href="TensorFlow.Output.html#_opInputs"><span class="hs-identifier hs-var hs-var">_opInputs</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621679164990"><span class="annot"><span class="annottext">o :: OpDef
+</span><a href="#local-6989586621679164990"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span id="local-6989586621679164989"><span class="annot"><span class="annottext">x :: [Output]
+</span><a href="#local-6989586621679164989"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">OpDef
+</span><a href="#local-6989586621679164990"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_opInputs :: [Output]
+</span><a href="TensorFlow.Output.html#_opInputs"><span class="hs-identifier hs-var">_opInputs</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Output]
+</span><a href="#local-6989586621679164989"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">}</span><span class="hs-special">)</span><span>
+</span><span id="line-116"></span><span>
+</span><span id="line-117"></span><span class="annot"><a href="TensorFlow.Output.html#opControlInputs"><span class="hs-identifier hs-type">opControlInputs</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Lens'</span></span><span> </span><span class="annot"><a href="TensorFlow.Output.html#OpDef"><span class="hs-identifier hs-type">OpDef</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="TensorFlow.Output.html#NodeName"><span class="hs-identifier hs-type">NodeName</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-118"></span><span id="opControlInputs"><span class="annot"><span class="annottext">opControlInputs :: LensLike' f OpDef [NodeName]
+</span><a href="TensorFlow.Output.html#opControlInputs"><span class="hs-identifier hs-var hs-var">opControlInputs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(OpDef -&gt; [NodeName])
+-&gt; (OpDef -&gt; [NodeName] -&gt; OpDef)
+-&gt; Lens OpDef OpDef [NodeName] [NodeName]
+forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span class="hs-identifier hs-var">lens</span></span><span> </span><span class="annot"><span class="annottext">OpDef -&gt; [NodeName]
+</span><a href="TensorFlow.Output.html#_opControlInputs"><span class="hs-identifier hs-var hs-var">_opControlInputs</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621679164988"><span class="annot"><span class="annottext">o :: OpDef
+</span><a href="#local-6989586621679164988"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span id="local-6989586621679164987"><span class="annot"><span class="annottext">x :: [NodeName]
+</span><a href="#local-6989586621679164987"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">OpDef
+</span><a href="#local-6989586621679164988"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_opControlInputs :: [NodeName]
+</span><a href="TensorFlow.Output.html#_opControlInputs"><span class="hs-identifier hs-var">_opControlInputs</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[NodeName]
+</span><a href="#local-6989586621679164987"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">}</span><span class="hs-special">)</span><span>
+</span><span id="line-119"></span><span>
+</span><span id="line-120"></span><span class="hs-comment">-- TODO(gnezdo): IsString instance is weird and we should move that</span><span>
+</span><span id="line-121"></span><span class="hs-comment">-- code into a Build function</span><span>
+</span><span id="line-122"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IsString</span></span><span> </span><span class="annot"><a href="TensorFlow.Output.html#Output"><span class="hs-identifier hs-type">Output</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-123"></span><span>    </span><span id="local-6989586621679164985"><span class="annot"><span class="annottext">fromString :: String -&gt; Output
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">fromString</span></span></span><span> </span><span id="local-6989586621679164984"><span class="annot"><span class="annottext">s :: String
+</span><a href="#local-6989586621679164984"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">(Char -&gt; Bool) -&gt; String -&gt; (String, String)
+forall a. (a -&gt; Bool) -&gt; [a] -&gt; ([a], [a])
+</span><span class="hs-identifier hs-var">break</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Char -&gt; Char -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span class="annot"><span class="hs-char">':'</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679164984"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-124"></span><span>        </span><span class="hs-special">(</span><span id="local-6989586621679164982"><span class="annot"><span class="annottext">n :: String
+</span><a href="#local-6989586621679164982"><span class="hs-identifier hs-var">n</span></a></span></span><span class="hs-special">,</span><span> </span><span class="hs-char">':'</span><span class="annot"><span class="hs-glyph hs-type">:</span></span><span id="local-6989586621679164981"><span class="annot"><span class="annottext">ixStr :: String
+</span><a href="#local-6989586621679164981"><span class="hs-identifier hs-var">ixStr</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">|</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span id="local-6989586621679164980"><span class="annot"><span class="annottext">ix :: Integer
+</span><a href="#local-6989586621679164980"><span class="hs-identifier hs-var">ix</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;&quot;</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">String -&gt; [(Integer, String)]
+forall a. Read a =&gt; String -&gt; a
+</span><span class="hs-identifier hs-var">read</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679164981"><span class="hs-identifier hs-var">ixStr</span></a></span><span>
+</span><span id="line-125"></span><span>                         </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">OutputIx -&gt; NodeName -&gt; Output
+</span><a href="TensorFlow.Output.html#Output"><span class="hs-identifier hs-var">Output</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Integer -&gt; OutputIx
+forall a. Num a =&gt; Integer -&gt; a
+</span><span class="hs-identifier hs-var">fromInteger</span></span><span> </span><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621679164980"><span class="hs-identifier hs-var">ix</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(NodeName -&gt; Output) -&gt; NodeName -&gt; Output
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; NodeName
+</span><a href="#local-6989586621679164978"><span class="hs-identifier hs-var">assigned</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679164982"><span class="hs-identifier hs-var">n</span></a></span><span>
+</span><span id="line-126"></span><span>        </span><span class="hs-identifier">_</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">OutputIx -&gt; NodeName -&gt; Output
+</span><a href="TensorFlow.Output.html#Output"><span class="hs-identifier hs-var">Output</span></a></span><span> </span><span class="annot"><span class="hs-number">0</span></span><span> </span><span class="annot"><span class="annottext">(NodeName -&gt; Output) -&gt; NodeName -&gt; Output
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; NodeName
+</span><a href="#local-6989586621679164978"><span class="hs-identifier hs-var">assigned</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679164984"><span class="hs-identifier hs-var">s</span></a></span><span>
+</span><span id="line-127"></span><span>     </span><span class="hs-keyword">where</span><span> </span><span id="local-6989586621679164978"><span class="annot"><span class="annottext">assigned :: String -&gt; NodeName
+</span><a href="#local-6989586621679164978"><span class="hs-identifier hs-var hs-var">assigned</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; NodeName
+</span><a href="TensorFlow.Output.html#NodeName"><span class="hs-identifier hs-var">NodeName</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; NodeName) -&gt; (String -&gt; Text) -&gt; String -&gt; NodeName
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Text
+</span><span class="hs-identifier hs-var">Text.pack</span></span><span>
+</span><span id="line-128"></span></pre></body></html>

@@ -19,7 +19,7 @@ encodeTFRecords :: Monad m => ConduitT ByteString ByteString m ()
 decodeTFRecords :: MonadThrow m => ConduitT ByteString ByteString m ()
 
 -- | Write TFRecords to a file.
-sinkTFRecords :: (MonadResource m) => FilePath -> ConduitT ByteString o m ()
+sinkTFRecords :: MonadResource m => FilePath -> ConduitT ByteString o m ()
 
 -- | Read TFRecords from a file.
 sourceTFRecords :: (MonadResource m, MonadThrow m) => FilePath -> ConduitT i ByteString m ()

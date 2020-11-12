@@ -1,32 +1,40 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">-- Copyright 2016 TensorFlow authors.</span><span>
-</span><a name="line-2"></a><span class="hs-comment">--</span><span>
-</span><a name="line-3"></a><span class="hs-comment">-- Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span><span>
-</span><a name="line-4"></a><span class="hs-comment">-- you may not use this file except in compliance with the License.</span><span>
-</span><a name="line-5"></a><span class="hs-comment">-- You may obtain a copy of the License at</span><span>
-</span><a name="line-6"></a><span class="hs-comment">--</span><span>
-</span><a name="line-7"></a><span class="hs-comment">--     http://www.apache.org/licenses/LICENSE-2.0</span><span>
-</span><a name="line-8"></a><span class="hs-comment">--</span><span>
-</span><a name="line-9"></a><span class="hs-comment">-- Unless required by applicable law or agreed to in writing, software</span><span>
-</span><a name="line-10"></a><span class="hs-comment">-- distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span><span>
-</span><a name="line-11"></a><span class="hs-comment">-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span><span>
-</span><a name="line-12"></a><span class="hs-comment">-- See the License for the specific language governing permissions and</span><span>
-</span><a name="line-13"></a><span class="hs-comment">-- limitations under the License.</span><span>
-</span><a name="line-14"></a><span>
-</span><a name="line-15"></a><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">TensorFlow</span><span class="hs-operator">.</span><span class="hs-identifier">Examples</span><span class="hs-operator">.</span><span class="hs-identifier">MNIST</span><span class="hs-operator">.</span><span class="hs-identifier">InputData</span><span>
-</span><a name="line-16"></a><span>  </span><span class="hs-special">(</span><span> </span><a href="TensorFlow.Examples.MNIST.InputData.html#trainingImageData"><span class="hs-identifier hs-var">trainingImageData</span></a><span>
-</span><a name="line-17"></a><span>  </span><span class="hs-special">,</span><span> </span><a href="TensorFlow.Examples.MNIST.InputData.html#trainingLabelData"><span class="hs-identifier hs-var">trainingLabelData</span></a><span>
-</span><a name="line-18"></a><span>  </span><span class="hs-special">,</span><span> </span><a href="TensorFlow.Examples.MNIST.InputData.html#testImageData"><span class="hs-identifier hs-var">testImageData</span></a><span>
-</span><a name="line-19"></a><span>  </span><span class="hs-special">,</span><span> </span><a href="TensorFlow.Examples.MNIST.InputData.html#testLabelData"><span class="hs-identifier hs-var">testLabelData</span></a><span>
-</span><a name="line-20"></a><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
-</span><a name="line-21"></a><span>
-</span><a name="line-22"></a><span class="hs-keyword">import</span><span> </span><a href="Paths_tensorflow_mnist_input_data.html"><span class="hs-identifier">Paths_tensorflow_mnist_input_data</span></a><span> </span><span class="hs-special">(</span><a href="Paths_tensorflow_mnist_input_data.html#getDataFileName"><span class="hs-identifier hs-var">getDataFileName</span></a><span class="hs-special">)</span><span>
-</span><a name="line-23"></a><span>
-</span><a name="line-24"></a><span class="hs-comment">-- | Download the files containing the canonical MNIST samples and labels.</span><span>
-</span><a name="line-25"></a><span class="hs-identifier">trainingImageData</span><span class="hs-special">,</span><span> </span><span class="hs-identifier">trainingLabelData</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">IO</span><span> </span><span class="hs-identifier hs-type">FilePath</span><span>
-</span><a name="line-26"></a><a name="trainingImageData"><a href="TensorFlow.Examples.MNIST.InputData.html#trainingImageData"><span class="hs-identifier">trainingImageData</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><a href="Paths_tensorflow_mnist_input_data.html#getDataFileName"><span class="hs-identifier hs-var">getDataFileName</span></a><span> </span><span class="hs-string">&quot;train-images-idx3-ubyte.gz&quot;</span><span>
-</span><a name="line-27"></a><a name="trainingLabelData"><a href="TensorFlow.Examples.MNIST.InputData.html#trainingLabelData"><span class="hs-identifier">trainingLabelData</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><a href="Paths_tensorflow_mnist_input_data.html#getDataFileName"><span class="hs-identifier hs-var">getDataFileName</span></a><span> </span><span class="hs-string">&quot;train-labels-idx1-ubyte.gz&quot;</span><span>
-</span><a name="line-28"></a><span>
-</span><a name="line-29"></a><span class="hs-identifier">testImageData</span><span class="hs-special">,</span><span> </span><span class="hs-identifier">testLabelData</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">IO</span><span> </span><span class="hs-identifier hs-type">FilePath</span><span>
-</span><a name="line-30"></a><a name="testImageData"><a href="TensorFlow.Examples.MNIST.InputData.html#testImageData"><span class="hs-identifier">testImageData</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><a href="Paths_tensorflow_mnist_input_data.html#getDataFileName"><span class="hs-identifier hs-var">getDataFileName</span></a><span> </span><span class="hs-string">&quot;t10k-images-idx3-ubyte.gz&quot;</span><span>
-</span><a name="line-31"></a><a name="testLabelData"><a href="TensorFlow.Examples.MNIST.InputData.html#testLabelData"><span class="hs-identifier">testLabelData</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><a href="Paths_tensorflow_mnist_input_data.html#getDataFileName"><span class="hs-identifier hs-var">getDataFileName</span></a><span> </span><span class="hs-string">&quot;t10k-labels-idx1-ubyte.gz&quot;</span><span>
-</span><a name="line-32"></a></pre></body></html>
+</span><span id="line-2"></span><span class="hs-comment">--</span><span>
+</span><span id="line-3"></span><span class="hs-comment">-- Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span><span>
+</span><span id="line-4"></span><span class="hs-comment">-- you may not use this file except in compliance with the License.</span><span>
+</span><span id="line-5"></span><span class="hs-comment">-- You may obtain a copy of the License at</span><span>
+</span><span id="line-6"></span><span class="hs-comment">--</span><span>
+</span><span id="line-7"></span><span class="hs-comment">--     http://www.apache.org/licenses/LICENSE-2.0</span><span>
+</span><span id="line-8"></span><span class="hs-comment">--</span><span>
+</span><span id="line-9"></span><span class="hs-comment">-- Unless required by applicable law or agreed to in writing, software</span><span>
+</span><span id="line-10"></span><span class="hs-comment">-- distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span><span>
+</span><span id="line-11"></span><span class="hs-comment">-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span><span>
+</span><span id="line-12"></span><span class="hs-comment">-- See the License for the specific language governing permissions and</span><span>
+</span><span id="line-13"></span><span class="hs-comment">-- limitations under the License.</span><span>
+</span><span id="line-14"></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">TensorFlow.Examples.MNIST.InputData</span><span>
+</span><span id="line-16"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="TensorFlow.Examples.MNIST.InputData.html#trainingImageData"><span class="hs-identifier">trainingImageData</span></a></span><span>
+</span><span id="line-17"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Examples.MNIST.InputData.html#trainingLabelData"><span class="hs-identifier">trainingLabelData</span></a></span><span>
+</span><span id="line-18"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Examples.MNIST.InputData.html#testImageData"><span class="hs-identifier">testImageData</span></a></span><span>
+</span><span id="line-19"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Examples.MNIST.InputData.html#testLabelData"><span class="hs-identifier">testLabelData</span></a></span><span>
+</span><span id="line-20"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-21"></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Paths_tensorflow_mnist_input_data.html"><span class="hs-identifier">Paths_tensorflow_mnist_input_data</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Paths_tensorflow_mnist_input_data.html#getDataFileName"><span class="hs-identifier">getDataFileName</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-23"></span><span>
+</span><span id="line-24"></span><span class="hs-comment">-- | Download the files containing the canonical MNIST samples and labels.</span><span>
+</span><span id="line-25"></span><span class="annot"><a href="TensorFlow.Examples.MNIST.InputData.html#trainingImageData"><span class="hs-identifier hs-type">trainingImageData</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Examples.MNIST.InputData.html#trainingLabelData"><span class="hs-identifier hs-type">trainingLabelData</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">FilePath</span></span><span>
+</span><span id="line-26"></span><span id="trainingImageData"><span class="annot"><span class="annottext">trainingImageData :: IO FilePath
+</span><a href="TensorFlow.Examples.MNIST.InputData.html#trainingImageData"><span class="hs-identifier hs-var hs-var">trainingImageData</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">FilePath -&gt; IO FilePath
+</span><a href="Paths_tensorflow_mnist_input_data.html#getDataFileName"><span class="hs-identifier hs-var">getDataFileName</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;train-images-idx3-ubyte.gz&quot;</span></span><span>
+</span><span id="line-27"></span><span id="trainingLabelData"><span class="annot"><span class="annottext">trainingLabelData :: IO FilePath
+</span><a href="TensorFlow.Examples.MNIST.InputData.html#trainingLabelData"><span class="hs-identifier hs-var hs-var">trainingLabelData</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">FilePath -&gt; IO FilePath
+</span><a href="Paths_tensorflow_mnist_input_data.html#getDataFileName"><span class="hs-identifier hs-var">getDataFileName</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;train-labels-idx1-ubyte.gz&quot;</span></span><span>
+</span><span id="line-28"></span><span>
+</span><span id="line-29"></span><span class="annot"><a href="TensorFlow.Examples.MNIST.InputData.html#testImageData"><span class="hs-identifier hs-type">testImageData</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Examples.MNIST.InputData.html#testLabelData"><span class="hs-identifier hs-type">testLabelData</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">FilePath</span></span><span>
+</span><span id="line-30"></span><span id="testImageData"><span class="annot"><span class="annottext">testImageData :: IO FilePath
+</span><a href="TensorFlow.Examples.MNIST.InputData.html#testImageData"><span class="hs-identifier hs-var hs-var">testImageData</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">FilePath -&gt; IO FilePath
+</span><a href="Paths_tensorflow_mnist_input_data.html#getDataFileName"><span class="hs-identifier hs-var">getDataFileName</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;t10k-images-idx3-ubyte.gz&quot;</span></span><span>
+</span><span id="line-31"></span><span id="testLabelData"><span class="annot"><span class="annottext">testLabelData :: IO FilePath
+</span><a href="TensorFlow.Examples.MNIST.InputData.html#testLabelData"><span class="hs-identifier hs-var hs-var">testLabelData</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">FilePath -&gt; IO FilePath
+</span><a href="Paths_tensorflow_mnist_input_data.html#getDataFileName"><span class="hs-identifier hs-var">getDataFileName</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;t10k-labels-idx1-ubyte.gz&quot;</span></span><span>
+</span><span id="line-32"></span></pre></body></html>

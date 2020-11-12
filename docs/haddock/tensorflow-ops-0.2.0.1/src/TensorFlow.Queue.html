@@ -1,0 +1,148 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">-- Copyright 2016 TensorFlow authors.</span><span>
+</span><span id="line-2"></span><span class="hs-comment">--</span><span>
+</span><span id="line-3"></span><span class="hs-comment">-- Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span><span>
+</span><span id="line-4"></span><span class="hs-comment">-- you may not use this file except in compliance with the License.</span><span>
+</span><span id="line-5"></span><span class="hs-comment">-- You may obtain a copy of the License at</span><span>
+</span><span id="line-6"></span><span class="hs-comment">--</span><span>
+</span><span id="line-7"></span><span class="hs-comment">--     http://www.apache.org/licenses/LICENSE-2.0</span><span>
+</span><span id="line-8"></span><span class="hs-comment">--</span><span>
+</span><span id="line-9"></span><span class="hs-comment">-- Unless required by applicable law or agreed to in writing, software</span><span>
+</span><span id="line-10"></span><span class="hs-comment">-- distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span><span>
+</span><span id="line-11"></span><span class="hs-comment">-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span><span>
+</span><span id="line-12"></span><span class="hs-comment">-- See the License for the specific language governing permissions and</span><span>
+</span><span id="line-13"></span><span class="hs-comment">-- limitations under the License.</span><span>
+</span><span id="line-14"></span><span>
+</span><span id="line-15"></span><span class="hs-pragma">{-# LANGUAGE DataKinds #-}</span><span>
+</span><span id="line-16"></span><span class="hs-pragma">{-# LANGUAGE KindSignatures #-}</span><span>
+</span><span id="line-17"></span><span class="hs-pragma">{-# LANGUAGE OverloadedStrings #-}</span><span>
+</span><span id="line-18"></span><span class="hs-pragma">{-# LANGUAGE ScopedTypeVariables #-}</span><span>
+</span><span id="line-19"></span><span>
+</span><span id="line-20"></span><span class="hs-comment">-- | Queues in TensorFlow graph. Very limited support for now.</span><span>
+</span><span id="line-21"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">TensorFlow.Queue</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="TensorFlow.Queue.html#Queue"><span class="hs-identifier">Queue</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Queue.html#makeQueue"><span class="hs-identifier">makeQueue</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Queue.html#enqueue"><span class="hs-identifier">enqueue</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Queue.html#dequeue"><span class="hs-identifier">dequeue</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-22"></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.ByteString</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">ByteString</span></span><span class="hs-special">)</span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Int</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Int64</span></span><span class="hs-special">)</span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Proxy</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Proxy</span></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Lens.Family2</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-operator">(.~)</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-operator">(&amp;)</span></span><span class="hs-special">)</span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">TensorFlow.Build</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">ControlNode</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">MonadBuild</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">build</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">addInitializer</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">opAttr</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">opDef</span></span><span class="hs-special">)</span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">TensorFlow.BuildOp</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">buildOp</span></span><span class="hs-special">)</span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">TensorFlow.ControlFlow</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">group</span></span><span class="hs-special">)</span><span>
+</span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">TensorFlow.GenOps.Core</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">CoreOps</span></span><span>
+</span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">TensorFlow.Tensor</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Ref</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">Value</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">Tensor</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">TensorList</span></span><span class="hs-special">)</span><span>
+</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">TensorFlow.Types</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">TensorTypes</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">fromTensorTypes</span></span><span class="hs-special">)</span><span>
+</span><span id="line-33"></span><span>
+</span><span id="line-34"></span><span class="hs-comment">-- | A queue carrying tuples.</span><span>
+</span><span id="line-35"></span><span class="hs-keyword">data</span><span> </span><span id="Queue"><span class="annot"><a href="TensorFlow.Queue.html#Queue"><span class="hs-identifier hs-var">Queue</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679157689"><span class="annot"><a href="#local-6989586621679157689"><span class="hs-keyword hs-type">as</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-operator">*</span></span><span class="hs-special">]</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Queue"><span class="annot"><a href="TensorFlow.Queue.html#Queue"><span class="hs-identifier hs-var">Queue</span></a></span></span><span> </span><span class="hs-special">{</span><span> </span><span id="handle"><span class="annot"><span class="annottext">Queue as -&gt; Handle
+</span><a href="TensorFlow.Queue.html#handle"><span class="hs-identifier hs-var hs-var">handle</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="TensorFlow.Queue.html#Handle"><span class="hs-identifier hs-type">Handle</span></a></span><span> </span><span class="hs-special">}</span><span>
+</span><span id="line-36"></span><span>
+</span><span id="line-37"></span><span class="hs-keyword">type</span><span> </span><span id="Handle"><span class="annot"><a href="TensorFlow.Queue.html#Handle"><span class="hs-identifier hs-var">Handle</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Tensor</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Ref</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span>
+</span><span id="line-38"></span><span>
+</span><span id="line-39"></span><span class="hs-comment">-- | Adds the given values to the queue.</span><span>
+</span><span id="line-40"></span><span class="annot"><a href="TensorFlow.Queue.html#enqueue"><span class="hs-identifier hs-type">enqueue</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621679157625"><span class="annot"><a href="#local-6989586621679157625"><span class="hs-keyword hs-type">as</span></a></span></span><span> </span><span id="local-6989586621679157624"><span class="annot"><a href="#local-6989586621679157624"><span class="hs-identifier hs-type">v</span></a></span></span><span> </span><span id="local-6989586621679157623"><span class="annot"><a href="#local-6989586621679157623"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span class="hs-operator">.</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadBuild</span></span><span> </span><span class="annot"><a href="#local-6989586621679157623"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TensorTypes</span></span><span> </span><span class="annot"><a href="#local-6989586621679157625"><span class="hs-keyword hs-type">as</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-41"></span><span>           </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Queue.html#Queue"><span class="hs-identifier hs-type">Queue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679157625"><span class="hs-keyword hs-type">as</span></a></span><span>
+</span><span id="line-42"></span><span>           </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TensorList</span></span><span> </span><span class="annot"><a href="#local-6989586621679157624"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679157625"><span class="hs-keyword hs-type">as</span></a></span><span>
+</span><span id="line-43"></span><span>           </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679157623"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">ControlNode</span></span><span>
+</span><span id="line-44"></span><span id="enqueue"><span class="annot"><span class="annottext">enqueue :: Queue as -&gt; TensorList v as -&gt; m ControlNode
+</span><a href="TensorFlow.Queue.html#enqueue"><span class="hs-identifier hs-var hs-var">enqueue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Handle -&gt; TensorList v as -&gt; m ControlNode
+forall (v'2 :: * -&gt; *) (tcomponents :: [*]) (m' :: * -&gt; *).
+(MonadBuild m', TensorTypes tcomponents) =&gt;
+Handle -&gt; TensorList v'2 tcomponents -&gt; m' ControlNode
+</span><span class="hs-identifier hs-var">CoreOps.queueEnqueue</span></span><span> </span><span class="annot"><span class="annottext">(Handle -&gt; TensorList v as -&gt; m ControlNode)
+-&gt; (Queue as -&gt; Handle)
+-&gt; Queue as
+-&gt; TensorList v as
+-&gt; m ControlNode
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Queue as -&gt; Handle
+forall (as :: [*]). Queue as -&gt; Handle
+</span><a href="TensorFlow.Queue.html#handle"><span class="hs-identifier hs-var hs-var">handle</span></a></span><span>
+</span><span id="line-45"></span><span>
+</span><span id="line-46"></span><span class="hs-comment">-- | Retrieves the values from the queue.</span><span>
+</span><span id="line-47"></span><span class="annot"><a href="TensorFlow.Queue.html#dequeue"><span class="hs-identifier hs-type">dequeue</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621679157620"><span class="annot"><a href="#local-6989586621679157620"><span class="hs-keyword hs-type">as</span></a></span></span><span> </span><span id="local-6989586621679157619"><span class="annot"><a href="#local-6989586621679157619"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span class="hs-operator">.</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadBuild</span></span><span> </span><span class="annot"><a href="#local-6989586621679157619"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TensorTypes</span></span><span> </span><span class="annot"><a href="#local-6989586621679157620"><span class="hs-keyword hs-type">as</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-48"></span><span>           </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Queue.html#Queue"><span class="hs-identifier hs-type">Queue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679157620"><span class="hs-keyword hs-type">as</span></a></span><span>
+</span><span id="line-49"></span><span>           </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679157619"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">TensorList</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Value</span></span><span> </span><span class="annot"><a href="#local-6989586621679157620"><span class="hs-keyword hs-type">as</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-50"></span><span>           </span><span class="hs-comment">-- ^ Dequeued tensors. They are coupled in a sense</span><span>
+</span><span id="line-51"></span><span>           </span><span class="hs-comment">-- that values appear together, even if they are</span><span>
+</span><span id="line-52"></span><span>           </span><span class="hs-comment">-- not consumed together.</span><span>
+</span><span id="line-53"></span><span id="dequeue"><span class="annot"><span class="annottext">dequeue :: Queue as -&gt; m (TensorList Value as)
+</span><a href="TensorFlow.Queue.html#dequeue"><span class="hs-identifier hs-var hs-var">dequeue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Handle -&gt; m (TensorList Value as)
+forall (component_types :: [*]) (m' :: * -&gt; *).
+(MonadBuild m', TensorTypes component_types) =&gt;
+Handle -&gt; m' (TensorList Value component_types)
+</span><span class="hs-identifier hs-var">CoreOps.queueDequeue</span></span><span> </span><span class="annot"><span class="annottext">(Handle -&gt; m (TensorList Value as))
+-&gt; (Queue as -&gt; Handle) -&gt; Queue as -&gt; m (TensorList Value as)
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Queue as -&gt; Handle
+forall (as :: [*]). Queue as -&gt; Handle
+</span><a href="TensorFlow.Queue.html#handle"><span class="hs-identifier hs-var hs-var">handle</span></a></span><span>
+</span><span id="line-54"></span><span>
+</span><span id="line-55"></span><span class="hs-comment">-- | Creates a new queue with the given capacity and shared name.</span><span>
+</span><span id="line-56"></span><span class="annot"><a href="TensorFlow.Queue.html#makeQueue"><span class="hs-identifier hs-type">makeQueue</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621679157617"><span class="annot"><a href="#local-6989586621679157617"><span class="hs-keyword hs-type">as</span></a></span></span><span> </span><span id="local-6989586621679157616"><span class="annot"><a href="#local-6989586621679157616"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span class="hs-operator">.</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadBuild</span></span><span> </span><span class="annot"><a href="#local-6989586621679157616"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TensorTypes</span></span><span> </span><span class="annot"><a href="#local-6989586621679157617"><span class="hs-keyword hs-type">as</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-57"></span><span>              </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int64</span></span><span>  </span><span class="hs-comment">-- ^ The upper bound on the number of elements in</span><span>
+</span><span id="line-58"></span><span>                        </span><span class="hs-comment">--  this queue. Negative numbers mean no limit.</span><span>
+</span><span id="line-59"></span><span>              </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span> </span><span class="hs-comment">-- ^ If non-empty, this queue will be shared</span><span>
+</span><span id="line-60"></span><span>                            </span><span class="hs-comment">-- under the given name across multiple sessions.</span><span>
+</span><span id="line-61"></span><span>              </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679157616"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="TensorFlow.Queue.html#Queue"><span class="hs-identifier hs-type">Queue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679157617"><span class="hs-keyword hs-type">as</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-62"></span><span id="makeQueue"><span class="annot"><span class="annottext">makeQueue :: Int64 -&gt; ByteString -&gt; m (Queue as)
+</span><a href="TensorFlow.Queue.html#makeQueue"><span class="hs-identifier hs-var hs-var">makeQueue</span></a></span></span><span> </span><span id="local-6989586621679157615"><span class="annot"><span class="annottext">capacity :: Int64
+</span><a href="#local-6989586621679157615"><span class="hs-identifier hs-var">capacity</span></a></span></span><span> </span><span id="local-6989586621679157614"><span class="annot"><span class="annottext">sharedName :: ByteString
+</span><a href="#local-6989586621679157614"><span class="hs-identifier hs-var">sharedName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-63"></span><span>    </span><span id="local-6989586621679157613"><span class="annot"><span class="annottext">Handle
+</span><a href="#local-6989586621679157613"><span class="hs-identifier hs-var">q</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Build Handle -&gt; m Handle
+forall (m :: * -&gt; *) a. MonadBuild m =&gt; Build a -&gt; m a
+</span><span class="hs-identifier hs-var">build</span></span><span> </span><span class="annot"><span class="annottext">(Build Handle -&gt; m Handle) -&gt; Build Handle -&gt; m Handle
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[Int64] -&gt; OpDef -&gt; Build Handle
+forall a. BuildResult a =&gt; [Int64] -&gt; OpDef -&gt; Build a
+</span><span class="hs-identifier hs-var">buildOp</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OpType -&gt; OpDef
+</span><span class="hs-identifier hs-var">opDef</span></span><span> </span><span class="annot"><span class="hs-string">&quot;FIFOQueue&quot;</span></span><span>
+</span><span id="line-64"></span><span>                     </span><span class="annot"><span class="annottext">OpDef -&gt; (OpDef -&gt; OpDef) -&gt; OpDef
+forall s t. s -&gt; (s -&gt; t) -&gt; t
+</span><span class="hs-operator hs-var">&amp;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Lens' OpDef [DataType]
+forall a. Attribute a =&gt; Text -&gt; Lens' OpDef a
+</span><span class="hs-identifier hs-var">opAttr</span></span><span> </span><span class="annot"><span class="hs-string">&quot;component_types&quot;</span></span><span> </span><span class="annot"><span class="annottext">(forall (f :: * -&gt; *). Identical f =&gt; LensLike' f OpDef [DataType])
+-&gt; [DataType] -&gt; OpDef -&gt; OpDef
+forall s t a b. Setter s t a b -&gt; b -&gt; s -&gt; t
+</span><span class="hs-operator hs-var">.~</span></span><span> </span><span class="annot"><span class="annottext">Proxy as -&gt; [DataType]
+forall (as :: [*]). TensorTypes as =&gt; Proxy as -&gt; [DataType]
+</span><span class="hs-identifier hs-var">fromTensorTypes</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Proxy as
+forall k (t :: k). Proxy t
+</span><span class="hs-identifier hs-var">Proxy</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Proxy</span></span><span> </span><span class="annot"><a href="#local-6989586621679157617"><span class="hs-keyword hs-type">as</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-65"></span><span>                     </span><span class="annot"><span class="annottext">OpDef -&gt; (OpDef -&gt; OpDef) -&gt; OpDef
+forall s t. s -&gt; (s -&gt; t) -&gt; t
+</span><span class="hs-operator hs-var">&amp;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Lens' OpDef ByteString
+forall a. Attribute a =&gt; Text -&gt; Lens' OpDef a
+</span><span class="hs-identifier hs-var">opAttr</span></span><span> </span><span class="annot"><span class="hs-string">&quot;shared_name&quot;</span></span><span> </span><span class="annot"><span class="annottext">(forall (f :: * -&gt; *). Identical f =&gt; LensLike' f OpDef ByteString)
+-&gt; ByteString -&gt; OpDef -&gt; OpDef
+forall s t a b. Setter s t a b -&gt; b -&gt; s -&gt; t
+</span><span class="hs-operator hs-var">.~</span></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679157614"><span class="hs-identifier hs-var">sharedName</span></a></span><span>
+</span><span id="line-66"></span><span>                     </span><span class="annot"><span class="annottext">OpDef -&gt; (OpDef -&gt; OpDef) -&gt; OpDef
+forall s t. s -&gt; (s -&gt; t) -&gt; t
+</span><span class="hs-operator hs-var">&amp;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Lens' OpDef Int64
+forall a. Attribute a =&gt; Text -&gt; Lens' OpDef a
+</span><span class="hs-identifier hs-var">opAttr</span></span><span> </span><span class="annot"><span class="hs-string">&quot;capacity&quot;</span></span><span> </span><span class="annot"><span class="annottext">(forall (f :: * -&gt; *). Identical f =&gt; LensLike' f OpDef Int64)
+-&gt; Int64 -&gt; OpDef -&gt; OpDef
+forall s t a b. Setter s t a b -&gt; b -&gt; s -&gt; t
+</span><span class="hs-operator hs-var">.~</span></span><span> </span><span class="annot"><span class="annottext">Int64
+</span><a href="#local-6989586621679157615"><span class="hs-identifier hs-var">capacity</span></a></span><span>
+</span><span id="line-67"></span><span>                    </span><span class="hs-special">)</span><span>
+</span><span id="line-68"></span><span>    </span><span class="annot"><span class="annottext">Handle -&gt; m ControlNode
+forall (m :: * -&gt; *) t.
+(MonadBuild m, Nodes t) =&gt;
+t -&gt; m ControlNode
+</span><span class="hs-identifier hs-var">group</span></span><span> </span><span class="annot"><span class="annottext">Handle
+</span><a href="#local-6989586621679157613"><span class="hs-identifier hs-var">q</span></a></span><span> </span><span class="annot"><span class="annottext">m ControlNode -&gt; (ControlNode -&gt; m ()) -&gt; m ()
+forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
+</span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="annot"><span class="annottext">ControlNode -&gt; m ()
+forall (m :: * -&gt; *). MonadBuild m =&gt; ControlNode -&gt; m ()
+</span><span class="hs-identifier hs-var">addInitializer</span></span><span>
+</span><span id="line-69"></span><span>    </span><span class="annot"><span class="annottext">Queue as -&gt; m (Queue as)
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Handle -&gt; Queue as
+forall (as :: [*]). Handle -&gt; Queue as
+</span><a href="TensorFlow.Queue.html#Queue"><span class="hs-identifier hs-var">Queue</span></a></span><span> </span><span class="annot"><span class="annottext">Handle
+</span><a href="#local-6989586621679157613"><span class="hs-identifier hs-var">q</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-70"></span><span>
+</span><span id="line-71"></span><span class="hs-comment">-- TODO(gnezdo): Figure out the closing story for queues.</span><span>
+</span><span id="line-72"></span></pre></body></html>

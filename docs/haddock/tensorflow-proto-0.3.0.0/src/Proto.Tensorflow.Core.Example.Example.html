@@ -1,0 +1,1436 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">{- This file was auto-generated from tensorflow/core/example/example.proto by the proto-lens-protoc program. -}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE ScopedTypeVariables, DataKinds, TypeFamilies, UndecidableInstances, GeneralizedNewtypeDeriving, MultiParamTypeClasses, FlexibleContexts, FlexibleInstances, PatternSynonyms, MagicHash, NoImplicitPrelude, DataKinds, BangPatterns, TypeApplications, OverloadedStrings, DerivingStrategies#-}</span><span>
+</span><span id="line-3"></span><span class="hs-pragma">{-# OPTIONS_GHC -Wno-unused-imports#-}</span><span>
+</span><span id="line-4"></span><span class="hs-pragma">{-# OPTIONS_GHC -Wno-duplicate-exports#-}</span><span>
+</span><span id="line-5"></span><span class="hs-pragma">{-# OPTIONS_GHC -Wno-dodgy-exports#-}</span><span>
+</span><span id="line-6"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Proto.Tensorflow.Core.Example.Example</span><span> </span><span class="hs-special">(</span><span>
+</span><span id="line-7"></span><span>        </span><span class="annot"><a href="Proto.Tensorflow.Core.Example.Example.html#Example"><span class="hs-identifier">Example</span></a></span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Example.Example.html#SequenceExample"><span class="hs-identifier">SequenceExample</span></a></span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-8"></span><span>    </span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Control.DeepSeq</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Control.DeepSeq</span></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.ProtoLens.Prism</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Prism</span></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Prelude</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Prelude</span></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.Int</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.Int</span></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.Monoid</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.Monoid</span></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.Word</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.Word</span></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.ProtoLens</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens</span></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.ProtoLens.Encoding.Bytes</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Encoding.Bytes</span></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.ProtoLens.Encoding.Growing</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Encoding.Growing</span></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.ProtoLens.Encoding.Parser.Unsafe</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Encoding.Parser.Unsafe</span></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.ProtoLens.Encoding.Wire</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Encoding.Wire</span></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.ProtoLens.Field</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Field</span></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.ProtoLens.Message.Enum</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Message.Enum</span></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.ProtoLens.Service.Types</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Service.Types</span></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Lens.Family2</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Lens.Family2</span></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Lens.Family2.Unchecked</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Lens.Family2.Unchecked</span></span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.Text</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text</span></span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.Map</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.Map</span></span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.ByteString</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.ByteString</span></span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.ByteString.Char8</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.ByteString.Char8</span></span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.Text.Encoding</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text.Encoding</span></span><span>
+</span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.Vector</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.Vector</span></span><span>
+</span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.Vector.Generic</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.Vector.Generic</span></span><span>
+</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.Vector.Unboxed</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.Vector.Unboxed</span></span><span>
+</span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Text.Read</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Text.Read</span></span><span>
+</span><span id="line-34"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Example.Feature.html"><span class="hs-identifier">Proto.Tensorflow.Core.Example.Feature</span></a></span><span>
+</span><span id="line-35"></span><span class="hs-comment">{- | Fields :
+     
+         * 'Proto.Tensorflow.Core.Example.Example_Fields.features' @:: Lens' Example Proto.Tensorflow.Core.Example.Feature.Features@
+         * 'Proto.Tensorflow.Core.Example.Example_Fields.maybe'features' @:: Lens' Example (Prelude.Maybe Proto.Tensorflow.Core.Example.Feature.Features)@ -}</span><span>
+</span><span id="line-39"></span><span class="hs-keyword">data</span><span> </span><span id="Example"><span class="annot"><a href="Proto.Tensorflow.Core.Example.Example.html#Example"><span class="hs-identifier hs-var">Example</span></a></span></span><span>
+</span><span id="line-40"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="Example%27_constructor"><span class="annot"><a href="Proto.Tensorflow.Core.Example.Example.html#Example%27_constructor"><span class="hs-identifier hs-var">Example'_constructor</span></a></span></span><span> </span><span class="hs-special">{</span><span id="_Example%27features"><span class="annot"><span class="annottext">Example -&gt; Maybe Features
+</span><a href="Proto.Tensorflow.Core.Example.Example.html#_Example%27features"><span class="hs-identifier hs-var hs-var">_Example'features</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Prelude.Maybe</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Example.Feature.html#Features"><span class="hs-identifier hs-type">Proto.Tensorflow.Core.Example.Feature.Features</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-41"></span><span>                          </span><span id="_Example%27_unknownFields"><span class="annot"><span class="annottext">Example -&gt; FieldSet
+</span><a href="Proto.Tensorflow.Core.Example.Example.html#_Example%27_unknownFields"><span class="hs-identifier hs-var hs-var">_Example'_unknownFields</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.FieldSet</span></span><span class="hs-special">}</span><span>
+</span><span id="line-42"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679473527"><span id="local-6989586621679473529"><span class="annot"><span class="annottext">Example -&gt; Example -&gt; Bool
+(Example -&gt; Example -&gt; Bool)
+-&gt; (Example -&gt; Example -&gt; Bool) -&gt; Eq Example
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: Example -&gt; Example -&gt; Bool
+$c/= :: Example -&gt; Example -&gt; Bool
+== :: Example -&gt; Example -&gt; Bool
+$c== :: Example -&gt; Example -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Prelude.Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679473511"><span id="local-6989586621679473513"><span id="local-6989586621679473515"><span id="local-6989586621679473517"><span id="local-6989586621679473519"><span id="local-6989586621679473521"><span id="local-6989586621679473523"><span class="annot"><span class="annottext">Eq Example
+Eq Example =&gt;
+(Example -&gt; Example -&gt; Ordering)
+-&gt; (Example -&gt; Example -&gt; Bool)
+-&gt; (Example -&gt; Example -&gt; Bool)
+-&gt; (Example -&gt; Example -&gt; Bool)
+-&gt; (Example -&gt; Example -&gt; Bool)
+-&gt; (Example -&gt; Example -&gt; Example)
+-&gt; (Example -&gt; Example -&gt; Example)
+-&gt; Ord Example
+Example -&gt; Example -&gt; Bool
+Example -&gt; Example -&gt; Ordering
+Example -&gt; Example -&gt; Example
+forall a.
+Eq a =&gt;
+(a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+min :: Example -&gt; Example -&gt; Example
+$cmin :: Example -&gt; Example -&gt; Example
+max :: Example -&gt; Example -&gt; Example
+$cmax :: Example -&gt; Example -&gt; Example
+&gt;= :: Example -&gt; Example -&gt; Bool
+$c&gt;= :: Example -&gt; Example -&gt; Bool
+&gt; :: Example -&gt; Example -&gt; Bool
+$c&gt; :: Example -&gt; Example -&gt; Bool
+&lt;= :: Example -&gt; Example -&gt; Bool
+$c&lt;= :: Example -&gt; Example -&gt; Bool
+&lt; :: Example -&gt; Example -&gt; Bool
+$c&lt; :: Example -&gt; Example -&gt; Bool
+compare :: Example -&gt; Example -&gt; Ordering
+$ccompare :: Example -&gt; Example -&gt; Ordering
+$cp1Ord :: Eq Example
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Prelude.Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-43"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679473505"><span id="local-6989586621679473507"><span class="annot"><span class="hs-identifier hs-type">Prelude.Show</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Example.Example.html#Example"><span class="hs-identifier hs-type">Example</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-44"></span><span>  </span><span id="local-6989586621679473503"><span class="annot"><span class="annottext">showsPrec :: Int -&gt; Example -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">showsPrec</span></span></span><span> </span><span class="hs-identifier">_</span><span> </span><span id="local-6989586621679473501"><span class="annot"><span class="annottext">__x :: Example
+</span><a href="#local-6989586621679473501"><span class="hs-identifier hs-var">__x</span></a></span></span><span> </span><span id="local-6989586621679473500"><span class="annot"><span class="annottext">__s :: String
+</span><a href="#local-6989586621679473500"><span class="hs-identifier hs-var">__s</span></a></span></span><span>
+</span><span id="line-45"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Char -&gt; ShowS
+</span><span class="hs-identifier hs-var">Prelude.showChar</span></span><span>
+</span><span id="line-46"></span><span>        </span><span class="annot"><span class="hs-char">'{'</span></span><span>
+</span><span id="line-47"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; ShowS
+</span><span class="hs-identifier hs-var">Prelude.showString</span></span><span>
+</span><span id="line-48"></span><span>           </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Example -&gt; String
+forall msg. Message msg =&gt; msg -&gt; String
+</span><span class="hs-identifier hs-var">Data.ProtoLens.showMessageShort</span></span><span> </span><span class="annot"><span class="annottext">Example
+</span><a href="#local-6989586621679473501"><span class="hs-identifier hs-var">__x</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Char -&gt; ShowS
+</span><span class="hs-identifier hs-var">Prelude.showChar</span></span><span> </span><span class="annot"><span class="hs-char">'}'</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679473500"><span class="hs-identifier hs-var">__s</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-49"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.Field.HasField</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Example.Example.html#Example"><span class="hs-identifier hs-type">Example</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;features&quot;</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Example.Feature.html#Features"><span class="hs-identifier hs-type">Proto.Tensorflow.Core.Example.Feature.Features</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-50"></span><span>  </span><span id="local-6989586621679473494"><span class="annot"><span class="annottext">fieldOf :: Proxy# &quot;features&quot;
+-&gt; (Features -&gt; f Features) -&gt; Example -&gt; f Example
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">fieldOf</span></span></span><span> </span><span class="hs-identifier">_</span><span>
+</span><span id="line-51"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((Maybe Features -&gt; f (Maybe Features)) -&gt; Example -&gt; f Example)
+-&gt; ((Features -&gt; f Features)
+    -&gt; Maybe Features -&gt; f (Maybe Features))
+-&gt; (Features -&gt; f Features)
+-&gt; Example
+-&gt; f Example
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">(Prelude..)</span></span><span>
+</span><span id="line-52"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Example -&gt; Maybe Features)
+-&gt; (Example -&gt; Maybe Features -&gt; Example)
+-&gt; Lens Example Example (Maybe Features) (Maybe Features)
+forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span class="hs-identifier hs-var">Lens.Family2.Unchecked.lens</span></span><span>
+</span><span id="line-53"></span><span>           </span><span class="annot"><span class="annottext">Example -&gt; Maybe Features
+</span><a href="Proto.Tensorflow.Core.Example.Example.html#_Example%27features"><span class="hs-identifier hs-var hs-var">_Example'features</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span> </span><span id="local-6989586621679473490"><span class="annot"><span class="annottext">x__ :: Example
+</span><a href="#local-6989586621679473490"><span class="hs-identifier hs-var">x__</span></a></span></span><span> </span><span id="local-6989586621679473489"><span class="annot"><span class="annottext">y__ :: Maybe Features
+</span><a href="#local-6989586621679473489"><span class="hs-identifier hs-var">y__</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Example
+</span><a href="#local-6989586621679473490"><span class="hs-identifier hs-var">x__</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_Example'features :: Maybe Features
+</span><a href="Proto.Tensorflow.Core.Example.Example.html#_Example%27features"><span class="hs-identifier hs-var">_Example'features</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Features
+</span><a href="#local-6989586621679473489"><span class="hs-identifier hs-var">y__</span></a></span><span class="hs-special">}</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-54"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Features -&gt; Lens' (Maybe Features) Features
+forall b. b -&gt; Lens' (Maybe b) b
+</span><span class="hs-identifier hs-var">Data.ProtoLens.maybeLens</span></span><span> </span><span class="annot"><span class="annottext">Features
+forall msg. Message msg =&gt; msg
+</span><span class="hs-identifier hs-var">Data.ProtoLens.defMessage</span></span><span class="hs-special">)</span><span>
+</span><span id="line-55"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.Field.HasField</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Example.Example.html#Example"><span class="hs-identifier hs-type">Example</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;maybe'features&quot;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Prelude.Maybe</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Example.Feature.html#Features"><span class="hs-identifier hs-type">Proto.Tensorflow.Core.Example.Feature.Features</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-56"></span><span>  </span><span id="local-6989586621679473485"><span class="annot"><span class="annottext">fieldOf :: Proxy# &quot;maybe'features&quot;
+-&gt; (Maybe Features -&gt; f (Maybe Features)) -&gt; Example -&gt; f Example
+</span><a href="#local-6989586621679473485"><span class="hs-identifier hs-var hs-var hs-var hs-var">fieldOf</span></a></span></span><span> </span><span class="hs-identifier">_</span><span>
+</span><span id="line-57"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((Maybe Features -&gt; f (Maybe Features)) -&gt; Example -&gt; f Example)
+-&gt; ((Maybe Features -&gt; f (Maybe Features))
+    -&gt; Maybe Features -&gt; f (Maybe Features))
+-&gt; (Maybe Features -&gt; f (Maybe Features))
+-&gt; Example
+-&gt; f Example
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">(Prelude..)</span></span><span>
+</span><span id="line-58"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Example -&gt; Maybe Features)
+-&gt; (Example -&gt; Maybe Features -&gt; Example)
+-&gt; Lens Example Example (Maybe Features) (Maybe Features)
+forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span class="hs-identifier hs-var">Lens.Family2.Unchecked.lens</span></span><span>
+</span><span id="line-59"></span><span>           </span><span class="annot"><span class="annottext">Example -&gt; Maybe Features
+</span><a href="Proto.Tensorflow.Core.Example.Example.html#_Example%27features"><span class="hs-identifier hs-var hs-var">_Example'features</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span> </span><span id="local-6989586621679473484"><span class="annot"><span class="annottext">x__ :: Example
+</span><a href="#local-6989586621679473484"><span class="hs-identifier hs-var">x__</span></a></span></span><span> </span><span id="local-6989586621679473483"><span class="annot"><span class="annottext">y__ :: Maybe Features
+</span><a href="#local-6989586621679473483"><span class="hs-identifier hs-var">y__</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Example
+</span><a href="#local-6989586621679473484"><span class="hs-identifier hs-var">x__</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_Example'features :: Maybe Features
+</span><a href="Proto.Tensorflow.Core.Example.Example.html#_Example%27features"><span class="hs-identifier hs-var">_Example'features</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Features
+</span><a href="#local-6989586621679473483"><span class="hs-identifier hs-var">y__</span></a></span><span class="hs-special">}</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-60"></span><span>        </span><span class="annot"><span class="annottext">(Maybe Features -&gt; f (Maybe Features))
+-&gt; Maybe Features -&gt; f (Maybe Features)
+forall a. a -&gt; a
+</span><span class="hs-identifier hs-var">Prelude.id</span></span><span>
+</span><span id="line-61"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679473475"><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.Message</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Example.Example.html#Example"><span class="hs-identifier hs-type">Example</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-62"></span><span>  </span><span id="local-6989586621679473470"><span class="annot"><span class="annottext">messageName :: Proxy Example -&gt; Text
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">messageName</span></span></span><span> </span><span class="hs-identifier">_</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Text
+</span><span class="hs-identifier hs-var">Data.Text.pack</span></span><span> </span><span class="annot"><span class="hs-string">&quot;tensorflow.Example&quot;</span></span><span>
+</span><span id="line-63"></span><span>  </span><span id="local-6989586621679473467"><span class="annot"><span class="annottext">packedMessageDescriptor :: Proxy Example -&gt; ByteString
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">packedMessageDescriptor</span></span></span><span> </span><span class="hs-identifier">_</span><span>
+</span><span id="line-64"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-string">&quot;\n\
+      \\aExample\DC20\n\
+      \\bfeatures\CAN\SOH \SOH(\v2\DC4.tensorflow.FeaturesR\bfeatures&quot;</span></span><span>
+</span><span id="line-67"></span><span>  </span><span id="local-6989586621679473465"><span class="annot"><span class="annottext">packedFileDescriptor :: Proxy Example -&gt; ByteString
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">packedFileDescriptor</span></span></span><span> </span><span class="hs-identifier">_</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="Proto.Tensorflow.Core.Example.Example.html#packedFileDescriptor"><span class="hs-identifier hs-var">packedFileDescriptor</span></a></span><span>
+</span><span id="line-68"></span><span>  </span><span id="local-6989586621679473462"><span class="annot"><span class="annottext">fieldsByTag :: Map Tag (FieldDescriptor Example)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">fieldsByTag</span></span></span><span>
+</span><span id="line-69"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">let</span><span>
+</span><span id="line-70"></span><span>        </span><span id="local-6989586621679473460"><span class="annot"><span class="annottext">features__field_descriptor :: FieldDescriptor Example
+</span><a href="#local-6989586621679473460"><span class="hs-identifier hs-var hs-var">features__field_descriptor</span></a></span></span><span>
+</span><span id="line-71"></span><span>          </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+-&gt; FieldTypeDescriptor Features
+-&gt; FieldAccessor Example Features
+-&gt; FieldDescriptor Example
+forall value msg.
+String
+-&gt; FieldTypeDescriptor value
+-&gt; FieldAccessor msg value
+-&gt; FieldDescriptor msg
+</span><span class="hs-identifier hs-var">Data.ProtoLens.FieldDescriptor</span></span><span>
+</span><span id="line-72"></span><span>              </span><span class="annot"><span class="hs-string">&quot;features&quot;</span></span><span>
+</span><span id="line-73"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">MessageOrGroup -&gt; FieldTypeDescriptor Features
+forall value.
+Message value =&gt;
+MessageOrGroup -&gt; FieldTypeDescriptor value
+</span><span class="hs-identifier hs-var">Data.ProtoLens.MessageField</span></span><span> </span><span class="annot"><span class="annottext">MessageOrGroup
+</span><span class="hs-identifier hs-var">Data.ProtoLens.MessageType</span></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-74"></span><span>                 </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.FieldTypeDescriptor</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Example.Feature.html#Features"><span class="hs-identifier hs-type">Proto.Tensorflow.Core.Example.Feature.Features</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-75"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Lens Example Example (Maybe Features) (Maybe Features)
+-&gt; FieldAccessor Example Features
+forall msg value.
+Lens' msg (Maybe value) -&gt; FieldAccessor msg value
+</span><span class="hs-identifier hs-var">Data.ProtoLens.OptionalField</span></span><span>
+</span><span id="line-76"></span><span>                 </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall s a (f :: * -&gt; *).
+(HasField s &quot;maybe'features&quot; a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+forall (x :: Symbol) s a (f :: * -&gt; *).
+(HasField s x a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Field.field</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-string">&quot;maybe'features&quot;</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-77"></span><span>              </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.FieldDescriptor</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Example.Example.html#Example"><span class="hs-identifier hs-type">Example</span></a></span><span>
+</span><span id="line-78"></span><span>      </span><span class="hs-keyword">in</span><span>
+</span><span id="line-79"></span><span>        </span><span class="annot"><span class="annottext">[(Tag, FieldDescriptor Example)]
+-&gt; Map Tag (FieldDescriptor Example)
+forall k a. Ord k =&gt; [(k, a)] -&gt; Map k a
+</span><span class="hs-identifier hs-var">Data.Map.fromList</span></span><span>
+</span><span id="line-80"></span><span>          </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; Tag
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Tag</span></span><span> </span><span class="annot"><span class="hs-number">1</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">FieldDescriptor Example
+</span><a href="#local-6989586621679473460"><span class="hs-identifier hs-var">features__field_descriptor</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
+</span><span id="line-81"></span><span>  </span><span id="local-6989586621679473452"><span class="annot"><span class="annottext">unknownFields :: LensLike' f Example FieldSet
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">unknownFields</span></span></span><span>
+</span><span id="line-82"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Example -&gt; FieldSet)
+-&gt; (Example -&gt; FieldSet -&gt; Example) -&gt; Lens' Example FieldSet
+forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span class="hs-identifier hs-var">Lens.Family2.Unchecked.lens</span></span><span>
+</span><span id="line-83"></span><span>        </span><span class="annot"><span class="annottext">Example -&gt; FieldSet
+</span><a href="Proto.Tensorflow.Core.Example.Example.html#_Example%27_unknownFields"><span class="hs-identifier hs-var hs-var">_Example'_unknownFields</span></a></span><span>
+</span><span id="line-84"></span><span>        </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span> </span><span id="local-6989586621679473450"><span class="annot"><span class="annottext">x__ :: Example
+</span><a href="#local-6989586621679473450"><span class="hs-identifier hs-var">x__</span></a></span></span><span> </span><span id="local-6989586621679473449"><span class="annot"><span class="annottext">y__ :: FieldSet
+</span><a href="#local-6989586621679473449"><span class="hs-identifier hs-var">y__</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Example
+</span><a href="#local-6989586621679473450"><span class="hs-identifier hs-var">x__</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_Example'_unknownFields :: FieldSet
+</span><a href="Proto.Tensorflow.Core.Example.Example.html#_Example%27_unknownFields"><span class="hs-identifier hs-var">_Example'_unknownFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">FieldSet
+</span><a href="#local-6989586621679473449"><span class="hs-identifier hs-var">y__</span></a></span><span class="hs-special">}</span><span class="hs-special">)</span><span>
+</span><span id="line-85"></span><span>  </span><span id="local-6989586621679473448"><span class="annot"><span class="annottext">defMessage :: Example
+</span><a href="#local-6989586621679473448"><span class="hs-identifier hs-var hs-var hs-var hs-var">defMessage</span></a></span></span><span>
+</span><span id="line-86"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">$WExample'_constructor :: Maybe Features -&gt; FieldSet -&gt; Example
+</span><a href="Proto.Tensorflow.Core.Example.Example.html#%24WExample%27_constructor"><span class="hs-identifier hs-type hs-type">Example'_constructor</span></a></span><span>
+</span><span id="line-87"></span><span>        </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_Example'features :: Maybe Features
+</span><a href="Proto.Tensorflow.Core.Example.Example.html#_Example%27features"><span class="hs-identifier hs-var">_Example'features</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Features
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Prelude.Nothing</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">_Example'_unknownFields :: FieldSet
+</span><a href="Proto.Tensorflow.Core.Example.Example.html#_Example%27_unknownFields"><span class="hs-identifier hs-var">_Example'_unknownFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span class="hs-special">}</span><span>
+</span><span id="line-88"></span><span>  </span><span id="local-6989586621679473446"><span class="annot"><span class="annottext">parseMessage :: Parser Example
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseMessage</span></span></span><span>
+</span><span id="line-89"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">let</span><span>
+</span><span id="line-90"></span><span>        </span><span class="annot"><a href="#local-6989586621679473444"><span class="hs-identifier hs-type">loop</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Example.Example.html#Example"><span class="hs-identifier hs-type">Example</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.Encoding.Bytes.Parser</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Example.Example.html#Example"><span class="hs-identifier hs-type">Example</span></a></span><span>
+</span><span id="line-91"></span><span>        </span><span id="local-6989586621679473444"><span class="annot"><span class="annottext">loop :: Example -&gt; Parser Example
+</span><a href="#local-6989586621679473444"><span class="hs-identifier hs-var hs-var">loop</span></a></span></span><span> </span><span id="local-6989586621679473443"><span class="annot"><span class="annottext">x :: Example
+</span><a href="#local-6989586621679473443"><span class="hs-identifier hs-var">x</span></a></span></span><span>
+</span><span id="line-92"></span><span>          </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span> </span><span id="local-6989586621679473442"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679473442"><span class="hs-identifier hs-var">end</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Bool
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.atEnd</span></span><span>
+</span><span id="line-93"></span><span>               </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679473442"><span class="hs-identifier hs-var">end</span></a></span><span> </span><span class="hs-keyword">then</span><span>
+</span><span id="line-94"></span><span>                   </span><span class="hs-keyword">do</span><span> </span><span class="hs-special">(</span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679473440"><span class="annot"><span class="annottext">missing :: [a]
+</span><a href="#local-6989586621679473440"><span class="hs-identifier hs-var hs-var">missing</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
+</span><span id="line-95"></span><span>                       </span><span class="hs-keyword">in</span><span>
+</span><span id="line-96"></span><span>                         </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">[Any] -&gt; Bool
+forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
+</span><span class="hs-identifier hs-var">Prelude.null</span></span><span> </span><span class="annot"><span class="annottext">[Any]
+forall a. [a]
+</span><a href="#local-6989586621679473440"><span class="hs-identifier hs-var">missing</span></a></span><span> </span><span class="hs-keyword">then</span><span>
+</span><span id="line-97"></span><span>                             </span><span class="annot"><span class="annottext">() -&gt; Parser ()
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span class="hs-identifier hs-var">Prelude.return</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-98"></span><span>                         </span><span class="hs-keyword">else</span><span>
+</span><span id="line-99"></span><span>                             </span><span class="annot"><span class="annottext">String -&gt; Parser ()
+forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
+</span><span class="hs-identifier hs-var">Prelude.fail</span></span><span>
+</span><span id="line-100"></span><span>                               </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; ShowS
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">(Prelude.++)</span></span><span>
+</span><span id="line-101"></span><span>                                  </span><span class="annot"><span class="hs-string">&quot;Missing required fields: &quot;</span></span><span>
+</span><span id="line-102"></span><span>                                  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[String] -&gt; String
+forall a. Show a =&gt; a -&gt; String
+</span><span class="hs-identifier hs-var">Prelude.show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[String]
+forall a. [a]
+</span><a href="#local-6989586621679473440"><span class="hs-identifier hs-var">missing</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Prelude.String</span></span><span class="hs-special">]</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-103"></span><span>                      </span><span class="annot"><span class="annottext">Example -&gt; Parser Example
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span class="hs-identifier hs-var">Prelude.return</span></span><span>
+</span><span id="line-104"></span><span>                        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Setter Example Example FieldSet FieldSet
+-&gt; (FieldSet -&gt; FieldSet) -&gt; Example -&gt; Example
+forall s t a b. Setter s t a b -&gt; (a -&gt; b) -&gt; s -&gt; t
+</span><span class="hs-identifier hs-var">Lens.Family2.over</span></span><span>
+</span><span id="line-105"></span><span>                           </span><span class="annot"><span class="annottext">forall msg. Message msg =&gt; Lens' msg FieldSet
+Setter Example Example FieldSet FieldSet
+</span><span class="hs-identifier hs-var">Data.ProtoLens.unknownFields</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621679473436"><span class="annot"><span class="annottext">FieldSet
+</span><a href="#local-6989586621679473436"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">FieldSet -&gt; FieldSet
+forall a. [a] -&gt; [a]
+</span><span class="hs-identifier hs-var">Prelude.reverse</span></span><span> </span><span class="annot"><span class="annottext">FieldSet
+</span><a href="#local-6989586621679473436"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Example
+</span><a href="#local-6989586621679473443"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-106"></span><span>               </span><span class="hs-keyword">else</span><span>
+</span><span id="line-107"></span><span>                   </span><span class="hs-keyword">do</span><span> </span><span id="local-6989586621679473434"><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679473434"><span class="hs-identifier hs-var">tag</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Word64
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.getVarInt</span></span><span>
+</span><span id="line-108"></span><span>                      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679473434"><span class="hs-identifier hs-var">tag</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-109"></span><span>                        </span><span class="hs-number">10</span><span>
+</span><span id="line-110"></span><span>                          </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span> </span><span id="local-6989586621679473432"><span class="annot"><span class="annottext">Features
+</span><a href="#local-6989586621679473432"><span class="hs-identifier hs-var">y</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Features -&gt; String -&gt; Parser Features
+forall a. Parser a -&gt; String -&gt; Parser a
+</span><span class="hs-operator hs-var">(Data.ProtoLens.Encoding.Bytes.&lt;?&gt;)</span></span><span>
+</span><span id="line-111"></span><span>                                       </span><span class="hs-special">(</span><span class="hs-keyword">do</span><span> </span><span id="local-6989586621679473430"><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679473430"><span class="hs-identifier hs-var">len</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Word64
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.getVarInt</span></span><span>
+</span><span id="line-112"></span><span>                                           </span><span class="annot"><span class="annottext">Int -&gt; Parser Features -&gt; Parser Features
+forall a. Int -&gt; Parser a -&gt; Parser a
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.isolate</span></span><span>
+</span><span id="line-113"></span><span>                                             </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word64 -&gt; Int
+forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">Prelude.fromIntegral</span></span><span> </span><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679473430"><span class="hs-identifier hs-var">len</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Parser Features
+forall msg. Message msg =&gt; Parser msg
+</span><span class="hs-identifier hs-var">Data.ProtoLens.parseMessage</span></span><span class="hs-special">)</span><span>
+</span><span id="line-114"></span><span>                                       </span><span class="annot"><span class="hs-string">&quot;features&quot;</span></span><span>
+</span><span id="line-115"></span><span>                                </span><span class="annot"><span class="annottext">Example -&gt; Parser Example
+</span><a href="#local-6989586621679473444"><span class="hs-identifier hs-var">loop</span></a></span><span>
+</span><span id="line-116"></span><span>                                  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Setter Example Example Features Features
+-&gt; Features -&gt; Example -&gt; Example
+forall s t a b. Setter s t a b -&gt; b -&gt; s -&gt; t
+</span><span class="hs-identifier hs-var">Lens.Family2.set</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall s a (f :: * -&gt; *).
+(HasField s &quot;features&quot; a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+forall (x :: Symbol) s a (f :: * -&gt; *).
+(HasField s x a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Field.field</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-string">&quot;features&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Features
+</span><a href="#local-6989586621679473432"><span class="hs-identifier hs-var">y</span></a></span><span> </span><span class="annot"><span class="annottext">Example
+</span><a href="#local-6989586621679473443"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-117"></span><span>                        </span><span id="local-6989586621679473427"><span class="annot"><span class="annottext">wire :: Word64
+</span><a href="#local-6989586621679473427"><span class="hs-identifier hs-var">wire</span></a></span></span><span>
+</span><span id="line-118"></span><span>                          </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621679473426"><span class="annot"><span class="annottext">TaggedValue
+</span><a href="#local-6989586621679473426"><span class="hs-identifier hs-var">y</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Word64 -&gt; Parser TaggedValue
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Wire.parseTaggedValueFromWire</span></span><span>
+</span><span id="line-119"></span><span>                                        </span><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679473427"><span class="hs-identifier hs-var">wire</span></a></span><span>
+</span><span id="line-120"></span><span>                                </span><span class="annot"><span class="annottext">Example -&gt; Parser Example
+</span><a href="#local-6989586621679473444"><span class="hs-identifier hs-var">loop</span></a></span><span>
+</span><span id="line-121"></span><span>                                  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Setter Example Example FieldSet FieldSet
+-&gt; (FieldSet -&gt; FieldSet) -&gt; Example -&gt; Example
+forall s t a b. Setter s t a b -&gt; (a -&gt; b) -&gt; s -&gt; t
+</span><span class="hs-identifier hs-var">Lens.Family2.over</span></span><span>
+</span><span id="line-122"></span><span>                                     </span><span class="annot"><span class="annottext">forall msg. Message msg =&gt; Lens' msg FieldSet
+Setter Example Example FieldSet FieldSet
+</span><span class="hs-identifier hs-var">Data.ProtoLens.unknownFields</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621679473424"><span class="annot"><span class="annottext">FieldSet
+</span><a href="#local-6989586621679473424"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="hs-glyph">:</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">TaggedValue
+</span><a href="#local-6989586621679473426"><span class="hs-identifier hs-var">y</span></a></span><span> </span><span class="annot"><span class="annottext">FieldSet
+</span><a href="#local-6989586621679473424"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Example
+</span><a href="#local-6989586621679473443"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-123"></span><span>      </span><span class="hs-keyword">in</span><span>
+</span><span id="line-124"></span><span>        </span><span class="annot"><span class="annottext">Parser Example -&gt; String -&gt; Parser Example
+forall a. Parser a -&gt; String -&gt; Parser a
+</span><span class="hs-operator hs-var">(Data.ProtoLens.Encoding.Bytes.&lt;?&gt;)</span></span><span>
+</span><span id="line-125"></span><span>          </span><span class="hs-special">(</span><span class="hs-keyword">do</span><span> </span><span class="annot"><span class="annottext">Example -&gt; Parser Example
+</span><a href="#local-6989586621679473444"><span class="hs-identifier hs-var">loop</span></a></span><span> </span><span class="annot"><span class="annottext">Example
+forall msg. Message msg =&gt; msg
+</span><span class="hs-identifier hs-var">Data.ProtoLens.defMessage</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="hs-string">&quot;Example&quot;</span></span><span>
+</span><span id="line-126"></span><span>  </span><span id="local-6989586621679473423"><span class="annot"><span class="annottext">buildMessage :: Example -&gt; Builder
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">buildMessage</span></span></span><span>
+</span><span id="line-127"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span> </span><span id="local-6989586621679473421"><span class="annot"><span class="annottext">_x :: Example
+</span><a href="#local-6989586621679473421"><span class="hs-identifier hs-var">_x</span></a></span></span><span>
+</span><span id="line-128"></span><span>        </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Builder -&gt; Builder -&gt; Builder
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">(Data.Monoid.&lt;&gt;)</span></span><span>
+</span><span id="line-129"></span><span>             </span><span class="hs-special">(</span><span class="hs-keyword">case</span><span>
+</span><span id="line-130"></span><span>                  </span><span class="annot"><span class="annottext">FoldLike
+  (Maybe Features) Example Example (Maybe Features) (Maybe Features)
+-&gt; Example -&gt; Maybe Features
+forall a s t b. FoldLike a s t a b -&gt; s -&gt; a
+</span><span class="hs-identifier hs-var">Lens.Family2.view</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall s a (f :: * -&gt; *).
+(HasField s &quot;maybe'features&quot; a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+forall (x :: Symbol) s a (f :: * -&gt; *).
+(HasField s x a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Field.field</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-string">&quot;maybe'features&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Example
+</span><a href="#local-6989586621679473421"><span class="hs-identifier hs-var">_x</span></a></span><span>
+</span><span id="line-131"></span><span>              </span><span class="hs-keyword">of</span><span>
+</span><span id="line-132"></span><span>                </span><span class="annot"><span class="hs-identifier hs-type">Prelude.Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Builder
+forall a. Monoid a =&gt; a
+</span><span class="hs-identifier hs-var">Data.Monoid.mempty</span></span><span>
+</span><span id="line-133"></span><span>                </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Prelude.Just</span></span><span> </span><span id="local-6989586621679473419"><span class="annot"><span class="annottext">_v :: Features
+</span><a href="#local-6989586621679473419"><span class="hs-identifier hs-var">_v</span></a></span></span><span class="hs-special">)</span><span>
+</span><span id="line-134"></span><span>                  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Builder -&gt; Builder -&gt; Builder
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">(Data.Monoid.&lt;&gt;)</span></span><span>
+</span><span id="line-135"></span><span>                       </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word64 -&gt; Builder
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.putVarInt</span></span><span> </span><span class="annot"><span class="hs-number">10</span></span><span class="hs-special">)</span><span>
+</span><span id="line-136"></span><span>                       </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(ByteString -&gt; Builder)
+-&gt; (Features -&gt; ByteString) -&gt; Features -&gt; Builder
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">(Prelude..)</span></span><span>
+</span><span id="line-137"></span><span>                          </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span> </span><span id="local-6989586621679473417"><span class="annot"><span class="annottext">bs :: ByteString
+</span><a href="#local-6989586621679473417"><span class="hs-identifier hs-var">bs</span></a></span></span><span>
+</span><span id="line-138"></span><span>                             </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Builder -&gt; Builder -&gt; Builder
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">(Data.Monoid.&lt;&gt;)</span></span><span>
+</span><span id="line-139"></span><span>                                  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word64 -&gt; Builder
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.putVarInt</span></span><span>
+</span><span id="line-140"></span><span>                                     </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; Word64
+forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">Prelude.fromIntegral</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; Int
+</span><span class="hs-identifier hs-var">Data.ByteString.length</span></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679473417"><span class="hs-identifier hs-var">bs</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-141"></span><span>                                  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; Builder
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.putBytes</span></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679473417"><span class="hs-identifier hs-var">bs</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-142"></span><span>                          </span><span class="annot"><span class="annottext">Features -&gt; ByteString
+forall msg. Message msg =&gt; msg -&gt; ByteString
+</span><span class="hs-identifier hs-var">Data.ProtoLens.encodeMessage</span></span><span>
+</span><span id="line-143"></span><span>                          </span><span class="annot"><span class="annottext">Features
+</span><a href="#local-6989586621679473419"><span class="hs-identifier hs-var">_v</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-144"></span><span>             </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FieldSet -&gt; Builder
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Wire.buildFieldSet</span></span><span>
+</span><span id="line-145"></span><span>                </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FoldLike FieldSet Example Example FieldSet FieldSet
+-&gt; Example -&gt; FieldSet
+forall a s t b. FoldLike a s t a b -&gt; s -&gt; a
+</span><span class="hs-identifier hs-var">Lens.Family2.view</span></span><span> </span><span class="annot"><span class="annottext">FoldLike FieldSet Example Example FieldSet FieldSet
+forall msg. Message msg =&gt; Lens' msg FieldSet
+</span><span class="hs-identifier hs-var">Data.ProtoLens.unknownFields</span></span><span> </span><span class="annot"><span class="annottext">Example
+</span><a href="#local-6989586621679473421"><span class="hs-identifier hs-var">_x</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-146"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Control.DeepSeq.NFData</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Example.Example.html#Example"><span class="hs-identifier hs-type">Example</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-147"></span><span>  </span><span id="local-6989586621679473410"><span class="annot"><span class="annottext">rnf :: Example -&gt; ()
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">rnf</span></span></span><span>
+</span><span id="line-148"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span> </span><span id="local-6989586621679473408"><span class="annot"><span class="annottext">x__ :: Example
+</span><a href="#local-6989586621679473408"><span class="hs-identifier hs-var">x__</span></a></span></span><span>
+</span><span id="line-149"></span><span>        </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">FieldSet -&gt; () -&gt; ()
+forall a b. NFData a =&gt; a -&gt; b -&gt; b
+</span><span class="hs-identifier hs-var">Control.DeepSeq.deepseq</span></span><span>
+</span><span id="line-150"></span><span>             </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Example -&gt; FieldSet
+</span><a href="Proto.Tensorflow.Core.Example.Example.html#_Example%27_unknownFields"><span class="hs-identifier hs-var hs-var">_Example'_unknownFields</span></a></span><span> </span><span class="annot"><span class="annottext">Example
+</span><a href="#local-6989586621679473408"><span class="hs-identifier hs-var">x__</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-151"></span><span>             </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe Features -&gt; () -&gt; ()
+forall a b. NFData a =&gt; a -&gt; b -&gt; b
+</span><span class="hs-identifier hs-var">Control.DeepSeq.deepseq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Example -&gt; Maybe Features
+</span><a href="Proto.Tensorflow.Core.Example.Example.html#_Example%27features"><span class="hs-identifier hs-var hs-var">_Example'features</span></a></span><span> </span><span class="annot"><span class="annottext">Example
+</span><a href="#local-6989586621679473408"><span class="hs-identifier hs-var">x__</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-152"></span><span class="hs-comment">{- | Fields :
+     
+         * 'Proto.Tensorflow.Core.Example.Example_Fields.context' @:: Lens' SequenceExample Proto.Tensorflow.Core.Example.Feature.Features@
+         * 'Proto.Tensorflow.Core.Example.Example_Fields.maybe'context' @:: Lens' SequenceExample (Prelude.Maybe Proto.Tensorflow.Core.Example.Feature.Features)@
+         * 'Proto.Tensorflow.Core.Example.Example_Fields.featureLists' @:: Lens' SequenceExample Proto.Tensorflow.Core.Example.Feature.FeatureLists@
+         * 'Proto.Tensorflow.Core.Example.Example_Fields.maybe'featureLists' @:: Lens' SequenceExample (Prelude.Maybe Proto.Tensorflow.Core.Example.Feature.FeatureLists)@ -}</span><span>
+</span><span id="line-158"></span><span class="hs-keyword">data</span><span> </span><span id="SequenceExample"><span class="annot"><a href="Proto.Tensorflow.Core.Example.Example.html#SequenceExample"><span class="hs-identifier hs-var">SequenceExample</span></a></span></span><span>
+</span><span id="line-159"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="SequenceExample%27_constructor"><span class="annot"><a href="Proto.Tensorflow.Core.Example.Example.html#SequenceExample%27_constructor"><span class="hs-identifier hs-var">SequenceExample'_constructor</span></a></span></span><span> </span><span class="hs-special">{</span><span id="_SequenceExample%27context"><span class="annot"><span class="annottext">SequenceExample -&gt; Maybe Features
+</span><a href="Proto.Tensorflow.Core.Example.Example.html#_SequenceExample%27context"><span class="hs-identifier hs-var hs-var">_SequenceExample'context</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Prelude.Maybe</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Example.Feature.html#Features"><span class="hs-identifier hs-type">Proto.Tensorflow.Core.Example.Feature.Features</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-160"></span><span>                                  </span><span id="_SequenceExample%27featureLists"><span class="annot"><span class="annottext">SequenceExample -&gt; Maybe FeatureLists
+</span><a href="Proto.Tensorflow.Core.Example.Example.html#_SequenceExample%27featureLists"><span class="hs-identifier hs-var hs-var">_SequenceExample'featureLists</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Prelude.Maybe</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Example.Feature.html#FeatureLists"><span class="hs-identifier hs-type">Proto.Tensorflow.Core.Example.Feature.FeatureLists</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-161"></span><span>                                  </span><span id="_SequenceExample%27_unknownFields"><span class="annot"><span class="annottext">SequenceExample -&gt; FieldSet
+</span><a href="Proto.Tensorflow.Core.Example.Example.html#_SequenceExample%27_unknownFields"><span class="hs-identifier hs-var hs-var">_SequenceExample'_unknownFields</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.FieldSet</span></span><span class="hs-special">}</span><span>
+</span><span id="line-162"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679473399"><span id="local-6989586621679473401"><span class="annot"><span class="annottext">SequenceExample -&gt; SequenceExample -&gt; Bool
+(SequenceExample -&gt; SequenceExample -&gt; Bool)
+-&gt; (SequenceExample -&gt; SequenceExample -&gt; Bool)
+-&gt; Eq SequenceExample
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: SequenceExample -&gt; SequenceExample -&gt; Bool
+$c/= :: SequenceExample -&gt; SequenceExample -&gt; Bool
+== :: SequenceExample -&gt; SequenceExample -&gt; Bool
+$c== :: SequenceExample -&gt; SequenceExample -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Prelude.Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679473384"><span id="local-6989586621679473386"><span id="local-6989586621679473388"><span id="local-6989586621679473390"><span id="local-6989586621679473392"><span id="local-6989586621679473394"><span id="local-6989586621679473396"><span class="annot"><span class="annottext">Eq SequenceExample
+Eq SequenceExample =&gt;
+(SequenceExample -&gt; SequenceExample -&gt; Ordering)
+-&gt; (SequenceExample -&gt; SequenceExample -&gt; Bool)
+-&gt; (SequenceExample -&gt; SequenceExample -&gt; Bool)
+-&gt; (SequenceExample -&gt; SequenceExample -&gt; Bool)
+-&gt; (SequenceExample -&gt; SequenceExample -&gt; Bool)
+-&gt; (SequenceExample -&gt; SequenceExample -&gt; SequenceExample)
+-&gt; (SequenceExample -&gt; SequenceExample -&gt; SequenceExample)
+-&gt; Ord SequenceExample
+SequenceExample -&gt; SequenceExample -&gt; Bool
+SequenceExample -&gt; SequenceExample -&gt; Ordering
+SequenceExample -&gt; SequenceExample -&gt; SequenceExample
+forall a.
+Eq a =&gt;
+(a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+min :: SequenceExample -&gt; SequenceExample -&gt; SequenceExample
+$cmin :: SequenceExample -&gt; SequenceExample -&gt; SequenceExample
+max :: SequenceExample -&gt; SequenceExample -&gt; SequenceExample
+$cmax :: SequenceExample -&gt; SequenceExample -&gt; SequenceExample
+&gt;= :: SequenceExample -&gt; SequenceExample -&gt; Bool
+$c&gt;= :: SequenceExample -&gt; SequenceExample -&gt; Bool
+&gt; :: SequenceExample -&gt; SequenceExample -&gt; Bool
+$c&gt; :: SequenceExample -&gt; SequenceExample -&gt; Bool
+&lt;= :: SequenceExample -&gt; SequenceExample -&gt; Bool
+$c&lt;= :: SequenceExample -&gt; SequenceExample -&gt; Bool
+&lt; :: SequenceExample -&gt; SequenceExample -&gt; Bool
+$c&lt; :: SequenceExample -&gt; SequenceExample -&gt; Bool
+compare :: SequenceExample -&gt; SequenceExample -&gt; Ordering
+$ccompare :: SequenceExample -&gt; SequenceExample -&gt; Ordering
+$cp1Ord :: Eq SequenceExample
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Prelude.Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-163"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679473379"><span id="local-6989586621679473381"><span class="annot"><span class="hs-identifier hs-type">Prelude.Show</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Example.Example.html#SequenceExample"><span class="hs-identifier hs-type">SequenceExample</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-164"></span><span>  </span><span id="local-6989586621679473378"><span class="annot"><span class="annottext">showsPrec :: Int -&gt; SequenceExample -&gt; ShowS
+</span><a href="#local-6989586621679473378"><span class="hs-identifier hs-var hs-var hs-var hs-var">showsPrec</span></a></span></span><span> </span><span class="hs-identifier">_</span><span> </span><span id="local-6989586621679473377"><span class="annot"><span class="annottext">__x :: SequenceExample
+</span><a href="#local-6989586621679473377"><span class="hs-identifier hs-var">__x</span></a></span></span><span> </span><span id="local-6989586621679473376"><span class="annot"><span class="annottext">__s :: String
+</span><a href="#local-6989586621679473376"><span class="hs-identifier hs-var">__s</span></a></span></span><span>
+</span><span id="line-165"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Char -&gt; ShowS
+</span><span class="hs-identifier hs-var">Prelude.showChar</span></span><span>
+</span><span id="line-166"></span><span>        </span><span class="annot"><span class="hs-char">'{'</span></span><span>
+</span><span id="line-167"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; ShowS
+</span><span class="hs-identifier hs-var">Prelude.showString</span></span><span>
+</span><span id="line-168"></span><span>           </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SequenceExample -&gt; String
+forall msg. Message msg =&gt; msg -&gt; String
+</span><span class="hs-identifier hs-var">Data.ProtoLens.showMessageShort</span></span><span> </span><span class="annot"><span class="annottext">SequenceExample
+</span><a href="#local-6989586621679473377"><span class="hs-identifier hs-var">__x</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Char -&gt; ShowS
+</span><span class="hs-identifier hs-var">Prelude.showChar</span></span><span> </span><span class="annot"><span class="hs-char">'}'</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679473376"><span class="hs-identifier hs-var">__s</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-169"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.Field.HasField</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Example.Example.html#SequenceExample"><span class="hs-identifier hs-type">SequenceExample</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;context&quot;</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Example.Feature.html#Features"><span class="hs-identifier hs-type">Proto.Tensorflow.Core.Example.Feature.Features</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-170"></span><span>  </span><span id="local-6989586621679473374"><span class="annot"><span class="annottext">fieldOf :: Proxy# &quot;context&quot;
+-&gt; (Features -&gt; f Features) -&gt; SequenceExample -&gt; f SequenceExample
+</span><a href="#local-6989586621679473374"><span class="hs-identifier hs-var hs-var hs-var hs-var">fieldOf</span></a></span></span><span> </span><span class="hs-identifier">_</span><span>
+</span><span id="line-171"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((Maybe Features -&gt; f (Maybe Features))
+ -&gt; SequenceExample -&gt; f SequenceExample)
+-&gt; ((Features -&gt; f Features)
+    -&gt; Maybe Features -&gt; f (Maybe Features))
+-&gt; (Features -&gt; f Features)
+-&gt; SequenceExample
+-&gt; f SequenceExample
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">(Prelude..)</span></span><span>
+</span><span id="line-172"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(SequenceExample -&gt; Maybe Features)
+-&gt; (SequenceExample -&gt; Maybe Features -&gt; SequenceExample)
+-&gt; Lens
+     SequenceExample SequenceExample (Maybe Features) (Maybe Features)
+forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span class="hs-identifier hs-var">Lens.Family2.Unchecked.lens</span></span><span>
+</span><span id="line-173"></span><span>           </span><span class="annot"><span class="annottext">SequenceExample -&gt; Maybe Features
+</span><a href="Proto.Tensorflow.Core.Example.Example.html#_SequenceExample%27context"><span class="hs-identifier hs-var hs-var">_SequenceExample'context</span></a></span><span>
+</span><span id="line-174"></span><span>           </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span> </span><span id="local-6989586621679473373"><span class="annot"><span class="annottext">x__ :: SequenceExample
+</span><a href="#local-6989586621679473373"><span class="hs-identifier hs-var">x__</span></a></span></span><span> </span><span id="local-6989586621679473372"><span class="annot"><span class="annottext">y__ :: Maybe Features
+</span><a href="#local-6989586621679473372"><span class="hs-identifier hs-var">y__</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SequenceExample
+</span><a href="#local-6989586621679473373"><span class="hs-identifier hs-var">x__</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_SequenceExample'context :: Maybe Features
+</span><a href="Proto.Tensorflow.Core.Example.Example.html#_SequenceExample%27context"><span class="hs-identifier hs-var">_SequenceExample'context</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Features
+</span><a href="#local-6989586621679473372"><span class="hs-identifier hs-var">y__</span></a></span><span class="hs-special">}</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-175"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Features -&gt; Lens' (Maybe Features) Features
+forall b. b -&gt; Lens' (Maybe b) b
+</span><span class="hs-identifier hs-var">Data.ProtoLens.maybeLens</span></span><span> </span><span class="annot"><span class="annottext">Features
+forall msg. Message msg =&gt; msg
+</span><span class="hs-identifier hs-var">Data.ProtoLens.defMessage</span></span><span class="hs-special">)</span><span>
+</span><span id="line-176"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.Field.HasField</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Example.Example.html#SequenceExample"><span class="hs-identifier hs-type">SequenceExample</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;maybe'context&quot;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Prelude.Maybe</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Example.Feature.html#Features"><span class="hs-identifier hs-type">Proto.Tensorflow.Core.Example.Feature.Features</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-177"></span><span>  </span><span id="local-6989586621679473370"><span class="annot"><span class="annottext">fieldOf :: Proxy# &quot;maybe'context&quot;
+-&gt; (Maybe Features -&gt; f (Maybe Features))
+-&gt; SequenceExample
+-&gt; f SequenceExample
+</span><a href="#local-6989586621679473370"><span class="hs-identifier hs-var hs-var hs-var hs-var">fieldOf</span></a></span></span><span> </span><span class="hs-identifier">_</span><span>
+</span><span id="line-178"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((Maybe Features -&gt; f (Maybe Features))
+ -&gt; SequenceExample -&gt; f SequenceExample)
+-&gt; ((Maybe Features -&gt; f (Maybe Features))
+    -&gt; Maybe Features -&gt; f (Maybe Features))
+-&gt; (Maybe Features -&gt; f (Maybe Features))
+-&gt; SequenceExample
+-&gt; f SequenceExample
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">(Prelude..)</span></span><span>
+</span><span id="line-179"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(SequenceExample -&gt; Maybe Features)
+-&gt; (SequenceExample -&gt; Maybe Features -&gt; SequenceExample)
+-&gt; Lens
+     SequenceExample SequenceExample (Maybe Features) (Maybe Features)
+forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span class="hs-identifier hs-var">Lens.Family2.Unchecked.lens</span></span><span>
+</span><span id="line-180"></span><span>           </span><span class="annot"><span class="annottext">SequenceExample -&gt; Maybe Features
+</span><a href="Proto.Tensorflow.Core.Example.Example.html#_SequenceExample%27context"><span class="hs-identifier hs-var hs-var">_SequenceExample'context</span></a></span><span>
+</span><span id="line-181"></span><span>           </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span> </span><span id="local-6989586621679473369"><span class="annot"><span class="annottext">x__ :: SequenceExample
+</span><a href="#local-6989586621679473369"><span class="hs-identifier hs-var">x__</span></a></span></span><span> </span><span id="local-6989586621679473368"><span class="annot"><span class="annottext">y__ :: Maybe Features
+</span><a href="#local-6989586621679473368"><span class="hs-identifier hs-var">y__</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SequenceExample
+</span><a href="#local-6989586621679473369"><span class="hs-identifier hs-var">x__</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_SequenceExample'context :: Maybe Features
+</span><a href="Proto.Tensorflow.Core.Example.Example.html#_SequenceExample%27context"><span class="hs-identifier hs-var">_SequenceExample'context</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Features
+</span><a href="#local-6989586621679473368"><span class="hs-identifier hs-var">y__</span></a></span><span class="hs-special">}</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-182"></span><span>        </span><span class="annot"><span class="annottext">(Maybe Features -&gt; f (Maybe Features))
+-&gt; Maybe Features -&gt; f (Maybe Features)
+forall a. a -&gt; a
+</span><span class="hs-identifier hs-var">Prelude.id</span></span><span>
+</span><span id="line-183"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.Field.HasField</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Example.Example.html#SequenceExample"><span class="hs-identifier hs-type">SequenceExample</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;featureLists&quot;</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Example.Feature.html#FeatureLists"><span class="hs-identifier hs-type">Proto.Tensorflow.Core.Example.Feature.FeatureLists</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-184"></span><span>  </span><span id="local-6989586621679473366"><span class="annot"><span class="annottext">fieldOf :: Proxy# &quot;featureLists&quot;
+-&gt; (FeatureLists -&gt; f FeatureLists)
+-&gt; SequenceExample
+-&gt; f SequenceExample
+</span><a href="#local-6989586621679473366"><span class="hs-identifier hs-var hs-var hs-var hs-var">fieldOf</span></a></span></span><span> </span><span class="hs-identifier">_</span><span>
+</span><span id="line-185"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((Maybe FeatureLists -&gt; f (Maybe FeatureLists))
+ -&gt; SequenceExample -&gt; f SequenceExample)
+-&gt; ((FeatureLists -&gt; f FeatureLists)
+    -&gt; Maybe FeatureLists -&gt; f (Maybe FeatureLists))
+-&gt; (FeatureLists -&gt; f FeatureLists)
+-&gt; SequenceExample
+-&gt; f SequenceExample
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">(Prelude..)</span></span><span>
+</span><span id="line-186"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(SequenceExample -&gt; Maybe FeatureLists)
+-&gt; (SequenceExample -&gt; Maybe FeatureLists -&gt; SequenceExample)
+-&gt; Lens
+     SequenceExample
+     SequenceExample
+     (Maybe FeatureLists)
+     (Maybe FeatureLists)
+forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span class="hs-identifier hs-var">Lens.Family2.Unchecked.lens</span></span><span>
+</span><span id="line-187"></span><span>           </span><span class="annot"><span class="annottext">SequenceExample -&gt; Maybe FeatureLists
+</span><a href="Proto.Tensorflow.Core.Example.Example.html#_SequenceExample%27featureLists"><span class="hs-identifier hs-var hs-var">_SequenceExample'featureLists</span></a></span><span>
+</span><span id="line-188"></span><span>           </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span> </span><span id="local-6989586621679473365"><span class="annot"><span class="annottext">x__ :: SequenceExample
+</span><a href="#local-6989586621679473365"><span class="hs-identifier hs-var">x__</span></a></span></span><span> </span><span id="local-6989586621679473364"><span class="annot"><span class="annottext">y__ :: Maybe FeatureLists
+</span><a href="#local-6989586621679473364"><span class="hs-identifier hs-var">y__</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SequenceExample
+</span><a href="#local-6989586621679473365"><span class="hs-identifier hs-var">x__</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_SequenceExample'featureLists :: Maybe FeatureLists
+</span><a href="Proto.Tensorflow.Core.Example.Example.html#_SequenceExample%27featureLists"><span class="hs-identifier hs-var">_SequenceExample'featureLists</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe FeatureLists
+</span><a href="#local-6989586621679473364"><span class="hs-identifier hs-var">y__</span></a></span><span class="hs-special">}</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-189"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FeatureLists -&gt; Lens' (Maybe FeatureLists) FeatureLists
+forall b. b -&gt; Lens' (Maybe b) b
+</span><span class="hs-identifier hs-var">Data.ProtoLens.maybeLens</span></span><span> </span><span class="annot"><span class="annottext">FeatureLists
+forall msg. Message msg =&gt; msg
+</span><span class="hs-identifier hs-var">Data.ProtoLens.defMessage</span></span><span class="hs-special">)</span><span>
+</span><span id="line-190"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.Field.HasField</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Example.Example.html#SequenceExample"><span class="hs-identifier hs-type">SequenceExample</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;maybe'featureLists&quot;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Prelude.Maybe</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Example.Feature.html#FeatureLists"><span class="hs-identifier hs-type">Proto.Tensorflow.Core.Example.Feature.FeatureLists</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-191"></span><span>  </span><span id="local-6989586621679473362"><span class="annot"><span class="annottext">fieldOf :: Proxy# &quot;maybe'featureLists&quot;
+-&gt; (Maybe FeatureLists -&gt; f (Maybe FeatureLists))
+-&gt; SequenceExample
+-&gt; f SequenceExample
+</span><a href="#local-6989586621679473362"><span class="hs-identifier hs-var hs-var hs-var hs-var">fieldOf</span></a></span></span><span> </span><span class="hs-identifier">_</span><span>
+</span><span id="line-192"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((Maybe FeatureLists -&gt; f (Maybe FeatureLists))
+ -&gt; SequenceExample -&gt; f SequenceExample)
+-&gt; ((Maybe FeatureLists -&gt; f (Maybe FeatureLists))
+    -&gt; Maybe FeatureLists -&gt; f (Maybe FeatureLists))
+-&gt; (Maybe FeatureLists -&gt; f (Maybe FeatureLists))
+-&gt; SequenceExample
+-&gt; f SequenceExample
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">(Prelude..)</span></span><span>
+</span><span id="line-193"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(SequenceExample -&gt; Maybe FeatureLists)
+-&gt; (SequenceExample -&gt; Maybe FeatureLists -&gt; SequenceExample)
+-&gt; Lens
+     SequenceExample
+     SequenceExample
+     (Maybe FeatureLists)
+     (Maybe FeatureLists)
+forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span class="hs-identifier hs-var">Lens.Family2.Unchecked.lens</span></span><span>
+</span><span id="line-194"></span><span>           </span><span class="annot"><span class="annottext">SequenceExample -&gt; Maybe FeatureLists
+</span><a href="Proto.Tensorflow.Core.Example.Example.html#_SequenceExample%27featureLists"><span class="hs-identifier hs-var hs-var">_SequenceExample'featureLists</span></a></span><span>
+</span><span id="line-195"></span><span>           </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span> </span><span id="local-6989586621679473361"><span class="annot"><span class="annottext">x__ :: SequenceExample
+</span><a href="#local-6989586621679473361"><span class="hs-identifier hs-var">x__</span></a></span></span><span> </span><span id="local-6989586621679473360"><span class="annot"><span class="annottext">y__ :: Maybe FeatureLists
+</span><a href="#local-6989586621679473360"><span class="hs-identifier hs-var">y__</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SequenceExample
+</span><a href="#local-6989586621679473361"><span class="hs-identifier hs-var">x__</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_SequenceExample'featureLists :: Maybe FeatureLists
+</span><a href="Proto.Tensorflow.Core.Example.Example.html#_SequenceExample%27featureLists"><span class="hs-identifier hs-var">_SequenceExample'featureLists</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe FeatureLists
+</span><a href="#local-6989586621679473360"><span class="hs-identifier hs-var">y__</span></a></span><span class="hs-special">}</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-196"></span><span>        </span><span class="annot"><span class="annottext">(Maybe FeatureLists -&gt; f (Maybe FeatureLists))
+-&gt; Maybe FeatureLists -&gt; f (Maybe FeatureLists)
+forall a. a -&gt; a
+</span><span class="hs-identifier hs-var">Prelude.id</span></span><span>
+</span><span id="line-197"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679473353"><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.Message</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Example.Example.html#SequenceExample"><span class="hs-identifier hs-type">SequenceExample</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-198"></span><span>  </span><span id="local-6989586621679473349"><span class="annot"><span class="annottext">messageName :: Proxy SequenceExample -&gt; Text
+</span><a href="#local-6989586621679473349"><span class="hs-identifier hs-var hs-var hs-var hs-var">messageName</span></a></span></span><span> </span><span class="hs-identifier">_</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Text
+</span><span class="hs-identifier hs-var">Data.Text.pack</span></span><span> </span><span class="annot"><span class="hs-string">&quot;tensorflow.SequenceExample&quot;</span></span><span>
+</span><span id="line-199"></span><span>  </span><span id="local-6989586621679473348"><span class="annot"><span class="annottext">packedMessageDescriptor :: Proxy SequenceExample -&gt; ByteString
+</span><a href="#local-6989586621679473348"><span class="hs-identifier hs-var hs-var hs-var hs-var">packedMessageDescriptor</span></a></span></span><span> </span><span class="hs-identifier">_</span><span>
+</span><span id="line-200"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-string">&quot;\n\
+      \\SISequenceExample\DC2.\n\
+      \\acontext\CAN\SOH \SOH(\v2\DC4.tensorflow.FeaturesR\acontext\DC2=\n\
+      \\rfeature_lists\CAN\STX \SOH(\v2\CAN.tensorflow.FeatureListsR\ffeatureLists&quot;</span></span><span>
+</span><span id="line-204"></span><span>  </span><span id="local-6989586621679473347"><span class="annot"><span class="annottext">packedFileDescriptor :: Proxy SequenceExample -&gt; ByteString
+</span><a href="#local-6989586621679473347"><span class="hs-identifier hs-var hs-var hs-var hs-var">packedFileDescriptor</span></a></span></span><span> </span><span class="hs-identifier">_</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="Proto.Tensorflow.Core.Example.Example.html#packedFileDescriptor"><span class="hs-identifier hs-var">packedFileDescriptor</span></a></span><span>
+</span><span id="line-205"></span><span>  </span><span id="local-6989586621679473346"><span class="annot"><span class="annottext">fieldsByTag :: Map Tag (FieldDescriptor SequenceExample)
+</span><a href="#local-6989586621679473346"><span class="hs-identifier hs-var hs-var hs-var hs-var">fieldsByTag</span></a></span></span><span>
+</span><span id="line-206"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">let</span><span>
+</span><span id="line-207"></span><span>        </span><span id="local-6989586621679473345"><span class="annot"><span class="annottext">context__field_descriptor :: FieldDescriptor SequenceExample
+</span><a href="#local-6989586621679473345"><span class="hs-identifier hs-var hs-var">context__field_descriptor</span></a></span></span><span>
+</span><span id="line-208"></span><span>          </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+-&gt; FieldTypeDescriptor Features
+-&gt; FieldAccessor SequenceExample Features
+-&gt; FieldDescriptor SequenceExample
+forall value msg.
+String
+-&gt; FieldTypeDescriptor value
+-&gt; FieldAccessor msg value
+-&gt; FieldDescriptor msg
+</span><span class="hs-identifier hs-var">Data.ProtoLens.FieldDescriptor</span></span><span>
+</span><span id="line-209"></span><span>              </span><span class="annot"><span class="hs-string">&quot;context&quot;</span></span><span>
+</span><span id="line-210"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">MessageOrGroup -&gt; FieldTypeDescriptor Features
+forall value.
+Message value =&gt;
+MessageOrGroup -&gt; FieldTypeDescriptor value
+</span><span class="hs-identifier hs-var">Data.ProtoLens.MessageField</span></span><span> </span><span class="annot"><span class="annottext">MessageOrGroup
+</span><span class="hs-identifier hs-var">Data.ProtoLens.MessageType</span></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-211"></span><span>                 </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.FieldTypeDescriptor</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Example.Feature.html#Features"><span class="hs-identifier hs-type">Proto.Tensorflow.Core.Example.Feature.Features</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-212"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Lens
+  SequenceExample SequenceExample (Maybe Features) (Maybe Features)
+-&gt; FieldAccessor SequenceExample Features
+forall msg value.
+Lens' msg (Maybe value) -&gt; FieldAccessor msg value
+</span><span class="hs-identifier hs-var">Data.ProtoLens.OptionalField</span></span><span>
+</span><span id="line-213"></span><span>                 </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall s a (f :: * -&gt; *).
+(HasField s &quot;maybe'context&quot; a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+forall (x :: Symbol) s a (f :: * -&gt; *).
+(HasField s x a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Field.field</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-string">&quot;maybe'context&quot;</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-214"></span><span>              </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.FieldDescriptor</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Example.Example.html#SequenceExample"><span class="hs-identifier hs-type">SequenceExample</span></a></span><span>
+</span><span id="line-215"></span><span>        </span><span id="local-6989586621679473344"><span class="annot"><span class="annottext">featureLists__field_descriptor :: FieldDescriptor SequenceExample
+</span><a href="#local-6989586621679473344"><span class="hs-identifier hs-var hs-var">featureLists__field_descriptor</span></a></span></span><span>
+</span><span id="line-216"></span><span>          </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+-&gt; FieldTypeDescriptor FeatureLists
+-&gt; FieldAccessor SequenceExample FeatureLists
+-&gt; FieldDescriptor SequenceExample
+forall value msg.
+String
+-&gt; FieldTypeDescriptor value
+-&gt; FieldAccessor msg value
+-&gt; FieldDescriptor msg
+</span><span class="hs-identifier hs-var">Data.ProtoLens.FieldDescriptor</span></span><span>
+</span><span id="line-217"></span><span>              </span><span class="annot"><span class="hs-string">&quot;feature_lists&quot;</span></span><span>
+</span><span id="line-218"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">MessageOrGroup -&gt; FieldTypeDescriptor FeatureLists
+forall value.
+Message value =&gt;
+MessageOrGroup -&gt; FieldTypeDescriptor value
+</span><span class="hs-identifier hs-var">Data.ProtoLens.MessageField</span></span><span> </span><span class="annot"><span class="annottext">MessageOrGroup
+</span><span class="hs-identifier hs-var">Data.ProtoLens.MessageType</span></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-219"></span><span>                 </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.FieldTypeDescriptor</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Example.Feature.html#FeatureLists"><span class="hs-identifier hs-type">Proto.Tensorflow.Core.Example.Feature.FeatureLists</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-220"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Lens
+  SequenceExample
+  SequenceExample
+  (Maybe FeatureLists)
+  (Maybe FeatureLists)
+-&gt; FieldAccessor SequenceExample FeatureLists
+forall msg value.
+Lens' msg (Maybe value) -&gt; FieldAccessor msg value
+</span><span class="hs-identifier hs-var">Data.ProtoLens.OptionalField</span></span><span>
+</span><span id="line-221"></span><span>                 </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall s a (f :: * -&gt; *).
+(HasField s &quot;maybe'featureLists&quot; a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+forall (x :: Symbol) s a (f :: * -&gt; *).
+(HasField s x a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Field.field</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-string">&quot;maybe'featureLists&quot;</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-222"></span><span>              </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.FieldDescriptor</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Example.Example.html#SequenceExample"><span class="hs-identifier hs-type">SequenceExample</span></a></span><span>
+</span><span id="line-223"></span><span>      </span><span class="hs-keyword">in</span><span>
+</span><span id="line-224"></span><span>        </span><span class="annot"><span class="annottext">[(Tag, FieldDescriptor SequenceExample)]
+-&gt; Map Tag (FieldDescriptor SequenceExample)
+forall k a. Ord k =&gt; [(k, a)] -&gt; Map k a
+</span><span class="hs-identifier hs-var">Data.Map.fromList</span></span><span>
+</span><span id="line-225"></span><span>          </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; Tag
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Tag</span></span><span> </span><span class="annot"><span class="hs-number">1</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">FieldDescriptor SequenceExample
+</span><a href="#local-6989586621679473345"><span class="hs-identifier hs-var">context__field_descriptor</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-226"></span><span>           </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; Tag
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Tag</span></span><span> </span><span class="annot"><span class="hs-number">2</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">FieldDescriptor SequenceExample
+</span><a href="#local-6989586621679473344"><span class="hs-identifier hs-var">featureLists__field_descriptor</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
+</span><span id="line-227"></span><span>  </span><span id="local-6989586621679473343"><span class="annot"><span class="annottext">unknownFields :: LensLike' f SequenceExample FieldSet
+</span><a href="#local-6989586621679473343"><span class="hs-identifier hs-var hs-var hs-var hs-var">unknownFields</span></a></span></span><span>
+</span><span id="line-228"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(SequenceExample -&gt; FieldSet)
+-&gt; (SequenceExample -&gt; FieldSet -&gt; SequenceExample)
+-&gt; Lens' SequenceExample FieldSet
+forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span class="hs-identifier hs-var">Lens.Family2.Unchecked.lens</span></span><span>
+</span><span id="line-229"></span><span>        </span><span class="annot"><span class="annottext">SequenceExample -&gt; FieldSet
+</span><a href="Proto.Tensorflow.Core.Example.Example.html#_SequenceExample%27_unknownFields"><span class="hs-identifier hs-var hs-var">_SequenceExample'_unknownFields</span></a></span><span>
+</span><span id="line-230"></span><span>        </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span> </span><span id="local-6989586621679473342"><span class="annot"><span class="annottext">x__ :: SequenceExample
+</span><a href="#local-6989586621679473342"><span class="hs-identifier hs-var">x__</span></a></span></span><span> </span><span id="local-6989586621679473341"><span class="annot"><span class="annottext">y__ :: FieldSet
+</span><a href="#local-6989586621679473341"><span class="hs-identifier hs-var">y__</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SequenceExample
+</span><a href="#local-6989586621679473342"><span class="hs-identifier hs-var">x__</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_SequenceExample'_unknownFields :: FieldSet
+</span><a href="Proto.Tensorflow.Core.Example.Example.html#_SequenceExample%27_unknownFields"><span class="hs-identifier hs-var">_SequenceExample'_unknownFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">FieldSet
+</span><a href="#local-6989586621679473341"><span class="hs-identifier hs-var">y__</span></a></span><span class="hs-special">}</span><span class="hs-special">)</span><span>
+</span><span id="line-231"></span><span>  </span><span id="local-6989586621679473340"><span class="annot"><span class="annottext">defMessage :: SequenceExample
+</span><a href="#local-6989586621679473340"><span class="hs-identifier hs-var hs-var hs-var hs-var">defMessage</span></a></span></span><span>
+</span><span id="line-232"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">$WSequenceExample'_constructor :: Maybe Features -&gt; Maybe FeatureLists -&gt; FieldSet -&gt; SequenceExample
+</span><a href="Proto.Tensorflow.Core.Example.Example.html#%24WSequenceExample%27_constructor"><span class="hs-identifier hs-type hs-type">SequenceExample'_constructor</span></a></span><span>
+</span><span id="line-233"></span><span>        </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_SequenceExample'context :: Maybe Features
+</span><a href="Proto.Tensorflow.Core.Example.Example.html#_SequenceExample%27context"><span class="hs-identifier hs-var">_SequenceExample'context</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Features
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Prelude.Nothing</span></span><span class="hs-special">,</span><span>
+</span><span id="line-234"></span><span>         </span><span class="annot"><span class="annottext">_SequenceExample'featureLists :: Maybe FeatureLists
+</span><a href="Proto.Tensorflow.Core.Example.Example.html#_SequenceExample%27featureLists"><span class="hs-identifier hs-var">_SequenceExample'featureLists</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe FeatureLists
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Prelude.Nothing</span></span><span class="hs-special">,</span><span>
+</span><span id="line-235"></span><span>         </span><span class="annot"><span class="annottext">_SequenceExample'_unknownFields :: FieldSet
+</span><a href="Proto.Tensorflow.Core.Example.Example.html#_SequenceExample%27_unknownFields"><span class="hs-identifier hs-var">_SequenceExample'_unknownFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span class="hs-special">}</span><span>
+</span><span id="line-236"></span><span>  </span><span id="local-6989586621679473338"><span class="annot"><span class="annottext">parseMessage :: Parser SequenceExample
+</span><a href="#local-6989586621679473338"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseMessage</span></a></span></span><span>
+</span><span id="line-237"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">let</span><span>
+</span><span id="line-238"></span><span>        </span><span class="annot"><a href="#local-6989586621679473337"><span class="hs-identifier hs-type">loop</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-239"></span><span>          </span><span class="annot"><a href="Proto.Tensorflow.Core.Example.Example.html#SequenceExample"><span class="hs-identifier hs-type">SequenceExample</span></a></span><span>
+</span><span id="line-240"></span><span>          </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.Encoding.Bytes.Parser</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Example.Example.html#SequenceExample"><span class="hs-identifier hs-type">SequenceExample</span></a></span><span>
+</span><span id="line-241"></span><span>        </span><span id="local-6989586621679473337"><span class="annot"><span class="annottext">loop :: SequenceExample -&gt; Parser SequenceExample
+</span><a href="#local-6989586621679473337"><span class="hs-identifier hs-var hs-var">loop</span></a></span></span><span> </span><span id="local-6989586621679473336"><span class="annot"><span class="annottext">x :: SequenceExample
+</span><a href="#local-6989586621679473336"><span class="hs-identifier hs-var">x</span></a></span></span><span>
+</span><span id="line-242"></span><span>          </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span> </span><span id="local-6989586621679473335"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679473335"><span class="hs-identifier hs-var">end</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Bool
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.atEnd</span></span><span>
+</span><span id="line-243"></span><span>               </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679473335"><span class="hs-identifier hs-var">end</span></a></span><span> </span><span class="hs-keyword">then</span><span>
+</span><span id="line-244"></span><span>                   </span><span class="hs-keyword">do</span><span> </span><span class="hs-special">(</span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679473334"><span class="annot"><span class="annottext">missing :: [a]
+</span><a href="#local-6989586621679473334"><span class="hs-identifier hs-var hs-var">missing</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
+</span><span id="line-245"></span><span>                       </span><span class="hs-keyword">in</span><span>
+</span><span id="line-246"></span><span>                         </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">[Any] -&gt; Bool
+forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
+</span><span class="hs-identifier hs-var">Prelude.null</span></span><span> </span><span class="annot"><span class="annottext">[Any]
+forall a. [a]
+</span><a href="#local-6989586621679473334"><span class="hs-identifier hs-var">missing</span></a></span><span> </span><span class="hs-keyword">then</span><span>
+</span><span id="line-247"></span><span>                             </span><span class="annot"><span class="annottext">() -&gt; Parser ()
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span class="hs-identifier hs-var">Prelude.return</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-248"></span><span>                         </span><span class="hs-keyword">else</span><span>
+</span><span id="line-249"></span><span>                             </span><span class="annot"><span class="annottext">String -&gt; Parser ()
+forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
+</span><span class="hs-identifier hs-var">Prelude.fail</span></span><span>
+</span><span id="line-250"></span><span>                               </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; ShowS
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">(Prelude.++)</span></span><span>
+</span><span id="line-251"></span><span>                                  </span><span class="annot"><span class="hs-string">&quot;Missing required fields: &quot;</span></span><span>
+</span><span id="line-252"></span><span>                                  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[String] -&gt; String
+forall a. Show a =&gt; a -&gt; String
+</span><span class="hs-identifier hs-var">Prelude.show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[String]
+forall a. [a]
+</span><a href="#local-6989586621679473334"><span class="hs-identifier hs-var">missing</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Prelude.String</span></span><span class="hs-special">]</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-253"></span><span>                      </span><span class="annot"><span class="annottext">SequenceExample -&gt; Parser SequenceExample
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span class="hs-identifier hs-var">Prelude.return</span></span><span>
+</span><span id="line-254"></span><span>                        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Setter SequenceExample SequenceExample FieldSet FieldSet
+-&gt; (FieldSet -&gt; FieldSet) -&gt; SequenceExample -&gt; SequenceExample
+forall s t a b. Setter s t a b -&gt; (a -&gt; b) -&gt; s -&gt; t
+</span><span class="hs-identifier hs-var">Lens.Family2.over</span></span><span>
+</span><span id="line-255"></span><span>                           </span><span class="annot"><span class="annottext">forall msg. Message msg =&gt; Lens' msg FieldSet
+Setter SequenceExample SequenceExample FieldSet FieldSet
+</span><span class="hs-identifier hs-var">Data.ProtoLens.unknownFields</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621679473333"><span class="annot"><span class="annottext">FieldSet
+</span><a href="#local-6989586621679473333"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">FieldSet -&gt; FieldSet
+forall a. [a] -&gt; [a]
+</span><span class="hs-identifier hs-var">Prelude.reverse</span></span><span> </span><span class="annot"><span class="annottext">FieldSet
+</span><a href="#local-6989586621679473333"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">SequenceExample
+</span><a href="#local-6989586621679473336"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-256"></span><span>               </span><span class="hs-keyword">else</span><span>
+</span><span id="line-257"></span><span>                   </span><span class="hs-keyword">do</span><span> </span><span id="local-6989586621679473332"><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679473332"><span class="hs-identifier hs-var">tag</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Word64
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.getVarInt</span></span><span>
+</span><span id="line-258"></span><span>                      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679473332"><span class="hs-identifier hs-var">tag</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-259"></span><span>                        </span><span class="hs-number">10</span><span>
+</span><span id="line-260"></span><span>                          </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span> </span><span id="local-6989586621679473331"><span class="annot"><span class="annottext">Features
+</span><a href="#local-6989586621679473331"><span class="hs-identifier hs-var">y</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Features -&gt; String -&gt; Parser Features
+forall a. Parser a -&gt; String -&gt; Parser a
+</span><span class="hs-operator hs-var">(Data.ProtoLens.Encoding.Bytes.&lt;?&gt;)</span></span><span>
+</span><span id="line-261"></span><span>                                       </span><span class="hs-special">(</span><span class="hs-keyword">do</span><span> </span><span id="local-6989586621679473330"><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679473330"><span class="hs-identifier hs-var">len</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Word64
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.getVarInt</span></span><span>
+</span><span id="line-262"></span><span>                                           </span><span class="annot"><span class="annottext">Int -&gt; Parser Features -&gt; Parser Features
+forall a. Int -&gt; Parser a -&gt; Parser a
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.isolate</span></span><span>
+</span><span id="line-263"></span><span>                                             </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word64 -&gt; Int
+forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">Prelude.fromIntegral</span></span><span> </span><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679473330"><span class="hs-identifier hs-var">len</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Parser Features
+forall msg. Message msg =&gt; Parser msg
+</span><span class="hs-identifier hs-var">Data.ProtoLens.parseMessage</span></span><span class="hs-special">)</span><span>
+</span><span id="line-264"></span><span>                                       </span><span class="annot"><span class="hs-string">&quot;context&quot;</span></span><span>
+</span><span id="line-265"></span><span>                                </span><span class="annot"><span class="annottext">SequenceExample -&gt; Parser SequenceExample
+</span><a href="#local-6989586621679473337"><span class="hs-identifier hs-var">loop</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Setter SequenceExample SequenceExample Features Features
+-&gt; Features -&gt; SequenceExample -&gt; SequenceExample
+forall s t a b. Setter s t a b -&gt; b -&gt; s -&gt; t
+</span><span class="hs-identifier hs-var">Lens.Family2.set</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall s a (f :: * -&gt; *).
+(HasField s &quot;context&quot; a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+forall (x :: Symbol) s a (f :: * -&gt; *).
+(HasField s x a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Field.field</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-string">&quot;context&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Features
+</span><a href="#local-6989586621679473331"><span class="hs-identifier hs-var">y</span></a></span><span> </span><span class="annot"><span class="annottext">SequenceExample
+</span><a href="#local-6989586621679473336"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-266"></span><span>                        </span><span class="hs-number">18</span><span>
+</span><span id="line-267"></span><span>                          </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span> </span><span id="local-6989586621679473329"><span class="annot"><span class="annottext">FeatureLists
+</span><a href="#local-6989586621679473329"><span class="hs-identifier hs-var">y</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser FeatureLists -&gt; String -&gt; Parser FeatureLists
+forall a. Parser a -&gt; String -&gt; Parser a
+</span><span class="hs-operator hs-var">(Data.ProtoLens.Encoding.Bytes.&lt;?&gt;)</span></span><span>
+</span><span id="line-268"></span><span>                                       </span><span class="hs-special">(</span><span class="hs-keyword">do</span><span> </span><span id="local-6989586621679473328"><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679473328"><span class="hs-identifier hs-var">len</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Word64
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.getVarInt</span></span><span>
+</span><span id="line-269"></span><span>                                           </span><span class="annot"><span class="annottext">Int -&gt; Parser FeatureLists -&gt; Parser FeatureLists
+forall a. Int -&gt; Parser a -&gt; Parser a
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.isolate</span></span><span>
+</span><span id="line-270"></span><span>                                             </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word64 -&gt; Int
+forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">Prelude.fromIntegral</span></span><span> </span><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679473328"><span class="hs-identifier hs-var">len</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Parser FeatureLists
+forall msg. Message msg =&gt; Parser msg
+</span><span class="hs-identifier hs-var">Data.ProtoLens.parseMessage</span></span><span class="hs-special">)</span><span>
+</span><span id="line-271"></span><span>                                       </span><span class="annot"><span class="hs-string">&quot;feature_lists&quot;</span></span><span>
+</span><span id="line-272"></span><span>                                </span><span class="annot"><span class="annottext">SequenceExample -&gt; Parser SequenceExample
+</span><a href="#local-6989586621679473337"><span class="hs-identifier hs-var">loop</span></a></span><span>
+</span><span id="line-273"></span><span>                                  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Setter SequenceExample SequenceExample FeatureLists FeatureLists
+-&gt; FeatureLists -&gt; SequenceExample -&gt; SequenceExample
+forall s t a b. Setter s t a b -&gt; b -&gt; s -&gt; t
+</span><span class="hs-identifier hs-var">Lens.Family2.set</span></span><span>
+</span><span id="line-274"></span><span>                                     </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall s a (f :: * -&gt; *).
+(HasField s &quot;featureLists&quot; a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+forall (x :: Symbol) s a (f :: * -&gt; *).
+(HasField s x a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Field.field</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-string">&quot;featureLists&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">FeatureLists
+</span><a href="#local-6989586621679473329"><span class="hs-identifier hs-var">y</span></a></span><span> </span><span class="annot"><span class="annottext">SequenceExample
+</span><a href="#local-6989586621679473336"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-275"></span><span>                        </span><span id="local-6989586621679473327"><span class="annot"><span class="annottext">wire :: Word64
+</span><a href="#local-6989586621679473327"><span class="hs-identifier hs-var">wire</span></a></span></span><span>
+</span><span id="line-276"></span><span>                          </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621679473326"><span class="annot"><span class="annottext">TaggedValue
+</span><a href="#local-6989586621679473326"><span class="hs-identifier hs-var">y</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Word64 -&gt; Parser TaggedValue
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Wire.parseTaggedValueFromWire</span></span><span>
+</span><span id="line-277"></span><span>                                        </span><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679473327"><span class="hs-identifier hs-var">wire</span></a></span><span>
+</span><span id="line-278"></span><span>                                </span><span class="annot"><span class="annottext">SequenceExample -&gt; Parser SequenceExample
+</span><a href="#local-6989586621679473337"><span class="hs-identifier hs-var">loop</span></a></span><span>
+</span><span id="line-279"></span><span>                                  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Setter SequenceExample SequenceExample FieldSet FieldSet
+-&gt; (FieldSet -&gt; FieldSet) -&gt; SequenceExample -&gt; SequenceExample
+forall s t a b. Setter s t a b -&gt; (a -&gt; b) -&gt; s -&gt; t
+</span><span class="hs-identifier hs-var">Lens.Family2.over</span></span><span>
+</span><span id="line-280"></span><span>                                     </span><span class="annot"><span class="annottext">forall msg. Message msg =&gt; Lens' msg FieldSet
+Setter SequenceExample SequenceExample FieldSet FieldSet
+</span><span class="hs-identifier hs-var">Data.ProtoLens.unknownFields</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621679473325"><span class="annot"><span class="annottext">FieldSet
+</span><a href="#local-6989586621679473325"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="hs-glyph">:</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">TaggedValue
+</span><a href="#local-6989586621679473326"><span class="hs-identifier hs-var">y</span></a></span><span> </span><span class="annot"><span class="annottext">FieldSet
+</span><a href="#local-6989586621679473325"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">SequenceExample
+</span><a href="#local-6989586621679473336"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-281"></span><span>      </span><span class="hs-keyword">in</span><span>
+</span><span id="line-282"></span><span>        </span><span class="annot"><span class="annottext">Parser SequenceExample -&gt; String -&gt; Parser SequenceExample
+forall a. Parser a -&gt; String -&gt; Parser a
+</span><span class="hs-operator hs-var">(Data.ProtoLens.Encoding.Bytes.&lt;?&gt;)</span></span><span>
+</span><span id="line-283"></span><span>          </span><span class="hs-special">(</span><span class="hs-keyword">do</span><span> </span><span class="annot"><span class="annottext">SequenceExample -&gt; Parser SequenceExample
+</span><a href="#local-6989586621679473337"><span class="hs-identifier hs-var">loop</span></a></span><span> </span><span class="annot"><span class="annottext">SequenceExample
+forall msg. Message msg =&gt; msg
+</span><span class="hs-identifier hs-var">Data.ProtoLens.defMessage</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="hs-string">&quot;SequenceExample&quot;</span></span><span>
+</span><span id="line-284"></span><span>  </span><span id="local-6989586621679473324"><span class="annot"><span class="annottext">buildMessage :: SequenceExample -&gt; Builder
+</span><a href="#local-6989586621679473324"><span class="hs-identifier hs-var hs-var hs-var hs-var">buildMessage</span></a></span></span><span>
+</span><span id="line-285"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span> </span><span id="local-6989586621679473323"><span class="annot"><span class="annottext">_x :: SequenceExample
+</span><a href="#local-6989586621679473323"><span class="hs-identifier hs-var">_x</span></a></span></span><span>
+</span><span id="line-286"></span><span>        </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Builder -&gt; Builder -&gt; Builder
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">(Data.Monoid.&lt;&gt;)</span></span><span>
+</span><span id="line-287"></span><span>             </span><span class="hs-special">(</span><span class="hs-keyword">case</span><span>
+</span><span id="line-288"></span><span>                  </span><span class="annot"><span class="annottext">FoldLike
+  (Maybe Features)
+  SequenceExample
+  SequenceExample
+  (Maybe Features)
+  (Maybe Features)
+-&gt; SequenceExample -&gt; Maybe Features
+forall a s t b. FoldLike a s t a b -&gt; s -&gt; a
+</span><span class="hs-identifier hs-var">Lens.Family2.view</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall s a (f :: * -&gt; *).
+(HasField s &quot;maybe'context&quot; a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+forall (x :: Symbol) s a (f :: * -&gt; *).
+(HasField s x a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Field.field</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-string">&quot;maybe'context&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">SequenceExample
+</span><a href="#local-6989586621679473323"><span class="hs-identifier hs-var">_x</span></a></span><span>
+</span><span id="line-289"></span><span>              </span><span class="hs-keyword">of</span><span>
+</span><span id="line-290"></span><span>                </span><span class="annot"><span class="hs-identifier hs-type">Prelude.Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Builder
+forall a. Monoid a =&gt; a
+</span><span class="hs-identifier hs-var">Data.Monoid.mempty</span></span><span>
+</span><span id="line-291"></span><span>                </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Prelude.Just</span></span><span> </span><span id="local-6989586621679473322"><span class="annot"><span class="annottext">_v :: Features
+</span><a href="#local-6989586621679473322"><span class="hs-identifier hs-var">_v</span></a></span></span><span class="hs-special">)</span><span>
+</span><span id="line-292"></span><span>                  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Builder -&gt; Builder -&gt; Builder
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">(Data.Monoid.&lt;&gt;)</span></span><span>
+</span><span id="line-293"></span><span>                       </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word64 -&gt; Builder
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.putVarInt</span></span><span> </span><span class="annot"><span class="hs-number">10</span></span><span class="hs-special">)</span><span>
+</span><span id="line-294"></span><span>                       </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(ByteString -&gt; Builder)
+-&gt; (Features -&gt; ByteString) -&gt; Features -&gt; Builder
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">(Prelude..)</span></span><span>
+</span><span id="line-295"></span><span>                          </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span> </span><span id="local-6989586621679473321"><span class="annot"><span class="annottext">bs :: ByteString
+</span><a href="#local-6989586621679473321"><span class="hs-identifier hs-var">bs</span></a></span></span><span>
+</span><span id="line-296"></span><span>                             </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Builder -&gt; Builder -&gt; Builder
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">(Data.Monoid.&lt;&gt;)</span></span><span>
+</span><span id="line-297"></span><span>                                  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word64 -&gt; Builder
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.putVarInt</span></span><span>
+</span><span id="line-298"></span><span>                                     </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; Word64
+forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">Prelude.fromIntegral</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; Int
+</span><span class="hs-identifier hs-var">Data.ByteString.length</span></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679473321"><span class="hs-identifier hs-var">bs</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-299"></span><span>                                  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; Builder
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.putBytes</span></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679473321"><span class="hs-identifier hs-var">bs</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-300"></span><span>                          </span><span class="annot"><span class="annottext">Features -&gt; ByteString
+forall msg. Message msg =&gt; msg -&gt; ByteString
+</span><span class="hs-identifier hs-var">Data.ProtoLens.encodeMessage</span></span><span>
+</span><span id="line-301"></span><span>                          </span><span class="annot"><span class="annottext">Features
+</span><a href="#local-6989586621679473322"><span class="hs-identifier hs-var">_v</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-302"></span><span>             </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Builder -&gt; Builder -&gt; Builder
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">(Data.Monoid.&lt;&gt;)</span></span><span>
+</span><span id="line-303"></span><span>                </span><span class="hs-special">(</span><span class="hs-keyword">case</span><span>
+</span><span id="line-304"></span><span>                     </span><span class="annot"><span class="annottext">FoldLike
+  (Maybe FeatureLists)
+  SequenceExample
+  SequenceExample
+  (Maybe FeatureLists)
+  (Maybe FeatureLists)
+-&gt; SequenceExample -&gt; Maybe FeatureLists
+forall a s t b. FoldLike a s t a b -&gt; s -&gt; a
+</span><span class="hs-identifier hs-var">Lens.Family2.view</span></span><span>
+</span><span id="line-305"></span><span>                       </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall s a (f :: * -&gt; *).
+(HasField s &quot;maybe'featureLists&quot; a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+forall (x :: Symbol) s a (f :: * -&gt; *).
+(HasField s x a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Field.field</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-string">&quot;maybe'featureLists&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">SequenceExample
+</span><a href="#local-6989586621679473323"><span class="hs-identifier hs-var">_x</span></a></span><span>
+</span><span id="line-306"></span><span>                 </span><span class="hs-keyword">of</span><span>
+</span><span id="line-307"></span><span>                   </span><span class="annot"><span class="hs-identifier hs-type">Prelude.Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Builder
+forall a. Monoid a =&gt; a
+</span><span class="hs-identifier hs-var">Data.Monoid.mempty</span></span><span>
+</span><span id="line-308"></span><span>                   </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Prelude.Just</span></span><span> </span><span id="local-6989586621679473320"><span class="annot"><span class="annottext">_v :: FeatureLists
+</span><a href="#local-6989586621679473320"><span class="hs-identifier hs-var">_v</span></a></span></span><span class="hs-special">)</span><span>
+</span><span id="line-309"></span><span>                     </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Builder -&gt; Builder -&gt; Builder
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">(Data.Monoid.&lt;&gt;)</span></span><span>
+</span><span id="line-310"></span><span>                          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word64 -&gt; Builder
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.putVarInt</span></span><span> </span><span class="annot"><span class="hs-number">18</span></span><span class="hs-special">)</span><span>
+</span><span id="line-311"></span><span>                          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(ByteString -&gt; Builder)
+-&gt; (FeatureLists -&gt; ByteString) -&gt; FeatureLists -&gt; Builder
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">(Prelude..)</span></span><span>
+</span><span id="line-312"></span><span>                             </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span> </span><span id="local-6989586621679473319"><span class="annot"><span class="annottext">bs :: ByteString
+</span><a href="#local-6989586621679473319"><span class="hs-identifier hs-var">bs</span></a></span></span><span>
+</span><span id="line-313"></span><span>                                </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Builder -&gt; Builder -&gt; Builder
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">(Data.Monoid.&lt;&gt;)</span></span><span>
+</span><span id="line-314"></span><span>                                     </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word64 -&gt; Builder
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.putVarInt</span></span><span>
+</span><span id="line-315"></span><span>                                        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; Word64
+forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">Prelude.fromIntegral</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; Int
+</span><span class="hs-identifier hs-var">Data.ByteString.length</span></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679473319"><span class="hs-identifier hs-var">bs</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-316"></span><span>                                     </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; Builder
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.putBytes</span></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679473319"><span class="hs-identifier hs-var">bs</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-317"></span><span>                             </span><span class="annot"><span class="annottext">FeatureLists -&gt; ByteString
+forall msg. Message msg =&gt; msg -&gt; ByteString
+</span><span class="hs-identifier hs-var">Data.ProtoLens.encodeMessage</span></span><span>
+</span><span id="line-318"></span><span>                             </span><span class="annot"><span class="annottext">FeatureLists
+</span><a href="#local-6989586621679473320"><span class="hs-identifier hs-var">_v</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-319"></span><span>                </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FieldSet -&gt; Builder
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Wire.buildFieldSet</span></span><span>
+</span><span id="line-320"></span><span>                   </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FoldLike FieldSet SequenceExample SequenceExample FieldSet FieldSet
+-&gt; SequenceExample -&gt; FieldSet
+forall a s t b. FoldLike a s t a b -&gt; s -&gt; a
+</span><span class="hs-identifier hs-var">Lens.Family2.view</span></span><span> </span><span class="annot"><span class="annottext">FoldLike FieldSet SequenceExample SequenceExample FieldSet FieldSet
+forall msg. Message msg =&gt; Lens' msg FieldSet
+</span><span class="hs-identifier hs-var">Data.ProtoLens.unknownFields</span></span><span> </span><span class="annot"><span class="annottext">SequenceExample
+</span><a href="#local-6989586621679473323"><span class="hs-identifier hs-var">_x</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-321"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Control.DeepSeq.NFData</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Example.Example.html#SequenceExample"><span class="hs-identifier hs-type">SequenceExample</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-322"></span><span>  </span><span id="local-6989586621679473317"><span class="annot"><span class="annottext">rnf :: SequenceExample -&gt; ()
+</span><a href="#local-6989586621679473317"><span class="hs-identifier hs-var hs-var hs-var hs-var">rnf</span></a></span></span><span>
+</span><span id="line-323"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span> </span><span id="local-6989586621679473316"><span class="annot"><span class="annottext">x__ :: SequenceExample
+</span><a href="#local-6989586621679473316"><span class="hs-identifier hs-var">x__</span></a></span></span><span>
+</span><span id="line-324"></span><span>        </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">FieldSet -&gt; () -&gt; ()
+forall a b. NFData a =&gt; a -&gt; b -&gt; b
+</span><span class="hs-identifier hs-var">Control.DeepSeq.deepseq</span></span><span>
+</span><span id="line-325"></span><span>             </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SequenceExample -&gt; FieldSet
+</span><a href="Proto.Tensorflow.Core.Example.Example.html#_SequenceExample%27_unknownFields"><span class="hs-identifier hs-var hs-var">_SequenceExample'_unknownFields</span></a></span><span> </span><span class="annot"><span class="annottext">SequenceExample
+</span><a href="#local-6989586621679473316"><span class="hs-identifier hs-var">x__</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-326"></span><span>             </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe Features -&gt; () -&gt; ()
+forall a b. NFData a =&gt; a -&gt; b -&gt; b
+</span><span class="hs-identifier hs-var">Control.DeepSeq.deepseq</span></span><span>
+</span><span id="line-327"></span><span>                </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SequenceExample -&gt; Maybe Features
+</span><a href="Proto.Tensorflow.Core.Example.Example.html#_SequenceExample%27context"><span class="hs-identifier hs-var hs-var">_SequenceExample'context</span></a></span><span> </span><span class="annot"><span class="annottext">SequenceExample
+</span><a href="#local-6989586621679473316"><span class="hs-identifier hs-var">x__</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-328"></span><span>                </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe FeatureLists -&gt; () -&gt; ()
+forall a b. NFData a =&gt; a -&gt; b -&gt; b
+</span><span class="hs-identifier hs-var">Control.DeepSeq.deepseq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SequenceExample -&gt; Maybe FeatureLists
+</span><a href="Proto.Tensorflow.Core.Example.Example.html#_SequenceExample%27featureLists"><span class="hs-identifier hs-var hs-var">_SequenceExample'featureLists</span></a></span><span> </span><span class="annot"><span class="annottext">SequenceExample
+</span><a href="#local-6989586621679473316"><span class="hs-identifier hs-var">x__</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-329"></span><span class="annot"><a href="Proto.Tensorflow.Core.Example.Example.html#packedFileDescriptor"><span class="hs-identifier hs-type">packedFileDescriptor</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data.ByteString.ByteString</span></span><span>
+</span><span id="line-330"></span><span id="packedFileDescriptor"><span class="annot"><span class="annottext">packedFileDescriptor :: ByteString
+</span><a href="Proto.Tensorflow.Core.Example.Example.html#packedFileDescriptor"><span class="hs-identifier hs-var hs-var">packedFileDescriptor</span></a></span></span><span>
+</span><span id="line-331"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-string">&quot;\n\
+    \%tensorflow/core/example/example.proto\DC2\n\
+    \tensorflow\SUB%tensorflow/core/example/feature.proto\&quot;;\n\
+    \\aExample\DC20\n\
+    \\bfeatures\CAN\SOH \SOH(\v2\DC4.tensorflow.FeaturesR\bfeatures\&quot;\128\SOH\n\
+    \\SISequenceExample\DC2.\n\
+    \\acontext\CAN\SOH \SOH(\v2\DC4.tensorflow.FeaturesR\acontext\DC2=\n\
+    \\rfeature_lists\CAN\STX \SOH(\v2\CAN.tensorflow.FeatureListsR\ffeatureListsB\129\SOH\n\
+    \\SYNorg.tensorflow.exampleB\rExampleProtosP\SOHZSgithub.com/tensorflow/tensorflow/tensorflow/go/core/example/example_protos_go_proto\248\SOH\SOHJ\255N\n\
+    \\a\DC2\ENQ\STX\NUL\174\STX\SOH\n\
+    \s\n\
+    \\SOH\f\DC2\ETX\STX\NUL\DC2\SUBi Protocol messages for describing input data Examples for machine learning\n\
+    \ model training or inference.\n\
+    \\n\
+    \\b\n\
+    \\SOH\STX\DC2\ETX\EOT\NUL\DC3\n\
+    \\t\n\
+    \\STX\ETX\NUL\DC2\ETX\ACK\NUL/\n\
+    \\b\n\
+    \\SOH\b\DC2\ETX\b\NUL\US\n\
+    \\t\n\
+    \\STX\b\US\DC2\ETX\b\NUL\US\n\
+    \\b\n\
+    \\SOH\b\DC2\ETX\t\NUL.\n\
+    \\t\n\
+    \\STX\b\b\DC2\ETX\t\NUL.\n\
+    \\b\n\
+    \\SOH\b\DC2\ETX\n\
+    \\NUL\&quot;\n\
+    \\t\n\
+    \\STX\b\n\
+    \\DC2\ETX\n\
+    \\NUL\&quot;\n\
+    \\b\n\
+    \\SOH\b\DC2\ETX\v\NUL/\n\
+    \\t\n\
+    \\STX\b\SOH\DC2\ETX\v\NUL/\n\
+    \\b\n\
+    \\SOH\b\DC2\ETX\f\NULj\n\
+    \\t\n\
+    \\STX\b\v\DC2\ETX\f\NULj\n\
+    \\170\SYN\n\
+    \\STX\EOT\NUL\DC2\EOTY\NUL[\SOH2\157\SYN An Example is a mostly-normalized data format for storing data for\n\
+    \ training and inference.  It contains a key-value store (features); where\n\
+    \ each key (string) maps to a Feature message (which is oneof packed BytesList,\n\
+    \ FloatList, or Int64List).  This flexible and compact format allows the\n\
+    \ storage of large amounts of typed data, but requires that the data shape\n\
+    \ and use be determined by the configuration files and parsers that are used to\n\
+    \ read and write this format.  That is, the Example is mostly *not* a\n\
+    \ self-describing format.  In TensorFlow, Examples are read in row-major\n\
+    \ format, so any configuration that describes data with rank-2 or above\n\
+    \ should keep this in mind.  For example, to store an M x N matrix of Bytes,\n\
+    \ the BytesList must contain M*N bytes, with M rows of N contiguous values\n\
+    \ each.  That is, the BytesList value must store the matrix as:\n\
+    \     .... row 0 .... .... row 1 .... // ...........  // ... row M-1 ....\n\
+    \\n\
+    \ An Example for a movie recommendation application:\n\
+    \   features {\n\
+    \     feature {\n\
+    \       key: \&quot;age\&quot;\n\
+    \       value { float_list {\n\
+    \         value: 29.0\n\
+    \       }}\n\
+    \     }\n\
+    \     feature {\n\
+    \       key: \&quot;movie\&quot;\n\
+    \       value { bytes_list {\n\
+    \         value: \&quot;The Shawshank Redemption\&quot;\n\
+    \         value: \&quot;Fight Club\&quot;\n\
+    \       }}\n\
+    \     }\n\
+    \     feature {\n\
+    \       key: \&quot;movie_ratings\&quot;\n\
+    \       value { float_list {\n\
+    \         value: 9.0\n\
+    \         value: 9.7\n\
+    \       }}\n\
+    \     }\n\
+    \     feature {\n\
+    \       key: \&quot;suggestion\&quot;\n\
+    \       value { bytes_list {\n\
+    \         value: \&quot;Inception\&quot;\n\
+    \       }}\n\
+    \     }\n\
+    \     # Note that this feature exists to be used as a label in training.\n\
+    \     # E.g., if training a logistic regression model to predict purchase\n\
+    \     # probability in our learning tool we would set the label feature to\n\
+    \     # \&quot;suggestion_purchased\&quot;.\n\
+    \     feature {\n\
+    \       key: \&quot;suggestion_purchased\&quot;\n\
+    \       value { float_list {\n\
+    \         value: 1.0\n\
+    \       }}\n\
+    \     }\n\
+    \     # Similar to \&quot;suggestion_purchased\&quot; above this feature exists to be used\n\
+    \     # as a label in training.\n\
+    \     # E.g., if training a linear regression model to predict purchase\n\
+    \     # price in our learning tool we would set the label feature to\n\
+    \     # \&quot;purchase_price\&quot;.\n\
+    \     feature {\n\
+    \       key: \&quot;purchase_price\&quot;\n\
+    \       value { float_list {\n\
+    \         value: 9.99\n\
+    \       }}\n\
+    \     }\n\
+    \  }\n\
+    \\n\
+    \ A conformant Example data set obeys the following conventions:\n\
+    \   - If a Feature K exists in one example with data type T, it must be of\n\
+    \       type T in all other examples when present. It may be omitted.\n\
+    \   - The number of instances of Feature K list data may vary across examples,\n\
+    \       depending on the requirements of the model.\n\
+    \   - If a Feature K doesn't exist in an example, a K-specific default will be\n\
+    \       used, if configured.\n\
+    \   - If a Feature K exists in an example but contains no items, the intent\n\
+    \       is considered to be an empty tensor and no default will be used.\n\
+    \\n\
+    \\n\
+    \\n\
+    \\ETX\EOT\NUL\SOH\DC2\ETXY\b\SI\n\
+    \\v\n\
+    \\EOT\EOT\NUL\STX\NUL\DC2\ETXZ\STX\CAN\n\
+    \\f\n\
+    \\ENQ\EOT\NUL\STX\NUL\ACK\DC2\ETXZ\STX\n\
+    \\n\
+    \\f\n\
+    \\ENQ\EOT\NUL\STX\NUL\SOH\DC2\ETXZ\v\DC3\n\
+    \\f\n\
+    \\ENQ\EOT\NUL\STX\NUL\ETX\DC2\ETXZ\SYN\ETB\n\
+    \\141\&amp;5\n\
+    \\STX\EOT\SOH\DC2\ACK\171\STX\NUL\174\STX\SOH2\254\&amp;4 A SequenceExample is an Example representing one or more sequences, and\n\
+    \ some context.  The context contains features which apply to the entire\n\
+    \ example. The feature_lists contain a key, value map where each key is\n\
+    \ associated with a repeated set of Features (a FeatureList).\n\
+    \ A FeatureList thus represents the values of a feature identified by its key\n\
+    \ over time / frames.\n\
+    \\n\
+    \ Below is a SequenceExample for a movie recommendation application recording a\n\
+    \ sequence of ratings by a user. The time-independent features (\&quot;locale\&quot;,\n\
+    \ \&quot;age\&quot;, \&quot;favorites\&quot;) describing the user are part of the context. The sequence\n\
+    \ of movies the user rated are part of the feature_lists. For each movie in the\n\
+    \ sequence we have information on its name and actors and the user's rating.\n\
+    \ This information is recorded in three separate feature_list(s).\n\
+    \ In the example below there are only two movies. All three feature_list(s),\n\
+    \ namely \&quot;movie_ratings\&quot;, \&quot;movie_names\&quot;, and \&quot;actors\&quot; have a feature value for\n\
+    \ both movies. Note, that \&quot;actors\&quot; is itself a bytes_list with multiple\n\
+    \ strings per movie.\n\
+    \\n\
+    \ context: {\n\
+    \   feature: {\n\
+    \     key  : \&quot;locale\&quot;\n\
+    \     value: {\n\
+    \       bytes_list: {\n\
+    \         value: [ \&quot;pt_BR\&quot; ]\n\
+    \       }\n\
+    \     }\n\
+    \   }\n\
+    \   feature: {\n\
+    \     key  : \&quot;age\&quot;\n\
+    \     value: {\n\
+    \       float_list: {\n\
+    \         value: [ 19.0 ]\n\
+    \       }\n\
+    \     }\n\
+    \   }\n\
+    \   feature: {\n\
+    \     key  : \&quot;favorites\&quot;\n\
+    \     value: {\n\
+    \       bytes_list: {\n\
+    \         value: [ \&quot;Majesty Rose\&quot;, \&quot;Savannah Outen\&quot;, \&quot;One Direction\&quot; ]\n\
+    \       }\n\
+    \     }\n\
+    \   }\n\
+    \ }\n\
+    \ feature_lists: {\n\
+    \   feature_list: {\n\
+    \     key  : \&quot;movie_ratings\&quot;\n\
+    \     value: {\n\
+    \       feature: {\n\
+    \         float_list: {\n\
+    \           value: [ 4.5 ]\n\
+    \         }\n\
+    \       }\n\
+    \       feature: {\n\
+    \         float_list: {\n\
+    \           value: [ 5.0 ]\n\
+    \         }\n\
+    \       }\n\
+    \     }\n\
+    \   }\n\
+    \   feature_list: {\n\
+    \     key  : \&quot;movie_names\&quot;\n\
+    \     value: {\n\
+    \       feature: {\n\
+    \         bytes_list: {\n\
+    \           value: [ \&quot;The Shawshank Redemption\&quot; ]\n\
+    \         }\n\
+    \       }\n\
+    \       feature: {\n\
+    \         bytes_list: {\n\
+    \           value: [ \&quot;Fight Club\&quot; ]\n\
+    \         }\n\
+    \       }\n\
+    \     }\n\
+    \   }\n\
+    \   feature_list: {\n\
+    \     key  : \&quot;actors\&quot;\n\
+    \     value: {\n\
+    \       feature: {\n\
+    \         bytes_list: {\n\
+    \           value: [ \&quot;Tim Robbins\&quot;, \&quot;Morgan Freeman\&quot; ]\n\
+    \         }\n\
+    \       }\n\
+    \       feature: {\n\
+    \         bytes_list: {\n\
+    \           value: [ \&quot;Brad Pitt\&quot;, \&quot;Edward Norton\&quot;, \&quot;Helena Bonham Carter\&quot; ]\n\
+    \         }\n\
+    \       }\n\
+    \     }\n\
+    \   }\n\
+    \ }\n\
+    \\n\
+    \ A conformant SequenceExample data set obeys the following conventions:\n\
+    \\n\
+    \ Context:\n\
+    \   - All conformant context features K must obey the same conventions as\n\
+    \     a conformant Example's features (see above).\n\
+    \ Feature lists:\n\
+    \   - A FeatureList L may be missing in an example; it is up to the\n\
+    \     parser configuration to determine if this is allowed or considered\n\
+    \     an empty list (zero length).\n\
+    \   - If a FeatureList L exists, it may be empty (zero length).\n\
+    \   - If a FeatureList L is non-empty, all features within the FeatureList\n\
+    \     must have the same data type T. Even across SequenceExamples, the type T\n\
+    \     of the FeatureList identified by the same key must be the same. An entry\n\
+    \     without any values may serve as an empty feature.\n\
+    \   - If a FeatureList L is non-empty, it is up to the parser configuration\n\
+    \     to determine if all features within the FeatureList must\n\
+    \     have the same size.  The same holds for this FeatureList across multiple\n\
+    \     examples.\n\
+    \   - For sequence modeling, e.g.:\n\
+    \        http://colah.github.io/posts/2015-08-Understanding-LSTMs/\n\
+    \        https://github.com/tensorflow/nmt\n\
+    \     the feature lists represent a sequence of frames.\n\
+    \     In this scenario, all FeatureLists in a SequenceExample have the same\n\
+    \     number of Feature messages, so that the ith element in each FeatureList\n\
+    \     is part of the ith frame (or time step).\n\
+    \ Examples of conformant and non-conformant examples' FeatureLists:\n\
+    \\n\
+    \ Conformant FeatureLists:\n\
+    \    feature_lists: { feature_list: {\n\
+    \      key: \&quot;movie_ratings\&quot;\n\
+    \      value: { feature: { float_list: { value: [ 4.5 ] } }\n\
+    \               feature: { float_list: { value: [ 5.0 ] } } }\n\
+    \    } }\n\
+    \\n\
+    \ Non-conformant FeatureLists (mismatched types):\n\
+    \    feature_lists: { feature_list: {\n\
+    \      key: \&quot;movie_ratings\&quot;\n\
+    \      value: { feature: { float_list: { value: [ 4.5 ] } }\n\
+    \               feature: { int64_list: { value: [ 5 ] } } }\n\
+    \    } }\n\
+    \\n\
+    \ Conditionally conformant FeatureLists, the parser configuration determines\n\
+    \ if the feature sizes must match:\n\
+    \    feature_lists: { feature_list: {\n\
+    \      key: \&quot;movie_ratings\&quot;\n\
+    \      value: { feature: { float_list: { value: [ 4.5 ] } }\n\
+    \               feature: { float_list: { value: [ 5.0, 6.0 ] } } }\n\
+    \    } }\n\
+    \\n\
+    \ Conformant pair of SequenceExample\n\
+    \    feature_lists: { feature_list: {\n\
+    \      key: \&quot;movie_ratings\&quot;\n\
+    \      value: { feature: { float_list: { value: [ 4.5 ] } }\n\
+    \               feature: { float_list: { value: [ 5.0 ] } } }\n\
+    \    } }\n\
+    \ and:\n\
+    \    feature_lists: { feature_list: {\n\
+    \      key: \&quot;movie_ratings\&quot;\n\
+    \      value: { feature: { float_list: { value: [ 4.5 ] } }\n\
+    \               feature: { float_list: { value: [ 5.0 ] } }\n\
+    \               feature: { float_list: { value: [ 2.0 ] } } }\n\
+    \    } }\n\
+    \\n\
+    \ Conformant pair of SequenceExample\n\
+    \    feature_lists: { feature_list: {\n\
+    \      key: \&quot;movie_ratings\&quot;\n\
+    \      value: { feature: { float_list: { value: [ 4.5 ] } }\n\
+    \               feature: { float_list: { value: [ 5.0 ] } } }\n\
+    \    } }\n\
+    \ and:\n\
+    \    feature_lists: { feature_list: {\n\
+    \      key: \&quot;movie_ratings\&quot;\n\
+    \      value: { }\n\
+    \    } }\n\
+    \\n\
+    \ Conditionally conformant pair of SequenceExample, the parser configuration\n\
+    \ determines if the second feature_lists is consistent (zero-length) or\n\
+    \ invalid (missing \&quot;movie_ratings\&quot;):\n\
+    \    feature_lists: { feature_list: {\n\
+    \      key: \&quot;movie_ratings\&quot;\n\
+    \      value: { feature: { float_list: { value: [ 4.5 ] } }\n\
+    \               feature: { float_list: { value: [ 5.0 ] } } }\n\
+    \    } }\n\
+    \ and:\n\
+    \    feature_lists: { }\n\
+    \\n\
+    \ Non-conformant pair of SequenceExample (mismatched types)\n\
+    \    feature_lists: { feature_list: {\n\
+    \      key: \&quot;movie_ratings\&quot;\n\
+    \      value: { feature: { float_list: { value: [ 4.5 ] } }\n\
+    \               feature: { float_list: { value: [ 5.0 ] } } }\n\
+    \    } }\n\
+    \ and:\n\
+    \    feature_lists: { feature_list: {\n\
+    \      key: \&quot;movie_ratings\&quot;\n\
+    \      value: { feature: { int64_list: { value: [ 4 ] } }\n\
+    \               feature: { int64_list: { value: [ 5 ] } }\n\
+    \               feature: { int64_list: { value: [ 2 ] } } }\n\
+    \    } }\n\
+    \\n\
+    \ Conditionally conformant pair of SequenceExample; the parser configuration\n\
+    \ determines if the feature sizes must match:\n\
+    \    feature_lists: { feature_list: {\n\
+    \      key: \&quot;movie_ratings\&quot;\n\
+    \      value: { feature: { float_list: { value: [ 4.5 ] } }\n\
+    \               feature: { float_list: { value: [ 5.0 ] } } }\n\
+    \    } }\n\
+    \ and:\n\
+    \    feature_lists: { feature_list: {\n\
+    \      key: \&quot;movie_ratings\&quot;\n\
+    \      value: { feature: { float_list: { value: [ 4.0 ] } }\n\
+    \               feature: { float_list: { value: [ 5.0, 3.0 ] } }\n\
+    \    } }\n\
+    \\n\
+    \\v\n\
+    \\ETX\EOT\SOH\SOH\DC2\EOT\171\STX\b\ETB\n\
+    \\f\n\
+    \\EOT\EOT\SOH\STX\NUL\DC2\EOT\172\STX\STX\ETB\n\
+    \\r\n\
+    \\ENQ\EOT\SOH\STX\NUL\ACK\DC2\EOT\172\STX\STX\n\
+    \\n\
+    \\r\n\
+    \\ENQ\EOT\SOH\STX\NUL\SOH\DC2\EOT\172\STX\v\DC2\n\
+    \\r\n\
+    \\ENQ\EOT\SOH\STX\NUL\ETX\DC2\EOT\172\STX\NAK\SYN\n\
+    \\f\n\
+    \\EOT\EOT\SOH\STX\SOH\DC2\EOT\173\STX\STX!\n\
+    \\r\n\
+    \\ENQ\EOT\SOH\STX\SOH\ACK\DC2\EOT\173\STX\STX\SO\n\
+    \\r\n\
+    \\ENQ\EOT\SOH\STX\SOH\SOH\DC2\EOT\173\STX\SI\FS\n\
+    \\r\n\
+    \\ENQ\EOT\SOH\STX\SOH\ETX\DC2\EOT\173\STX\US b\ACKproto3&quot;</span></span></pre></body></html>

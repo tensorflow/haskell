@@ -1,0 +1,423 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">-- Copyright 2016 TensorFlow authors.</span><span>
+</span><span id="line-2"></span><span class="hs-comment">--</span><span>
+</span><span id="line-3"></span><span class="hs-comment">-- Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span><span>
+</span><span id="line-4"></span><span class="hs-comment">-- you may not use this file except in compliance with the License.</span><span>
+</span><span id="line-5"></span><span class="hs-comment">-- You may obtain a copy of the License at</span><span>
+</span><span id="line-6"></span><span class="hs-comment">--</span><span>
+</span><span id="line-7"></span><span class="hs-comment">--     http://www.apache.org/licenses/LICENSE-2.0</span><span>
+</span><span id="line-8"></span><span class="hs-comment">--</span><span>
+</span><span id="line-9"></span><span class="hs-comment">-- Unless required by applicable law or agreed to in writing, software</span><span>
+</span><span id="line-10"></span><span class="hs-comment">-- distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span><span>
+</span><span id="line-11"></span><span class="hs-comment">-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span><span>
+</span><span id="line-12"></span><span class="hs-comment">-- See the License for the specific language governing permissions and</span><span>
+</span><span id="line-13"></span><span class="hs-comment">-- limitations under the License.</span><span>
+</span><span id="line-14"></span><span>
+</span><span id="line-15"></span><span class="hs-pragma">{-# LANGUAGE ConstraintKinds #-}</span><span>
+</span><span id="line-16"></span><span class="hs-pragma">{-# LANGUAGE DataKinds #-}</span><span>
+</span><span id="line-17"></span><span class="hs-pragma">{-# LANGUAGE FlexibleContexts #-}</span><span>
+</span><span id="line-18"></span><span class="hs-pragma">{-# LANGUAGE OverloadedStrings #-}</span><span>
+</span><span id="line-19"></span><span class="hs-pragma">{-# LANGUAGE RankNTypes #-}</span><span>
+</span><span id="line-20"></span><span class="hs-pragma">{-# LANGUAGE ScopedTypeVariables #-}</span><span>
+</span><span id="line-21"></span><span class="hs-pragma">{-# LANGUAGE TypeApplications #-}</span><span>
+</span><span id="line-22"></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">TensorFlow.Minimize</span><span>
+</span><span id="line-24"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="TensorFlow.Minimize.html#Minimizer"><span class="hs-identifier">Minimizer</span></a></span><span>
+</span><span id="line-25"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Minimize.html#minimizeWith"><span class="hs-identifier">minimizeWith</span></a></span><span>
+</span><span id="line-26"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Minimize.html#gradientDescent"><span class="hs-identifier">gradientDescent</span></a></span><span>
+</span><span id="line-27"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Minimize.html#OneOfAdamDataTypes"><span class="hs-identifier">OneOfAdamDataTypes</span></a></span><span>
+</span><span id="line-28"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Minimize.html#AdamConfig"><span class="hs-identifier">AdamConfig</span></a></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-29"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Minimize.html#adam"><span class="hs-identifier">adam</span></a></span><span>
+</span><span id="line-30"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Minimize.html#adam%27"><span class="hs-identifier">adam'</span></a></span><span>
+</span><span id="line-31"></span><span>    </span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-32"></span><span>
+</span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Complex</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Complex</span></span><span class="hs-special">)</span><span>
+</span><span id="line-34"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Int</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Int8</span></span><span class="hs-special">,</span><span class="annot"><span class="hs-identifier">Int16</span></span><span class="hs-special">,</span><span class="annot"><span class="hs-identifier">Int32</span></span><span class="hs-special">,</span><span class="annot"><span class="hs-identifier">Int64</span></span><span class="hs-special">)</span><span>
+</span><span id="line-35"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Word</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Word8</span></span><span class="hs-special">,</span><span class="annot"><span class="hs-identifier">Word16</span></span><span class="hs-special">,</span><span class="annot"><span class="hs-identifier">Word32</span></span><span class="hs-special">,</span><span class="annot"><span class="hs-identifier">Word64</span></span><span class="hs-special">)</span><span>
+</span><span id="line-36"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Monad</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">zipWithM</span></span><span class="hs-special">)</span><span>
+</span><span id="line-37"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Default</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Default</span></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-38"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.List</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">zipWith4</span></span><span class="hs-special">)</span><span>
+</span><span id="line-39"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">fromMaybe</span></span><span class="hs-special">)</span><span>
+</span><span id="line-40"></span><span>
+</span><span id="line-41"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">TensorFlow.Core</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">TF</span></span><span>
+</span><span id="line-42"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><a href="TensorFlow.Gradient.html"><span class="hs-identifier">TensorFlow.Gradient</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">TF</span></span><span>
+</span><span id="line-43"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><a href="TensorFlow.Ops.html"><span class="hs-identifier">TensorFlow.Ops</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">TF</span></span><span> </span><span class="hs-keyword">hiding</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">assign</span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Ops.html#initializedVariable"><span class="hs-identifier">initializedVariable</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-44"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><a href="TensorFlow.Variable.html"><span class="hs-identifier">TensorFlow.Variable</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">TF</span></span><span>
+</span><span id="line-45"></span><span>
+</span><span id="line-46"></span><span class="hs-comment">-- | Functions that minimize a loss w.r.t. a set of 'TF.Variable's.</span><span>
+</span><span id="line-47"></span><span class="hs-comment">--</span><span>
+</span><span id="line-48"></span><span class="hs-comment">-- Generally only performs one step of an iterative algorithm.</span><span>
+</span><span id="line-49"></span><span class="hs-comment">--</span><span>
+</span><span id="line-50"></span><span class="hs-comment">-- 'Minimizer's are defined as a function of the gradients instead of</span><span>
+</span><span id="line-51"></span><span class="hs-comment">-- the loss so that users can apply transformations to the gradients.</span><span>
+</span><span id="line-52"></span><span class="hs-keyword">type</span><span> </span><span id="Minimizer"><span class="annot"><a href="TensorFlow.Minimize.html#Minimizer"><span class="hs-identifier hs-var">Minimizer</span></a></span></span><span> </span><span id="local-6989586621679158058"><span class="annot"><a href="#local-6989586621679158058"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-53"></span><span>    </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621679158057"><span class="annot"><a href="#local-6989586621679158057"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.MonadBuild</span></span><span> </span><span class="annot"><a href="#local-6989586621679158057"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-54"></span><span>    </span><span class="hs-special">[</span><span class="annot"><a href="TensorFlow.Variable.html#Variable"><span class="hs-identifier hs-type">TF.Variable</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679158058"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Value</span></span><span> </span><span class="annot"><a href="#local-6989586621679158058"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679158057"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.ControlNode</span></span><span>
+</span><span id="line-55"></span><span>
+</span><span id="line-56"></span><span class="hs-comment">-- | Convenience wrapper around 'TF.gradients' and a 'Minimizer'.</span><span>
+</span><span id="line-57"></span><span id="local-6989586621679158054"><span id="local-6989586621679158055"><span id="local-6989586621679158056"><span class="annot"><a href="TensorFlow.Minimize.html#minimizeWith"><span class="hs-identifier hs-type">minimizeWith</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">TF.MonadBuild</span></span><span> </span><span class="annot"><a href="#local-6989586621679158056"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Gradient.html#GradientCompatible"><span class="hs-identifier hs-type">TF.GradientCompatible</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679158055"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-58"></span><span>             </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Minimize.html#Minimizer"><span class="hs-identifier hs-type">Minimizer</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679158055"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-59"></span><span>             </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679158054"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679158055"><span class="hs-identifier hs-type">a</span></a></span><span>    </span><span class="hs-comment">-- ^ Loss.</span><span>
+</span><span id="line-60"></span><span>             </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="TensorFlow.Variable.html#Variable"><span class="hs-identifier hs-type">TF.Variable</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679158055"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span><span>  </span><span class="hs-comment">-- ^ Parameters of the loss function.</span><span>
+</span><span id="line-61"></span><span>             </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679158056"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.ControlNode</span></span></span></span></span><span>
+</span><span id="line-62"></span><span id="minimizeWith"><span class="annot"><span class="annottext">minimizeWith :: Minimizer a -&gt; Tensor v a -&gt; [Variable a] -&gt; m ControlNode
+</span><a href="TensorFlow.Minimize.html#minimizeWith"><span class="hs-identifier hs-var hs-var">minimizeWith</span></a></span></span><span> </span><span id="local-6989586621679158053"><span class="annot"><span class="annottext">minimizer :: Minimizer a
+</span><a href="#local-6989586621679158053"><span class="hs-identifier hs-var">minimizer</span></a></span></span><span> </span><span id="local-6989586621679158052"><span class="annot"><span class="annottext">loss :: Tensor v a
+</span><a href="#local-6989586621679158052"><span class="hs-identifier hs-var">loss</span></a></span></span><span> </span><span id="local-6989586621679158051"><span class="annot"><span class="annottext">params :: [Variable a]
+</span><a href="#local-6989586621679158051"><span class="hs-identifier hs-var">params</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-63"></span><span>    </span><span class="annot"><span class="annottext">Tensor v a -&gt; [Variable a] -&gt; m [Tensor Value a]
+forall a (v1 :: * -&gt; *) (t :: * -&gt; *) (m :: * -&gt; *).
+(MonadBuild m, Rendered t, ToTensor t, GradientCompatible a) =&gt;
+Tensor v1 a -&gt; [t a] -&gt; m [Tensor Value a]
+</span><a href="TensorFlow.Gradient.html#gradients"><span class="hs-identifier hs-var">TF.gradients</span></a></span><span> </span><span class="annot"><span class="annottext">Tensor v a
+</span><a href="#local-6989586621679158052"><span class="hs-identifier hs-var">loss</span></a></span><span> </span><span class="annot"><span class="annottext">[Variable a]
+</span><a href="#local-6989586621679158051"><span class="hs-identifier hs-var">params</span></a></span><span> </span><span class="annot"><span class="annottext">m [Tensor Value a]
+-&gt; ([Tensor Value a] -&gt; m ControlNode) -&gt; m ControlNode
+forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
+</span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="annot"><span class="annottext">[Variable a] -&gt; [Tensor Value a] -&gt; m ControlNode
+Minimizer a
+</span><a href="#local-6989586621679158053"><span class="hs-identifier hs-var">minimizer</span></a></span><span> </span><span class="annot"><span class="annottext">[Variable a]
+</span><a href="#local-6989586621679158051"><span class="hs-identifier hs-var">params</span></a></span><span>
+</span><span id="line-64"></span><span>
+</span><span id="line-65"></span><span class="hs-comment">-- | Perform one step of the gradient descent algorithm.</span><span>
+</span><span id="line-66"></span><span id="local-6989586621679158049"><span class="annot"><a href="TensorFlow.Minimize.html#gradientDescent"><span class="hs-identifier hs-type">gradientDescent</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="TensorFlow.Gradient.html#GradientCompatible"><span class="hs-identifier hs-type">TF.GradientCompatible</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679158049"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-67"></span><span>                </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679158049"><span class="hs-identifier hs-type">a</span></a></span><span>  </span><span class="hs-comment">-- ^ Learning rate.</span><span>
+</span><span id="line-68"></span><span>                </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Minimize.html#Minimizer"><span class="hs-identifier hs-type">Minimizer</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679158049"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-69"></span><span id="gradientDescent"><span class="annot"><span class="annottext">gradientDescent :: a -&gt; Minimizer a
+</span><a href="TensorFlow.Minimize.html#gradientDescent"><span class="hs-identifier hs-var hs-var">gradientDescent</span></a></span></span><span> </span><span id="local-6989586621679158048"><span class="annot"><span class="annottext">learningRate :: a
+</span><a href="#local-6989586621679158048"><span class="hs-identifier hs-var">learningRate</span></a></span></span><span> </span><span id="local-6989586621679158047"><span class="annot"><span class="annottext">params :: [Variable a]
+</span><a href="#local-6989586621679158047"><span class="hs-identifier hs-var">params</span></a></span></span><span> </span><span id="local-6989586621679158046"><span class="annot"><span class="annottext">grads :: [Tensor Value a]
+</span><a href="#local-6989586621679158046"><span class="hs-identifier hs-var">grads</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; m ControlNode -&gt; m ControlNode
+forall (m :: * -&gt; *) a. MonadBuild m =&gt; Text -&gt; m a -&gt; m a
+</span><span class="hs-identifier hs-var">TF.withNameScope</span></span><span> </span><span class="annot"><span class="hs-string">&quot;gradientDescent&quot;</span></span><span> </span><span class="annot"><span class="annottext">(m ControlNode -&gt; m ControlNode) -&gt; m ControlNode -&gt; m ControlNode
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-70"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679158044"><span class="annot"><span class="annottext">applyGrad :: Variable a -&gt; Tensor v'2 a -&gt; m ControlNode
+</span><a href="#local-6989586621679158044"><span class="hs-identifier hs-var hs-var">applyGrad</span></a></span></span><span> </span><span id="local-6989586621679158043"><span class="annot"><span class="annottext">param :: Variable a
+</span><a href="#local-6989586621679158043"><span class="hs-identifier hs-var">param</span></a></span></span><span> </span><span id="local-6989586621679158042"><span class="annot"><span class="annottext">grad :: Tensor v'2 a
+</span><a href="#local-6989586621679158042"><span class="hs-identifier hs-var">grad</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-71"></span><span>            </span><span class="annot"><span class="annottext">Variable a -&gt; Tensor Build a -&gt; m ControlNode
+forall (m :: * -&gt; *) a (v :: * -&gt; *).
+(MonadBuild m, TensorType a) =&gt;
+Variable a -&gt; Tensor v a -&gt; m ControlNode
+</span><a href="TensorFlow.Variable.html#assignAdd"><span class="hs-identifier hs-var">TF.assignAdd</span></a></span><span> </span><span class="annot"><span class="annottext">Variable a
+</span><a href="#local-6989586621679158043"><span class="hs-identifier hs-var">param</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a -&gt; Tensor Build a
+forall a. TensorType a =&gt; a -&gt; Tensor Build a
+</span><a href="TensorFlow.Ops.html#scalar"><span class="hs-identifier hs-var">TF.scalar</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">-</span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679158048"><span class="hs-identifier hs-var">learningRate</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Tensor Build a -&gt; Tensor v'2 a -&gt; Tensor Build a
+forall (v'1 :: * -&gt; *) (v'2 :: * -&gt; *) t.
+OneOf
+  '[Complex Double, Complex Float, Int16, Int32, Int64, Int8, Word16,
+    Word8, Double, Float]
+  t =&gt;
+Tensor v'1 t -&gt; Tensor v'2 t -&gt; Tensor Build t
+</span><span class="hs-operator hs-var">`TF.mul`</span></span><span> </span><span class="annot"><span class="annottext">Tensor v'2 a
+</span><a href="#local-6989586621679158042"><span class="hs-identifier hs-var">grad</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-72"></span><span>    </span><span class="annot"><span class="annottext">[ControlNode] -&gt; m ControlNode
+forall (m :: * -&gt; *) t.
+(MonadBuild m, Nodes t) =&gt;
+t -&gt; m ControlNode
+</span><span class="hs-identifier hs-var">TF.group</span></span><span> </span><span class="annot"><span class="annottext">([ControlNode] -&gt; m ControlNode)
+-&gt; m [ControlNode] -&gt; m ControlNode
+forall (m :: * -&gt; *) a b. Monad m =&gt; (a -&gt; m b) -&gt; m a -&gt; m b
+</span><span class="hs-operator hs-var">=&lt;&lt;</span></span><span> </span><span class="annot"><span class="annottext">(Variable a -&gt; Tensor Value a -&gt; m ControlNode)
+-&gt; [Variable a] -&gt; [Tensor Value a] -&gt; m [ControlNode]
+forall (m :: * -&gt; *) a b c.
+Applicative m =&gt;
+(a -&gt; b -&gt; m c) -&gt; [a] -&gt; [b] -&gt; m [c]
+</span><span class="hs-identifier hs-var">zipWithM</span></span><span> </span><span class="annot"><span class="annottext">Variable a -&gt; Tensor Value a -&gt; m ControlNode
+forall (m :: * -&gt; *) (v'2 :: * -&gt; *).
+MonadBuild m =&gt;
+Variable a -&gt; Tensor v'2 a -&gt; m ControlNode
+</span><a href="#local-6989586621679158044"><span class="hs-identifier hs-var">applyGrad</span></a></span><span> </span><span class="annot"><span class="annottext">[Variable a]
+</span><a href="#local-6989586621679158047"><span class="hs-identifier hs-var">params</span></a></span><span> </span><span class="annot"><span class="annottext">[Tensor Value a]
+</span><a href="#local-6989586621679158046"><span class="hs-identifier hs-var">grads</span></a></span><span>
+</span><span id="line-73"></span><span>
+</span><span id="line-74"></span><span class="hs-keyword">data</span><span> </span><span id="AdamConfig"><span class="annot"><a href="TensorFlow.Minimize.html#AdamConfig"><span class="hs-identifier hs-var">AdamConfig</span></a></span></span><span> </span><span id="local-6989586621679158120"><span class="annot"><a href="#local-6989586621679158120"><span class="hs-identifier hs-type">t</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="AdamConfig"><span class="annot"><a href="TensorFlow.Minimize.html#AdamConfig"><span class="hs-identifier hs-var">AdamConfig</span></a></span></span><span>
+</span><span id="line-75"></span><span>    </span><span class="hs-special">{</span><span> </span><span id="adamLearningRate"><span class="annot"><span class="annottext">AdamConfig t -&gt; t
+</span><a href="TensorFlow.Minimize.html#adamLearningRate"><span class="hs-identifier hs-var hs-var">adamLearningRate</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621679158120"><span class="hs-identifier hs-type">t</span></a></span><span>
+</span><span id="line-76"></span><span>    </span><span class="hs-special">,</span><span> </span><span id="adamBeta1"><span class="annot"><span class="annottext">AdamConfig t -&gt; t
+</span><a href="TensorFlow.Minimize.html#adamBeta1"><span class="hs-identifier hs-var hs-var">adamBeta1</span></a></span></span><span>        </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621679158120"><span class="hs-identifier hs-type">t</span></a></span><span>
+</span><span id="line-77"></span><span>    </span><span class="hs-special">,</span><span> </span><span id="adamBeta2"><span class="annot"><span class="annottext">AdamConfig t -&gt; t
+</span><a href="TensorFlow.Minimize.html#adamBeta2"><span class="hs-identifier hs-var hs-var">adamBeta2</span></a></span></span><span>        </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621679158120"><span class="hs-identifier hs-type">t</span></a></span><span>
+</span><span id="line-78"></span><span>    </span><span class="hs-special">,</span><span> </span><span id="adamEpsilon"><span class="annot"><span class="annottext">AdamConfig t -&gt; t
+</span><a href="TensorFlow.Minimize.html#adamEpsilon"><span class="hs-identifier hs-var hs-var">adamEpsilon</span></a></span></span><span>      </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621679158120"><span class="hs-identifier hs-type">t</span></a></span><span>
+</span><span id="line-79"></span><span>    </span><span class="hs-special">}</span><span>
+</span><span id="line-80"></span><span>
+</span><span id="line-81"></span><span class="hs-keyword">type</span><span> </span><span id="OneOfAdamDataTypes"><span class="annot"><a href="TensorFlow.Minimize.html#OneOfAdamDataTypes"><span class="hs-identifier hs-var">OneOfAdamDataTypes</span></a></span></span><span> </span><span id="local-6989586621679158031"><span class="annot"><a href="#local-6989586621679158031"><span class="hs-identifier hs-type">t</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-82"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">TF.OneOf</span></span><span> </span><span class="hs-special">'</span><span class="hs-special">[</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Complex</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Complex</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Float</span></span><span>
+</span><span id="line-83"></span><span>                  </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int16</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int32</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int64</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int8</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word16</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word32</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word64</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span>
+</span><span id="line-84"></span><span>                  </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Float</span></span><span class="hs-special">]</span><span> </span><span class="annot"><a href="#local-6989586621679158031"><span class="hs-identifier hs-type">t</span></a></span><span>
+</span><span id="line-85"></span><span>
+</span><span id="line-86"></span><span id="local-6989586621679158030"><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Fractional</span></span><span> </span><span class="annot"><a href="#local-6989586621679158030"><span class="hs-identifier hs-type">t</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Default</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="TensorFlow.Minimize.html#AdamConfig"><span class="hs-identifier hs-type">AdamConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679158030"><span class="hs-identifier hs-type">t</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-87"></span><span>  </span><span class="hs-comment">-- Recommended defaults from the adam paper.</span><span>
+</span><span id="line-88"></span><span>  </span><span id="local-6989586621679158027"><span class="annot"><span class="annottext">def :: AdamConfig t
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">def</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">t -&gt; t -&gt; t -&gt; t -&gt; AdamConfig t
+forall t. t -&gt; t -&gt; t -&gt; t -&gt; AdamConfig t
+</span><a href="TensorFlow.Minimize.html#AdamConfig"><span class="hs-identifier hs-var">AdamConfig</span></a></span><span> </span><span class="annot"><span class="hs-number">0.001</span></span><span> </span><span class="annot"><span class="hs-number">0.9</span></span><span> </span><span class="annot"><span class="hs-number">0.999</span></span><span> </span><span class="annot"><span class="hs-number">1e-8</span></span></span><span>
+</span><span id="line-89"></span><span>
+</span><span id="line-90"></span><span class="hs-comment">-- | Perform one step of the adam algorithm.</span><span>
+</span><span id="line-91"></span><span class="hs-comment">--</span><span>
+</span><span id="line-92"></span><span class="hs-comment">-- See https://arxiv.org/abs/1412.6980.</span><span>
+</span><span id="line-93"></span><span class="hs-comment">--</span><span>
+</span><span id="line-94"></span><span class="hs-comment">-- NOTE: Currently requires all 'TF.Variable's to have an 'TF.initializedValue'.</span><span>
+</span><span id="line-95"></span><span id="local-6989586621679158025"><span class="annot"><a href="TensorFlow.Minimize.html#adam"><span class="hs-identifier hs-type">adam</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="TensorFlow.Minimize.html#OneOfAdamDataTypes"><span class="hs-identifier hs-type">OneOfAdamDataTypes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679158025"><span class="hs-identifier hs-type">t</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Fractional</span></span><span> </span><span class="annot"><a href="#local-6989586621679158025"><span class="hs-identifier hs-type">t</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Minimize.html#Minimizer"><span class="hs-identifier hs-type">Minimizer</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679158025"><span class="hs-identifier hs-type">t</span></a></span></span><span>
+</span><span id="line-96"></span><span id="adam"><span class="annot"><span class="annottext">adam :: Minimizer t
+</span><a href="TensorFlow.Minimize.html#adam"><span class="hs-identifier hs-var hs-var">adam</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">AdamConfig t -&gt; Minimizer t
+forall t. OneOfAdamDataTypes t =&gt; AdamConfig t -&gt; Minimizer t
+</span><a href="TensorFlow.Minimize.html#adam%27"><span class="hs-identifier hs-var">adam'</span></a></span><span> </span><span class="annot"><span class="annottext">AdamConfig t
+forall a. Default a =&gt; a
+</span><span class="hs-identifier hs-var">def</span></span><span>
+</span><span id="line-97"></span><span>
+</span><span id="line-98"></span><span id="local-6989586621679158117"><span class="annot"><a href="TensorFlow.Minimize.html#adam%27"><span class="hs-identifier hs-type">adam'</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="TensorFlow.Minimize.html#OneOfAdamDataTypes"><span class="hs-identifier hs-type">OneOfAdamDataTypes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679158117"><span class="hs-identifier hs-type">t</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Minimize.html#AdamConfig"><span class="hs-identifier hs-type">AdamConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679158117"><span class="hs-identifier hs-type">t</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Minimize.html#Minimizer"><span class="hs-identifier hs-type">Minimizer</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679158117"><span class="hs-identifier hs-type">t</span></a></span></span><span>
+</span><span id="line-99"></span><span id="adam%27"><span class="annot"><span class="annottext">adam' :: AdamConfig t -&gt; Minimizer t
+</span><a href="TensorFlow.Minimize.html#adam%27"><span class="hs-identifier hs-var hs-var">adam'</span></a></span></span><span> </span><span id="local-6989586621679158024"><span class="annot"><span class="annottext">config :: AdamConfig t
+</span><a href="#local-6989586621679158024"><span class="hs-identifier hs-var">config</span></a></span></span><span> </span><span id="local-6989586621679158023"><span class="annot"><span class="annottext">params :: [Variable t]
+</span><a href="#local-6989586621679158023"><span class="hs-identifier hs-var">params</span></a></span></span><span> </span><span id="local-6989586621679158022"><span class="annot"><span class="annottext">grads :: [Tensor Value t]
+</span><a href="#local-6989586621679158022"><span class="hs-identifier hs-var">grads</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; m ControlNode -&gt; m ControlNode
+forall (m :: * -&gt; *) a. MonadBuild m =&gt; Text -&gt; m a -&gt; m a
+</span><span class="hs-identifier hs-var">TF.withNameScope</span></span><span> </span><span class="annot"><span class="hs-string">&quot;adam&quot;</span></span><span> </span><span class="annot"><span class="annottext">(m ControlNode -&gt; m ControlNode) -&gt; m ControlNode -&gt; m ControlNode
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-100"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679158021"><span class="annot"><span class="annottext">lr :: Tensor Build t
+</span><a href="#local-6989586621679158021"><span class="hs-identifier hs-var hs-var">lr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">t -&gt; Tensor Build t
+forall a. TensorType a =&gt; a -&gt; Tensor Build a
+</span><a href="TensorFlow.Ops.html#scalar"><span class="hs-identifier hs-var">TF.scalar</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AdamConfig t -&gt; t
+forall t. AdamConfig t -&gt; t
+</span><a href="TensorFlow.Minimize.html#adamLearningRate"><span class="hs-identifier hs-var hs-var">adamLearningRate</span></a></span><span> </span><span class="annot"><span class="annottext">AdamConfig t
+</span><a href="#local-6989586621679158024"><span class="hs-identifier hs-var">config</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-101"></span><span>        </span><span id="local-6989586621679158020"><span class="annot"><span class="annottext">beta1 :: Tensor Build t
+</span><a href="#local-6989586621679158020"><span class="hs-identifier hs-var hs-var">beta1</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">t -&gt; Tensor Build t
+forall a. TensorType a =&gt; a -&gt; Tensor Build a
+</span><a href="TensorFlow.Ops.html#scalar"><span class="hs-identifier hs-var">TF.scalar</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AdamConfig t -&gt; t
+forall t. AdamConfig t -&gt; t
+</span><a href="TensorFlow.Minimize.html#adamBeta1"><span class="hs-identifier hs-var hs-var">adamBeta1</span></a></span><span> </span><span class="annot"><span class="annottext">AdamConfig t
+</span><a href="#local-6989586621679158024"><span class="hs-identifier hs-var">config</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-102"></span><span>        </span><span id="local-6989586621679158019"><span class="annot"><span class="annottext">beta2 :: Tensor Build t
+</span><a href="#local-6989586621679158019"><span class="hs-identifier hs-var hs-var">beta2</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">t -&gt; Tensor Build t
+forall a. TensorType a =&gt; a -&gt; Tensor Build a
+</span><a href="TensorFlow.Ops.html#scalar"><span class="hs-identifier hs-var">TF.scalar</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AdamConfig t -&gt; t
+forall t. AdamConfig t -&gt; t
+</span><a href="TensorFlow.Minimize.html#adamBeta2"><span class="hs-identifier hs-var hs-var">adamBeta2</span></a></span><span> </span><span class="annot"><span class="annottext">AdamConfig t
+</span><a href="#local-6989586621679158024"><span class="hs-identifier hs-var">config</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-103"></span><span>        </span><span id="local-6989586621679158018"><span class="annot"><span class="annottext">epsilon :: Tensor Build t
+</span><a href="#local-6989586621679158018"><span class="hs-identifier hs-var hs-var">epsilon</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">t -&gt; Tensor Build t
+forall a. TensorType a =&gt; a -&gt; Tensor Build a
+</span><a href="TensorFlow.Ops.html#scalar"><span class="hs-identifier hs-var">TF.scalar</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AdamConfig t -&gt; t
+forall t. AdamConfig t -&gt; t
+</span><a href="TensorFlow.Minimize.html#adamEpsilon"><span class="hs-identifier hs-var hs-var">adamEpsilon</span></a></span><span> </span><span class="annot"><span class="annottext">AdamConfig t
+</span><a href="#local-6989586621679158024"><span class="hs-identifier hs-var">config</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-104"></span><span>    </span><span class="hs-comment">-- Create adam state variables.</span><span>
+</span><span id="line-105"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679158017"><span class="annot"><span class="annottext">errorMsg :: [Char]
+</span><a href="#local-6989586621679158017"><span class="hs-identifier hs-var hs-var">errorMsg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-string">&quot;TensorFlow.Minimize.adam requires an initial value for all variables&quot;</span></span><span>
+</span><span id="line-106"></span><span>        </span><span id="local-6989586621679158016"><span class="annot"><span class="annottext">initVal :: Variable a -&gt; Tensor Value a
+</span><a href="#local-6989586621679158016"><span class="hs-identifier hs-var hs-var">initVal</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Tensor Value a -&gt; Maybe (Tensor Value a) -&gt; Tensor Value a
+forall a. a -&gt; Maybe a -&gt; a
+</span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Char] -&gt; Tensor Value a
+forall a. HasCallStack =&gt; [Char] -&gt; a
+</span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><a href="#local-6989586621679158017"><span class="hs-identifier hs-var">errorMsg</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Maybe (Tensor Value a) -&gt; Tensor Value a)
+-&gt; (Variable a -&gt; Maybe (Tensor Value a))
+-&gt; Variable a
+-&gt; Tensor Value a
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Variable a -&gt; Maybe (Tensor Value a)
+forall a. Variable a -&gt; Maybe (Tensor Value a)
+</span><a href="TensorFlow.Variable.html#initializedValue"><span class="hs-identifier hs-var hs-var">TF.initializedValue</span></a></span><span>
+</span><span id="line-107"></span><span>    </span><span id="local-6989586621679158012"><span class="annot"><span class="annottext">[Variable t]
+</span><a href="#local-6989586621679158012"><span class="hs-identifier hs-var">ms</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(Variable t -&gt; m (Variable t)) -&gt; [Variable t] -&gt; m [Variable t]
+forall (t :: * -&gt; *) (m :: * -&gt; *) a b.
+(Traversable t, Monad m) =&gt;
+(a -&gt; m b) -&gt; t a -&gt; m (t b)
+</span><span class="hs-identifier hs-var">mapM</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Tensor Build t -&gt; m (Variable t)
+forall (m :: * -&gt; *) a (v :: * -&gt; *).
+(MonadBuild m, TensorType a) =&gt;
+Tensor v a -&gt; m (Variable a)
+</span><a href="TensorFlow.Variable.html#initializedVariable"><span class="hs-identifier hs-var">TF.initializedVariable</span></a></span><span> </span><span class="annot"><span class="annottext">(Tensor Build t -&gt; m (Variable t))
+-&gt; (Variable t -&gt; Tensor Build t) -&gt; Variable t -&gt; m (Variable t)
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Tensor Value t -&gt; Tensor Build t
+forall (v'1 :: * -&gt; *) t.
+TensorType t =&gt;
+Tensor v'1 t -&gt; Tensor Build t
+</span><span class="hs-identifier hs-var">TF.zerosLike</span></span><span> </span><span class="annot"><span class="annottext">(Tensor Value t -&gt; Tensor Build t)
+-&gt; (Variable t -&gt; Tensor Value t) -&gt; Variable t -&gt; Tensor Build t
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Variable t -&gt; Tensor Value t
+forall a. Variable a -&gt; Tensor Value a
+</span><a href="#local-6989586621679158016"><span class="hs-identifier hs-var">initVal</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[Variable t]
+</span><a href="#local-6989586621679158023"><span class="hs-identifier hs-var">params</span></a></span><span>
+</span><span id="line-108"></span><span>    </span><span id="local-6989586621679158008"><span class="annot"><span class="annottext">[Variable t]
+</span><a href="#local-6989586621679158008"><span class="hs-identifier hs-var">vs</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(Variable t -&gt; m (Variable t)) -&gt; [Variable t] -&gt; m [Variable t]
+forall (t :: * -&gt; *) (m :: * -&gt; *) a b.
+(Traversable t, Monad m) =&gt;
+(a -&gt; m b) -&gt; t a -&gt; m (t b)
+</span><span class="hs-identifier hs-var">mapM</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Tensor Build t -&gt; m (Variable t)
+forall (m :: * -&gt; *) a (v :: * -&gt; *).
+(MonadBuild m, TensorType a) =&gt;
+Tensor v a -&gt; m (Variable a)
+</span><a href="TensorFlow.Variable.html#initializedVariable"><span class="hs-identifier hs-var">TF.initializedVariable</span></a></span><span> </span><span class="annot"><span class="annottext">(Tensor Build t -&gt; m (Variable t))
+-&gt; (Variable t -&gt; Tensor Build t) -&gt; Variable t -&gt; m (Variable t)
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Tensor Value t -&gt; Tensor Build t
+forall (v'1 :: * -&gt; *) t.
+TensorType t =&gt;
+Tensor v'1 t -&gt; Tensor Build t
+</span><span class="hs-identifier hs-var">TF.zerosLike</span></span><span> </span><span class="annot"><span class="annottext">(Tensor Value t -&gt; Tensor Build t)
+-&gt; (Variable t -&gt; Tensor Value t) -&gt; Variable t -&gt; Tensor Build t
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Variable t -&gt; Tensor Value t
+forall a. Variable a -&gt; Tensor Value a
+</span><a href="#local-6989586621679158016"><span class="hs-identifier hs-var">initVal</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[Variable t]
+</span><a href="#local-6989586621679158023"><span class="hs-identifier hs-var">params</span></a></span><span>
+</span><span id="line-109"></span><span>    </span><span id="local-6989586621679158007"><span class="annot"><span class="annottext">Variable t
+</span><a href="#local-6989586621679158007"><span class="hs-identifier hs-var">beta1Power</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Tensor Build t -&gt; m (Variable t)
+forall (m :: * -&gt; *) a (v :: * -&gt; *).
+(MonadBuild m, TensorType a) =&gt;
+Tensor v a -&gt; m (Variable a)
+</span><a href="TensorFlow.Variable.html#initializedVariable"><span class="hs-identifier hs-var">TF.initializedVariable</span></a></span><span> </span><span class="annot"><span class="annottext">Tensor Build t
+</span><a href="#local-6989586621679158020"><span class="hs-identifier hs-var">beta1</span></a></span><span>
+</span><span id="line-110"></span><span>    </span><span id="local-6989586621679158006"><span class="annot"><span class="annottext">Variable t
+</span><a href="#local-6989586621679158006"><span class="hs-identifier hs-var">beta2Power</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Tensor Build t -&gt; m (Variable t)
+forall (m :: * -&gt; *) a (v :: * -&gt; *).
+(MonadBuild m, TensorType a) =&gt;
+Tensor v a -&gt; m (Variable a)
+</span><a href="TensorFlow.Variable.html#initializedVariable"><span class="hs-identifier hs-var">TF.initializedVariable</span></a></span><span> </span><span class="annot"><span class="annottext">Tensor Build t
+</span><a href="#local-6989586621679158019"><span class="hs-identifier hs-var">beta2</span></a></span><span>
+</span><span id="line-111"></span><span>    </span><span class="hs-comment">-- Perform adam update.</span><span>
+</span><span id="line-112"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679158005"><span class="annot"><span class="annottext">applyGrad :: Variable t
+-&gt; Variable t -&gt; Variable t -&gt; Tensor v7 t -&gt; m ControlNode
+</span><a href="#local-6989586621679158005"><span class="hs-identifier hs-var hs-var">applyGrad</span></a></span></span><span> </span><span id="local-6989586621679158004"><span class="annot"><span class="annottext">param :: Variable t
+</span><a href="#local-6989586621679158004"><span class="hs-identifier hs-var">param</span></a></span></span><span> </span><span id="local-6989586621679158003"><span class="annot"><span class="annottext">m :: Variable t
+</span><a href="#local-6989586621679158003"><span class="hs-identifier hs-var">m</span></a></span></span><span> </span><span id="local-6989586621679158002"><span class="annot"><span class="annottext">v :: Variable t
+</span><a href="#local-6989586621679158002"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-113"></span><span>            </span><span class="annot"><span class="annottext">Variable t
+-&gt; Variable t
+-&gt; Variable t
+-&gt; Tensor Build t
+-&gt; Tensor Build t
+-&gt; Tensor Build t
+-&gt; Tensor Build t
+-&gt; Tensor Build t
+-&gt; Tensor Build t
+-&gt; Tensor v7 t
+-&gt; m ControlNode
+forall (m :: * -&gt; *) t (v1 :: * -&gt; *) (v2 :: * -&gt; *) (v3 :: * -&gt; *)
+       (v4 :: * -&gt; *) (v5 :: * -&gt; *) (v6 :: * -&gt; *) (v7 :: * -&gt; *).
+(MonadBuild m,
+ OneOf
+   '[Complex Double, Complex Float, Int16, Int32, Int64, Int8, Word16,
+     Word8, Double, Float]
+   t) =&gt;
+Variable t
+-&gt; Variable t
+-&gt; Variable t
+-&gt; Tensor v1 t
+-&gt; Tensor v2 t
+-&gt; Tensor v3 t
+-&gt; Tensor v4 t
+-&gt; Tensor v5 t
+-&gt; Tensor v6 t
+-&gt; Tensor v7 t
+-&gt; m ControlNode
+</span><a href="TensorFlow.Variable.html#resourceApplyAdam"><span class="hs-identifier hs-var">TF.resourceApplyAdam</span></a></span><span> </span><span class="annot"><span class="annottext">Variable t
+</span><a href="#local-6989586621679158004"><span class="hs-identifier hs-var">param</span></a></span><span> </span><span class="annot"><span class="annottext">Variable t
+</span><a href="#local-6989586621679158003"><span class="hs-identifier hs-var">m</span></a></span><span> </span><span class="annot"><span class="annottext">Variable t
+</span><a href="#local-6989586621679158002"><span class="hs-identifier hs-var">v</span></a></span><span>
+</span><span id="line-114"></span><span>                                 </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Variable t -&gt; Tensor Build t
+forall a. TensorType a =&gt; Variable a -&gt; Tensor Build a
+</span><a href="TensorFlow.Variable.html#readValue"><span class="hs-identifier hs-var">TF.readValue</span></a></span><span> </span><span class="annot"><span class="annottext">Variable t
+</span><a href="#local-6989586621679158007"><span class="hs-identifier hs-var">beta1Power</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-115"></span><span>                                 </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Variable t -&gt; Tensor Build t
+forall a. TensorType a =&gt; Variable a -&gt; Tensor Build a
+</span><a href="TensorFlow.Variable.html#readValue"><span class="hs-identifier hs-var">TF.readValue</span></a></span><span> </span><span class="annot"><span class="annottext">Variable t
+</span><a href="#local-6989586621679158006"><span class="hs-identifier hs-var">beta2Power</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-116"></span><span>                                 </span><span class="annot"><span class="annottext">Tensor Build t
+</span><a href="#local-6989586621679158021"><span class="hs-identifier hs-var">lr</span></a></span><span> </span><span class="annot"><span class="annottext">Tensor Build t
+</span><a href="#local-6989586621679158020"><span class="hs-identifier hs-var">beta1</span></a></span><span> </span><span class="annot"><span class="annottext">Tensor Build t
+</span><a href="#local-6989586621679158019"><span class="hs-identifier hs-var">beta2</span></a></span><span> </span><span class="annot"><span class="annottext">Tensor Build t
+</span><a href="#local-6989586621679158018"><span class="hs-identifier hs-var">epsilon</span></a></span><span>
+</span><span id="line-117"></span><span>    </span><span id="local-6989586621679157999"><span class="annot"><span class="annottext">[ControlNode]
+</span><a href="#local-6989586621679157999"><span class="hs-identifier hs-var">updateVars</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[m ControlNode] -&gt; m [ControlNode]
+forall (t :: * -&gt; *) (m :: * -&gt; *) a.
+(Traversable t, Monad m) =&gt;
+t (m a) -&gt; m (t a)
+</span><span class="hs-identifier hs-var">sequence</span></span><span> </span><span class="annot"><span class="annottext">([m ControlNode] -&gt; m [ControlNode])
+-&gt; [m ControlNode] -&gt; m [ControlNode]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(Variable t
+ -&gt; Variable t -&gt; Variable t -&gt; Tensor Value t -&gt; m ControlNode)
+-&gt; [Variable t]
+-&gt; [Variable t]
+-&gt; [Variable t]
+-&gt; [Tensor Value t]
+-&gt; [m ControlNode]
+forall a b c d e.
+(a -&gt; b -&gt; c -&gt; d -&gt; e) -&gt; [a] -&gt; [b] -&gt; [c] -&gt; [d] -&gt; [e]
+</span><span class="hs-identifier hs-var">zipWith4</span></span><span> </span><span class="annot"><span class="annottext">Variable t
+-&gt; Variable t -&gt; Variable t -&gt; Tensor Value t -&gt; m ControlNode
+forall (m :: * -&gt; *) (v7 :: * -&gt; *).
+MonadBuild m =&gt;
+Variable t
+-&gt; Variable t -&gt; Variable t -&gt; Tensor v7 t -&gt; m ControlNode
+</span><a href="#local-6989586621679158005"><span class="hs-identifier hs-var">applyGrad</span></a></span><span> </span><span class="annot"><span class="annottext">[Variable t]
+</span><a href="#local-6989586621679158023"><span class="hs-identifier hs-var">params</span></a></span><span> </span><span class="annot"><span class="annottext">[Variable t]
+</span><a href="#local-6989586621679158012"><span class="hs-identifier hs-var">ms</span></a></span><span> </span><span class="annot"><span class="annottext">[Variable t]
+</span><a href="#local-6989586621679158008"><span class="hs-identifier hs-var">vs</span></a></span><span> </span><span class="annot"><span class="annottext">[Tensor Value t]
+</span><a href="#local-6989586621679158022"><span class="hs-identifier hs-var">grads</span></a></span><span>
+</span><span id="line-118"></span><span>    </span><span class="hs-comment">-- Update beta variables after adam update.</span><span>
+</span><span id="line-119"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679157997"><span class="annot"><span class="annottext">updateBeta :: Variable t -&gt; Tensor v'2 t -&gt; m ControlNode
+</span><a href="#local-6989586621679157997"><span class="hs-identifier hs-var hs-var">updateBeta</span></a></span></span><span> </span><span id="local-6989586621679157996"><span class="annot"><span class="annottext">betaPower :: Variable t
+</span><a href="#local-6989586621679157996"><span class="hs-identifier hs-var">betaPower</span></a></span></span><span> </span><span id="local-6989586621679157995"><span class="annot"><span class="annottext">beta :: Tensor v'2 t
+</span><a href="#local-6989586621679157995"><span class="hs-identifier hs-var">beta</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-120"></span><span>            </span><span class="annot"><span class="annottext">[ControlNode] -&gt; m ControlNode -&gt; m ControlNode
+forall (m :: * -&gt; *) t a.
+(MonadBuild m, Nodes t) =&gt;
+t -&gt; m a -&gt; m a
+</span><span class="hs-identifier hs-var">TF.withControlDependencies</span></span><span> </span><span class="annot"><span class="annottext">[ControlNode]
+</span><a href="#local-6989586621679157999"><span class="hs-identifier hs-var">updateVars</span></a></span><span>
+</span><span id="line-121"></span><span>                </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Variable t -&gt; Tensor Build t -&gt; m ControlNode
+forall (m :: * -&gt; *) a (v :: * -&gt; *).
+(MonadBuild m, TensorType a) =&gt;
+Variable a -&gt; Tensor v a -&gt; m ControlNode
+</span><a href="TensorFlow.Variable.html#assign"><span class="hs-identifier hs-var">TF.assign</span></a></span><span> </span><span class="annot"><span class="annottext">Variable t
+</span><a href="#local-6989586621679157996"><span class="hs-identifier hs-var">betaPower</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Variable t -&gt; Tensor Build t
+forall a. TensorType a =&gt; Variable a -&gt; Tensor Build a
+</span><a href="TensorFlow.Variable.html#readValue"><span class="hs-identifier hs-var">TF.readValue</span></a></span><span> </span><span class="annot"><span class="annottext">Variable t
+</span><a href="#local-6989586621679157996"><span class="hs-identifier hs-var">betaPower</span></a></span><span> </span><span class="annot"><span class="annottext">Tensor Build t -&gt; Tensor v'2 t -&gt; Tensor Build t
+forall (v'1 :: * -&gt; *) (v'2 :: * -&gt; *) t.
+OneOf
+  '[Complex Double, Complex Float, Int16, Int32, Int64, Int8, Word16,
+    Word8, Double, Float]
+  t =&gt;
+Tensor v'1 t -&gt; Tensor v'2 t -&gt; Tensor Build t
+</span><span class="hs-operator hs-var">`TF.mul`</span></span><span> </span><span class="annot"><span class="annottext">Tensor v'2 t
+</span><a href="#local-6989586621679157995"><span class="hs-identifier hs-var">beta</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-122"></span><span>    </span><span id="local-6989586621679157992"><span class="annot"><span class="annottext">ControlNode
+</span><a href="#local-6989586621679157992"><span class="hs-identifier hs-var">updateBeta1</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Variable t -&gt; Tensor Build t -&gt; m ControlNode
+forall t (m :: * -&gt; *) (v'2 :: * -&gt; *).
+(t /= ByteString, t /= Bool, MonadBuild m, TensorType t) =&gt;
+Variable t -&gt; Tensor v'2 t -&gt; m ControlNode
+</span><a href="#local-6989586621679157997"><span class="hs-identifier hs-var">updateBeta</span></a></span><span> </span><span class="annot"><span class="annottext">Variable t
+</span><a href="#local-6989586621679158007"><span class="hs-identifier hs-var">beta1Power</span></a></span><span> </span><span class="annot"><span class="annottext">Tensor Build t
+</span><a href="#local-6989586621679158020"><span class="hs-identifier hs-var">beta1</span></a></span><span>
+</span><span id="line-123"></span><span>    </span><span id="local-6989586621679157991"><span class="annot"><span class="annottext">ControlNode
+</span><a href="#local-6989586621679157991"><span class="hs-identifier hs-var">updateBeta2</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Variable t -&gt; Tensor Build t -&gt; m ControlNode
+forall t (m :: * -&gt; *) (v'2 :: * -&gt; *).
+(t /= ByteString, t /= Bool, MonadBuild m, TensorType t) =&gt;
+Variable t -&gt; Tensor v'2 t -&gt; m ControlNode
+</span><a href="#local-6989586621679157997"><span class="hs-identifier hs-var">updateBeta</span></a></span><span> </span><span class="annot"><span class="annottext">Variable t
+</span><a href="#local-6989586621679158006"><span class="hs-identifier hs-var">beta2Power</span></a></span><span> </span><span class="annot"><span class="annottext">Tensor Build t
+</span><a href="#local-6989586621679158019"><span class="hs-identifier hs-var">beta2</span></a></span><span>
+</span><span id="line-124"></span><span>    </span><span class="annot"><span class="annottext">[ControlNode] -&gt; m ControlNode
+forall (m :: * -&gt; *) t.
+(MonadBuild m, Nodes t) =&gt;
+t -&gt; m ControlNode
+</span><span class="hs-identifier hs-var">TF.group</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ControlNode
+</span><a href="#local-6989586621679157992"><span class="hs-identifier hs-var">updateBeta1</span></a></span><span class="annot"><span class="annottext">ControlNode -&gt; [ControlNode] -&gt; [ControlNode]
+forall a. a -&gt; [a] -&gt; [a]
+</span><span class="hs-glyph hs-var">:</span></span><span class="annot"><span class="annottext">ControlNode
+</span><a href="#local-6989586621679157991"><span class="hs-identifier hs-var">updateBeta2</span></a></span><span class="annot"><span class="annottext">ControlNode -&gt; [ControlNode] -&gt; [ControlNode]
+forall a. a -&gt; [a] -&gt; [a]
+</span><span class="hs-glyph hs-var">:</span></span><span class="annot"><span class="annottext">[ControlNode]
+</span><a href="#local-6989586621679157999"><span class="hs-identifier hs-var">updateVars</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-125"></span></pre></body></html>

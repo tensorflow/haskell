@@ -1,0 +1,904 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">-- Copyright 2020 TensorFlow authors.</span><span>
+</span><span id="line-2"></span><span class="hs-comment">--</span><span>
+</span><span id="line-3"></span><span class="hs-comment">-- Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span><span>
+</span><span id="line-4"></span><span class="hs-comment">-- you may not use this file except in compliance with the License.</span><span>
+</span><span id="line-5"></span><span class="hs-comment">-- You may obtain a copy of the License at</span><span>
+</span><span id="line-6"></span><span class="hs-comment">--</span><span>
+</span><span id="line-7"></span><span class="hs-comment">--     http://www.apache.org/licenses/LICENSE-2.0</span><span>
+</span><span id="line-8"></span><span class="hs-comment">--</span><span>
+</span><span id="line-9"></span><span class="hs-comment">-- Unless required by applicable law or agreed to in writing, software</span><span>
+</span><span id="line-10"></span><span class="hs-comment">-- distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span><span>
+</span><span id="line-11"></span><span class="hs-comment">-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span><span>
+</span><span id="line-12"></span><span class="hs-comment">-- See the License for the specific language governing permissions and</span><span>
+</span><span id="line-13"></span><span class="hs-comment">-- limitations under the License.</span><span>
+</span><span id="line-14"></span><span>
+</span><span id="line-15"></span><span class="hs-pragma">{-# LANGUAGE ConstraintKinds #-}</span><span>
+</span><span id="line-16"></span><span class="hs-pragma">{-# LANGUAGE DataKinds #-}</span><span>
+</span><span id="line-17"></span><span class="hs-pragma">{-# LANGUAGE OverloadedStrings #-}</span><span>
+</span><span id="line-18"></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">TensorFlow.Convolution</span><span>
+</span><span id="line-20"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="TensorFlow.Convolution.html#Padding"><span class="hs-identifier">Padding</span></a></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-21"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Convolution.html#DataFormat"><span class="hs-identifier">DataFormat</span></a></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-22"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Convolution.html#conv2D"><span class="hs-identifier">conv2D</span></a></span><span>
+</span><span id="line-23"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Convolution.html#conv2D%27"><span class="hs-identifier">conv2D'</span></a></span><span>
+</span><span id="line-24"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Convolution.html#conv2DBackpropFilter"><span class="hs-identifier">conv2DBackpropFilter</span></a></span><span>
+</span><span id="line-25"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Convolution.html#conv2DBackpropFilter%27"><span class="hs-identifier">conv2DBackpropFilter'</span></a></span><span>
+</span><span id="line-26"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Convolution.html#conv2DBackpropInput"><span class="hs-identifier">conv2DBackpropInput</span></a></span><span>
+</span><span id="line-27"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Convolution.html#conv2DBackpropInput%27"><span class="hs-identifier">conv2DBackpropInput'</span></a></span><span>
+</span><span id="line-28"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Convolution.html#conv3D"><span class="hs-identifier">conv3D</span></a></span><span>
+</span><span id="line-29"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Convolution.html#conv3D%27"><span class="hs-identifier">conv3D'</span></a></span><span>
+</span><span id="line-30"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Convolution.html#conv3DBackpropFilter"><span class="hs-identifier">conv3DBackpropFilter</span></a></span><span>
+</span><span id="line-31"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Convolution.html#conv3DBackpropFilter%27"><span class="hs-identifier">conv3DBackpropFilter'</span></a></span><span>
+</span><span id="line-32"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Convolution.html#conv3DBackpropFilterV2"><span class="hs-identifier">conv3DBackpropFilterV2</span></a></span><span>
+</span><span id="line-33"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Convolution.html#conv3DBackpropFilterV2%27"><span class="hs-identifier">conv3DBackpropFilterV2'</span></a></span><span>
+</span><span id="line-34"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Convolution.html#conv3DBackpropInput"><span class="hs-identifier">conv3DBackpropInput</span></a></span><span>
+</span><span id="line-35"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Convolution.html#conv3DBackpropInput%27"><span class="hs-identifier">conv3DBackpropInput'</span></a></span><span>
+</span><span id="line-36"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Convolution.html#conv3DBackpropInputV2"><span class="hs-identifier">conv3DBackpropInputV2</span></a></span><span>
+</span><span id="line-37"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Convolution.html#conv3DBackpropInputV2%27"><span class="hs-identifier">conv3DBackpropInputV2'</span></a></span><span>
+</span><span id="line-38"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Convolution.html#depthwiseConv2dNative"><span class="hs-identifier">depthwiseConv2dNative</span></a></span><span>
+</span><span id="line-39"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Convolution.html#depthwiseConv2dNative%27"><span class="hs-identifier">depthwiseConv2dNative'</span></a></span><span>
+</span><span id="line-40"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Convolution.html#depthwiseConv2dNativeBackpropFilter"><span class="hs-identifier">depthwiseConv2dNativeBackpropFilter</span></a></span><span>
+</span><span id="line-41"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Convolution.html#depthwiseConv2dNativeBackpropFilter%27"><span class="hs-identifier">depthwiseConv2dNativeBackpropFilter'</span></a></span><span>
+</span><span id="line-42"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Convolution.html#depthwiseConv2dNativeBackpropInput"><span class="hs-identifier">depthwiseConv2dNativeBackpropInput</span></a></span><span>
+</span><span id="line-43"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Convolution.html#depthwiseConv2dNativeBackpropInput%27"><span class="hs-identifier">depthwiseConv2dNativeBackpropInput'</span></a></span><span>
+</span><span id="line-44"></span><span>    </span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-45"></span><span>
+</span><span id="line-46"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Word</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Word16</span></span><span class="hs-special">)</span><span>
+</span><span id="line-47"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Int</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Int32</span></span><span class="hs-special">,</span><span class="annot"><span class="hs-identifier">Int64</span></span><span class="hs-special">)</span><span>
+</span><span id="line-48"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.ByteString</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">ByteString</span></span><span class="hs-special">)</span><span>
+</span><span id="line-49"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Lens.Family2</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-operator">(.~)</span></span><span class="hs-special">)</span><span>
+</span><span id="line-50"></span><span>
+</span><span id="line-51"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">TensorFlow.BuildOp</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">TF</span></span><span>
+</span><span id="line-52"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">TensorFlow.Core</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">TF</span></span><span>
+</span><span id="line-53"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">TensorFlow.GenOps.Core</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">TF</span></span><span>
+</span><span id="line-54"></span><span>
+</span><span id="line-55"></span><span class="hs-comment">-- TODO: Support other convolution parameters such as stride.</span><span>
+</span><span id="line-56"></span><span>
+</span><span id="line-57"></span><span class="hs-comment">-- | Convolution padding.</span><span>
+</span><span id="line-58"></span><span class="hs-keyword">data</span><span> </span><span id="Padding"><span class="annot"><a href="TensorFlow.Convolution.html#Padding"><span class="hs-identifier hs-var">Padding</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span>
+</span><span id="line-59"></span><span>        </span><span class="hs-comment">-- | output_spatial_shape[i] = ceil(input_spatial_shape[i] / strides[i])</span><span>
+</span><span id="line-60"></span><span>        </span><span id="PaddingValid"><span class="annot"><a href="TensorFlow.Convolution.html#PaddingValid"><span class="hs-identifier hs-var">PaddingValid</span></a></span></span><span>
+</span><span id="line-61"></span><span>        </span><span class="hs-comment">-- | output_spatial_shape[i] = ceil(</span><span>
+</span><span id="line-62"></span><span>        </span><span class="hs-comment">--      (input_spatial_shape[i] -</span><span>
+</span><span id="line-63"></span><span>        </span><span class="hs-comment">--          (spatial_filter_shape[i]-1) * dilation_rate[i]) / strides[i])</span><span>
+</span><span id="line-64"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span id="PaddingSame"><span class="annot"><a href="TensorFlow.Convolution.html#PaddingSame"><span class="hs-identifier hs-var">PaddingSame</span></a></span></span><span>
+</span><span id="line-65"></span><span>
+</span><span id="line-66"></span><span class="annot"><a href="TensorFlow.Convolution.html#paddingToByteString"><span class="hs-identifier hs-type">paddingToByteString</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="TensorFlow.Convolution.html#Padding"><span class="hs-identifier hs-type">Padding</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span>
+</span><span id="line-67"></span><span id="paddingToByteString"><span class="annot"><span class="annottext">paddingToByteString :: Padding -&gt; ByteString
+</span><a href="TensorFlow.Convolution.html#paddingToByteString"><span class="hs-identifier hs-var hs-var">paddingToByteString</span></a></span></span><span> </span><span id="local-6989586621679155634"><span class="annot"><span class="annottext">x :: Padding
+</span><a href="#local-6989586621679155634"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Padding
+</span><a href="#local-6989586621679155634"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-68"></span><span>    </span><span class="annot"><a href="TensorFlow.Convolution.html#PaddingValid"><span class="hs-identifier hs-type">PaddingValid</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-string">&quot;VALID&quot;</span></span><span>
+</span><span id="line-69"></span><span>    </span><span class="annot"><a href="TensorFlow.Convolution.html#PaddingSame"><span class="hs-identifier hs-type">PaddingSame</span></a></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-string">&quot;SAME&quot;</span></span><span>
+</span><span id="line-70"></span><span>
+</span><span id="line-71"></span><span class="hs-comment">-- | Matrix format.</span><span>
+</span><span id="line-72"></span><span class="hs-keyword">data</span><span> </span><span id="DataFormat"><span class="annot"><a href="TensorFlow.Convolution.html#DataFormat"><span class="hs-identifier hs-var">DataFormat</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ChannelLast"><span class="annot"><a href="TensorFlow.Convolution.html#ChannelLast"><span class="hs-identifier hs-var">ChannelLast</span></a></span></span><span>  </span><span class="hs-comment">-- ^ Channel is the last dimension (e.g. NWC, NHWC, NDHWC)</span><span>
+</span><span id="line-73"></span><span>                </span><span class="hs-glyph">|</span><span> </span><span id="ChannelFirst"><span class="annot"><a href="TensorFlow.Convolution.html#ChannelFirst"><span class="hs-identifier hs-var">ChannelFirst</span></a></span></span><span> </span><span class="hs-comment">-- ^ Channel is the first dimension after N (e.g. NCW, NCHW, NCDHW)</span><span>
+</span><span id="line-74"></span><span>
+</span><span id="line-75"></span><span class="hs-comment">-- TODO: Address 1D convolution.</span><span>
+</span><span id="line-76"></span><span>
+</span><span id="line-77"></span><span class="annot"><a href="TensorFlow.Convolution.html#dataFormat2D"><span class="hs-identifier hs-type">dataFormat2D</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="TensorFlow.Convolution.html#DataFormat"><span class="hs-identifier hs-type">DataFormat</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span>
+</span><span id="line-78"></span><span id="dataFormat2D"><span class="annot"><span class="annottext">dataFormat2D :: DataFormat -&gt; ByteString
+</span><a href="TensorFlow.Convolution.html#dataFormat2D"><span class="hs-identifier hs-var hs-var">dataFormat2D</span></a></span></span><span> </span><span id="local-6989586621679155630"><span class="annot"><span class="annottext">x :: DataFormat
+</span><a href="#local-6989586621679155630"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">DataFormat
+</span><a href="#local-6989586621679155630"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-79"></span><span>    </span><span class="annot"><a href="TensorFlow.Convolution.html#ChannelLast"><span class="hs-identifier hs-type">ChannelLast</span></a></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-string">&quot;NHWC&quot;</span></span><span>
+</span><span id="line-80"></span><span>    </span><span class="annot"><a href="TensorFlow.Convolution.html#ChannelFirst"><span class="hs-identifier hs-type">ChannelFirst</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-string">&quot;NCHW&quot;</span></span><span>
+</span><span id="line-81"></span><span>
+</span><span id="line-82"></span><span class="annot"><a href="TensorFlow.Convolution.html#dataFormat3D"><span class="hs-identifier hs-type">dataFormat3D</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="TensorFlow.Convolution.html#DataFormat"><span class="hs-identifier hs-type">DataFormat</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span>
+</span><span id="line-83"></span><span id="dataFormat3D"><span class="annot"><span class="annottext">dataFormat3D :: DataFormat -&gt; ByteString
+</span><a href="TensorFlow.Convolution.html#dataFormat3D"><span class="hs-identifier hs-var hs-var">dataFormat3D</span></a></span></span><span> </span><span id="local-6989586621679155628"><span class="annot"><span class="annottext">x :: DataFormat
+</span><a href="#local-6989586621679155628"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">DataFormat
+</span><a href="#local-6989586621679155628"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-84"></span><span>    </span><span class="annot"><a href="TensorFlow.Convolution.html#ChannelLast"><span class="hs-identifier hs-type">ChannelLast</span></a></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-string">&quot;NDHWC&quot;</span></span><span>
+</span><span id="line-85"></span><span>    </span><span class="annot"><a href="TensorFlow.Convolution.html#ChannelFirst"><span class="hs-identifier hs-type">ChannelFirst</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-string">&quot;NCDHW&quot;</span></span><span>
+</span><span id="line-86"></span><span>
+</span><span id="line-87"></span><span class="hs-comment">-- | 2D Convolution with default parameters.</span><span>
+</span><span id="line-88"></span><span id="local-6989586621679155625"><span id="local-6989586621679155626"><span id="local-6989586621679155627"><span class="annot"><a href="TensorFlow.Convolution.html#conv2D"><span class="hs-identifier hs-type">conv2D</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.OneOf</span></span><span> </span><span class="hs-special">'</span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Word16</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Float</span></span><span class="hs-special">]</span><span> </span><span class="annot"><a href="#local-6989586621679155627"><span class="hs-identifier hs-type">t</span></a></span><span>
+</span><span id="line-89"></span><span>       </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679155626"><span class="hs-identifier hs-type">v1</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679155627"><span class="hs-identifier hs-type">t</span></a></span><span> </span><span class="hs-comment">-- ^ input</span><span>
+</span><span id="line-90"></span><span>       </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679155625"><span class="hs-identifier hs-type">v2</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679155627"><span class="hs-identifier hs-type">t</span></a></span><span> </span><span class="hs-comment">-- ^ filter</span><span>
+</span><span id="line-91"></span><span>       </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Build</span></span><span> </span><span class="annot"><a href="#local-6989586621679155627"><span class="hs-identifier hs-type">t</span></a></span><span> </span><span class="hs-comment">-- ^ output</span></span></span></span><span>
+</span><span id="line-92"></span><span id="conv2D"><span class="annot"><span class="annottext">conv2D :: Tensor v1 t -&gt; Tensor v2 t -&gt; Tensor Build t
+</span><a href="TensorFlow.Convolution.html#conv2D"><span class="hs-identifier hs-var hs-var">conv2D</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OpParams
+-&gt; Padding
+-&gt; DataFormat
+-&gt; Tensor v1 t
+-&gt; Tensor v2 t
+-&gt; Tensor Build t
+forall t (v1 :: * -&gt; *) (v2 :: * -&gt; *).
+OneOf '[Word16, Double, Float] t =&gt;
+OpParams
+-&gt; Padding
+-&gt; DataFormat
+-&gt; Tensor v1 t
+-&gt; Tensor v2 t
+-&gt; Tensor Build t
+</span><a href="TensorFlow.Convolution.html#conv2D%27"><span class="hs-identifier hs-var">conv2D'</span></a></span><span> </span><span class="annot"><span class="annottext">OpParams
+forall a. a -&gt; a
+</span><span class="hs-identifier hs-var">id</span></span><span> </span><span class="annot"><span class="annottext">Padding
+</span><a href="TensorFlow.Convolution.html#PaddingValid"><span class="hs-identifier hs-var">PaddingValid</span></a></span><span> </span><span class="annot"><span class="annottext">DataFormat
+</span><a href="TensorFlow.Convolution.html#ChannelLast"><span class="hs-identifier hs-var">ChannelLast</span></a></span><span>
+</span><span id="line-93"></span><span>
+</span><span id="line-94"></span><span id="local-6989586621679155803"><span id="local-6989586621679155804"><span id="local-6989586621679155806"><span class="annot"><a href="TensorFlow.Convolution.html#conv2D%27"><span class="hs-identifier hs-type">conv2D'</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.OneOf</span></span><span> </span><span class="hs-special">'</span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Word16</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Float</span></span><span class="hs-special">]</span><span> </span><span class="annot"><a href="#local-6989586621679155806"><span class="hs-identifier hs-type">t</span></a></span><span>
+</span><span id="line-95"></span><span>        </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.OpParams</span></span><span>
+</span><span id="line-96"></span><span>        </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Convolution.html#Padding"><span class="hs-identifier hs-type">Padding</span></a></span><span>
+</span><span id="line-97"></span><span>        </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Convolution.html#DataFormat"><span class="hs-identifier hs-type">DataFormat</span></a></span><span>
+</span><span id="line-98"></span><span>        </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679155804"><span class="hs-identifier hs-type">v1</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679155806"><span class="hs-identifier hs-type">t</span></a></span><span> </span><span class="hs-comment">-- ^ input</span><span>
+</span><span id="line-99"></span><span>        </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679155803"><span class="hs-identifier hs-type">v2</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679155806"><span class="hs-identifier hs-type">t</span></a></span><span> </span><span class="hs-comment">-- ^ filter</span><span>
+</span><span id="line-100"></span><span>        </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Build</span></span><span> </span><span class="annot"><a href="#local-6989586621679155806"><span class="hs-identifier hs-type">t</span></a></span><span> </span><span class="hs-comment">-- ^ output</span></span></span></span><span>
+</span><span id="line-101"></span><span id="conv2D%27"><span class="annot"><span class="annottext">conv2D' :: OpParams
+-&gt; Padding
+-&gt; DataFormat
+-&gt; Tensor v1 t
+-&gt; Tensor v2 t
+-&gt; Tensor Build t
+</span><a href="TensorFlow.Convolution.html#conv2D%27"><span class="hs-identifier hs-var hs-var">conv2D'</span></a></span></span><span> </span><span id="local-6989586621679155623"><span class="annot"><span class="annottext">params :: OpParams
+</span><a href="#local-6989586621679155623"><span class="hs-identifier hs-var">params</span></a></span></span><span> </span><span id="local-6989586621679155622"><span class="annot"><span class="annottext">padding :: Padding
+</span><a href="#local-6989586621679155622"><span class="hs-identifier hs-var">padding</span></a></span></span><span> </span><span id="local-6989586621679155621"><span class="annot"><span class="annottext">dataformat :: DataFormat
+</span><a href="#local-6989586621679155621"><span class="hs-identifier hs-var">dataformat</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OpParams
+-&gt; ByteString -&gt; Tensor v1 t -&gt; Tensor v2 t -&gt; Tensor Build t
+forall (v'1 :: * -&gt; *) (v'2 :: * -&gt; *) t.
+OneOf '[Int32, Word16, Double, Float] t =&gt;
+OpParams
+-&gt; ByteString -&gt; Tensor v'1 t -&gt; Tensor v'2 t -&gt; Tensor Build t
+</span><span class="hs-identifier hs-var">TF.conv2D'</span></span><span>
+</span><span id="line-102"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OpParams
+</span><a href="#local-6989586621679155623"><span class="hs-identifier hs-var">params</span></a></span><span> </span><span class="annot"><span class="annottext">OpParams -&gt; OpParams -&gt; OpParams
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Lens' OpDef ByteString
+forall a. Attribute a =&gt; Text -&gt; Lens' OpDef a
+</span><span class="hs-identifier hs-var">TF.opAttr</span></span><span> </span><span class="annot"><span class="hs-string">&quot;data_format&quot;</span></span><span> </span><span class="annot"><span class="annottext">(forall (f :: * -&gt; *). Identical f =&gt; LensLike' f OpDef ByteString)
+-&gt; ByteString -&gt; OpParams
+forall s t a b. Setter s t a b -&gt; b -&gt; s -&gt; t
+</span><span class="hs-operator hs-var">.~</span></span><span> </span><span class="annot"><span class="annottext">DataFormat -&gt; ByteString
+</span><a href="TensorFlow.Convolution.html#dataFormat2D"><span class="hs-identifier hs-var">dataFormat2D</span></a></span><span> </span><span class="annot"><span class="annottext">DataFormat
+</span><a href="#local-6989586621679155621"><span class="hs-identifier hs-var">dataformat</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-103"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Padding -&gt; ByteString
+</span><a href="TensorFlow.Convolution.html#paddingToByteString"><span class="hs-identifier hs-var">paddingToByteString</span></a></span><span> </span><span class="annot"><span class="annottext">Padding
+</span><a href="#local-6989586621679155622"><span class="hs-identifier hs-var">padding</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-104"></span><span>
+</span><span id="line-105"></span><span class="hs-comment">-- | 2D convolution backpropagation filter with default parameters.</span><span>
+</span><span id="line-106"></span><span id="local-6989586621679155614"><span id="local-6989586621679155615"><span id="local-6989586621679155616"><span id="local-6989586621679155617"><span class="annot"><a href="TensorFlow.Convolution.html#conv2DBackpropFilter"><span class="hs-identifier hs-type">conv2DBackpropFilter</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.OneOf</span></span><span> </span><span class="hs-special">'</span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Word16</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Float</span></span><span class="hs-special">]</span><span> </span><span class="annot"><a href="#local-6989586621679155617"><span class="hs-identifier hs-type">t</span></a></span><span>
+</span><span id="line-107"></span><span>                     </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679155616"><span class="hs-identifier hs-type">v1</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679155617"><span class="hs-identifier hs-type">t</span></a></span><span>        </span><span class="hs-comment">-- ^ input</span><span>
+</span><span id="line-108"></span><span>                     </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679155615"><span class="hs-identifier hs-type">v2</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int32</span></span><span>    </span><span class="hs-comment">-- ^ filter_sizes</span><span>
+</span><span id="line-109"></span><span>                     </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679155614"><span class="hs-identifier hs-type">v3</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679155617"><span class="hs-identifier hs-type">t</span></a></span><span>        </span><span class="hs-comment">-- ^ out_backprop</span><span>
+</span><span id="line-110"></span><span>                     </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Build</span></span><span> </span><span class="annot"><a href="#local-6989586621679155617"><span class="hs-identifier hs-type">t</span></a></span><span>  </span><span class="hs-comment">-- ^ output</span></span></span></span></span><span>
+</span><span id="line-111"></span><span id="conv2DBackpropFilter"><span class="annot"><span class="annottext">conv2DBackpropFilter :: Tensor v1 t -&gt; Tensor v2 Int32 -&gt; Tensor v3 t -&gt; Tensor Build t
+</span><a href="TensorFlow.Convolution.html#conv2DBackpropFilter"><span class="hs-identifier hs-var hs-var">conv2DBackpropFilter</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OpParams
+-&gt; Padding
+-&gt; DataFormat
+-&gt; Tensor v1 t
+-&gt; Tensor v2 Int32
+-&gt; Tensor v3 t
+-&gt; Tensor Build t
+forall t (v1 :: * -&gt; *) (v2 :: * -&gt; *) (v3 :: * -&gt; *).
+OneOf '[Word16, Double, Float] t =&gt;
+OpParams
+-&gt; Padding
+-&gt; DataFormat
+-&gt; Tensor v1 t
+-&gt; Tensor v2 Int32
+-&gt; Tensor v3 t
+-&gt; Tensor Build t
+</span><a href="TensorFlow.Convolution.html#conv2DBackpropFilter%27"><span class="hs-identifier hs-var">conv2DBackpropFilter'</span></a></span><span> </span><span class="annot"><span class="annottext">OpParams
+forall a. a -&gt; a
+</span><span class="hs-identifier hs-var">id</span></span><span> </span><span class="annot"><span class="annottext">Padding
+</span><a href="TensorFlow.Convolution.html#PaddingValid"><span class="hs-identifier hs-var">PaddingValid</span></a></span><span> </span><span class="annot"><span class="annottext">DataFormat
+</span><a href="TensorFlow.Convolution.html#ChannelLast"><span class="hs-identifier hs-var">ChannelLast</span></a></span><span>
+</span><span id="line-112"></span><span>
+</span><span id="line-113"></span><span id="local-6989586621679155772"><span id="local-6989586621679155773"><span id="local-6989586621679155774"><span id="local-6989586621679155775"><span class="annot"><a href="TensorFlow.Convolution.html#conv2DBackpropFilter%27"><span class="hs-identifier hs-type">conv2DBackpropFilter'</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.OneOf</span></span><span> </span><span class="hs-special">'</span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Word16</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Float</span></span><span class="hs-special">]</span><span> </span><span class="annot"><a href="#local-6989586621679155775"><span class="hs-identifier hs-type">t</span></a></span><span>
+</span><span id="line-114"></span><span>                      </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.OpParams</span></span><span>
+</span><span id="line-115"></span><span>                      </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Convolution.html#Padding"><span class="hs-identifier hs-type">Padding</span></a></span><span>
+</span><span id="line-116"></span><span>                      </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Convolution.html#DataFormat"><span class="hs-identifier hs-type">DataFormat</span></a></span><span>
+</span><span id="line-117"></span><span>                      </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679155774"><span class="hs-identifier hs-type">v1</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679155775"><span class="hs-identifier hs-type">t</span></a></span><span>        </span><span class="hs-comment">-- ^ input</span><span>
+</span><span id="line-118"></span><span>                      </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679155773"><span class="hs-identifier hs-type">v2</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int32</span></span><span>    </span><span class="hs-comment">-- ^ filter_sizes</span><span>
+</span><span id="line-119"></span><span>                      </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679155772"><span class="hs-identifier hs-type">v3</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679155775"><span class="hs-identifier hs-type">t</span></a></span><span>        </span><span class="hs-comment">-- ^ out_backprop</span><span>
+</span><span id="line-120"></span><span>                      </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Build</span></span><span> </span><span class="annot"><a href="#local-6989586621679155775"><span class="hs-identifier hs-type">t</span></a></span><span>  </span><span class="hs-comment">-- ^ output</span></span></span></span></span><span>
+</span><span id="line-121"></span><span id="conv2DBackpropFilter%27"><span class="annot"><span class="annottext">conv2DBackpropFilter' :: OpParams
+-&gt; Padding
+-&gt; DataFormat
+-&gt; Tensor v1 t
+-&gt; Tensor v2 Int32
+-&gt; Tensor v3 t
+-&gt; Tensor Build t
+</span><a href="TensorFlow.Convolution.html#conv2DBackpropFilter%27"><span class="hs-identifier hs-var hs-var">conv2DBackpropFilter'</span></a></span></span><span> </span><span id="local-6989586621679155613"><span class="annot"><span class="annottext">params :: OpParams
+</span><a href="#local-6989586621679155613"><span class="hs-identifier hs-var">params</span></a></span></span><span> </span><span id="local-6989586621679155612"><span class="annot"><span class="annottext">padding :: Padding
+</span><a href="#local-6989586621679155612"><span class="hs-identifier hs-var">padding</span></a></span></span><span> </span><span id="local-6989586621679155611"><span class="annot"><span class="annottext">dataformat :: DataFormat
+</span><a href="#local-6989586621679155611"><span class="hs-identifier hs-var">dataformat</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OpParams
+-&gt; ByteString
+-&gt; Tensor v1 t
+-&gt; Tensor v2 Int32
+-&gt; Tensor v3 t
+-&gt; Tensor Build t
+forall (v'1 :: * -&gt; *) (v'2 :: * -&gt; *) (v'3 :: * -&gt; *) t.
+OneOf '[Word16, Double, Float] t =&gt;
+OpParams
+-&gt; ByteString
+-&gt; Tensor v'1 t
+-&gt; Tensor v'2 Int32
+-&gt; Tensor v'3 t
+-&gt; Tensor Build t
+</span><span class="hs-identifier hs-var">TF.conv2DBackpropFilter'</span></span><span>
+</span><span id="line-122"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OpParams
+</span><a href="#local-6989586621679155613"><span class="hs-identifier hs-var">params</span></a></span><span> </span><span class="annot"><span class="annottext">OpParams -&gt; OpParams -&gt; OpParams
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Lens' OpDef ByteString
+forall a. Attribute a =&gt; Text -&gt; Lens' OpDef a
+</span><span class="hs-identifier hs-var">TF.opAttr</span></span><span> </span><span class="annot"><span class="hs-string">&quot;data_format&quot;</span></span><span> </span><span class="annot"><span class="annottext">(forall (f :: * -&gt; *). Identical f =&gt; LensLike' f OpDef ByteString)
+-&gt; ByteString -&gt; OpParams
+forall s t a b. Setter s t a b -&gt; b -&gt; s -&gt; t
+</span><span class="hs-operator hs-var">.~</span></span><span> </span><span class="annot"><span class="annottext">DataFormat -&gt; ByteString
+</span><a href="TensorFlow.Convolution.html#dataFormat2D"><span class="hs-identifier hs-var">dataFormat2D</span></a></span><span> </span><span class="annot"><span class="annottext">DataFormat
+</span><a href="#local-6989586621679155611"><span class="hs-identifier hs-var">dataformat</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-123"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Padding -&gt; ByteString
+</span><a href="TensorFlow.Convolution.html#paddingToByteString"><span class="hs-identifier hs-var">paddingToByteString</span></a></span><span> </span><span class="annot"><span class="annottext">Padding
+</span><a href="#local-6989586621679155612"><span class="hs-identifier hs-var">padding</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-124"></span><span>
+</span><span id="line-125"></span><span class="hs-comment">-- | 2D convolution backpropagation input with default parameters.</span><span>
+</span><span id="line-126"></span><span id="local-6989586621679155606"><span id="local-6989586621679155607"><span id="local-6989586621679155608"><span id="local-6989586621679155609"><span class="annot"><a href="TensorFlow.Convolution.html#conv2DBackpropInput"><span class="hs-identifier hs-type">conv2DBackpropInput</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.OneOf</span></span><span> </span><span class="hs-special">'</span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Word16</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Float</span></span><span class="hs-special">]</span><span> </span><span class="annot"><a href="#local-6989586621679155609"><span class="hs-identifier hs-type">t</span></a></span><span>
+</span><span id="line-127"></span><span>                    </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679155608"><span class="hs-identifier hs-type">v1</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int32</span></span><span>    </span><span class="hs-comment">-- ^ input_sizes</span><span>
+</span><span id="line-128"></span><span>                    </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679155607"><span class="hs-identifier hs-type">v2</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679155609"><span class="hs-identifier hs-type">t</span></a></span><span>        </span><span class="hs-comment">-- ^ filter</span><span>
+</span><span id="line-129"></span><span>                    </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679155606"><span class="hs-identifier hs-type">v3</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679155609"><span class="hs-identifier hs-type">t</span></a></span><span>        </span><span class="hs-comment">-- ^ out_backprop</span><span>
+</span><span id="line-130"></span><span>                    </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Build</span></span><span> </span><span class="annot"><a href="#local-6989586621679155609"><span class="hs-identifier hs-type">t</span></a></span><span>  </span><span class="hs-comment">-- ^ output</span></span></span></span></span><span>
+</span><span id="line-131"></span><span id="conv2DBackpropInput"><span class="annot"><span class="annottext">conv2DBackpropInput :: Tensor v1 Int32 -&gt; Tensor v2 t -&gt; Tensor v3 t -&gt; Tensor Build t
+</span><a href="TensorFlow.Convolution.html#conv2DBackpropInput"><span class="hs-identifier hs-var hs-var">conv2DBackpropInput</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OpParams
+-&gt; Padding
+-&gt; DataFormat
+-&gt; Tensor v1 Int32
+-&gt; Tensor v2 t
+-&gt; Tensor v3 t
+-&gt; Tensor Build t
+forall t (v1 :: * -&gt; *) (v2 :: * -&gt; *) (v3 :: * -&gt; *).
+OneOf '[Word16, Double, Float] t =&gt;
+OpParams
+-&gt; Padding
+-&gt; DataFormat
+-&gt; Tensor v1 Int32
+-&gt; Tensor v2 t
+-&gt; Tensor v3 t
+-&gt; Tensor Build t
+</span><a href="TensorFlow.Convolution.html#conv2DBackpropInput%27"><span class="hs-identifier hs-var">conv2DBackpropInput'</span></a></span><span> </span><span class="annot"><span class="annottext">OpParams
+forall a. a -&gt; a
+</span><span class="hs-identifier hs-var">id</span></span><span> </span><span class="annot"><span class="annottext">Padding
+</span><a href="TensorFlow.Convolution.html#PaddingValid"><span class="hs-identifier hs-var">PaddingValid</span></a></span><span> </span><span class="annot"><span class="annottext">DataFormat
+</span><a href="TensorFlow.Convolution.html#ChannelLast"><span class="hs-identifier hs-var">ChannelLast</span></a></span><span>
+</span><span id="line-132"></span><span>
+</span><span id="line-133"></span><span id="local-6989586621679155756"><span id="local-6989586621679155757"><span id="local-6989586621679155758"><span id="local-6989586621679155759"><span class="annot"><a href="TensorFlow.Convolution.html#conv2DBackpropInput%27"><span class="hs-identifier hs-type">conv2DBackpropInput'</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.OneOf</span></span><span> </span><span class="hs-special">'</span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Word16</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Float</span></span><span class="hs-special">]</span><span> </span><span class="annot"><a href="#local-6989586621679155759"><span class="hs-identifier hs-type">t</span></a></span><span>
+</span><span id="line-134"></span><span>                     </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.OpParams</span></span><span>
+</span><span id="line-135"></span><span>                     </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Convolution.html#Padding"><span class="hs-identifier hs-type">Padding</span></a></span><span>
+</span><span id="line-136"></span><span>                     </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Convolution.html#DataFormat"><span class="hs-identifier hs-type">DataFormat</span></a></span><span>
+</span><span id="line-137"></span><span>                     </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679155758"><span class="hs-identifier hs-type">v1</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int32</span></span><span>    </span><span class="hs-comment">-- ^ input_sizes</span><span>
+</span><span id="line-138"></span><span>                     </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679155757"><span class="hs-identifier hs-type">v2</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679155759"><span class="hs-identifier hs-type">t</span></a></span><span>        </span><span class="hs-comment">-- ^ filter</span><span>
+</span><span id="line-139"></span><span>                     </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679155756"><span class="hs-identifier hs-type">v3</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679155759"><span class="hs-identifier hs-type">t</span></a></span><span>        </span><span class="hs-comment">-- ^ out_backprop</span><span>
+</span><span id="line-140"></span><span>                     </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Build</span></span><span> </span><span class="annot"><a href="#local-6989586621679155759"><span class="hs-identifier hs-type">t</span></a></span><span>  </span><span class="hs-comment">-- ^ output</span></span></span></span></span><span>
+</span><span id="line-141"></span><span id="conv2DBackpropInput%27"><span class="annot"><span class="annottext">conv2DBackpropInput' :: OpParams
+-&gt; Padding
+-&gt; DataFormat
+-&gt; Tensor v1 Int32
+-&gt; Tensor v2 t
+-&gt; Tensor v3 t
+-&gt; Tensor Build t
+</span><a href="TensorFlow.Convolution.html#conv2DBackpropInput%27"><span class="hs-identifier hs-var hs-var">conv2DBackpropInput'</span></a></span></span><span> </span><span id="local-6989586621679155605"><span class="annot"><span class="annottext">params :: OpParams
+</span><a href="#local-6989586621679155605"><span class="hs-identifier hs-var">params</span></a></span></span><span> </span><span id="local-6989586621679155604"><span class="annot"><span class="annottext">padding :: Padding
+</span><a href="#local-6989586621679155604"><span class="hs-identifier hs-var">padding</span></a></span></span><span> </span><span id="local-6989586621679155603"><span class="annot"><span class="annottext">dataformat :: DataFormat
+</span><a href="#local-6989586621679155603"><span class="hs-identifier hs-var">dataformat</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OpParams
+-&gt; ByteString
+-&gt; Tensor v1 Int32
+-&gt; Tensor v2 t
+-&gt; Tensor v3 t
+-&gt; Tensor Build t
+forall (v'1 :: * -&gt; *) (v'2 :: * -&gt; *) (v'3 :: * -&gt; *) t.
+OneOf '[Int32, Word16, Double, Float] t =&gt;
+OpParams
+-&gt; ByteString
+-&gt; Tensor v'1 Int32
+-&gt; Tensor v'2 t
+-&gt; Tensor v'3 t
+-&gt; Tensor Build t
+</span><span class="hs-identifier hs-var">TF.conv2DBackpropInput'</span></span><span>
+</span><span id="line-142"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OpParams
+</span><a href="#local-6989586621679155605"><span class="hs-identifier hs-var">params</span></a></span><span> </span><span class="annot"><span class="annottext">OpParams -&gt; OpParams -&gt; OpParams
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Lens' OpDef ByteString
+forall a. Attribute a =&gt; Text -&gt; Lens' OpDef a
+</span><span class="hs-identifier hs-var">TF.opAttr</span></span><span> </span><span class="annot"><span class="hs-string">&quot;data_format&quot;</span></span><span> </span><span class="annot"><span class="annottext">(forall (f :: * -&gt; *). Identical f =&gt; LensLike' f OpDef ByteString)
+-&gt; ByteString -&gt; OpParams
+forall s t a b. Setter s t a b -&gt; b -&gt; s -&gt; t
+</span><span class="hs-operator hs-var">.~</span></span><span> </span><span class="annot"><span class="annottext">DataFormat -&gt; ByteString
+</span><a href="TensorFlow.Convolution.html#dataFormat2D"><span class="hs-identifier hs-var">dataFormat2D</span></a></span><span> </span><span class="annot"><span class="annottext">DataFormat
+</span><a href="#local-6989586621679155603"><span class="hs-identifier hs-var">dataformat</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-143"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Padding -&gt; ByteString
+</span><a href="TensorFlow.Convolution.html#paddingToByteString"><span class="hs-identifier hs-var">paddingToByteString</span></a></span><span> </span><span class="annot"><span class="annottext">Padding
+</span><a href="#local-6989586621679155604"><span class="hs-identifier hs-var">padding</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-144"></span><span>
+</span><span id="line-145"></span><span class="hs-comment">-- | 3D Convolution with default parameters.</span><span>
+</span><span id="line-146"></span><span id="local-6989586621679155599"><span id="local-6989586621679155600"><span id="local-6989586621679155601"><span class="annot"><a href="TensorFlow.Convolution.html#conv3D"><span class="hs-identifier hs-type">conv3D</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.OneOf</span></span><span> </span><span class="hs-special">'</span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Word16</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Float</span></span><span class="hs-special">]</span><span> </span><span class="annot"><a href="#local-6989586621679155601"><span class="hs-identifier hs-type">t</span></a></span><span>
+</span><span id="line-147"></span><span>       </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679155600"><span class="hs-identifier hs-type">v1</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679155601"><span class="hs-identifier hs-type">t</span></a></span><span> </span><span class="hs-comment">-- ^ input</span><span>
+</span><span id="line-148"></span><span>       </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679155599"><span class="hs-identifier hs-type">v2</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679155601"><span class="hs-identifier hs-type">t</span></a></span><span> </span><span class="hs-comment">-- ^ filter</span><span>
+</span><span id="line-149"></span><span>       </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Build</span></span><span> </span><span class="annot"><a href="#local-6989586621679155601"><span class="hs-identifier hs-type">t</span></a></span><span> </span><span class="hs-comment">-- ^ output</span></span></span></span><span>
+</span><span id="line-150"></span><span id="conv3D"><span class="annot"><span class="annottext">conv3D :: Tensor v1 t -&gt; Tensor v2 t -&gt; Tensor Build t
+</span><a href="TensorFlow.Convolution.html#conv3D"><span class="hs-identifier hs-var hs-var">conv3D</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OpParams
+-&gt; Padding
+-&gt; DataFormat
+-&gt; Tensor v1 t
+-&gt; Tensor v2 t
+-&gt; Tensor Build t
+forall t (v1 :: * -&gt; *) (v2 :: * -&gt; *).
+OneOf '[Word16, Double, Float] t =&gt;
+OpParams
+-&gt; Padding
+-&gt; DataFormat
+-&gt; Tensor v1 t
+-&gt; Tensor v2 t
+-&gt; Tensor Build t
+</span><a href="TensorFlow.Convolution.html#conv3D%27"><span class="hs-identifier hs-var">conv3D'</span></a></span><span> </span><span class="annot"><span class="annottext">OpParams
+forall a. a -&gt; a
+</span><span class="hs-identifier hs-var">id</span></span><span> </span><span class="annot"><span class="annottext">Padding
+</span><a href="TensorFlow.Convolution.html#PaddingValid"><span class="hs-identifier hs-var">PaddingValid</span></a></span><span> </span><span class="annot"><span class="annottext">DataFormat
+</span><a href="TensorFlow.Convolution.html#ChannelLast"><span class="hs-identifier hs-var">ChannelLast</span></a></span><span>
+</span><span id="line-151"></span><span>
+</span><span id="line-152"></span><span id="local-6989586621679155596"><span id="local-6989586621679155597"><span id="local-6989586621679155598"><span class="annot"><a href="TensorFlow.Convolution.html#conv3D%27"><span class="hs-identifier hs-type">conv3D'</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.OneOf</span></span><span> </span><span class="hs-special">'</span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Word16</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Float</span></span><span class="hs-special">]</span><span> </span><span class="annot"><a href="#local-6989586621679155598"><span class="hs-identifier hs-type">t</span></a></span><span>
+</span><span id="line-153"></span><span>        </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.OpParams</span></span><span>
+</span><span id="line-154"></span><span>        </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Convolution.html#Padding"><span class="hs-identifier hs-type">Padding</span></a></span><span>
+</span><span id="line-155"></span><span>        </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Convolution.html#DataFormat"><span class="hs-identifier hs-type">DataFormat</span></a></span><span>
+</span><span id="line-156"></span><span>        </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679155597"><span class="hs-identifier hs-type">v1</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679155598"><span class="hs-identifier hs-type">t</span></a></span><span> </span><span class="hs-comment">-- ^ input</span><span>
+</span><span id="line-157"></span><span>        </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679155596"><span class="hs-identifier hs-type">v2</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679155598"><span class="hs-identifier hs-type">t</span></a></span><span> </span><span class="hs-comment">-- ^ filter</span><span>
+</span><span id="line-158"></span><span>        </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Build</span></span><span> </span><span class="annot"><a href="#local-6989586621679155598"><span class="hs-identifier hs-type">t</span></a></span><span> </span><span class="hs-comment">-- ^ output</span></span></span></span><span>
+</span><span id="line-159"></span><span id="conv3D%27"><span class="annot"><span class="annottext">conv3D' :: OpParams
+-&gt; Padding
+-&gt; DataFormat
+-&gt; Tensor v1 t
+-&gt; Tensor v2 t
+-&gt; Tensor Build t
+</span><a href="TensorFlow.Convolution.html#conv3D%27"><span class="hs-identifier hs-var hs-var">conv3D'</span></a></span></span><span> </span><span id="local-6989586621679155595"><span class="annot"><span class="annottext">params :: OpParams
+</span><a href="#local-6989586621679155595"><span class="hs-identifier hs-var">params</span></a></span></span><span> </span><span id="local-6989586621679155594"><span class="annot"><span class="annottext">padding :: Padding
+</span><a href="#local-6989586621679155594"><span class="hs-identifier hs-var">padding</span></a></span></span><span> </span><span id="local-6989586621679155593"><span class="annot"><span class="annottext">dataformat :: DataFormat
+</span><a href="#local-6989586621679155593"><span class="hs-identifier hs-var">dataformat</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OpParams
+-&gt; ByteString -&gt; Tensor v1 t -&gt; Tensor v2 t -&gt; Tensor Build t
+forall (v'1 :: * -&gt; *) (v'2 :: * -&gt; *) t.
+OneOf '[Word16, Double, Float] t =&gt;
+OpParams
+-&gt; ByteString -&gt; Tensor v'1 t -&gt; Tensor v'2 t -&gt; Tensor Build t
+</span><span class="hs-identifier hs-var">TF.conv3D'</span></span><span>
+</span><span id="line-160"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OpParams
+</span><a href="#local-6989586621679155595"><span class="hs-identifier hs-var">params</span></a></span><span> </span><span class="annot"><span class="annottext">OpParams -&gt; OpParams -&gt; OpParams
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Lens' OpDef ByteString
+forall a. Attribute a =&gt; Text -&gt; Lens' OpDef a
+</span><span class="hs-identifier hs-var">TF.opAttr</span></span><span> </span><span class="annot"><span class="hs-string">&quot;data_format&quot;</span></span><span> </span><span class="annot"><span class="annottext">(forall (f :: * -&gt; *). Identical f =&gt; LensLike' f OpDef ByteString)
+-&gt; ByteString -&gt; OpParams
+forall s t a b. Setter s t a b -&gt; b -&gt; s -&gt; t
+</span><span class="hs-operator hs-var">.~</span></span><span> </span><span class="annot"><span class="annottext">DataFormat -&gt; ByteString
+</span><a href="TensorFlow.Convolution.html#dataFormat3D"><span class="hs-identifier hs-var">dataFormat3D</span></a></span><span> </span><span class="annot"><span class="annottext">DataFormat
+</span><a href="#local-6989586621679155593"><span class="hs-identifier hs-var">dataformat</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-161"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Padding -&gt; ByteString
+</span><a href="TensorFlow.Convolution.html#paddingToByteString"><span class="hs-identifier hs-var">paddingToByteString</span></a></span><span> </span><span class="annot"><span class="annottext">Padding
+</span><a href="#local-6989586621679155594"><span class="hs-identifier hs-var">padding</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-162"></span><span>
+</span><span id="line-163"></span><span class="hs-comment">-- | 3D convolution backpropagation filter with default parameters.</span><span>
+</span><span id="line-164"></span><span id="local-6989586621679155588"><span id="local-6989586621679155589"><span id="local-6989586621679155590"><span id="local-6989586621679155591"><span class="annot"><a href="TensorFlow.Convolution.html#conv3DBackpropFilter"><span class="hs-identifier hs-type">conv3DBackpropFilter</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.OneOf</span></span><span> </span><span class="hs-special">'</span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Word16</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Float</span></span><span class="hs-special">]</span><span> </span><span class="annot"><a href="#local-6989586621679155591"><span class="hs-identifier hs-type">t</span></a></span><span>
+</span><span id="line-165"></span><span>                     </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679155590"><span class="hs-identifier hs-type">v1</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679155591"><span class="hs-identifier hs-type">t</span></a></span><span>        </span><span class="hs-comment">-- ^ input</span><span>
+</span><span id="line-166"></span><span>                     </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679155589"><span class="hs-identifier hs-type">v2</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679155591"><span class="hs-identifier hs-type">t</span></a></span><span>        </span><span class="hs-comment">-- ^ filter</span><span>
+</span><span id="line-167"></span><span>                     </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679155588"><span class="hs-identifier hs-type">v3</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679155591"><span class="hs-identifier hs-type">t</span></a></span><span>        </span><span class="hs-comment">-- ^ out_backprop</span><span>
+</span><span id="line-168"></span><span>                     </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Build</span></span><span> </span><span class="annot"><a href="#local-6989586621679155591"><span class="hs-identifier hs-type">t</span></a></span><span>  </span><span class="hs-comment">-- ^ output</span></span></span></span></span><span>
+</span><span id="line-169"></span><span id="conv3DBackpropFilter"><span class="annot"><span class="annottext">conv3DBackpropFilter :: Tensor v1 t -&gt; Tensor v2 t -&gt; Tensor v3 t -&gt; Tensor Build t
+</span><a href="TensorFlow.Convolution.html#conv3DBackpropFilter"><span class="hs-identifier hs-var hs-var">conv3DBackpropFilter</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OpParams
+-&gt; Padding
+-&gt; DataFormat
+-&gt; Tensor v1 t
+-&gt; Tensor v2 t
+-&gt; Tensor v3 t
+-&gt; Tensor Build t
+forall t (v1 :: * -&gt; *) (v2 :: * -&gt; *) (v3 :: * -&gt; *).
+OneOf '[Word16, Double, Float] t =&gt;
+OpParams
+-&gt; Padding
+-&gt; DataFormat
+-&gt; Tensor v1 t
+-&gt; Tensor v2 t
+-&gt; Tensor v3 t
+-&gt; Tensor Build t
+</span><a href="TensorFlow.Convolution.html#conv3DBackpropFilter%27"><span class="hs-identifier hs-var">conv3DBackpropFilter'</span></a></span><span> </span><span class="annot"><span class="annottext">OpParams
+forall a. a -&gt; a
+</span><span class="hs-identifier hs-var">id</span></span><span> </span><span class="annot"><span class="annottext">Padding
+</span><a href="TensorFlow.Convolution.html#PaddingValid"><span class="hs-identifier hs-var">PaddingValid</span></a></span><span> </span><span class="annot"><span class="annottext">DataFormat
+</span><a href="TensorFlow.Convolution.html#ChannelLast"><span class="hs-identifier hs-var">ChannelLast</span></a></span><span>
+</span><span id="line-170"></span><span>
+</span><span id="line-171"></span><span id="local-6989586621679155731"><span id="local-6989586621679155732"><span id="local-6989586621679155733"><span id="local-6989586621679155734"><span class="annot"><a href="TensorFlow.Convolution.html#conv3DBackpropFilter%27"><span class="hs-identifier hs-type">conv3DBackpropFilter'</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.OneOf</span></span><span> </span><span class="hs-special">'</span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Word16</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Float</span></span><span class="hs-special">]</span><span> </span><span class="annot"><a href="#local-6989586621679155734"><span class="hs-identifier hs-type">t</span></a></span><span>
+</span><span id="line-172"></span><span>                      </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.OpParams</span></span><span>
+</span><span id="line-173"></span><span>                      </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Convolution.html#Padding"><span class="hs-identifier hs-type">Padding</span></a></span><span>
+</span><span id="line-174"></span><span>                      </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Convolution.html#DataFormat"><span class="hs-identifier hs-type">DataFormat</span></a></span><span>
+</span><span id="line-175"></span><span>                      </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679155733"><span class="hs-identifier hs-type">v1</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679155734"><span class="hs-identifier hs-type">t</span></a></span><span>        </span><span class="hs-comment">-- ^ input</span><span>
+</span><span id="line-176"></span><span>                      </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679155732"><span class="hs-identifier hs-type">v2</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679155734"><span class="hs-identifier hs-type">t</span></a></span><span>        </span><span class="hs-comment">-- ^ filter</span><span>
+</span><span id="line-177"></span><span>                      </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679155731"><span class="hs-identifier hs-type">v3</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679155734"><span class="hs-identifier hs-type">t</span></a></span><span>        </span><span class="hs-comment">-- ^ out_backprop</span><span>
+</span><span id="line-178"></span><span>                      </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Build</span></span><span> </span><span class="annot"><a href="#local-6989586621679155734"><span class="hs-identifier hs-type">t</span></a></span><span>  </span><span class="hs-comment">-- ^ output</span></span></span></span></span><span>
+</span><span id="line-179"></span><span id="conv3DBackpropFilter%27"><span class="annot"><span class="annottext">conv3DBackpropFilter' :: OpParams
+-&gt; Padding
+-&gt; DataFormat
+-&gt; Tensor v1 t
+-&gt; Tensor v2 t
+-&gt; Tensor v3 t
+-&gt; Tensor Build t
+</span><a href="TensorFlow.Convolution.html#conv3DBackpropFilter%27"><span class="hs-identifier hs-var hs-var">conv3DBackpropFilter'</span></a></span></span><span> </span><span id="local-6989586621679155587"><span class="annot"><span class="annottext">params :: OpParams
+</span><a href="#local-6989586621679155587"><span class="hs-identifier hs-var">params</span></a></span></span><span> </span><span id="local-6989586621679155586"><span class="annot"><span class="annottext">padding :: Padding
+</span><a href="#local-6989586621679155586"><span class="hs-identifier hs-var">padding</span></a></span></span><span> </span><span id="local-6989586621679155585"><span class="annot"><span class="annottext">dataformat :: DataFormat
+</span><a href="#local-6989586621679155585"><span class="hs-identifier hs-var">dataformat</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OpParams
+-&gt; ByteString
+-&gt; Tensor v1 t
+-&gt; Tensor v2 t
+-&gt; Tensor v3 t
+-&gt; Tensor Build t
+forall (v'1 :: * -&gt; *) (v'2 :: * -&gt; *) (v'3 :: * -&gt; *) t.
+OneOf '[Word16, Double, Float] t =&gt;
+OpParams
+-&gt; ByteString
+-&gt; Tensor v'1 t
+-&gt; Tensor v'2 t
+-&gt; Tensor v'3 t
+-&gt; Tensor Build t
+</span><span class="hs-identifier hs-var">TF.conv3DBackpropFilter'</span></span><span>
+</span><span id="line-180"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OpParams
+</span><a href="#local-6989586621679155587"><span class="hs-identifier hs-var">params</span></a></span><span> </span><span class="annot"><span class="annottext">OpParams -&gt; OpParams -&gt; OpParams
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Lens' OpDef ByteString
+forall a. Attribute a =&gt; Text -&gt; Lens' OpDef a
+</span><span class="hs-identifier hs-var">TF.opAttr</span></span><span> </span><span class="annot"><span class="hs-string">&quot;data_format&quot;</span></span><span> </span><span class="annot"><span class="annottext">(forall (f :: * -&gt; *). Identical f =&gt; LensLike' f OpDef ByteString)
+-&gt; ByteString -&gt; OpParams
+forall s t a b. Setter s t a b -&gt; b -&gt; s -&gt; t
+</span><span class="hs-operator hs-var">.~</span></span><span> </span><span class="annot"><span class="annottext">DataFormat -&gt; ByteString
+</span><a href="TensorFlow.Convolution.html#dataFormat3D"><span class="hs-identifier hs-var">dataFormat3D</span></a></span><span> </span><span class="annot"><span class="annottext">DataFormat
+</span><a href="#local-6989586621679155585"><span class="hs-identifier hs-var">dataformat</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-181"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Padding -&gt; ByteString
+</span><a href="TensorFlow.Convolution.html#paddingToByteString"><span class="hs-identifier hs-var">paddingToByteString</span></a></span><span> </span><span class="annot"><span class="annottext">Padding
+</span><a href="#local-6989586621679155586"><span class="hs-identifier hs-var">padding</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-182"></span><span>
+</span><span id="line-183"></span><span class="hs-comment">-- | 3D convolution backpropagation filter with default parameters.</span><span>
+</span><span id="line-184"></span><span id="local-6989586621679155580"><span id="local-6989586621679155581"><span id="local-6989586621679155582"><span id="local-6989586621679155583"><span class="annot"><a href="TensorFlow.Convolution.html#conv3DBackpropFilterV2"><span class="hs-identifier hs-type">conv3DBackpropFilterV2</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.OneOf</span></span><span> </span><span class="hs-special">'</span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Word16</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Float</span></span><span class="hs-special">]</span><span> </span><span class="annot"><a href="#local-6989586621679155583"><span class="hs-identifier hs-type">t</span></a></span><span>
+</span><span id="line-185"></span><span>                     </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679155582"><span class="hs-identifier hs-type">v1</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679155583"><span class="hs-identifier hs-type">t</span></a></span><span>        </span><span class="hs-comment">-- ^ input</span><span>
+</span><span id="line-186"></span><span>                     </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679155581"><span class="hs-identifier hs-type">v2</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int32</span></span><span>    </span><span class="hs-comment">-- ^ filter_sizes</span><span>
+</span><span id="line-187"></span><span>                     </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679155580"><span class="hs-identifier hs-type">v3</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679155583"><span class="hs-identifier hs-type">t</span></a></span><span>        </span><span class="hs-comment">-- ^ out_backprop</span><span>
+</span><span id="line-188"></span><span>                     </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Build</span></span><span> </span><span class="annot"><a href="#local-6989586621679155583"><span class="hs-identifier hs-type">t</span></a></span><span>  </span><span class="hs-comment">-- ^ output</span></span></span></span></span><span>
+</span><span id="line-189"></span><span id="conv3DBackpropFilterV2"><span class="annot"><span class="annottext">conv3DBackpropFilterV2 :: Tensor v1 t -&gt; Tensor v2 Int32 -&gt; Tensor v3 t -&gt; Tensor Build t
+</span><a href="TensorFlow.Convolution.html#conv3DBackpropFilterV2"><span class="hs-identifier hs-var hs-var">conv3DBackpropFilterV2</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OpParams
+-&gt; Padding
+-&gt; DataFormat
+-&gt; Tensor v1 t
+-&gt; Tensor v2 Int32
+-&gt; Tensor v3 t
+-&gt; Tensor Build t
+forall t (v1 :: * -&gt; *) (v2 :: * -&gt; *) (v3 :: * -&gt; *).
+OneOf '[Word16, Double, Float] t =&gt;
+OpParams
+-&gt; Padding
+-&gt; DataFormat
+-&gt; Tensor v1 t
+-&gt; Tensor v2 Int32
+-&gt; Tensor v3 t
+-&gt; Tensor Build t
+</span><a href="TensorFlow.Convolution.html#conv3DBackpropFilterV2%27"><span class="hs-identifier hs-var">conv3DBackpropFilterV2'</span></a></span><span> </span><span class="annot"><span class="annottext">OpParams
+forall a. a -&gt; a
+</span><span class="hs-identifier hs-var">id</span></span><span> </span><span class="annot"><span class="annottext">Padding
+</span><a href="TensorFlow.Convolution.html#PaddingValid"><span class="hs-identifier hs-var">PaddingValid</span></a></span><span> </span><span class="annot"><span class="annottext">DataFormat
+</span><a href="TensorFlow.Convolution.html#ChannelLast"><span class="hs-identifier hs-var">ChannelLast</span></a></span><span>
+</span><span id="line-190"></span><span>
+</span><span id="line-191"></span><span id="local-6989586621679155576"><span id="local-6989586621679155577"><span id="local-6989586621679155578"><span id="local-6989586621679155579"><span class="annot"><a href="TensorFlow.Convolution.html#conv3DBackpropFilterV2%27"><span class="hs-identifier hs-type">conv3DBackpropFilterV2'</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.OneOf</span></span><span> </span><span class="hs-special">'</span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Word16</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Float</span></span><span class="hs-special">]</span><span> </span><span class="annot"><a href="#local-6989586621679155579"><span class="hs-identifier hs-type">t</span></a></span><span>
+</span><span id="line-192"></span><span>                      </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.OpParams</span></span><span>
+</span><span id="line-193"></span><span>                      </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Convolution.html#Padding"><span class="hs-identifier hs-type">Padding</span></a></span><span>
+</span><span id="line-194"></span><span>                      </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Convolution.html#DataFormat"><span class="hs-identifier hs-type">DataFormat</span></a></span><span>
+</span><span id="line-195"></span><span>                      </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679155578"><span class="hs-identifier hs-type">v1</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679155579"><span class="hs-identifier hs-type">t</span></a></span><span>        </span><span class="hs-comment">-- ^ input</span><span>
+</span><span id="line-196"></span><span>                      </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679155577"><span class="hs-identifier hs-type">v2</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int32</span></span><span>    </span><span class="hs-comment">-- ^ filter_sizes</span><span>
+</span><span id="line-197"></span><span>                      </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679155576"><span class="hs-identifier hs-type">v3</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679155579"><span class="hs-identifier hs-type">t</span></a></span><span>        </span><span class="hs-comment">-- ^ out_backprop</span><span>
+</span><span id="line-198"></span><span>                      </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Build</span></span><span> </span><span class="annot"><a href="#local-6989586621679155579"><span class="hs-identifier hs-type">t</span></a></span><span>  </span><span class="hs-comment">-- ^ output</span></span></span></span></span><span>
+</span><span id="line-199"></span><span id="conv3DBackpropFilterV2%27"><span class="annot"><span class="annottext">conv3DBackpropFilterV2' :: OpParams
+-&gt; Padding
+-&gt; DataFormat
+-&gt; Tensor v1 t
+-&gt; Tensor v2 Int32
+-&gt; Tensor v3 t
+-&gt; Tensor Build t
+</span><a href="TensorFlow.Convolution.html#conv3DBackpropFilterV2%27"><span class="hs-identifier hs-var hs-var">conv3DBackpropFilterV2'</span></a></span></span><span> </span><span id="local-6989586621679155575"><span class="annot"><span class="annottext">params :: OpParams
+</span><a href="#local-6989586621679155575"><span class="hs-identifier hs-var">params</span></a></span></span><span> </span><span id="local-6989586621679155574"><span class="annot"><span class="annottext">padding :: Padding
+</span><a href="#local-6989586621679155574"><span class="hs-identifier hs-var">padding</span></a></span></span><span> </span><span id="local-6989586621679155573"><span class="annot"><span class="annottext">dataformat :: DataFormat
+</span><a href="#local-6989586621679155573"><span class="hs-identifier hs-var">dataformat</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OpParams
+-&gt; ByteString
+-&gt; Tensor v1 t
+-&gt; Tensor v2 Int32
+-&gt; Tensor v3 t
+-&gt; Tensor Build t
+forall (v'1 :: * -&gt; *) (v'2 :: * -&gt; *) (v'3 :: * -&gt; *) t.
+OneOf '[Word16, Double, Float] t =&gt;
+OpParams
+-&gt; ByteString
+-&gt; Tensor v'1 t
+-&gt; Tensor v'2 Int32
+-&gt; Tensor v'3 t
+-&gt; Tensor Build t
+</span><span class="hs-identifier hs-var">TF.conv3DBackpropFilterV2'</span></span><span>
+</span><span id="line-200"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OpParams
+</span><a href="#local-6989586621679155575"><span class="hs-identifier hs-var">params</span></a></span><span> </span><span class="annot"><span class="annottext">OpParams -&gt; OpParams -&gt; OpParams
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Lens' OpDef ByteString
+forall a. Attribute a =&gt; Text -&gt; Lens' OpDef a
+</span><span class="hs-identifier hs-var">TF.opAttr</span></span><span> </span><span class="annot"><span class="hs-string">&quot;data_format&quot;</span></span><span> </span><span class="annot"><span class="annottext">(forall (f :: * -&gt; *). Identical f =&gt; LensLike' f OpDef ByteString)
+-&gt; ByteString -&gt; OpParams
+forall s t a b. Setter s t a b -&gt; b -&gt; s -&gt; t
+</span><span class="hs-operator hs-var">.~</span></span><span> </span><span class="annot"><span class="annottext">DataFormat -&gt; ByteString
+</span><a href="TensorFlow.Convolution.html#dataFormat3D"><span class="hs-identifier hs-var">dataFormat3D</span></a></span><span> </span><span class="annot"><span class="annottext">DataFormat
+</span><a href="#local-6989586621679155573"><span class="hs-identifier hs-var">dataformat</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-201"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Padding -&gt; ByteString
+</span><a href="TensorFlow.Convolution.html#paddingToByteString"><span class="hs-identifier hs-var">paddingToByteString</span></a></span><span> </span><span class="annot"><span class="annottext">Padding
+</span><a href="#local-6989586621679155574"><span class="hs-identifier hs-var">padding</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-202"></span><span>
+</span><span id="line-203"></span><span class="hs-comment">-- | 3D convolution backpropagation input with default parameters.</span><span>
+</span><span id="line-204"></span><span id="local-6989586621679155568"><span id="local-6989586621679155569"><span id="local-6989586621679155570"><span id="local-6989586621679155571"><span class="annot"><a href="TensorFlow.Convolution.html#conv3DBackpropInput"><span class="hs-identifier hs-type">conv3DBackpropInput</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.OneOf</span></span><span> </span><span class="hs-special">'</span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Word16</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Float</span></span><span class="hs-special">]</span><span> </span><span class="annot"><a href="#local-6989586621679155571"><span class="hs-identifier hs-type">t</span></a></span><span>
+</span><span id="line-205"></span><span>                    </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679155570"><span class="hs-identifier hs-type">v1</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679155571"><span class="hs-identifier hs-type">t</span></a></span><span>        </span><span class="hs-comment">-- ^ input</span><span>
+</span><span id="line-206"></span><span>                    </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679155569"><span class="hs-identifier hs-type">v2</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679155571"><span class="hs-identifier hs-type">t</span></a></span><span>        </span><span class="hs-comment">-- ^ filter</span><span>
+</span><span id="line-207"></span><span>                    </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679155568"><span class="hs-identifier hs-type">v3</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679155571"><span class="hs-identifier hs-type">t</span></a></span><span>        </span><span class="hs-comment">-- ^ out_backprop</span><span>
+</span><span id="line-208"></span><span>                    </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Build</span></span><span> </span><span class="annot"><a href="#local-6989586621679155571"><span class="hs-identifier hs-type">t</span></a></span><span>  </span><span class="hs-comment">-- ^ output</span></span></span></span></span><span>
+</span><span id="line-209"></span><span id="conv3DBackpropInput"><span class="annot"><span class="annottext">conv3DBackpropInput :: Tensor v1 t -&gt; Tensor v2 t -&gt; Tensor v3 t -&gt; Tensor Build t
+</span><a href="TensorFlow.Convolution.html#conv3DBackpropInput"><span class="hs-identifier hs-var hs-var">conv3DBackpropInput</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OpParams
+-&gt; Padding
+-&gt; DataFormat
+-&gt; Tensor v1 t
+-&gt; Tensor v2 t
+-&gt; Tensor v3 t
+-&gt; Tensor Build t
+forall t (v1 :: * -&gt; *) (v2 :: * -&gt; *) (v3 :: * -&gt; *).
+OneOf '[Word16, Double, Float] t =&gt;
+OpParams
+-&gt; Padding
+-&gt; DataFormat
+-&gt; Tensor v1 t
+-&gt; Tensor v2 t
+-&gt; Tensor v3 t
+-&gt; Tensor Build t
+</span><a href="TensorFlow.Convolution.html#conv3DBackpropInput%27"><span class="hs-identifier hs-var">conv3DBackpropInput'</span></a></span><span> </span><span class="annot"><span class="annottext">OpParams
+forall a. a -&gt; a
+</span><span class="hs-identifier hs-var">id</span></span><span> </span><span class="annot"><span class="annottext">Padding
+</span><a href="TensorFlow.Convolution.html#PaddingValid"><span class="hs-identifier hs-var">PaddingValid</span></a></span><span> </span><span class="annot"><span class="annottext">DataFormat
+</span><a href="TensorFlow.Convolution.html#ChannelLast"><span class="hs-identifier hs-var">ChannelLast</span></a></span><span>
+</span><span id="line-210"></span><span>
+</span><span id="line-211"></span><span id="local-6989586621679155564"><span id="local-6989586621679155565"><span id="local-6989586621679155566"><span id="local-6989586621679155567"><span class="annot"><a href="TensorFlow.Convolution.html#conv3DBackpropInput%27"><span class="hs-identifier hs-type">conv3DBackpropInput'</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.OneOf</span></span><span> </span><span class="hs-special">'</span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Word16</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Float</span></span><span class="hs-special">]</span><span> </span><span class="annot"><a href="#local-6989586621679155567"><span class="hs-identifier hs-type">t</span></a></span><span>
+</span><span id="line-212"></span><span>                     </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.OpParams</span></span><span>
+</span><span id="line-213"></span><span>                     </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Convolution.html#Padding"><span class="hs-identifier hs-type">Padding</span></a></span><span>
+</span><span id="line-214"></span><span>                     </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Convolution.html#DataFormat"><span class="hs-identifier hs-type">DataFormat</span></a></span><span>
+</span><span id="line-215"></span><span>                     </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679155566"><span class="hs-identifier hs-type">v1</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679155567"><span class="hs-identifier hs-type">t</span></a></span><span>        </span><span class="hs-comment">-- ^ input</span><span>
+</span><span id="line-216"></span><span>                     </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679155565"><span class="hs-identifier hs-type">v2</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679155567"><span class="hs-identifier hs-type">t</span></a></span><span>        </span><span class="hs-comment">-- ^ filter</span><span>
+</span><span id="line-217"></span><span>                     </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679155564"><span class="hs-identifier hs-type">v3</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679155567"><span class="hs-identifier hs-type">t</span></a></span><span>        </span><span class="hs-comment">-- ^ out_backprop</span><span>
+</span><span id="line-218"></span><span>                     </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Build</span></span><span> </span><span class="annot"><a href="#local-6989586621679155567"><span class="hs-identifier hs-type">t</span></a></span><span>  </span><span class="hs-comment">-- ^ output</span></span></span></span></span><span>
+</span><span id="line-219"></span><span id="conv3DBackpropInput%27"><span class="annot"><span class="annottext">conv3DBackpropInput' :: OpParams
+-&gt; Padding
+-&gt; DataFormat
+-&gt; Tensor v1 t
+-&gt; Tensor v2 t
+-&gt; Tensor v3 t
+-&gt; Tensor Build t
+</span><a href="TensorFlow.Convolution.html#conv3DBackpropInput%27"><span class="hs-identifier hs-var hs-var">conv3DBackpropInput'</span></a></span></span><span> </span><span id="local-6989586621679155563"><span class="annot"><span class="annottext">params :: OpParams
+</span><a href="#local-6989586621679155563"><span class="hs-identifier hs-var">params</span></a></span></span><span> </span><span id="local-6989586621679155562"><span class="annot"><span class="annottext">padding :: Padding
+</span><a href="#local-6989586621679155562"><span class="hs-identifier hs-var">padding</span></a></span></span><span> </span><span id="local-6989586621679155561"><span class="annot"><span class="annottext">dataformat :: DataFormat
+</span><a href="#local-6989586621679155561"><span class="hs-identifier hs-var">dataformat</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OpParams
+-&gt; ByteString
+-&gt; Tensor v1 t
+-&gt; Tensor v2 t
+-&gt; Tensor v3 t
+-&gt; Tensor Build t
+forall (v'1 :: * -&gt; *) (v'2 :: * -&gt; *) (v'3 :: * -&gt; *) t.
+OneOf '[Word16, Double, Float] t =&gt;
+OpParams
+-&gt; ByteString
+-&gt; Tensor v'1 t
+-&gt; Tensor v'2 t
+-&gt; Tensor v'3 t
+-&gt; Tensor Build t
+</span><span class="hs-identifier hs-var">TF.conv3DBackpropInput'</span></span><span>
+</span><span id="line-220"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OpParams
+</span><a href="#local-6989586621679155563"><span class="hs-identifier hs-var">params</span></a></span><span> </span><span class="annot"><span class="annottext">OpParams -&gt; OpParams -&gt; OpParams
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Lens' OpDef ByteString
+forall a. Attribute a =&gt; Text -&gt; Lens' OpDef a
+</span><span class="hs-identifier hs-var">TF.opAttr</span></span><span> </span><span class="annot"><span class="hs-string">&quot;data_format&quot;</span></span><span> </span><span class="annot"><span class="annottext">(forall (f :: * -&gt; *). Identical f =&gt; LensLike' f OpDef ByteString)
+-&gt; ByteString -&gt; OpParams
+forall s t a b. Setter s t a b -&gt; b -&gt; s -&gt; t
+</span><span class="hs-operator hs-var">.~</span></span><span> </span><span class="annot"><span class="annottext">DataFormat -&gt; ByteString
+</span><a href="TensorFlow.Convolution.html#dataFormat3D"><span class="hs-identifier hs-var">dataFormat3D</span></a></span><span> </span><span class="annot"><span class="annottext">DataFormat
+</span><a href="#local-6989586621679155561"><span class="hs-identifier hs-var">dataformat</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-221"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Padding -&gt; ByteString
+</span><a href="TensorFlow.Convolution.html#paddingToByteString"><span class="hs-identifier hs-var">paddingToByteString</span></a></span><span> </span><span class="annot"><span class="annottext">Padding
+</span><a href="#local-6989586621679155562"><span class="hs-identifier hs-var">padding</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-222"></span><span>
+</span><span id="line-223"></span><span class="hs-comment">-- | 3D convolution backpropagation input with default parameters.</span><span>
+</span><span id="line-224"></span><span id="local-6989586621679155555"><span id="local-6989586621679155556"><span id="local-6989586621679155557"><span id="local-6989586621679155558"><span id="local-6989586621679155559"><span class="annot"><a href="TensorFlow.Convolution.html#conv3DBackpropInputV2"><span class="hs-identifier hs-type">conv3DBackpropInputV2</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">TF.OneOf</span></span><span> </span><span class="hs-special">'</span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Word16</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Float</span></span><span class="hs-special">]</span><span> </span><span class="annot"><a href="#local-6989586621679155559"><span class="hs-identifier hs-type">t</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.OneOf</span></span><span> </span><span class="hs-special">'</span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Int32</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int64</span></span><span class="hs-special">]</span><span> </span><span class="annot"><a href="#local-6989586621679155558"><span class="hs-identifier hs-type">tshape</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-225"></span><span>                    </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679155557"><span class="hs-identifier hs-type">v1</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679155558"><span class="hs-identifier hs-type">tshape</span></a></span><span>   </span><span class="hs-comment">-- ^ input_sizes</span><span>
+</span><span id="line-226"></span><span>                    </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679155556"><span class="hs-identifier hs-type">v2</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679155559"><span class="hs-identifier hs-type">t</span></a></span><span>        </span><span class="hs-comment">-- ^ filter</span><span>
+</span><span id="line-227"></span><span>                    </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679155555"><span class="hs-identifier hs-type">v3</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679155559"><span class="hs-identifier hs-type">t</span></a></span><span>        </span><span class="hs-comment">-- ^ out_backprop</span><span>
+</span><span id="line-228"></span><span>                    </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Build</span></span><span> </span><span class="annot"><a href="#local-6989586621679155559"><span class="hs-identifier hs-type">t</span></a></span><span>  </span><span class="hs-comment">-- ^ output</span></span></span></span></span></span><span>
+</span><span id="line-229"></span><span id="conv3DBackpropInputV2"><span class="annot"><span class="annottext">conv3DBackpropInputV2 :: Tensor v1 tshape -&gt; Tensor v2 t -&gt; Tensor v3 t -&gt; Tensor Build t
+</span><a href="TensorFlow.Convolution.html#conv3DBackpropInputV2"><span class="hs-identifier hs-var hs-var">conv3DBackpropInputV2</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OpParams
+-&gt; Padding
+-&gt; DataFormat
+-&gt; Tensor v1 tshape
+-&gt; Tensor v2 t
+-&gt; Tensor v3 t
+-&gt; Tensor Build t
+forall t tshape (v1 :: * -&gt; *) (v2 :: * -&gt; *) (v3 :: * -&gt; *).
+(OneOf '[Word16, Double, Float] t, OneOf '[Int32, Int64] tshape) =&gt;
+OpParams
+-&gt; Padding
+-&gt; DataFormat
+-&gt; Tensor v1 tshape
+-&gt; Tensor v2 t
+-&gt; Tensor v3 t
+-&gt; Tensor Build t
+</span><a href="TensorFlow.Convolution.html#conv3DBackpropInputV2%27"><span class="hs-identifier hs-var">conv3DBackpropInputV2'</span></a></span><span> </span><span class="annot"><span class="annottext">OpParams
+forall a. a -&gt; a
+</span><span class="hs-identifier hs-var">id</span></span><span> </span><span class="annot"><span class="annottext">Padding
+</span><a href="TensorFlow.Convolution.html#PaddingValid"><span class="hs-identifier hs-var">PaddingValid</span></a></span><span> </span><span class="annot"><span class="annottext">DataFormat
+</span><a href="TensorFlow.Convolution.html#ChannelLast"><span class="hs-identifier hs-var">ChannelLast</span></a></span><span>
+</span><span id="line-230"></span><span>
+</span><span id="line-231"></span><span id="local-6989586621679155697"><span id="local-6989586621679155698"><span id="local-6989586621679155699"><span id="local-6989586621679155700"><span id="local-6989586621679155701"><span class="annot"><a href="TensorFlow.Convolution.html#conv3DBackpropInputV2%27"><span class="hs-identifier hs-type">conv3DBackpropInputV2'</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">TF.OneOf</span></span><span> </span><span class="hs-special">'</span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Word16</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Float</span></span><span class="hs-special">]</span><span> </span><span class="annot"><a href="#local-6989586621679155701"><span class="hs-identifier hs-type">t</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.OneOf</span></span><span> </span><span class="hs-special">'</span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Int32</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int64</span></span><span class="hs-special">]</span><span> </span><span class="annot"><a href="#local-6989586621679155700"><span class="hs-identifier hs-type">tshape</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-232"></span><span>                     </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.OpParams</span></span><span>
+</span><span id="line-233"></span><span>                     </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Convolution.html#Padding"><span class="hs-identifier hs-type">Padding</span></a></span><span>
+</span><span id="line-234"></span><span>                     </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Convolution.html#DataFormat"><span class="hs-identifier hs-type">DataFormat</span></a></span><span>
+</span><span id="line-235"></span><span>                     </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679155699"><span class="hs-identifier hs-type">v1</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679155700"><span class="hs-identifier hs-type">tshape</span></a></span><span>   </span><span class="hs-comment">-- ^ input_sizes</span><span>
+</span><span id="line-236"></span><span>                     </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679155698"><span class="hs-identifier hs-type">v2</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679155701"><span class="hs-identifier hs-type">t</span></a></span><span>        </span><span class="hs-comment">-- ^ filter</span><span>
+</span><span id="line-237"></span><span>                     </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679155697"><span class="hs-identifier hs-type">v3</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679155701"><span class="hs-identifier hs-type">t</span></a></span><span>        </span><span class="hs-comment">-- ^ out_backprop</span><span>
+</span><span id="line-238"></span><span>                     </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Build</span></span><span> </span><span class="annot"><a href="#local-6989586621679155701"><span class="hs-identifier hs-type">t</span></a></span><span>  </span><span class="hs-comment">-- ^ output</span></span></span></span></span></span><span>
+</span><span id="line-239"></span><span id="conv3DBackpropInputV2%27"><span class="annot"><span class="annottext">conv3DBackpropInputV2' :: OpParams
+-&gt; Padding
+-&gt; DataFormat
+-&gt; Tensor v1 tshape
+-&gt; Tensor v2 t
+-&gt; Tensor v3 t
+-&gt; Tensor Build t
+</span><a href="TensorFlow.Convolution.html#conv3DBackpropInputV2%27"><span class="hs-identifier hs-var hs-var">conv3DBackpropInputV2'</span></a></span></span><span> </span><span id="local-6989586621679155554"><span class="annot"><span class="annottext">params :: OpParams
+</span><a href="#local-6989586621679155554"><span class="hs-identifier hs-var">params</span></a></span></span><span> </span><span id="local-6989586621679155553"><span class="annot"><span class="annottext">padding :: Padding
+</span><a href="#local-6989586621679155553"><span class="hs-identifier hs-var">padding</span></a></span></span><span> </span><span id="local-6989586621679155552"><span class="annot"><span class="annottext">dataformat :: DataFormat
+</span><a href="#local-6989586621679155552"><span class="hs-identifier hs-var">dataformat</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OpParams
+-&gt; ByteString
+-&gt; Tensor v1 tshape
+-&gt; Tensor v2 t
+-&gt; Tensor v3 t
+-&gt; Tensor Build t
+forall (v'1 :: * -&gt; *) (v'2 :: * -&gt; *) (v'3 :: * -&gt; *) t tshape.
+(OneOf '[Word16, Double, Float] t, OneOf '[Int32, Int64] tshape) =&gt;
+OpParams
+-&gt; ByteString
+-&gt; Tensor v'1 tshape
+-&gt; Tensor v'2 t
+-&gt; Tensor v'3 t
+-&gt; Tensor Build t
+</span><span class="hs-identifier hs-var">TF.conv3DBackpropInputV2'</span></span><span>
+</span><span id="line-240"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OpParams
+</span><a href="#local-6989586621679155554"><span class="hs-identifier hs-var">params</span></a></span><span> </span><span class="annot"><span class="annottext">OpParams -&gt; OpParams -&gt; OpParams
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Lens' OpDef ByteString
+forall a. Attribute a =&gt; Text -&gt; Lens' OpDef a
+</span><span class="hs-identifier hs-var">TF.opAttr</span></span><span> </span><span class="annot"><span class="hs-string">&quot;data_format&quot;</span></span><span> </span><span class="annot"><span class="annottext">(forall (f :: * -&gt; *). Identical f =&gt; LensLike' f OpDef ByteString)
+-&gt; ByteString -&gt; OpParams
+forall s t a b. Setter s t a b -&gt; b -&gt; s -&gt; t
+</span><span class="hs-operator hs-var">.~</span></span><span> </span><span class="annot"><span class="annottext">DataFormat -&gt; ByteString
+</span><a href="TensorFlow.Convolution.html#dataFormat3D"><span class="hs-identifier hs-var">dataFormat3D</span></a></span><span> </span><span class="annot"><span class="annottext">DataFormat
+</span><a href="#local-6989586621679155552"><span class="hs-identifier hs-var">dataformat</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-241"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Padding -&gt; ByteString
+</span><a href="TensorFlow.Convolution.html#paddingToByteString"><span class="hs-identifier hs-var">paddingToByteString</span></a></span><span> </span><span class="annot"><span class="annottext">Padding
+</span><a href="#local-6989586621679155553"><span class="hs-identifier hs-var">padding</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-242"></span><span>
+</span><span id="line-243"></span><span class="hs-comment">-- | Depth-wise 2D convolution native with default parameters.</span><span>
+</span><span id="line-244"></span><span id="local-6989586621679155548"><span id="local-6989586621679155549"><span id="local-6989586621679155550"><span class="annot"><a href="TensorFlow.Convolution.html#depthwiseConv2dNative"><span class="hs-identifier hs-type">depthwiseConv2dNative</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.OneOf</span></span><span> </span><span class="hs-special">'</span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Word16</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Float</span></span><span class="hs-special">]</span><span> </span><span class="annot"><a href="#local-6989586621679155550"><span class="hs-identifier hs-type">t</span></a></span><span>
+</span><span id="line-245"></span><span>                      </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679155549"><span class="hs-identifier hs-type">v1</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679155550"><span class="hs-identifier hs-type">t</span></a></span><span> </span><span class="hs-comment">-- ^ input</span><span>
+</span><span id="line-246"></span><span>                      </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679155548"><span class="hs-identifier hs-type">v2</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679155550"><span class="hs-identifier hs-type">t</span></a></span><span> </span><span class="hs-comment">-- ^ filter</span><span>
+</span><span id="line-247"></span><span>                      </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Build</span></span><span> </span><span class="annot"><a href="#local-6989586621679155550"><span class="hs-identifier hs-type">t</span></a></span><span> </span><span class="hs-comment">-- ^ output</span></span></span></span><span>
+</span><span id="line-248"></span><span id="depthwiseConv2dNative"><span class="annot"><span class="annottext">depthwiseConv2dNative :: Tensor v1 t -&gt; Tensor v2 t -&gt; Tensor Build t
+</span><a href="TensorFlow.Convolution.html#depthwiseConv2dNative"><span class="hs-identifier hs-var hs-var">depthwiseConv2dNative</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OpParams
+-&gt; Padding
+-&gt; DataFormat
+-&gt; Tensor v1 t
+-&gt; Tensor v2 t
+-&gt; Tensor Build t
+forall t (v1 :: * -&gt; *) (v2 :: * -&gt; *).
+OneOf '[Word16, Double, Float] t =&gt;
+OpParams
+-&gt; Padding
+-&gt; DataFormat
+-&gt; Tensor v1 t
+-&gt; Tensor v2 t
+-&gt; Tensor Build t
+</span><a href="TensorFlow.Convolution.html#depthwiseConv2dNative%27"><span class="hs-identifier hs-var">depthwiseConv2dNative'</span></a></span><span> </span><span class="annot"><span class="annottext">OpParams
+forall a. a -&gt; a
+</span><span class="hs-identifier hs-var">id</span></span><span> </span><span class="annot"><span class="annottext">Padding
+</span><a href="TensorFlow.Convolution.html#PaddingValid"><span class="hs-identifier hs-var">PaddingValid</span></a></span><span> </span><span class="annot"><span class="annottext">DataFormat
+</span><a href="TensorFlow.Convolution.html#ChannelLast"><span class="hs-identifier hs-var">ChannelLast</span></a></span><span>
+</span><span id="line-249"></span><span>
+</span><span id="line-250"></span><span id="local-6989586621679155545"><span id="local-6989586621679155546"><span id="local-6989586621679155547"><span class="annot"><a href="TensorFlow.Convolution.html#depthwiseConv2dNative%27"><span class="hs-identifier hs-type">depthwiseConv2dNative'</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.OneOf</span></span><span> </span><span class="hs-special">'</span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Word16</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Float</span></span><span class="hs-special">]</span><span> </span><span class="annot"><a href="#local-6989586621679155547"><span class="hs-identifier hs-type">t</span></a></span><span>
+</span><span id="line-251"></span><span>                       </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.OpParams</span></span><span>
+</span><span id="line-252"></span><span>                       </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Convolution.html#Padding"><span class="hs-identifier hs-type">Padding</span></a></span><span>
+</span><span id="line-253"></span><span>                       </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Convolution.html#DataFormat"><span class="hs-identifier hs-type">DataFormat</span></a></span><span>
+</span><span id="line-254"></span><span>                       </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679155546"><span class="hs-identifier hs-type">v1</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679155547"><span class="hs-identifier hs-type">t</span></a></span><span> </span><span class="hs-comment">-- ^ input</span><span>
+</span><span id="line-255"></span><span>                       </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679155545"><span class="hs-identifier hs-type">v2</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679155547"><span class="hs-identifier hs-type">t</span></a></span><span> </span><span class="hs-comment">-- ^ filter</span><span>
+</span><span id="line-256"></span><span>                       </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Build</span></span><span> </span><span class="annot"><a href="#local-6989586621679155547"><span class="hs-identifier hs-type">t</span></a></span><span> </span><span class="hs-comment">-- ^ output</span></span></span></span><span>
+</span><span id="line-257"></span><span id="depthwiseConv2dNative%27"><span class="annot"><span class="annottext">depthwiseConv2dNative' :: OpParams
+-&gt; Padding
+-&gt; DataFormat
+-&gt; Tensor v1 t
+-&gt; Tensor v2 t
+-&gt; Tensor Build t
+</span><a href="TensorFlow.Convolution.html#depthwiseConv2dNative%27"><span class="hs-identifier hs-var hs-var">depthwiseConv2dNative'</span></a></span></span><span> </span><span id="local-6989586621679155544"><span class="annot"><span class="annottext">params :: OpParams
+</span><a href="#local-6989586621679155544"><span class="hs-identifier hs-var">params</span></a></span></span><span> </span><span id="local-6989586621679155543"><span class="annot"><span class="annottext">padding :: Padding
+</span><a href="#local-6989586621679155543"><span class="hs-identifier hs-var">padding</span></a></span></span><span> </span><span id="local-6989586621679155542"><span class="annot"><span class="annottext">dataformat :: DataFormat
+</span><a href="#local-6989586621679155542"><span class="hs-identifier hs-var">dataformat</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OpParams
+-&gt; ByteString -&gt; Tensor v1 t -&gt; Tensor v2 t -&gt; Tensor Build t
+forall (v'1 :: * -&gt; *) (v'2 :: * -&gt; *) t.
+OneOf '[Word16, Double, Float] t =&gt;
+OpParams
+-&gt; ByteString -&gt; Tensor v'1 t -&gt; Tensor v'2 t -&gt; Tensor Build t
+</span><span class="hs-identifier hs-var">TF.depthwiseConv2dNative'</span></span><span>
+</span><span id="line-258"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OpParams
+</span><a href="#local-6989586621679155544"><span class="hs-identifier hs-var">params</span></a></span><span> </span><span class="annot"><span class="annottext">OpParams -&gt; OpParams -&gt; OpParams
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Lens' OpDef ByteString
+forall a. Attribute a =&gt; Text -&gt; Lens' OpDef a
+</span><span class="hs-identifier hs-var">TF.opAttr</span></span><span> </span><span class="annot"><span class="hs-string">&quot;data_format&quot;</span></span><span> </span><span class="annot"><span class="annottext">(forall (f :: * -&gt; *). Identical f =&gt; LensLike' f OpDef ByteString)
+-&gt; ByteString -&gt; OpParams
+forall s t a b. Setter s t a b -&gt; b -&gt; s -&gt; t
+</span><span class="hs-operator hs-var">.~</span></span><span> </span><span class="annot"><span class="annottext">DataFormat -&gt; ByteString
+</span><a href="TensorFlow.Convolution.html#dataFormat2D"><span class="hs-identifier hs-var">dataFormat2D</span></a></span><span> </span><span class="annot"><span class="annottext">DataFormat
+</span><a href="#local-6989586621679155542"><span class="hs-identifier hs-var">dataformat</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-259"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Padding -&gt; ByteString
+</span><a href="TensorFlow.Convolution.html#paddingToByteString"><span class="hs-identifier hs-var">paddingToByteString</span></a></span><span> </span><span class="annot"><span class="annottext">Padding
+</span><a href="#local-6989586621679155543"><span class="hs-identifier hs-var">padding</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-260"></span><span>
+</span><span id="line-261"></span><span class="hs-comment">-- | Depth-wise 2D convolution native backpropagation filter with default parameters.</span><span>
+</span><span id="line-262"></span><span id="local-6989586621679155537"><span id="local-6989586621679155538"><span id="local-6989586621679155539"><span id="local-6989586621679155540"><span class="annot"><a href="TensorFlow.Convolution.html#depthwiseConv2dNativeBackpropFilter"><span class="hs-identifier hs-type">depthwiseConv2dNativeBackpropFilter</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.OneOf</span></span><span> </span><span class="hs-special">'</span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Word16</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Float</span></span><span class="hs-special">]</span><span> </span><span class="annot"><a href="#local-6989586621679155540"><span class="hs-identifier hs-type">t</span></a></span><span>
+</span><span id="line-263"></span><span>                                    </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679155539"><span class="hs-identifier hs-type">v1</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679155540"><span class="hs-identifier hs-type">t</span></a></span><span>     </span><span class="hs-comment">-- ^ input</span><span>
+</span><span id="line-264"></span><span>                                    </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679155538"><span class="hs-identifier hs-type">v2</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int32</span></span><span> </span><span class="hs-comment">-- ^ filter_sizes</span><span>
+</span><span id="line-265"></span><span>                                    </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679155537"><span class="hs-identifier hs-type">v3</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679155540"><span class="hs-identifier hs-type">t</span></a></span><span>     </span><span class="hs-comment">-- ^ out_backprop</span><span>
+</span><span id="line-266"></span><span>                                    </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Build</span></span><span> </span><span class="annot"><a href="#local-6989586621679155540"><span class="hs-identifier hs-type">t</span></a></span><span>  </span><span class="hs-comment">-- ^ output</span></span></span></span></span><span>
+</span><span id="line-267"></span><span id="depthwiseConv2dNativeBackpropFilter"><span class="annot"><span class="annottext">depthwiseConv2dNativeBackpropFilter :: Tensor v1 t -&gt; Tensor v2 Int32 -&gt; Tensor v3 t -&gt; Tensor Build t
+</span><a href="TensorFlow.Convolution.html#depthwiseConv2dNativeBackpropFilter"><span class="hs-identifier hs-var hs-var">depthwiseConv2dNativeBackpropFilter</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OpParams
+-&gt; Padding
+-&gt; DataFormat
+-&gt; Tensor v1 t
+-&gt; Tensor v2 Int32
+-&gt; Tensor v3 t
+-&gt; Tensor Build t
+forall t (v1 :: * -&gt; *) (v2 :: * -&gt; *) (v3 :: * -&gt; *).
+OneOf '[Word16, Double, Float] t =&gt;
+OpParams
+-&gt; Padding
+-&gt; DataFormat
+-&gt; Tensor v1 t
+-&gt; Tensor v2 Int32
+-&gt; Tensor v3 t
+-&gt; Tensor Build t
+</span><a href="TensorFlow.Convolution.html#depthwiseConv2dNativeBackpropFilter%27"><span class="hs-identifier hs-var">depthwiseConv2dNativeBackpropFilter'</span></a></span><span> </span><span class="annot"><span class="annottext">OpParams
+forall a. a -&gt; a
+</span><span class="hs-identifier hs-var">id</span></span><span> </span><span class="annot"><span class="annottext">Padding
+</span><a href="TensorFlow.Convolution.html#PaddingValid"><span class="hs-identifier hs-var">PaddingValid</span></a></span><span> </span><span class="annot"><span class="annottext">DataFormat
+</span><a href="TensorFlow.Convolution.html#ChannelLast"><span class="hs-identifier hs-var">ChannelLast</span></a></span><span>
+</span><span id="line-268"></span><span>
+</span><span id="line-269"></span><span id="local-6989586621679155533"><span id="local-6989586621679155534"><span id="local-6989586621679155535"><span id="local-6989586621679155536"><span class="annot"><a href="TensorFlow.Convolution.html#depthwiseConv2dNativeBackpropFilter%27"><span class="hs-identifier hs-type">depthwiseConv2dNativeBackpropFilter'</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.OneOf</span></span><span> </span><span class="hs-special">'</span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Word16</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Float</span></span><span class="hs-special">]</span><span> </span><span class="annot"><a href="#local-6989586621679155536"><span class="hs-identifier hs-type">t</span></a></span><span>
+</span><span id="line-270"></span><span>                                     </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.OpParams</span></span><span>
+</span><span id="line-271"></span><span>                                     </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Convolution.html#Padding"><span class="hs-identifier hs-type">Padding</span></a></span><span>
+</span><span id="line-272"></span><span>                                     </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Convolution.html#DataFormat"><span class="hs-identifier hs-type">DataFormat</span></a></span><span>
+</span><span id="line-273"></span><span>                                     </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679155535"><span class="hs-identifier hs-type">v1</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679155536"><span class="hs-identifier hs-type">t</span></a></span><span>        </span><span class="hs-comment">-- ^ input</span><span>
+</span><span id="line-274"></span><span>                                     </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679155534"><span class="hs-identifier hs-type">v2</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int32</span></span><span>    </span><span class="hs-comment">-- ^ filter_sizes</span><span>
+</span><span id="line-275"></span><span>                                     </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679155533"><span class="hs-identifier hs-type">v3</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679155536"><span class="hs-identifier hs-type">t</span></a></span><span>        </span><span class="hs-comment">-- ^ out_backprop</span><span>
+</span><span id="line-276"></span><span>                                     </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Build</span></span><span> </span><span class="annot"><a href="#local-6989586621679155536"><span class="hs-identifier hs-type">t</span></a></span><span>  </span><span class="hs-comment">-- ^ output</span></span></span></span></span><span>
+</span><span id="line-277"></span><span id="depthwiseConv2dNativeBackpropFilter%27"><span class="annot"><span class="annottext">depthwiseConv2dNativeBackpropFilter' :: OpParams
+-&gt; Padding
+-&gt; DataFormat
+-&gt; Tensor v1 t
+-&gt; Tensor v2 Int32
+-&gt; Tensor v3 t
+-&gt; Tensor Build t
+</span><a href="TensorFlow.Convolution.html#depthwiseConv2dNativeBackpropFilter%27"><span class="hs-identifier hs-var hs-var">depthwiseConv2dNativeBackpropFilter'</span></a></span></span><span> </span><span id="local-6989586621679155532"><span class="annot"><span class="annottext">params :: OpParams
+</span><a href="#local-6989586621679155532"><span class="hs-identifier hs-var">params</span></a></span></span><span> </span><span id="local-6989586621679155531"><span class="annot"><span class="annottext">padding :: Padding
+</span><a href="#local-6989586621679155531"><span class="hs-identifier hs-var">padding</span></a></span></span><span> </span><span id="local-6989586621679155530"><span class="annot"><span class="annottext">dataformat :: DataFormat
+</span><a href="#local-6989586621679155530"><span class="hs-identifier hs-var">dataformat</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OpParams
+-&gt; ByteString
+-&gt; Tensor v1 t
+-&gt; Tensor v2 Int32
+-&gt; Tensor v3 t
+-&gt; Tensor Build t
+forall (v'1 :: * -&gt; *) (v'2 :: * -&gt; *) (v'3 :: * -&gt; *) t.
+OneOf '[Word16, Double, Float] t =&gt;
+OpParams
+-&gt; ByteString
+-&gt; Tensor v'1 t
+-&gt; Tensor v'2 Int32
+-&gt; Tensor v'3 t
+-&gt; Tensor Build t
+</span><span class="hs-identifier hs-var">TF.depthwiseConv2dNativeBackpropFilter'</span></span><span>
+</span><span id="line-278"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OpParams
+</span><a href="#local-6989586621679155532"><span class="hs-identifier hs-var">params</span></a></span><span> </span><span class="annot"><span class="annottext">OpParams -&gt; OpParams -&gt; OpParams
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Lens' OpDef ByteString
+forall a. Attribute a =&gt; Text -&gt; Lens' OpDef a
+</span><span class="hs-identifier hs-var">TF.opAttr</span></span><span> </span><span class="annot"><span class="hs-string">&quot;data_format&quot;</span></span><span> </span><span class="annot"><span class="annottext">(forall (f :: * -&gt; *). Identical f =&gt; LensLike' f OpDef ByteString)
+-&gt; ByteString -&gt; OpParams
+forall s t a b. Setter s t a b -&gt; b -&gt; s -&gt; t
+</span><span class="hs-operator hs-var">.~</span></span><span> </span><span class="annot"><span class="annottext">DataFormat -&gt; ByteString
+</span><a href="TensorFlow.Convolution.html#dataFormat2D"><span class="hs-identifier hs-var">dataFormat2D</span></a></span><span> </span><span class="annot"><span class="annottext">DataFormat
+</span><a href="#local-6989586621679155530"><span class="hs-identifier hs-var">dataformat</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-279"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Padding -&gt; ByteString
+</span><a href="TensorFlow.Convolution.html#paddingToByteString"><span class="hs-identifier hs-var">paddingToByteString</span></a></span><span> </span><span class="annot"><span class="annottext">Padding
+</span><a href="#local-6989586621679155531"><span class="hs-identifier hs-var">padding</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-280"></span><span>
+</span><span id="line-281"></span><span class="hs-comment">-- | Depth-wise 2D convolution native backpropagation input with default parameters.</span><span>
+</span><span id="line-282"></span><span id="local-6989586621679155525"><span id="local-6989586621679155526"><span id="local-6989586621679155527"><span id="local-6989586621679155528"><span class="annot"><a href="TensorFlow.Convolution.html#depthwiseConv2dNativeBackpropInput"><span class="hs-identifier hs-type">depthwiseConv2dNativeBackpropInput</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.OneOf</span></span><span> </span><span class="hs-special">'</span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Word16</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Float</span></span><span class="hs-special">]</span><span> </span><span class="annot"><a href="#local-6989586621679155528"><span class="hs-identifier hs-type">t</span></a></span><span>
+</span><span id="line-283"></span><span>                                   </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679155527"><span class="hs-identifier hs-type">v1</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int32</span></span><span> </span><span class="hs-comment">-- ^ input_sizes</span><span>
+</span><span id="line-284"></span><span>                                   </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679155526"><span class="hs-identifier hs-type">v2</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679155528"><span class="hs-identifier hs-type">t</span></a></span><span>     </span><span class="hs-comment">-- ^ input</span><span>
+</span><span id="line-285"></span><span>                                   </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679155525"><span class="hs-identifier hs-type">v3</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679155528"><span class="hs-identifier hs-type">t</span></a></span><span>     </span><span class="hs-comment">-- ^ out_backprop</span><span>
+</span><span id="line-286"></span><span>                                   </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Build</span></span><span> </span><span class="annot"><a href="#local-6989586621679155528"><span class="hs-identifier hs-type">t</span></a></span><span>  </span><span class="hs-comment">-- ^ output</span></span></span></span></span><span>
+</span><span id="line-287"></span><span id="depthwiseConv2dNativeBackpropInput"><span class="annot"><span class="annottext">depthwiseConv2dNativeBackpropInput :: Tensor v1 Int32 -&gt; Tensor v2 t -&gt; Tensor v3 t -&gt; Tensor Build t
+</span><a href="TensorFlow.Convolution.html#depthwiseConv2dNativeBackpropInput"><span class="hs-identifier hs-var hs-var">depthwiseConv2dNativeBackpropInput</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OpParams
+-&gt; Padding
+-&gt; DataFormat
+-&gt; Tensor v1 Int32
+-&gt; Tensor v2 t
+-&gt; Tensor v3 t
+-&gt; Tensor Build t
+forall t (v1 :: * -&gt; *) (v2 :: * -&gt; *) (v3 :: * -&gt; *).
+OneOf '[Word16, Double, Float] t =&gt;
+OpParams
+-&gt; Padding
+-&gt; DataFormat
+-&gt; Tensor v1 Int32
+-&gt; Tensor v2 t
+-&gt; Tensor v3 t
+-&gt; Tensor Build t
+</span><a href="TensorFlow.Convolution.html#depthwiseConv2dNativeBackpropInput%27"><span class="hs-identifier hs-var">depthwiseConv2dNativeBackpropInput'</span></a></span><span> </span><span class="annot"><span class="annottext">OpParams
+forall a. a -&gt; a
+</span><span class="hs-identifier hs-var">id</span></span><span> </span><span class="annot"><span class="annottext">Padding
+</span><a href="TensorFlow.Convolution.html#PaddingValid"><span class="hs-identifier hs-var">PaddingValid</span></a></span><span> </span><span class="annot"><span class="annottext">DataFormat
+</span><a href="TensorFlow.Convolution.html#ChannelLast"><span class="hs-identifier hs-var">ChannelLast</span></a></span><span>
+</span><span id="line-288"></span><span>
+</span><span id="line-289"></span><span>
+</span><span id="line-290"></span><span id="local-6989586621679155521"><span id="local-6989586621679155522"><span id="local-6989586621679155523"><span id="local-6989586621679155524"><span class="annot"><a href="TensorFlow.Convolution.html#depthwiseConv2dNativeBackpropInput%27"><span class="hs-identifier hs-type">depthwiseConv2dNativeBackpropInput'</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.OneOf</span></span><span> </span><span class="hs-special">'</span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Word16</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Float</span></span><span class="hs-special">]</span><span> </span><span class="annot"><a href="#local-6989586621679155524"><span class="hs-identifier hs-type">t</span></a></span><span>
+</span><span id="line-291"></span><span>                                    </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.OpParams</span></span><span>
+</span><span id="line-292"></span><span>                                    </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Convolution.html#Padding"><span class="hs-identifier hs-type">Padding</span></a></span><span>
+</span><span id="line-293"></span><span>                                    </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Convolution.html#DataFormat"><span class="hs-identifier hs-type">DataFormat</span></a></span><span>
+</span><span id="line-294"></span><span>                                    </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679155523"><span class="hs-identifier hs-type">v1</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int32</span></span><span> </span><span class="hs-comment">-- ^ input_sizes</span><span>
+</span><span id="line-295"></span><span>                                    </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679155522"><span class="hs-identifier hs-type">v2</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679155524"><span class="hs-identifier hs-type">t</span></a></span><span>     </span><span class="hs-comment">-- ^ input</span><span>
+</span><span id="line-296"></span><span>                                    </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><a href="#local-6989586621679155521"><span class="hs-identifier hs-type">v3</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679155524"><span class="hs-identifier hs-type">t</span></a></span><span>     </span><span class="hs-comment">-- ^ out_backprop</span><span>
+</span><span id="line-297"></span><span>                                    </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Tensor</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">TF.Build</span></span><span> </span><span class="annot"><a href="#local-6989586621679155524"><span class="hs-identifier hs-type">t</span></a></span><span>  </span><span class="hs-comment">-- ^ output</span></span></span></span></span><span>
+</span><span id="line-298"></span><span id="depthwiseConv2dNativeBackpropInput%27"><span class="annot"><span class="annottext">depthwiseConv2dNativeBackpropInput' :: OpParams
+-&gt; Padding
+-&gt; DataFormat
+-&gt; Tensor v1 Int32
+-&gt; Tensor v2 t
+-&gt; Tensor v3 t
+-&gt; Tensor Build t
+</span><a href="TensorFlow.Convolution.html#depthwiseConv2dNativeBackpropInput%27"><span class="hs-identifier hs-var hs-var">depthwiseConv2dNativeBackpropInput'</span></a></span></span><span> </span><span id="local-6989586621679155520"><span class="annot"><span class="annottext">params :: OpParams
+</span><a href="#local-6989586621679155520"><span class="hs-identifier hs-var">params</span></a></span></span><span> </span><span id="local-6989586621679155519"><span class="annot"><span class="annottext">padding :: Padding
+</span><a href="#local-6989586621679155519"><span class="hs-identifier hs-var">padding</span></a></span></span><span> </span><span id="local-6989586621679155518"><span class="annot"><span class="annottext">dataformat :: DataFormat
+</span><a href="#local-6989586621679155518"><span class="hs-identifier hs-var">dataformat</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OpParams
+-&gt; ByteString
+-&gt; Tensor v1 Int32
+-&gt; Tensor v2 t
+-&gt; Tensor v3 t
+-&gt; Tensor Build t
+forall (v'1 :: * -&gt; *) (v'2 :: * -&gt; *) (v'3 :: * -&gt; *) t.
+OneOf '[Word16, Double, Float] t =&gt;
+OpParams
+-&gt; ByteString
+-&gt; Tensor v'1 Int32
+-&gt; Tensor v'2 t
+-&gt; Tensor v'3 t
+-&gt; Tensor Build t
+</span><span class="hs-identifier hs-var">TF.depthwiseConv2dNativeBackpropInput'</span></span><span>
+</span><span id="line-299"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OpParams
+</span><a href="#local-6989586621679155520"><span class="hs-identifier hs-var">params</span></a></span><span> </span><span class="annot"><span class="annottext">OpParams -&gt; OpParams -&gt; OpParams
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Lens' OpDef ByteString
+forall a. Attribute a =&gt; Text -&gt; Lens' OpDef a
+</span><span class="hs-identifier hs-var">TF.opAttr</span></span><span> </span><span class="annot"><span class="hs-string">&quot;data_format&quot;</span></span><span> </span><span class="annot"><span class="annottext">(forall (f :: * -&gt; *). Identical f =&gt; LensLike' f OpDef ByteString)
+-&gt; ByteString -&gt; OpParams
+forall s t a b. Setter s t a b -&gt; b -&gt; s -&gt; t
+</span><span class="hs-operator hs-var">.~</span></span><span> </span><span class="annot"><span class="annottext">DataFormat -&gt; ByteString
+</span><a href="TensorFlow.Convolution.html#dataFormat2D"><span class="hs-identifier hs-var">dataFormat2D</span></a></span><span> </span><span class="annot"><span class="annottext">DataFormat
+</span><a href="#local-6989586621679155518"><span class="hs-identifier hs-var">dataformat</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-300"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Padding -&gt; ByteString
+</span><a href="TensorFlow.Convolution.html#paddingToByteString"><span class="hs-identifier hs-var">paddingToByteString</span></a></span><span> </span><span class="annot"><span class="annottext">Padding
+</span><a href="#local-6989586621679155519"><span class="hs-identifier hs-var">padding</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-301"></span></pre></body></html>

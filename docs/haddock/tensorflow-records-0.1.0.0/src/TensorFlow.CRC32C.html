@@ -1,62 +1,104 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">-- Copyright 2016 TensorFlow authors.</span><span>
-</span><a name="line-2"></a><span class="hs-comment">--</span><span>
-</span><a name="line-3"></a><span class="hs-comment">-- Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span><span>
-</span><a name="line-4"></a><span class="hs-comment">-- you may not use this file except in compliance with the License.</span><span>
-</span><a name="line-5"></a><span class="hs-comment">-- You may obtain a copy of the License at</span><span>
-</span><a name="line-6"></a><span class="hs-comment">--</span><span>
-</span><a name="line-7"></a><span class="hs-comment">--     http://www.apache.org/licenses/LICENSE-2.0</span><span>
-</span><a name="line-8"></a><span class="hs-comment">--</span><span>
-</span><a name="line-9"></a><span class="hs-comment">-- Unless required by applicable law or agreed to in writing, software</span><span>
-</span><a name="line-10"></a><span class="hs-comment">-- distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span><span>
-</span><a name="line-11"></a><span class="hs-comment">-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span><span>
-</span><a name="line-12"></a><span class="hs-comment">-- See the License for the specific language governing permissions and</span><span>
-</span><a name="line-13"></a><span class="hs-comment">-- limitations under the License.</span><span>
-</span><a name="line-14"></a><span>
-</span><a name="line-15"></a><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">TensorFlow</span><span class="hs-operator">.</span><span class="hs-identifier">CRC32C</span><span>
-</span><a name="line-16"></a><span>  </span><span class="hs-special">(</span><span> </span><span class="hs-identifier hs-var">crc32c</span><span>
-</span><a name="line-17"></a><span>  </span><span class="hs-special">,</span><span> </span><a href="TensorFlow.CRC32C.html#crc32cLBS"><span class="hs-identifier hs-var">crc32cLBS</span></a><span>
-</span><a name="line-18"></a><span>  </span><span class="hs-special">,</span><span> </span><a href="TensorFlow.CRC32C.html#crc32cUpdate"><span class="hs-identifier hs-var">crc32cUpdate</span></a><span>
-</span><a name="line-19"></a><span>  </span><span class="hs-special">,</span><span> </span><a href="TensorFlow.CRC32C.html#crc32cMasked"><span class="hs-identifier hs-var">crc32cMasked</span></a><span>
-</span><a name="line-20"></a><span>  </span><span class="hs-special">,</span><span> </span><a href="TensorFlow.CRC32C.html#crc32cLBSMasked"><span class="hs-identifier hs-var">crc32cLBSMasked</span></a><span>
-</span><a name="line-21"></a><span>  </span><span class="hs-special">,</span><span> </span><a href="TensorFlow.CRC32C.html#crc32cMask"><span class="hs-identifier hs-var">crc32cMask</span></a><span>
-</span><a name="line-22"></a><span>  </span><span class="hs-special">,</span><span> </span><a href="TensorFlow.CRC32C.html#crc32cUnmask"><span class="hs-identifier hs-var">crc32cUnmask</span></a><span>
-</span><a name="line-23"></a><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
-</span><a name="line-24"></a><span>
-</span><a name="line-25"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Data</span><span class="hs-operator">.</span><span class="hs-identifier">Bits</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-var">rotateL</span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">rotateR</span><span class="hs-special">)</span><span>
-</span><a name="line-26"></a><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-identifier">Data</span><span class="hs-operator">.</span><span class="hs-identifier">ByteString</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="hs-identifier">B</span><span>
-</span><a name="line-27"></a><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-identifier">Data</span><span class="hs-operator">.</span><span class="hs-identifier">ByteString</span><span class="hs-operator">.</span><span class="hs-identifier">Lazy</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="hs-identifier">BL</span><span>
-</span><a name="line-28"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Data</span><span class="hs-operator">.</span><span class="hs-identifier">Digest</span><span class="hs-operator">.</span><span class="hs-identifier">CRC32C</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-var">crc32c</span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">crc32c_update</span><span class="hs-special">)</span><span>
-</span><a name="line-29"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Data</span><span class="hs-operator">.</span><span class="hs-identifier">List</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-var">foldl'</span><span class="hs-special">)</span><span>
-</span><a name="line-30"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Data</span><span class="hs-operator">.</span><span class="hs-identifier">Word</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-type">Word32</span><span class="hs-special">)</span><span>
-</span><a name="line-31"></a><span>
-</span><a name="line-32"></a><span class="hs-comment">-- | Compute the CRC32C checksum of the concatenation of the bytes checksummed</span><span>
-</span><a name="line-33"></a><span class="hs-comment">-- by the given CRC32C value and the bytes in the given ByteString.</span><span>
-</span><a name="line-34"></a><span class="hs-identifier">crc32cUpdate</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">Word32</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-identifier hs-type">B</span><span class="hs-operator hs-type">.</span><span class="hs-identifier hs-type">ByteString</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-identifier hs-type">Word32</span><span>
-</span><a name="line-35"></a><a name="crc32cUpdate"><a href="TensorFlow.CRC32C.html#crc32cUpdate"><span class="hs-identifier">crc32cUpdate</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier hs-var">crc32c_update</span><span>
-</span><a name="line-36"></a><span>
-</span><a name="line-37"></a><span class="hs-comment">-- | Compute the CRC32C checksum of the given bytes.</span><span>
-</span><a name="line-38"></a><span class="hs-identifier">crc32cLBS</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">BL</span><span class="hs-operator hs-type">.</span><span class="hs-identifier hs-type">ByteString</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-identifier hs-type">Word32</span><span>
-</span><a name="line-39"></a><a name="crc32cLBS"><a href="TensorFlow.CRC32C.html#crc32cLBS"><span class="hs-identifier">crc32cLBS</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier hs-var">foldl'</span><span> </span><a href="TensorFlow.CRC32C.html#crc32cUpdate"><span class="hs-identifier hs-var">crc32cUpdate</span></a><span> </span><span class="hs-number">0</span><span> </span><span class="hs-operator hs-var">.</span><span> </span><span class="hs-identifier hs-var">BL</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">toChunks</span><span>
-</span><a name="line-40"></a><span>
-</span><a name="line-41"></a><span class="hs-comment">-- | Scramble a CRC32C value so that the result can be safely stored in a</span><span>
-</span><a name="line-42"></a><span class="hs-comment">-- bytestream that may itself be CRC'd.</span><span>
-</span><a name="line-43"></a><span class="hs-comment">--</span><span>
-</span><a name="line-44"></a><span class="hs-comment">-- This masking is the algorithm specified by TensorFlow's TFRecords format.</span><span>
-</span><a name="line-45"></a><span class="hs-identifier">crc32cMask</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">Word32</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-identifier hs-type">Word32</span><span>
-</span><a name="line-46"></a><a name="crc32cMask"><a href="TensorFlow.CRC32C.html#crc32cMask"><span class="hs-identifier">crc32cMask</span></a></a><span> </span><a name="local-6989586621679023451"><a href="#local-6989586621679023451"><span class="hs-identifier">x</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier hs-var">rotateR</span><span> </span><a href="#local-6989586621679023451"><span class="hs-identifier hs-var">x</span></a><span> </span><span class="hs-number">15</span><span> </span><span class="hs-operator hs-var">+</span><span> </span><a href="TensorFlow.CRC32C.html#maskDelta"><span class="hs-identifier hs-var">maskDelta</span></a><span>
-</span><a name="line-47"></a><span>
-</span><a name="line-48"></a><span class="hs-comment">-- | Inverse of 'crc32cMask'.</span><span>
-</span><a name="line-49"></a><span class="hs-identifier">crc32cUnmask</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">Word32</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-identifier hs-type">Word32</span><span>
-</span><a name="line-50"></a><a name="crc32cUnmask"><a href="TensorFlow.CRC32C.html#crc32cUnmask"><span class="hs-identifier">crc32cUnmask</span></a></a><span> </span><a name="local-6989586621679023531"><a href="#local-6989586621679023531"><span class="hs-identifier">x</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier hs-var">rotateL</span><span> </span><span class="hs-special">(</span><a href="#local-6989586621679023531"><span class="hs-identifier hs-var">x</span></a><span> </span><span class="hs-glyph">-</span><span> </span><a href="TensorFlow.CRC32C.html#maskDelta"><span class="hs-identifier hs-var">maskDelta</span></a><span class="hs-special">)</span><span> </span><span class="hs-number">15</span><span>
-</span><a name="line-51"></a><span>
-</span><a name="line-52"></a><span class="hs-comment">-- | Convenience function combining 'crc32c' and 'crc32cMask'.</span><span>
-</span><a name="line-53"></a><span class="hs-identifier">crc32cMasked</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">B</span><span class="hs-operator hs-type">.</span><span class="hs-identifier hs-type">ByteString</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-identifier hs-type">Word32</span><span>
-</span><a name="line-54"></a><a name="crc32cMasked"><a href="TensorFlow.CRC32C.html#crc32cMasked"><span class="hs-identifier">crc32cMasked</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><a href="TensorFlow.CRC32C.html#crc32cMask"><span class="hs-identifier hs-var">crc32cMask</span></a><span> </span><span class="hs-operator hs-var">.</span><span> </span><span class="hs-identifier hs-var">crc32c</span><span>
-</span><a name="line-55"></a><span>
-</span><a name="line-56"></a><span class="hs-comment">-- | Convenience function combining 'crc32cLBS' and 'crc32cMask'.</span><span>
-</span><a name="line-57"></a><span class="hs-identifier">crc32cLBSMasked</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">BL</span><span class="hs-operator hs-type">.</span><span class="hs-identifier hs-type">ByteString</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-identifier hs-type">Word32</span><span>
-</span><a name="line-58"></a><a name="crc32cLBSMasked"><a href="TensorFlow.CRC32C.html#crc32cLBSMasked"><span class="hs-identifier">crc32cLBSMasked</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><a href="TensorFlow.CRC32C.html#crc32cMask"><span class="hs-identifier hs-var">crc32cMask</span></a><span> </span><span class="hs-operator hs-var">.</span><span> </span><a href="TensorFlow.CRC32C.html#crc32cLBS"><span class="hs-identifier hs-var">crc32cLBS</span></a><span>
-</span><a name="line-59"></a><span>
-</span><a name="line-60"></a><span class="hs-identifier">maskDelta</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">Word32</span><span>
-</span><a name="line-61"></a><a name="maskDelta"><a href="TensorFlow.CRC32C.html#maskDelta"><span class="hs-identifier">maskDelta</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-number">0xa282ead8</span><span>
-</span><a name="line-62"></a></pre></body></html>
+</span><span id="line-2"></span><span class="hs-comment">--</span><span>
+</span><span id="line-3"></span><span class="hs-comment">-- Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span><span>
+</span><span id="line-4"></span><span class="hs-comment">-- you may not use this file except in compliance with the License.</span><span>
+</span><span id="line-5"></span><span class="hs-comment">-- You may obtain a copy of the License at</span><span>
+</span><span id="line-6"></span><span class="hs-comment">--</span><span>
+</span><span id="line-7"></span><span class="hs-comment">--     http://www.apache.org/licenses/LICENSE-2.0</span><span>
+</span><span id="line-8"></span><span class="hs-comment">--</span><span>
+</span><span id="line-9"></span><span class="hs-comment">-- Unless required by applicable law or agreed to in writing, software</span><span>
+</span><span id="line-10"></span><span class="hs-comment">-- distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span><span>
+</span><span id="line-11"></span><span class="hs-comment">-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span><span>
+</span><span id="line-12"></span><span class="hs-comment">-- See the License for the specific language governing permissions and</span><span>
+</span><span id="line-13"></span><span class="hs-comment">-- limitations under the License.</span><span>
+</span><span id="line-14"></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">TensorFlow.CRC32C</span><span>
+</span><span id="line-16"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier">crc32c</span></span><span>
+</span><span id="line-17"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.CRC32C.html#crc32cLBS"><span class="hs-identifier">crc32cLBS</span></a></span><span>
+</span><span id="line-18"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.CRC32C.html#crc32cUpdate"><span class="hs-identifier">crc32cUpdate</span></a></span><span>
+</span><span id="line-19"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.CRC32C.html#crc32cMasked"><span class="hs-identifier">crc32cMasked</span></a></span><span>
+</span><span id="line-20"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.CRC32C.html#crc32cLBSMasked"><span class="hs-identifier">crc32cLBSMasked</span></a></span><span>
+</span><span id="line-21"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.CRC32C.html#crc32cMask"><span class="hs-identifier">crc32cMask</span></a></span><span>
+</span><span id="line-22"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.CRC32C.html#crc32cUnmask"><span class="hs-identifier">crc32cUnmask</span></a></span><span>
+</span><span id="line-23"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-24"></span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Bits</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">rotateL</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">rotateR</span></span><span class="hs-special">)</span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ByteString</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">B</span></span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ByteString.Lazy</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">BL</span></span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Digest.CRC32C</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">crc32c</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">crc32c_update</span></span><span class="hs-special">)</span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.List</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">foldl'</span></span><span class="hs-special">)</span><span>
+</span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Word</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Word32</span></span><span class="hs-special">)</span><span>
+</span><span id="line-31"></span><span>
+</span><span id="line-32"></span><span class="hs-comment">-- | Compute the CRC32C checksum of the concatenation of the bytes checksummed</span><span>
+</span><span id="line-33"></span><span class="hs-comment">-- by the given CRC32C value and the bytes in the given ByteString.</span><span>
+</span><span id="line-34"></span><span class="annot"><a href="TensorFlow.CRC32C.html#crc32cUpdate"><span class="hs-identifier hs-type">crc32cUpdate</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word32</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">B.ByteString</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word32</span></span><span>
+</span><span id="line-35"></span><span id="crc32cUpdate"><span class="annot"><span class="annottext">crc32cUpdate :: Word32 -&gt; ByteString -&gt; Word32
+</span><a href="TensorFlow.CRC32C.html#crc32cUpdate"><span class="hs-identifier hs-var hs-var">crc32cUpdate</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; ByteString -&gt; Word32
+</span><span class="hs-identifier hs-var">crc32c_update</span></span><span>
+</span><span id="line-36"></span><span>
+</span><span id="line-37"></span><span class="hs-comment">-- | Compute the CRC32C checksum of the given bytes.</span><span>
+</span><span id="line-38"></span><span class="annot"><a href="TensorFlow.CRC32C.html#crc32cLBS"><span class="hs-identifier hs-type">crc32cLBS</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">BL.ByteString</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word32</span></span><span>
+</span><span id="line-39"></span><span id="crc32cLBS"><span class="annot"><span class="annottext">crc32cLBS :: ByteString -&gt; Word32
+</span><a href="TensorFlow.CRC32C.html#crc32cLBS"><span class="hs-identifier hs-var hs-var">crc32cLBS</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Word32 -&gt; ByteString -&gt; Word32)
+-&gt; Word32 -&gt; [ByteString] -&gt; Word32
+forall (t :: * -&gt; *) b a.
+Foldable t =&gt;
+(b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b
+</span><span class="hs-identifier hs-var">foldl'</span></span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; ByteString -&gt; Word32
+</span><a href="TensorFlow.CRC32C.html#crc32cUpdate"><span class="hs-identifier hs-var">crc32cUpdate</span></a></span><span> </span><span class="annot"><span class="hs-number">0</span></span><span> </span><span class="annot"><span class="annottext">([ByteString] -&gt; Word32)
+-&gt; (ByteString -&gt; [ByteString]) -&gt; ByteString -&gt; Word32
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; [ByteString]
+</span><span class="hs-identifier hs-var">BL.toChunks</span></span><span>
+</span><span id="line-40"></span><span>
+</span><span id="line-41"></span><span class="hs-comment">-- | Scramble a CRC32C value so that the result can be safely stored in a</span><span>
+</span><span id="line-42"></span><span class="hs-comment">-- bytestream that may itself be CRC'd.</span><span>
+</span><span id="line-43"></span><span class="hs-comment">--</span><span>
+</span><span id="line-44"></span><span class="hs-comment">-- This masking is the algorithm specified by TensorFlow's TFRecords format.</span><span>
+</span><span id="line-45"></span><span class="annot"><a href="TensorFlow.CRC32C.html#crc32cMask"><span class="hs-identifier hs-type">crc32cMask</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word32</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word32</span></span><span>
+</span><span id="line-46"></span><span id="crc32cMask"><span class="annot"><span class="annottext">crc32cMask :: Word32 -&gt; Word32
+</span><a href="TensorFlow.CRC32C.html#crc32cMask"><span class="hs-identifier hs-var hs-var">crc32cMask</span></a></span></span><span> </span><span id="local-6989586621679040800"><span class="annot"><span class="annottext">x :: Word32
+</span><a href="#local-6989586621679040800"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; Int -&gt; Word32
+forall a. Bits a =&gt; a -&gt; Int -&gt; a
+</span><span class="hs-identifier hs-var">rotateR</span></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621679040800"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="hs-number">15</span></span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; Word32 -&gt; Word32
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="TensorFlow.CRC32C.html#maskDelta"><span class="hs-identifier hs-var">maskDelta</span></a></span><span>
+</span><span id="line-47"></span><span>
+</span><span id="line-48"></span><span class="hs-comment">-- | Inverse of 'crc32cMask'.</span><span>
+</span><span id="line-49"></span><span class="annot"><a href="TensorFlow.CRC32C.html#crc32cUnmask"><span class="hs-identifier hs-type">crc32cUnmask</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word32</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word32</span></span><span>
+</span><span id="line-50"></span><span id="crc32cUnmask"><span class="annot"><span class="annottext">crc32cUnmask :: Word32 -&gt; Word32
+</span><a href="TensorFlow.CRC32C.html#crc32cUnmask"><span class="hs-identifier hs-var hs-var">crc32cUnmask</span></a></span></span><span> </span><span id="local-6989586621679040797"><span class="annot"><span class="annottext">x :: Word32
+</span><a href="#local-6989586621679040797"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; Int -&gt; Word32
+forall a. Bits a =&gt; a -&gt; Int -&gt; a
+</span><span class="hs-identifier hs-var">rotateL</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621679040797"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; Word32 -&gt; Word32
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-glyph hs-var">-</span></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="TensorFlow.CRC32C.html#maskDelta"><span class="hs-identifier hs-var">maskDelta</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="hs-number">15</span></span><span>
+</span><span id="line-51"></span><span>
+</span><span id="line-52"></span><span class="hs-comment">-- | Convenience function combining 'crc32c' and 'crc32cMask'.</span><span>
+</span><span id="line-53"></span><span class="annot"><a href="TensorFlow.CRC32C.html#crc32cMasked"><span class="hs-identifier hs-type">crc32cMasked</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">B.ByteString</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word32</span></span><span>
+</span><span id="line-54"></span><span id="crc32cMasked"><span class="annot"><span class="annottext">crc32cMasked :: ByteString -&gt; Word32
+</span><a href="TensorFlow.CRC32C.html#crc32cMasked"><span class="hs-identifier hs-var hs-var">crc32cMasked</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; Word32
+</span><a href="TensorFlow.CRC32C.html#crc32cMask"><span class="hs-identifier hs-var">crc32cMask</span></a></span><span> </span><span class="annot"><span class="annottext">(Word32 -&gt; Word32)
+-&gt; (ByteString -&gt; Word32) -&gt; ByteString -&gt; Word32
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Word32
+</span><span class="hs-identifier hs-var">crc32c</span></span><span>
+</span><span id="line-55"></span><span>
+</span><span id="line-56"></span><span class="hs-comment">-- | Convenience function combining 'crc32cLBS' and 'crc32cMask'.</span><span>
+</span><span id="line-57"></span><span class="annot"><a href="TensorFlow.CRC32C.html#crc32cLBSMasked"><span class="hs-identifier hs-type">crc32cLBSMasked</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">BL.ByteString</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word32</span></span><span>
+</span><span id="line-58"></span><span id="crc32cLBSMasked"><span class="annot"><span class="annottext">crc32cLBSMasked :: ByteString -&gt; Word32
+</span><a href="TensorFlow.CRC32C.html#crc32cLBSMasked"><span class="hs-identifier hs-var hs-var">crc32cLBSMasked</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; Word32
+</span><a href="TensorFlow.CRC32C.html#crc32cMask"><span class="hs-identifier hs-var">crc32cMask</span></a></span><span> </span><span class="annot"><span class="annottext">(Word32 -&gt; Word32)
+-&gt; (ByteString -&gt; Word32) -&gt; ByteString -&gt; Word32
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Word32
+</span><a href="TensorFlow.CRC32C.html#crc32cLBS"><span class="hs-identifier hs-var">crc32cLBS</span></a></span><span>
+</span><span id="line-59"></span><span>
+</span><span id="line-60"></span><span class="annot"><a href="TensorFlow.CRC32C.html#maskDelta"><span class="hs-identifier hs-type">maskDelta</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word32</span></span><span>
+</span><span id="line-61"></span><span id="maskDelta"><span class="annot"><span class="annottext">maskDelta :: Word32
+</span><a href="TensorFlow.CRC32C.html#maskDelta"><span class="hs-identifier hs-var hs-var">maskDelta</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-number">0xa282ead8</span></span><span>
+</span><span id="line-62"></span></pre></body></html>

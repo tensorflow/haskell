@@ -1,0 +1,198 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">-- Copyright 2016 TensorFlow authors.</span><span>
+</span><span id="line-2"></span><span class="hs-comment">--</span><span>
+</span><span id="line-3"></span><span class="hs-comment">-- Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span><span>
+</span><span id="line-4"></span><span class="hs-comment">-- you may not use this file except in compliance with the License.</span><span>
+</span><span id="line-5"></span><span class="hs-comment">-- You may obtain a copy of the License at</span><span>
+</span><span id="line-6"></span><span class="hs-comment">--</span><span>
+</span><span id="line-7"></span><span class="hs-comment">--     http://www.apache.org/licenses/LICENSE-2.0</span><span>
+</span><span id="line-8"></span><span class="hs-comment">--</span><span>
+</span><span id="line-9"></span><span class="hs-comment">-- Unless required by applicable law or agreed to in writing, software</span><span>
+</span><span id="line-10"></span><span class="hs-comment">-- distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span><span>
+</span><span id="line-11"></span><span class="hs-comment">-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span><span>
+</span><span id="line-12"></span><span class="hs-comment">-- See the License for the specific language governing permissions and</span><span>
+</span><span id="line-13"></span><span class="hs-comment">-- limitations under the License.</span><span>
+</span><span id="line-14"></span><span>
+</span><span id="line-15"></span><span class="hs-pragma">{-# LANGUAGE DataKinds #-}</span><span>
+</span><span id="line-16"></span><span class="hs-pragma">{-# LANGUAGE FlexibleContexts #-}</span><span>
+</span><span id="line-17"></span><span class="hs-pragma">{-# LANGUAGE OverloadedStrings #-}</span><span>
+</span><span id="line-18"></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">TensorFlow.NN</span><span>
+</span><span id="line-20"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="TensorFlow.NN.html#sigmoidCrossEntropyWithLogits"><span class="hs-identifier">sigmoidCrossEntropyWithLogits</span></a></span><span>
+</span><span id="line-21"></span><span>    </span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-22"></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Prelude</span></span><span> </span><span class="hs-keyword">hiding</span><span>           </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier">log</span></span><span>
+</span><span id="line-24"></span><span>                                </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">exp</span></span><span>
+</span><span id="line-25"></span><span>                                </span><span class="hs-special">)</span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">TensorFlow.Build</span></span><span>         </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier">MonadBuild</span></span><span>
+</span><span id="line-27"></span><span>                                </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">withNameScope</span></span><span>
+</span><span id="line-28"></span><span>                                </span><span class="hs-special">)</span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">TensorFlow.GenOps.Core</span></span><span>   </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier">greaterEqual</span></span><span>
+</span><span id="line-30"></span><span>                                </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">select</span></span><span>
+</span><span id="line-31"></span><span>                                </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">log</span></span><span>
+</span><span id="line-32"></span><span>                                </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">exp</span></span><span>
+</span><span id="line-33"></span><span>                                </span><span class="hs-special">)</span><span>
+</span><span id="line-34"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">TensorFlow.Tensor</span></span><span>        </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier">Tensor</span></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-35"></span><span>                                </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">render</span></span><span>
+</span><span id="line-36"></span><span>                                </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">Value</span></span><span>
+</span><span id="line-37"></span><span>                                </span><span class="hs-special">)</span><span>
+</span><span id="line-38"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">TensorFlow.Types</span></span><span>         </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier">TensorType</span></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-39"></span><span>                                </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">OneOf</span></span><span>
+</span><span id="line-40"></span><span>                                </span><span class="hs-special">)</span><span>
+</span><span id="line-41"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="TensorFlow.Ops.html"><span class="hs-identifier">TensorFlow.Ops</span></a></span><span>           </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier">zerosLike</span></span><span>
+</span><span id="line-42"></span><span>                                </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">add</span></span><span>
+</span><span id="line-43"></span><span>                                </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">mul</span></span><span>
+</span><span id="line-44"></span><span>                                </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">neg</span></span><span>
+</span><span id="line-45"></span><span>                                </span><span class="hs-special">)</span><span>
+</span><span id="line-46"></span><span>
+</span><span id="line-47"></span><span class="hs-comment">-- | Computes sigmoid cross entropy given `logits`.</span><span>
+</span><span id="line-48"></span><span class="hs-comment">--</span><span>
+</span><span id="line-49"></span><span class="hs-comment">-- Measures the probability error in discrete classification tasks in which each</span><span>
+</span><span id="line-50"></span><span class="hs-comment">-- class is independent and not mutually exclusive.  For instance, one could</span><span>
+</span><span id="line-51"></span><span class="hs-comment">-- perform multilabel classification where a picture can contain both an elephant</span><span>
+</span><span id="line-52"></span><span class="hs-comment">-- and a dog at the same time.</span><span>
+</span><span id="line-53"></span><span class="hs-comment">--</span><span>
+</span><span id="line-54"></span><span class="hs-comment">-- For brevity, let `x = logits`, `z = targets`.  The logistic loss is</span><span>
+</span><span id="line-55"></span><span class="hs-comment">--</span><span>
+</span><span id="line-56"></span><span class="hs-comment">--        z * -log(sigmoid(x)) + (1 - z) * -log(1 - sigmoid(x))</span><span>
+</span><span id="line-57"></span><span class="hs-comment">--      = z * -log(1 / (1 + exp(-x))) + (1 - z) * -log(exp(-x) / (1 + exp(-x)))</span><span>
+</span><span id="line-58"></span><span class="hs-comment">--      = z * log(1 + exp(-x)) + (1 - z) * (-log(exp(-x)) + log(1 + exp(-x)))</span><span>
+</span><span id="line-59"></span><span class="hs-comment">--      = z * log(1 + exp(-x)) + (1 - z) * (x + log(1 + exp(-x))</span><span>
+</span><span id="line-60"></span><span class="hs-comment">--      = (1 - z) * x + log(1 + exp(-x))</span><span>
+</span><span id="line-61"></span><span class="hs-comment">--      = x - x * z + log(1 + exp(-x))</span><span>
+</span><span id="line-62"></span><span class="hs-comment">--</span><span>
+</span><span id="line-63"></span><span class="hs-comment">--  For x &lt; 0, to avoid overflow in exp(-x), we reformulate the above</span><span>
+</span><span id="line-64"></span><span class="hs-comment">--</span><span>
+</span><span id="line-65"></span><span class="hs-comment">--        x - x * z + log(1 + exp(-x))</span><span>
+</span><span id="line-66"></span><span class="hs-comment">--      = log(exp(x)) - x * z + log(1 + exp(-x))</span><span>
+</span><span id="line-67"></span><span class="hs-comment">--      = - x * z + log(1 + exp(x))</span><span>
+</span><span id="line-68"></span><span class="hs-comment">--</span><span>
+</span><span id="line-69"></span><span class="hs-comment">--  Hence, to ensure stability and avoid overflow, the implementation uses this</span><span>
+</span><span id="line-70"></span><span class="hs-comment">--  equivalent formulation</span><span>
+</span><span id="line-71"></span><span class="hs-comment">--</span><span>
+</span><span id="line-72"></span><span class="hs-comment">--      max(x, 0) - x * z + log(1 + exp(-abs(x)))</span><span>
+</span><span id="line-73"></span><span class="hs-comment">--</span><span>
+</span><span id="line-74"></span><span class="hs-comment">--  `logits` and `targets` must have the same type and shape.</span><span>
+</span><span id="line-75"></span><span id="local-6989586621679156356"><span id="local-6989586621679156357"><span class="annot"><a href="TensorFlow.NN.html#sigmoidCrossEntropyWithLogits"><span class="hs-identifier hs-type">sigmoidCrossEntropyWithLogits</span></a></span><span>
+</span><span id="line-76"></span><span>  </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadBuild</span></span><span> </span><span class="annot"><a href="#local-6989586621679156357"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">OneOf</span></span><span> </span><span class="hs-special">'</span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Float</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Double</span></span><span class="hs-special">]</span><span> </span><span class="annot"><a href="#local-6989586621679156356"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TensorType</span></span><span> </span><span class="annot"><a href="#local-6989586621679156356"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Num</span></span><span> </span><span class="annot"><a href="#local-6989586621679156356"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-77"></span><span>     </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Tensor</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Value</span></span><span> </span><span class="annot"><a href="#local-6989586621679156356"><span class="hs-identifier hs-type">a</span></a></span><span>          </span><span class="hs-comment">-- ^ __logits__</span><span>
+</span><span id="line-78"></span><span>     </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Tensor</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Value</span></span><span> </span><span class="annot"><a href="#local-6989586621679156356"><span class="hs-identifier hs-type">a</span></a></span><span>          </span><span class="hs-comment">-- ^ __targets__</span><span>
+</span><span id="line-79"></span><span>     </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679156357"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Tensor</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Value</span></span><span> </span><span class="annot"><a href="#local-6989586621679156356"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-80"></span><span id="sigmoidCrossEntropyWithLogits"><span class="annot"><span class="annottext">sigmoidCrossEntropyWithLogits :: Tensor Value a -&gt; Tensor Value a -&gt; m (Tensor Value a)
+</span><a href="TensorFlow.NN.html#sigmoidCrossEntropyWithLogits"><span class="hs-identifier hs-var hs-var">sigmoidCrossEntropyWithLogits</span></a></span></span><span> </span><span id="local-6989586621679156355"><span class="annot"><span class="annottext">logits :: Tensor Value a
+</span><a href="#local-6989586621679156355"><span class="hs-identifier hs-var">logits</span></a></span></span><span> </span><span id="local-6989586621679156354"><span class="annot"><span class="annottext">targets :: Tensor Value a
+</span><a href="#local-6989586621679156354"><span class="hs-identifier hs-var">targets</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-81"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679156353"><span class="annot"><span class="annottext">zeros :: Tensor Build a
+</span><a href="#local-6989586621679156353"><span class="hs-identifier hs-var hs-var">zeros</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Tensor Value a -&gt; Tensor Build a
+forall (v'1 :: * -&gt; *) t.
+TensorType t =&gt;
+Tensor v'1 t -&gt; Tensor Build t
+</span><span class="hs-identifier hs-var">zerosLike</span></span><span> </span><span class="annot"><span class="annottext">Tensor Value a
+</span><a href="#local-6989586621679156355"><span class="hs-identifier hs-var">logits</span></a></span><span>
+</span><span id="line-82"></span><span>        </span><span id="local-6989586621679156352"><span class="annot"><span class="annottext">cond :: Tensor Build Bool
+</span><a href="#local-6989586621679156352"><span class="hs-identifier hs-var hs-var">cond</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Tensor Value a
+</span><a href="#local-6989586621679156355"><span class="hs-identifier hs-var">logits</span></a></span><span> </span><span class="annot"><span class="annottext">Tensor Value a -&gt; Tensor Build a -&gt; Tensor Build Bool
+forall (v'1 :: * -&gt; *) (v'2 :: * -&gt; *) t.
+OneOf
+  '[Int16, Int32, Int64, Int8, Word16, Word32, Word64, Word8, Double,
+    Float]
+  t =&gt;
+Tensor v'1 t -&gt; Tensor v'2 t -&gt; Tensor Build Bool
+</span><span class="hs-operator hs-var">`greaterEqual`</span></span><span> </span><span class="annot"><span class="annottext">Tensor Build a
+</span><a href="#local-6989586621679156353"><span class="hs-identifier hs-var">zeros</span></a></span><span>
+</span><span id="line-83"></span><span>        </span><span id="local-6989586621679156351"><span class="annot"><span class="annottext">relu_logits :: Tensor Build a
+</span><a href="#local-6989586621679156351"><span class="hs-identifier hs-var hs-var">relu_logits</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Tensor Build Bool
+-&gt; Tensor Value a -&gt; Tensor Build a -&gt; Tensor Build a
+forall (v'1 :: * -&gt; *) (v'2 :: * -&gt; *) (v'3 :: * -&gt; *) t.
+TensorType t =&gt;
+Tensor v'1 Bool -&gt; Tensor v'2 t -&gt; Tensor v'3 t -&gt; Tensor Build t
+</span><span class="hs-identifier hs-var">select</span></span><span> </span><span class="annot"><span class="annottext">Tensor Build Bool
+</span><a href="#local-6989586621679156352"><span class="hs-identifier hs-var">cond</span></a></span><span> </span><span class="annot"><span class="annottext">Tensor Value a
+</span><a href="#local-6989586621679156355"><span class="hs-identifier hs-var">logits</span></a></span><span> </span><span class="annot"><span class="annottext">Tensor Build a
+</span><a href="#local-6989586621679156353"><span class="hs-identifier hs-var">zeros</span></a></span><span>
+</span><span id="line-84"></span><span>        </span><span id="local-6989586621679156350"><span class="annot"><span class="annottext">neg_abs_logits :: Tensor Build a
+</span><a href="#local-6989586621679156350"><span class="hs-identifier hs-var hs-var">neg_abs_logits</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Tensor Build Bool
+-&gt; Tensor Build a -&gt; Tensor Value a -&gt; Tensor Build a
+forall (v'1 :: * -&gt; *) (v'2 :: * -&gt; *) (v'3 :: * -&gt; *) t.
+TensorType t =&gt;
+Tensor v'1 Bool -&gt; Tensor v'2 t -&gt; Tensor v'3 t -&gt; Tensor Build t
+</span><span class="hs-identifier hs-var">select</span></span><span> </span><span class="annot"><span class="annottext">Tensor Build Bool
+</span><a href="#local-6989586621679156352"><span class="hs-identifier hs-var">cond</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Tensor Value a -&gt; Tensor Build a
+forall (v'1 :: * -&gt; *) t.
+OneOf
+  '[Complex Double, Complex Float, Int16, Int32, Int64, Int8, Word16,
+    Double, Float]
+  t =&gt;
+Tensor v'1 t -&gt; Tensor Build t
+</span><span class="hs-identifier hs-var">neg</span></span><span> </span><span class="annot"><span class="annottext">Tensor Value a
+</span><a href="#local-6989586621679156355"><span class="hs-identifier hs-var">logits</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Tensor Value a
+</span><a href="#local-6989586621679156355"><span class="hs-identifier hs-var">logits</span></a></span><span>
+</span><span id="line-85"></span><span>    </span><span class="annot"><span class="annottext">Text -&gt; m (Tensor Value a) -&gt; m (Tensor Value a)
+forall (m :: * -&gt; *) a. MonadBuild m =&gt; Text -&gt; m a -&gt; m a
+</span><span class="hs-identifier hs-var">withNameScope</span></span><span> </span><span class="annot"><span class="hs-string">&quot;logistic_loss&quot;</span></span><span> </span><span class="annot"><span class="annottext">(m (Tensor Value a) -&gt; m (Tensor Value a))
+-&gt; m (Tensor Value a) -&gt; m (Tensor Value a)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-86"></span><span>        </span><span id="local-6989586621679156349"><span class="annot"><span class="annottext">Tensor Value a
+</span><a href="#local-6989586621679156349"><span class="hs-identifier hs-var">left</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Tensor Build a -&gt; m (Tensor Value a)
+forall (m :: * -&gt; *) a.
+MonadBuild m =&gt;
+Tensor Build a -&gt; m (Tensor Value a)
+</span><span class="hs-identifier hs-var">render</span></span><span> </span><span class="annot"><span class="annottext">(Tensor Build a -&gt; m (Tensor Value a))
+-&gt; Tensor Build a -&gt; m (Tensor Value a)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Tensor Build a
+</span><a href="#local-6989586621679156351"><span class="hs-identifier hs-var">relu_logits</span></a></span><span> </span><span class="annot"><span class="annottext">Tensor Build a -&gt; Tensor Build a -&gt; Tensor Build a
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-glyph hs-var">-</span></span><span> </span><span class="annot"><span class="annottext">Tensor Value a
+</span><a href="#local-6989586621679156355"><span class="hs-identifier hs-var">logits</span></a></span><span> </span><span class="annot"><span class="annottext">Tensor Value a -&gt; Tensor Value a -&gt; Tensor Build a
+forall (v'1 :: * -&gt; *) (v'2 :: * -&gt; *) t.
+OneOf
+  '[Complex Double, Complex Float, Int16, Int32, Int64, Int8, Word16,
+    Word8, Double, Float]
+  t =&gt;
+Tensor v'1 t -&gt; Tensor v'2 t -&gt; Tensor Build t
+</span><span class="hs-operator hs-var">`mul`</span></span><span> </span><span class="annot"><span class="annottext">Tensor Value a
+</span><a href="#local-6989586621679156354"><span class="hs-identifier hs-var">targets</span></a></span><span>
+</span><span id="line-87"></span><span>        </span><span id="local-6989586621679156348"><span class="annot"><span class="annottext">Tensor Value a
+</span><a href="#local-6989586621679156348"><span class="hs-identifier hs-var">right</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Tensor Build a -&gt; m (Tensor Value a)
+forall (m :: * -&gt; *) a.
+MonadBuild m =&gt;
+Tensor Build a -&gt; m (Tensor Value a)
+</span><span class="hs-identifier hs-var">render</span></span><span> </span><span class="annot"><span class="annottext">(Tensor Build a -&gt; m (Tensor Value a))
+-&gt; Tensor Build a -&gt; m (Tensor Value a)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Tensor Build a -&gt; Tensor Build a
+forall (v'1 :: * -&gt; *) t.
+OneOf '[Complex Double, Complex Float, Word16, Double, Float] t =&gt;
+Tensor v'1 t -&gt; Tensor Build t
+</span><span class="hs-identifier hs-var">log</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-number">1</span></span><span> </span><span class="annot"><span class="annottext">Tensor Build a -&gt; Tensor Build a -&gt; Tensor Build a
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">Tensor Build a -&gt; Tensor Build a
+forall (v'1 :: * -&gt; *) t.
+OneOf '[Complex Double, Complex Float, Word16, Double, Float] t =&gt;
+Tensor v'1 t -&gt; Tensor Build t
+</span><span class="hs-identifier hs-var">exp</span></span><span> </span><span class="annot"><span class="annottext">Tensor Build a
+</span><a href="#local-6989586621679156350"><span class="hs-identifier hs-var">neg_abs_logits</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-88"></span><span>        </span><span class="annot"><span class="annottext">Text -&gt; m (Tensor Value a) -&gt; m (Tensor Value a)
+forall (m :: * -&gt; *) a. MonadBuild m =&gt; Text -&gt; m a -&gt; m a
+</span><span class="hs-identifier hs-var">withNameScope</span></span><span> </span><span class="annot"><span class="hs-string">&quot;sigmoid_add&quot;</span></span><span> </span><span class="annot"><span class="annottext">(m (Tensor Value a) -&gt; m (Tensor Value a))
+-&gt; m (Tensor Value a) -&gt; m (Tensor Value a)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Tensor Build a -&gt; m (Tensor Value a)
+forall (m :: * -&gt; *) a.
+MonadBuild m =&gt;
+Tensor Build a -&gt; m (Tensor Value a)
+</span><span class="hs-identifier hs-var">render</span></span><span> </span><span class="annot"><span class="annottext">(Tensor Build a -&gt; m (Tensor Value a))
+-&gt; Tensor Build a -&gt; m (Tensor Value a)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Tensor Value a
+</span><a href="#local-6989586621679156349"><span class="hs-identifier hs-var">left</span></a></span><span> </span><span class="annot"><span class="annottext">Tensor Value a -&gt; Tensor Value a -&gt; Tensor Build a
+forall (v'1 :: * -&gt; *) (v'2 :: * -&gt; *) t.
+OneOf
+  '[Complex Double, Complex Float, ByteString, Int16, Int32, Int64,
+    Int8, Word16, Word8, Double, Float]
+  t =&gt;
+Tensor v'1 t -&gt; Tensor v'2 t -&gt; Tensor Build t
+</span><span class="hs-operator hs-var">`add`</span></span><span> </span><span class="annot"><span class="annottext">Tensor Value a
+</span><a href="#local-6989586621679156348"><span class="hs-identifier hs-var">right</span></a></span><span>
+</span><span id="line-89"></span></pre></body></html>

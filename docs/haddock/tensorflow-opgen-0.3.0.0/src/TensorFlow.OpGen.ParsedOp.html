@@ -1,0 +1,1196 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">-- | This module helps parse the proto OpDef into a Haskell type which is more</span><span>
+</span><span id="line-2"></span><span class="hs-comment">-- descriptive of how the attributes and arguments will be used in the</span><span>
+</span><span id="line-3"></span><span class="hs-comment">-- generated code.</span><span>
+</span><span id="line-4"></span><span class="hs-pragma">{-# LANGUAGE LambdaCase #-}</span><span>
+</span><span id="line-5"></span><span class="hs-pragma">{-# LANGUAGE OverloadedStrings #-}</span><span>
+</span><span id="line-6"></span><span class="hs-pragma">{-# LANGUAGE RecordWildCards #-}</span><span>
+</span><span id="line-7"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">TensorFlow.OpGen.ParsedOp</span><span>
+</span><span id="line-8"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#ParsedOp"><span class="hs-identifier">ParsedOp</span></a></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-9"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#Name"><span class="hs-identifier">Name</span></a></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-10"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#HaskellName"><span class="hs-identifier">HaskellName</span></a></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-11"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#TFName"><span class="hs-identifier">TFName</span></a></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-12"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#Attr"><span class="hs-identifier">Attr</span></a></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-13"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#AttrType"><span class="hs-identifier">AttrType</span></a></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-14"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#AttrBaseType"><span class="hs-identifier">AttrBaseType</span></a></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-15"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#TypeParam"><span class="hs-identifier">TypeParam</span></a></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#ParsedArg"><span class="hs-identifier">ParsedArg</span></a></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#ParsedArgCase"><span class="hs-identifier">ParsedArgCase</span></a></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-18"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#ArgType"><span class="hs-identifier">ArgType</span></a></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-19"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#ArgKind"><span class="hs-identifier">ArgKind</span></a></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-20"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#parseOp"><span class="hs-identifier">parseOp</span></a></span><span>
+</span><span id="line-21"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#camelCase"><span class="hs-identifier">camelCase</span></a></span><span>
+</span><span id="line-22"></span><span>    </span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-23"></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Char</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">toUpper</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">toLower</span></span><span class="hs-special">)</span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.List</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">sortBy</span></span><span class="hs-special">)</span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.List.NonEmpty</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">NonEmpty</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">nonEmpty</span></span><span class="hs-special">)</span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">mapMaybe</span></span><span class="hs-special">)</span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Ord</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">comparing</span></span><span class="hs-special">)</span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.Set</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Set</span></span><span>
+</span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Text</span></span><span class="hs-special">)</span><span>
+</span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Text</span></span><span>
+</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Lens.Family2</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-operator">(^.)</span></span><span class="hs-special">)</span><span>
+</span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Proto.Tensorflow.Core.Framework.AttrValue_Fields</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">list</span></span><span class="hs-special">)</span><span>
+</span><span id="line-34"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Proto.Tensorflow.Core.Framework.OpDef</span></span><span>
+</span><span id="line-35"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier">OpDef</span></span><span>
+</span><span id="line-36"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">OpDef'ArgDef</span></span><span>
+</span><span id="line-37"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">OpDef'AttrDef</span></span><span>
+</span><span id="line-38"></span><span>    </span><span class="hs-special">)</span><span>
+</span><span id="line-39"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Proto.Tensorflow.Core.Framework.OpDef_Fields</span></span><span>
+</span><span id="line-40"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier">allowedValues</span></span><span>
+</span><span id="line-41"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">attr</span></span><span>
+</span><span id="line-42"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">maybe'defaultValue</span></span><span>
+</span><span id="line-43"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">description</span></span><span>
+</span><span id="line-44"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">name</span></span><span>
+</span><span id="line-45"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">inputArg</span></span><span>
+</span><span id="line-46"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">isRef</span></span><span>
+</span><span id="line-47"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">isStateful</span></span><span>
+</span><span id="line-48"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">outputArg</span></span><span>
+</span><span id="line-49"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">summary</span></span><span>
+</span><span id="line-50"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">typeListAttr</span></span><span>
+</span><span id="line-51"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">numberAttr</span></span><span>
+</span><span id="line-52"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">typeAttr</span></span><span>
+</span><span id="line-53"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">type'</span></span><span>
+</span><span id="line-54"></span><span>    </span><span class="hs-special">)</span><span>
+</span><span id="line-55"></span><span>
+</span><span id="line-56"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Proto.Tensorflow.Core.Framework.Types</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">DataType</span></span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">DT_RESOURCE</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-57"></span><span>
+</span><span id="line-58"></span><span class="hs-keyword">data</span><span> </span><span id="ParsedOp"><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#ParsedOp"><span class="hs-identifier hs-var">ParsedOp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ParsedOp"><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#ParsedOp"><span class="hs-identifier hs-var">ParsedOp</span></a></span></span><span>
+</span><span id="line-59"></span><span>    </span><span class="hs-special">{</span><span> </span><span id="parsedOpName"><span class="annot"><span class="annottext">ParsedOp -&gt; Name
+</span><a href="TensorFlow.OpGen.ParsedOp.html#parsedOpName"><span class="hs-identifier hs-var hs-var">parsedOpName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#Name"><span class="hs-identifier hs-type">Name</span></a></span><span>
+</span><span id="line-60"></span><span>    </span><span class="hs-special">,</span><span> </span><span id="parsedOpSummary"><span class="annot"><span class="annottext">ParsedOp -&gt; Text
+</span><a href="TensorFlow.OpGen.ParsedOp.html#parsedOpSummary"><span class="hs-identifier hs-var hs-var">parsedOpSummary</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-61"></span><span>    </span><span class="hs-special">,</span><span> </span><span id="parsedOpDescription"><span class="annot"><span class="annottext">ParsedOp -&gt; Text
+</span><a href="TensorFlow.OpGen.ParsedOp.html#parsedOpDescription"><span class="hs-identifier hs-var hs-var">parsedOpDescription</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-62"></span><span>    </span><span class="hs-special">,</span><span> </span><span id="parsedInputs"><span class="annot"><span class="annottext">ParsedOp -&gt; [ParsedArg]
+</span><a href="TensorFlow.OpGen.ParsedOp.html#parsedInputs"><span class="hs-identifier hs-var hs-var">parsedInputs</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#ParsedArg"><span class="hs-identifier hs-type">ParsedArg</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-63"></span><span>    </span><span class="hs-special">,</span><span> </span><span id="parsedOutputs"><span class="annot"><span class="annottext">ParsedOp -&gt; [ParsedArg]
+</span><a href="TensorFlow.OpGen.ParsedOp.html#parsedOutputs"><span class="hs-identifier hs-var hs-var">parsedOutputs</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#ParsedArg"><span class="hs-identifier hs-type">ParsedArg</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-64"></span><span>    </span><span class="hs-special">,</span><span> </span><span id="explicitInputAttrs"><span class="annot"><span class="annottext">ParsedOp -&gt; [Attr AttrType]
+</span><a href="TensorFlow.OpGen.ParsedOp.html#explicitInputAttrs"><span class="hs-identifier hs-var hs-var">explicitInputAttrs</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#Attr"><span class="hs-identifier hs-type">Attr</span></a></span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#AttrType"><span class="hs-identifier hs-type">AttrType</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-65"></span><span>        </span><span class="hs-comment">-- ^ Attributes that must be set explicitly when creating the op.</span><span>
+</span><span id="line-66"></span><span>        </span><span class="hs-comment">-- Associated with the type of the attribute.</span><span>
+</span><span id="line-67"></span><span>    </span><span class="hs-special">,</span><span> </span><span id="inferredTypeAttrs"><span class="annot"><span class="annottext">ParsedOp -&gt; [Attr TypeParam]
+</span><a href="TensorFlow.OpGen.ParsedOp.html#inferredTypeAttrs"><span class="hs-identifier hs-var hs-var">inferredTypeAttrs</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#Attr"><span class="hs-identifier hs-type">Attr</span></a></span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#TypeParam"><span class="hs-identifier hs-type">TypeParam</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-68"></span><span>        </span><span class="hs-comment">-- ^ Attributes that are type parameters.</span><span>
+</span><span id="line-69"></span><span>    </span><span class="hs-special">,</span><span> </span><span id="inferredListSizeAttrs"><span class="annot"><span class="annottext">ParsedOp -&gt; [Attr (NonEmpty Name)]
+</span><a href="TensorFlow.OpGen.ParsedOp.html#inferredListSizeAttrs"><span class="hs-identifier hs-var hs-var">inferredListSizeAttrs</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#Attr"><span class="hs-identifier hs-type">Attr</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">NonEmpty</span></span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#Name"><span class="hs-identifier hs-type">Name</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
+</span><span id="line-70"></span><span>        </span><span class="hs-comment">-- Attributes which are list sizes (ints) that are inferred automatically</span><span>
+</span><span id="line-71"></span><span>        </span><span class="hs-comment">-- from one or more of the input tensors.</span><span>
+</span><span id="line-72"></span><span>        </span><span class="hs-comment">-- Associated with the list of tensors whose size it describes.</span><span>
+</span><span id="line-73"></span><span>    </span><span class="hs-special">,</span><span> </span><span id="parsedOpIsMonadic"><span class="annot"><span class="annottext">ParsedOp -&gt; Bool
+</span><a href="TensorFlow.OpGen.ParsedOp.html#parsedOpIsMonadic"><span class="hs-identifier hs-var hs-var">parsedOpIsMonadic</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
+</span><span id="line-74"></span><span>        </span><span class="hs-comment">-- ^ Whether this op is stateful or takes a stateful input.  Such ops</span><span>
+</span><span id="line-75"></span><span>        </span><span class="hs-comment">-- should not be CSE'd and must be monadic in our API (i.e., return a</span><span>
+</span><span id="line-76"></span><span>        </span><span class="hs-comment">-- Build action).</span><span>
+</span><span id="line-77"></span><span>    </span><span class="hs-special">}</span><span>
+</span><span id="line-78"></span><span>
+</span><span id="line-79"></span><span class="hs-keyword">data</span><span> </span><span id="Name"><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#Name"><span class="hs-identifier hs-var">Name</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Name"><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#Name"><span class="hs-identifier hs-var">Name</span></a></span></span><span>
+</span><span id="line-80"></span><span>    </span><span class="hs-special">{</span><span> </span><span id="haskellName"><span class="annot"><span class="annottext">Name -&gt; HaskellName
+</span><a href="TensorFlow.OpGen.ParsedOp.html#haskellName"><span class="hs-identifier hs-var hs-var">haskellName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#HaskellName"><span class="hs-identifier hs-type">HaskellName</span></a></span><span>
+</span><span id="line-81"></span><span>    </span><span class="hs-special">,</span><span> </span><span id="tfName"><span class="annot"><span class="annottext">Name -&gt; TFName
+</span><a href="TensorFlow.OpGen.ParsedOp.html#tfName"><span class="hs-identifier hs-var hs-var">tfName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#TFName"><span class="hs-identifier hs-type">TFName</span></a></span><span>
+</span><span id="line-82"></span><span>    </span><span class="hs-special">}</span><span>
+</span><span id="line-83"></span><span>
+</span><span id="line-84"></span><span class="hs-comment">-- | A raw name as specified in the OpDef proto.</span><span>
+</span><span id="line-85"></span><span class="hs-keyword">newtype</span><span> </span><span id="TFName"><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#TFName"><span class="hs-identifier hs-var">TFName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="TFName"><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#TFName"><span class="hs-identifier hs-var">TFName</span></a></span></span><span> </span><span class="hs-special">{</span><span> </span><span id="unTFName"><span class="annot"><span class="annottext">TFName -&gt; Text
+</span><a href="TensorFlow.OpGen.ParsedOp.html#unTFName"><span class="hs-identifier hs-var hs-var">unTFName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-special">}</span><span>
+</span><span id="line-86"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679085881"><span id="local-6989586621679085883"><span class="annot"><span class="annottext">TFName -&gt; TFName -&gt; Bool
+(TFName -&gt; TFName -&gt; Bool)
+-&gt; (TFName -&gt; TFName -&gt; Bool) -&gt; Eq TFName
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: TFName -&gt; TFName -&gt; Bool
+$c/= :: TFName -&gt; TFName -&gt; Bool
+== :: TFName -&gt; TFName -&gt; Bool
+$c== :: TFName -&gt; TFName -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679085865"><span id="local-6989586621679085867"><span id="local-6989586621679085869"><span id="local-6989586621679085871"><span id="local-6989586621679085873"><span id="local-6989586621679085875"><span id="local-6989586621679085877"><span class="annot"><span class="annottext">Eq TFName
+Eq TFName =&gt;
+(TFName -&gt; TFName -&gt; Ordering)
+-&gt; (TFName -&gt; TFName -&gt; Bool)
+-&gt; (TFName -&gt; TFName -&gt; Bool)
+-&gt; (TFName -&gt; TFName -&gt; Bool)
+-&gt; (TFName -&gt; TFName -&gt; Bool)
+-&gt; (TFName -&gt; TFName -&gt; TFName)
+-&gt; (TFName -&gt; TFName -&gt; TFName)
+-&gt; Ord TFName
+TFName -&gt; TFName -&gt; Bool
+TFName -&gt; TFName -&gt; Ordering
+TFName -&gt; TFName -&gt; TFName
+forall a.
+Eq a =&gt;
+(a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+min :: TFName -&gt; TFName -&gt; TFName
+$cmin :: TFName -&gt; TFName -&gt; TFName
+max :: TFName -&gt; TFName -&gt; TFName
+$cmax :: TFName -&gt; TFName -&gt; TFName
+&gt;= :: TFName -&gt; TFName -&gt; Bool
+$c&gt;= :: TFName -&gt; TFName -&gt; Bool
+&gt; :: TFName -&gt; TFName -&gt; Bool
+$c&gt; :: TFName -&gt; TFName -&gt; Bool
+&lt;= :: TFName -&gt; TFName -&gt; Bool
+$c&lt;= :: TFName -&gt; TFName -&gt; Bool
+&lt; :: TFName -&gt; TFName -&gt; Bool
+$c&lt; :: TFName -&gt; TFName -&gt; Bool
+compare :: TFName -&gt; TFName -&gt; Ordering
+$ccompare :: TFName -&gt; TFName -&gt; Ordering
+$cp1Ord :: Eq TFName
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-87"></span><span>
+</span><span id="line-88"></span><span class="hs-comment">-- | A name that's appropriate for a variable in a Haskell source file.</span><span>
+</span><span id="line-89"></span><span class="hs-keyword">newtype</span><span> </span><span id="HaskellName"><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#HaskellName"><span class="hs-identifier hs-var">HaskellName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="HaskellName"><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#HaskellName"><span class="hs-identifier hs-var">HaskellName</span></a></span></span><span> </span><span class="hs-special">{</span><span> </span><span id="unHaskellName"><span class="annot"><span class="annottext">HaskellName -&gt; Text
+</span><a href="TensorFlow.OpGen.ParsedOp.html#unHaskellName"><span class="hs-identifier hs-var hs-var">unHaskellName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-special">}</span><span>
+</span><span id="line-90"></span><span>
+</span><span id="line-91"></span><span class="hs-comment">-- | A named attribute, associated with some information about it.</span><span>
+</span><span id="line-92"></span><span class="hs-keyword">data</span><span> </span><span id="Attr"><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#Attr"><span class="hs-identifier hs-var">Attr</span></a></span></span><span> </span><span id="local-6989586621679085965"><span class="annot"><a href="#local-6989586621679085965"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Attr"><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#Attr"><span class="hs-identifier hs-var">Attr</span></a></span></span><span>
+</span><span id="line-93"></span><span>    </span><span class="hs-special">{</span><span> </span><span id="attrName"><span class="annot"><span class="annottext">Attr a -&gt; Name
+</span><a href="TensorFlow.OpGen.ParsedOp.html#attrName"><span class="hs-identifier hs-var hs-var">attrName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#Name"><span class="hs-identifier hs-type">Name</span></a></span><span>
+</span><span id="line-94"></span><span>    </span><span class="hs-special">,</span><span> </span><span id="attrDescription"><span class="annot"><span class="annottext">Attr a -&gt; Text
+</span><a href="TensorFlow.OpGen.ParsedOp.html#attrDescription"><span class="hs-identifier hs-var hs-var">attrDescription</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-95"></span><span>    </span><span class="hs-special">,</span><span> </span><span id="attrInfo"><span class="annot"><span class="annottext">Attr a -&gt; a
+</span><a href="TensorFlow.OpGen.ParsedOp.html#attrInfo"><span class="hs-identifier hs-var hs-var">attrInfo</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621679085965"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-96"></span><span>    </span><span class="hs-special">}</span><span>
+</span><span id="line-97"></span><span>
+</span><span id="line-98"></span><span class="hs-comment">-- | The type of an attribute.</span><span>
+</span><span id="line-99"></span><span class="hs-keyword">data</span><span> </span><span id="AttrType"><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#AttrType"><span class="hs-identifier hs-var">AttrType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="AttrSingle"><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#AttrSingle"><span class="hs-identifier hs-var">AttrSingle</span></a></span></span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#AttrBaseType"><span class="hs-identifier hs-type">AttrBaseType</span></a></span><span>
+</span><span id="line-100"></span><span>                </span><span class="hs-glyph">|</span><span> </span><span id="AttrList"><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#AttrList"><span class="hs-identifier hs-var">AttrList</span></a></span></span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#AttrBaseType"><span class="hs-identifier hs-type">AttrBaseType</span></a></span><span>
+</span><span id="line-101"></span><span>                </span><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621679085852"><span id="local-6989586621679085854"><span class="annot"><span class="annottext">AttrType -&gt; AttrType -&gt; Bool
+(AttrType -&gt; AttrType -&gt; Bool)
+-&gt; (AttrType -&gt; AttrType -&gt; Bool) -&gt; Eq AttrType
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: AttrType -&gt; AttrType -&gt; Bool
+$c/= :: AttrType -&gt; AttrType -&gt; Bool
+== :: AttrType -&gt; AttrType -&gt; Bool
+$c== :: AttrType -&gt; AttrType -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span>
+</span><span id="line-102"></span><span>
+</span><span id="line-103"></span><span class="hs-keyword">data</span><span> </span><span id="AttrBaseType"><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#AttrBaseType"><span class="hs-identifier hs-var">AttrBaseType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="AttrBytes"><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#AttrBytes"><span class="hs-identifier hs-var">AttrBytes</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="AttrInt64"><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#AttrInt64"><span class="hs-identifier hs-var">AttrInt64</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="AttrFloat"><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#AttrFloat"><span class="hs-identifier hs-var">AttrFloat</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="AttrBool"><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#AttrBool"><span class="hs-identifier hs-var">AttrBool</span></a></span></span><span>
+</span><span id="line-104"></span><span>                </span><span class="hs-glyph">|</span><span> </span><span id="AttrType"><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#AttrType"><span class="hs-identifier hs-var">AttrType</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="AttrShape"><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#AttrShape"><span class="hs-identifier hs-var">AttrShape</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="AttrTensor"><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#AttrTensor"><span class="hs-identifier hs-var">AttrTensor</span></a></span></span><span>
+</span><span id="line-105"></span><span>                </span><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621679085841"><span id="local-6989586621679085843"><span class="annot"><span class="annottext">AttrBaseType -&gt; AttrBaseType -&gt; Bool
+(AttrBaseType -&gt; AttrBaseType -&gt; Bool)
+-&gt; (AttrBaseType -&gt; AttrBaseType -&gt; Bool) -&gt; Eq AttrBaseType
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: AttrBaseType -&gt; AttrBaseType -&gt; Bool
+$c/= :: AttrBaseType -&gt; AttrBaseType -&gt; Bool
+== :: AttrBaseType -&gt; AttrBaseType -&gt; Bool
+$c== :: AttrBaseType -&gt; AttrBaseType -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span>
+</span><span id="line-106"></span><span>
+</span><span id="line-107"></span><span class="hs-keyword">data</span><span> </span><span id="TypeParam"><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#TypeParam"><span class="hs-identifier hs-var">TypeParam</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="TypeParam"><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#TypeParam"><span class="hs-identifier hs-var">TypeParam</span></a></span></span><span>
+</span><span id="line-108"></span><span>    </span><span class="hs-special">{</span><span> </span><span id="typeParamIsList"><span class="annot"><span class="annottext">TypeParam -&gt; Bool
+</span><a href="TensorFlow.OpGen.ParsedOp.html#typeParamIsList"><span class="hs-identifier hs-var hs-var">typeParamIsList</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
+</span><span id="line-109"></span><span>    </span><span class="hs-special">,</span><span> </span><span id="typeParamRestrictions"><span class="annot"><span class="annottext">TypeParam -&gt; Maybe (NonEmpty DataType)
+</span><a href="TensorFlow.OpGen.ParsedOp.html#typeParamRestrictions"><span class="hs-identifier hs-var hs-var">typeParamRestrictions</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">NonEmpty</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">DataType</span></span><span class="hs-special">)</span><span>
+</span><span id="line-110"></span><span>        </span><span class="hs-comment">-- ^ The list of allowed types (see: TensorFlow.Types.OneOf).</span><span>
+</span><span id="line-111"></span><span>        </span><span class="hs-comment">-- If 'Nothing', then any type is acceptable.</span><span>
+</span><span id="line-112"></span><span>    </span><span class="hs-special">}</span><span>
+</span><span id="line-113"></span><span>
+</span><span id="line-114"></span><span class="hs-comment">-- | An input or output argument (Tensor) for an op.</span><span>
+</span><span id="line-115"></span><span class="hs-keyword">data</span><span> </span><span id="ParsedArg"><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#ParsedArg"><span class="hs-identifier hs-var">ParsedArg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ParsedArg"><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#ParsedArg"><span class="hs-identifier hs-var">ParsedArg</span></a></span></span><span>
+</span><span id="line-116"></span><span>    </span><span class="hs-special">{</span><span> </span><span id="parsedArgName"><span class="annot"><span class="annottext">ParsedArg -&gt; Name
+</span><a href="TensorFlow.OpGen.ParsedOp.html#parsedArgName"><span class="hs-identifier hs-var hs-var">parsedArgName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#Name"><span class="hs-identifier hs-type">Name</span></a></span><span>
+</span><span id="line-117"></span><span>    </span><span class="hs-special">,</span><span> </span><span id="parsedArgDescription"><span class="annot"><span class="annottext">ParsedArg -&gt; Text
+</span><a href="TensorFlow.OpGen.ParsedOp.html#parsedArgDescription"><span class="hs-identifier hs-var hs-var">parsedArgDescription</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-118"></span><span>    </span><span class="hs-special">,</span><span> </span><span id="parsedArgCase"><span class="annot"><span class="annottext">ParsedArg -&gt; ParsedArgCase
+</span><a href="TensorFlow.OpGen.ParsedOp.html#parsedArgCase"><span class="hs-identifier hs-var hs-var">parsedArgCase</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#ParsedArgCase"><span class="hs-identifier hs-type">ParsedArgCase</span></a></span><span>
+</span><span id="line-119"></span><span>    </span><span class="hs-special">}</span><span>
+</span><span id="line-120"></span><span>
+</span><span id="line-121"></span><span class="hs-keyword">data</span><span> </span><span id="ParsedArgCase"><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#ParsedArgCase"><span class="hs-identifier hs-var">ParsedArgCase</span></a></span></span><span>
+</span><span id="line-122"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span id="SimpleArg"><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#SimpleArg"><span class="hs-identifier hs-var">SimpleArg</span></a></span></span><span> </span><span class="hs-special">{</span><span> </span><span id="argType"><span class="annot"><span class="annottext">ParsedArgCase -&gt; ArgType
+</span><a href="TensorFlow.OpGen.ParsedOp.html#argType"><span class="hs-identifier hs-var hs-var">argType</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#ArgType"><span class="hs-identifier hs-type">ArgType</span></a></span><span class="hs-special">,</span><span> </span><span id="argKind"><span class="annot"><span class="annottext">ParsedArgCase -&gt; ArgKind
+</span><a href="TensorFlow.OpGen.ParsedOp.html#argKind"><span class="hs-identifier hs-var hs-var">argKind</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#ArgKind"><span class="hs-identifier hs-type">ArgKind</span></a></span><span> </span><span class="hs-special">}</span><span>
+</span><span id="line-123"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span id="ListArg"><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#ListArg"><span class="hs-identifier hs-var">ListArg</span></a></span></span><span>
+</span><span id="line-124"></span><span>        </span><span class="hs-special">{</span><span> </span><span id="argLength"><span class="annot"><span class="annottext">ParsedArgCase -&gt; Name
+</span><a href="TensorFlow.OpGen.ParsedOp.html#argLength"><span class="hs-identifier hs-var hs-var">argLength</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#Name"><span class="hs-identifier hs-type">Name</span></a></span><span>  </span><span class="hs-comment">-- ^ The attribute that specifies this list's length.</span><span>
+</span><span id="line-125"></span><span>        </span><span class="hs-special">,</span><span> </span><span id="argType"><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#argType"><span class="hs-identifier hs-var">argType</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#ArgType"><span class="hs-identifier hs-type">ArgType</span></a></span><span>
+</span><span id="line-126"></span><span>        </span><span class="hs-special">,</span><span> </span><span id="argKind"><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#argKind"><span class="hs-identifier hs-var">argKind</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#ArgKind"><span class="hs-identifier hs-type">ArgKind</span></a></span><span>
+</span><span id="line-127"></span><span>        </span><span class="hs-special">}</span><span>
+</span><span id="line-128"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span id="MixedListArg"><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#MixedListArg"><span class="hs-identifier hs-var">MixedListArg</span></a></span></span><span> </span><span class="hs-special">{</span><span> </span><span id="argTypeAttr"><span class="annot"><span class="annottext">ParsedArgCase -&gt; Name
+</span><a href="TensorFlow.OpGen.ParsedOp.html#argTypeAttr"><span class="hs-identifier hs-var hs-var">argTypeAttr</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#Name"><span class="hs-identifier hs-type">Name</span></a></span><span class="hs-special">,</span><span> </span><span id="argKind"><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#argKind"><span class="hs-identifier hs-var">argKind</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#ArgKind"><span class="hs-identifier hs-type">ArgKind</span></a></span><span> </span><span class="hs-special">}</span><span>
+</span><span id="line-129"></span><span>        </span><span class="hs-comment">-- ^ A heterogeneous list.</span><span>
+</span><span id="line-130"></span><span>
+</span><span id="line-131"></span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#maybeArgType"><span class="hs-identifier hs-type">maybeArgType</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#ParsedArgCase"><span class="hs-identifier hs-type">ParsedArgCase</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#ArgType"><span class="hs-identifier hs-type">ArgType</span></a></span><span>
+</span><span id="line-132"></span><span id="maybeArgType"><span class="annot"><span class="annottext">maybeArgType :: ParsedArgCase -&gt; Maybe ArgType
+</span><a href="TensorFlow.OpGen.ParsedOp.html#maybeArgType"><span class="hs-identifier hs-var hs-var">maybeArgType</span></a></span></span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#MixedListArg"><span class="hs-identifier hs-type">MixedListArg</span></a></span><span class="hs-special">{</span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe ArgType
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span>
+</span><span id="line-133"></span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#maybeArgType"><span class="hs-identifier hs-var">maybeArgType</span></a></span><span> </span><span id="local-6989586621679085825"><span class="annot"><span class="annottext">a :: ParsedArgCase
+</span><a href="#local-6989586621679085825"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ArgType -&gt; Maybe ArgType
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(ArgType -&gt; Maybe ArgType) -&gt; ArgType -&gt; Maybe ArgType
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ParsedArgCase -&gt; ArgType
+</span><a href="TensorFlow.OpGen.ParsedOp.html#argType"><span class="hs-identifier hs-var hs-var">argType</span></a></span><span> </span><span class="annot"><span class="annottext">ParsedArgCase
+</span><a href="#local-6989586621679085825"><span class="hs-identifier hs-var">a</span></a></span><span>
+</span><span id="line-134"></span><span>
+</span><span id="line-135"></span><span class="hs-comment">-- | The type of an argument.</span><span>
+</span><span id="line-136"></span><span class="hs-keyword">data</span><span> </span><span id="ArgType"><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#ArgType"><span class="hs-identifier hs-var">ArgType</span></a></span></span><span>
+</span><span id="line-137"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span id="ArgTypeFixed"><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#ArgTypeFixed"><span class="hs-identifier hs-var">ArgTypeFixed</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">DataType</span></span><span> </span><span class="hs-comment">-- ^ A fixed type.</span><span>
+</span><span id="line-138"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span id="ArgTypeAttr"><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#ArgTypeAttr"><span class="hs-identifier hs-var">ArgTypeAttr</span></a></span></span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#Name"><span class="hs-identifier hs-type">Name</span></a></span><span>  </span><span class="hs-comment">-- ^ A type that depends on an attribute.</span><span>
+</span><span id="line-139"></span><span>
+</span><span id="line-140"></span><span class="hs-comment">-- The kind of an op input or output (not including the argument type `a`).</span><span>
+</span><span id="line-141"></span><span class="hs-keyword">data</span><span> </span><span id="ArgKind"><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#ArgKind"><span class="hs-identifier hs-var">ArgKind</span></a></span></span><span>
+</span><span id="line-142"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span id="ArgTensorRef"><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#ArgTensorRef"><span class="hs-identifier hs-var">ArgTensorRef</span></a></span></span><span> </span><span class="hs-comment">-- Tensor Ref a</span><span>
+</span><span id="line-143"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span id="ArgTensorValue"><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#ArgTensorValue"><span class="hs-identifier hs-var">ArgTensorValue</span></a></span></span><span> </span><span class="hs-comment">-- Tensor Value a</span><span>
+</span><span id="line-144"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span id="ArgTensorBuild"><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#ArgTensorBuild"><span class="hs-identifier hs-var">ArgTensorBuild</span></a></span></span><span> </span><span class="hs-comment">-- Tensor Build a</span><span>
+</span><span id="line-145"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span id="ArgSomeTensor"><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#ArgSomeTensor"><span class="hs-identifier hs-var">ArgSomeTensor</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-comment">-- Tensor v a; the Text is the variable 'v'.</span><span>
+</span><span id="line-146"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679085815"><span id="local-6989586621679085817"><span class="annot"><span class="annottext">ArgKind -&gt; ArgKind -&gt; Bool
+(ArgKind -&gt; ArgKind -&gt; Bool)
+-&gt; (ArgKind -&gt; ArgKind -&gt; Bool) -&gt; Eq ArgKind
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: ArgKind -&gt; ArgKind -&gt; Bool
+$c/= :: ArgKind -&gt; ArgKind -&gt; Bool
+== :: ArgKind -&gt; ArgKind -&gt; Bool
+$c== :: ArgKind -&gt; ArgKind -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-147"></span><span>
+</span><span id="line-148"></span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#isRefCase"><span class="hs-identifier hs-type">isRefCase</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#ParsedArgCase"><span class="hs-identifier hs-type">ParsedArgCase</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
+</span><span id="line-149"></span><span id="isRefCase"><span class="annot"><span class="annottext">isRefCase :: ParsedArgCase -&gt; Bool
+</span><a href="TensorFlow.OpGen.ParsedOp.html#isRefCase"><span class="hs-identifier hs-var hs-var">isRefCase</span></a></span></span><span> </span><span id="local-6989586621679085813"><span class="annot"><span class="annottext">a :: ParsedArgCase
+</span><a href="#local-6989586621679085813"><span class="hs-identifier hs-var">a</span></a></span></span><span>
+</span><span id="line-150"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">ArgKind
+</span><a href="TensorFlow.OpGen.ParsedOp.html#ArgTensorRef"><span class="hs-identifier hs-var">ArgTensorRef</span></a></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ParsedArgCase -&gt; ArgKind
+</span><a href="TensorFlow.OpGen.ParsedOp.html#argKind"><span class="hs-identifier hs-var hs-var">argKind</span></a></span><span> </span><span class="annot"><span class="annottext">ParsedArgCase
+</span><a href="#local-6989586621679085813"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">True</span></span><span>
+</span><span id="line-151"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#ArgTypeFixed"><span class="hs-identifier hs-type">ArgTypeFixed</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">DT_RESOURCE</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ParsedArgCase -&gt; Maybe ArgType
+</span><a href="TensorFlow.OpGen.ParsedOp.html#maybeArgType"><span class="hs-identifier hs-var">maybeArgType</span></a></span><span> </span><span class="annot"><span class="annottext">ParsedArgCase
+</span><a href="#local-6989586621679085813"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">True</span></span><span>
+</span><span id="line-152"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span>
+</span><span id="line-153"></span><span>
+</span><span id="line-154"></span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#makeName"><span class="hs-identifier hs-type">makeName</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#Name"><span class="hs-identifier hs-type">Name</span></a></span><span>
+</span><span id="line-155"></span><span id="makeName"><span class="annot"><span class="annottext">makeName :: Text -&gt; Name
+</span><a href="TensorFlow.OpGen.ParsedOp.html#makeName"><span class="hs-identifier hs-var hs-var">makeName</span></a></span></span><span> </span><span id="local-6989586621679085811"><span class="annot"><span class="annottext">n :: Text
+</span><a href="#local-6989586621679085811"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name :: HaskellName -&gt; TFName -&gt; Name
+</span><a href="TensorFlow.OpGen.ParsedOp.html#Name"><span class="hs-identifier hs-type hs-type">Name</span></a></span><span>
+</span><span id="line-156"></span><span>    </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">haskellName :: HaskellName
+</span><a href="TensorFlow.OpGen.ParsedOp.html#haskellName"><span class="hs-identifier hs-var">haskellName</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; HaskellName
+</span><a href="TensorFlow.OpGen.ParsedOp.html#HaskellName"><span class="hs-identifier hs-var">HaskellName</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; HaskellName) -&gt; Text -&gt; HaskellName
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
+</span><a href="TensorFlow.OpGen.ParsedOp.html#fixReservedName"><span class="hs-identifier hs-var">fixReservedName</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Text) -&gt; Text -&gt; Text
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
+</span><a href="TensorFlow.OpGen.ParsedOp.html#lowCase"><span class="hs-identifier hs-var">lowCase</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679085811"><span class="hs-identifier hs-var">n</span></a></span><span>
+</span><span id="line-157"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">tfName :: TFName
+</span><a href="TensorFlow.OpGen.ParsedOp.html#tfName"><span class="hs-identifier hs-var">tfName</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; TFName
+</span><a href="TensorFlow.OpGen.ParsedOp.html#TFName"><span class="hs-identifier hs-var">TFName</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679085811"><span class="hs-identifier hs-var">n</span></a></span><span>
+</span><span id="line-158"></span><span>    </span><span class="hs-special">}</span><span>
+</span><span id="line-159"></span><span>
+</span><span id="line-160"></span><span class="hs-comment">-- | Change a name so it doesn't conflict with any Haskell keywords.</span><span>
+</span><span id="line-161"></span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#fixReservedName"><span class="hs-identifier hs-type">fixReservedName</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-162"></span><span id="fixReservedName"><span class="annot"><span class="annottext">fixReservedName :: Text -&gt; Text
+</span><a href="TensorFlow.OpGen.ParsedOp.html#fixReservedName"><span class="hs-identifier hs-var hs-var">fixReservedName</span></a></span></span><span> </span><span id="local-6989586621679085807"><span class="annot"><span class="annottext">n :: Text
+</span><a href="#local-6989586621679085807"><span class="hs-identifier hs-var">n</span></a></span></span><span>
+</span><span id="line-163"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679085807"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Set Text -&gt; Bool
+forall a. Ord a =&gt; a -&gt; Set a -&gt; Bool
+</span><span class="hs-operator hs-var">`Set.member`</span></span><span> </span><span class="annot"><span class="annottext">Set Text
+</span><a href="TensorFlow.OpGen.ParsedOp.html#reservedKeywords"><span class="hs-identifier hs-var">reservedKeywords</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679085807"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="hs-string">&quot;'&quot;</span></span><span>
+</span><span id="line-164"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679085807"><span class="hs-identifier hs-var">n</span></a></span><span>
+</span><span id="line-165"></span><span>
+</span><span id="line-166"></span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#reservedKeywords"><span class="hs-identifier hs-type">reservedKeywords</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Set.Set</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-167"></span><span id="reservedKeywords"><span class="annot"><span class="annottext">reservedKeywords :: Set Text
+</span><a href="TensorFlow.OpGen.ParsedOp.html#reservedKeywords"><span class="hs-identifier hs-var hs-var">reservedKeywords</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Text] -&gt; Set Text
+forall a. Ord a =&gt; [a] -&gt; Set a
+</span><span class="hs-identifier hs-var">Set.fromList</span></span><span> </span><span class="annot"><span class="annottext">([Text] -&gt; Set Text) -&gt; [Text] -&gt; Set Text
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-168"></span><span>    </span><span class="hs-comment">-- Haskell2010 keywords:</span><span>
+</span><span id="line-169"></span><span>    </span><span class="hs-comment">-- https://www.haskell.org/onlinereport/haskell2010/haskellch2.html#x7-180002.4</span><span>
+</span><span id="line-170"></span><span>    </span><span class="hs-comment">-- We don't include keywords that are allowed to be variable names,</span><span>
+</span><span id="line-171"></span><span>    </span><span class="hs-comment">-- in particular: &quot;as&quot;, &quot;forall&quot;, and &quot;hiding&quot;.</span><span>
+</span><span id="line-172"></span><span>    </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="hs-string">&quot;case&quot;</span></span><span>
+</span><span id="line-173"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-string">&quot;class&quot;</span></span><span>
+</span><span id="line-174"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-string">&quot;data&quot;</span></span><span>
+</span><span id="line-175"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-string">&quot;default&quot;</span></span><span>
+</span><span id="line-176"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-string">&quot;deriving&quot;</span></span><span>
+</span><span id="line-177"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-string">&quot;do&quot;</span></span><span>
+</span><span id="line-178"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-string">&quot;else&quot;</span></span><span>
+</span><span id="line-179"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-string">&quot;foreign&quot;</span></span><span>
+</span><span id="line-180"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-string">&quot;if&quot;</span></span><span>
+</span><span id="line-181"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-string">&quot;import&quot;</span></span><span>
+</span><span id="line-182"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-string">&quot;in&quot;</span></span><span>
+</span><span id="line-183"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-string">&quot;infix&quot;</span></span><span>
+</span><span id="line-184"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-string">&quot;infixl&quot;</span></span><span>
+</span><span id="line-185"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-string">&quot;infixr&quot;</span></span><span>
+</span><span id="line-186"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-string">&quot;instance&quot;</span></span><span>
+</span><span id="line-187"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-string">&quot;let&quot;</span></span><span>
+</span><span id="line-188"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-string">&quot;module&quot;</span></span><span>
+</span><span id="line-189"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-string">&quot;newtype&quot;</span></span><span>
+</span><span id="line-190"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-string">&quot;of&quot;</span></span><span>
+</span><span id="line-191"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-string">&quot;then&quot;</span></span><span>
+</span><span id="line-192"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-string">&quot;type&quot;</span></span><span>
+</span><span id="line-193"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-string">&quot;where&quot;</span></span><span>
+</span><span id="line-194"></span><span>    </span><span class="hs-special">]</span><span>
+</span><span id="line-195"></span><span>    </span><span class="annot"><span class="annottext">[Text] -&gt; [Text] -&gt; [Text]
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span>  </span><span class="hs-comment">-- Nonstandard extensions</span><span>
+</span><span id="line-196"></span><span>    </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="hs-string">&quot;mdo&quot;</span></span><span>   </span><span class="hs-comment">-- RecursiveDo</span><span>
+</span><span id="line-197"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-string">&quot;rec&quot;</span></span><span>   </span><span class="hs-comment">-- Arrows, RecursiveDo</span><span>
+</span><span id="line-198"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-string">&quot;proc&quot;</span></span><span>  </span><span class="hs-comment">-- Arrows</span><span>
+</span><span id="line-199"></span><span>    </span><span class="hs-special">]</span><span>
+</span><span id="line-200"></span><span>
+</span><span id="line-201"></span><span class="hs-comment">-- | Lower-case the given text.</span><span>
+</span><span id="line-202"></span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#lowCase"><span class="hs-identifier hs-type">lowCase</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-203"></span><span id="lowCase"><span class="annot"><span class="annottext">lowCase :: Text -&gt; Text
+</span><a href="TensorFlow.OpGen.ParsedOp.html#lowCase"><span class="hs-identifier hs-var hs-var">lowCase</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Char -&gt; Char) -&gt; Text -&gt; Text
+</span><a href="TensorFlow.OpGen.ParsedOp.html#forceCase"><span class="hs-identifier hs-var">forceCase</span></a></span><span> </span><span class="annot"><span class="annottext">Char -&gt; Char
+</span><span class="hs-identifier hs-var">toLower</span></span><span>
+</span><span id="line-204"></span><span>
+</span><span id="line-205"></span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#forceCase"><span class="hs-identifier hs-type">forceCase</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Char</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Char</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-206"></span><span id="forceCase"><span class="annot"><span class="annottext">forceCase :: (Char -&gt; Char) -&gt; Text -&gt; Text
+</span><a href="TensorFlow.OpGen.ParsedOp.html#forceCase"><span class="hs-identifier hs-var hs-var">forceCase</span></a></span></span><span> </span><span id="local-6989586621679085802"><span class="annot"><span class="annottext">convert :: Char -&gt; Char
+</span><a href="#local-6989586621679085802"><span class="hs-identifier hs-var">convert</span></a></span></span><span> </span><span id="local-6989586621679085801"><span class="annot"><span class="annottext">s :: Text
+</span><a href="#local-6989586621679085801"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; ((Char, Text) -&gt; Text) -&gt; Maybe (Char, Text) -&gt; Text
+forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
+</span><span class="hs-identifier hs-var">maybe</span></span><span> </span><span class="annot"><span class="hs-string">&quot;&quot;</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621679085799"><span class="annot"><span class="annottext">c :: Char
+</span><a href="#local-6989586621679085799"><span class="hs-identifier hs-var">c</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679085798"><span class="annot"><span class="annottext">cs :: Text
+</span><a href="#local-6989586621679085798"><span class="hs-identifier hs-var">cs</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Char -&gt; Text -&gt; Text
+</span><span class="hs-identifier hs-var">Text.cons</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Char -&gt; Char
+</span><a href="#local-6989586621679085802"><span class="hs-identifier hs-var">convert</span></a></span><span> </span><span class="annot"><span class="annottext">Char
+</span><a href="#local-6989586621679085799"><span class="hs-identifier hs-var">c</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679085798"><span class="hs-identifier hs-var">cs</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-207"></span><span>                      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Maybe (Char, Text)
+</span><span class="hs-identifier hs-var">Text.uncons</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679085801"><span class="hs-identifier hs-var">s</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-208"></span><span>
+</span><span id="line-209"></span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#camelCase"><span class="hs-identifier hs-type">camelCase</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-210"></span><span id="camelCase"><span class="annot"><span class="annottext">camelCase :: Text -&gt; Text
+</span><a href="TensorFlow.OpGen.ParsedOp.html#camelCase"><span class="hs-identifier hs-var hs-var">camelCase</span></a></span></span><span> </span><span id="local-6989586621679085795"><span class="annot"><span class="annottext">s :: Text
+</span><a href="#local-6989586621679085795"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Text] -&gt; Text
+</span><span class="hs-identifier hs-var">Text.concat</span></span><span> </span><span class="annot"><span class="annottext">([Text] -&gt; Text) -&gt; [Text] -&gt; Text
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Text) -&gt; [Text] -&gt; [Text]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
+</span><a href="TensorFlow.OpGen.ParsedOp.html#upCase"><span class="hs-identifier hs-var">upCase</span></a></span><span>
+</span><span id="line-211"></span><span>                          </span><span class="annot"><span class="annottext">([Text] -&gt; [Text]) -&gt; [Text] -&gt; [Text]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; [Text]
+</span><span class="hs-identifier hs-var">Text.splitOn</span></span><span> </span><span class="annot"><span class="hs-string">&quot;_&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679085795"><span class="hs-identifier hs-var">s</span></a></span><span>
+</span><span id="line-212"></span><span>
+</span><span id="line-213"></span><span class="hs-comment">-- | Upper-case the given text.</span><span>
+</span><span id="line-214"></span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#upCase"><span class="hs-identifier hs-type">upCase</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-215"></span><span id="upCase"><span class="annot"><span class="annottext">upCase :: Text -&gt; Text
+</span><a href="TensorFlow.OpGen.ParsedOp.html#upCase"><span class="hs-identifier hs-var hs-var">upCase</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Char -&gt; Char) -&gt; Text -&gt; Text
+</span><a href="TensorFlow.OpGen.ParsedOp.html#forceCase"><span class="hs-identifier hs-var">forceCase</span></a></span><span> </span><span class="annot"><span class="annottext">Char -&gt; Char
+</span><span class="hs-identifier hs-var">toUpper</span></span><span>
+</span><span id="line-216"></span><span>
+</span><span id="line-217"></span><span>
+</span><span id="line-218"></span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#parseOp"><span class="hs-identifier hs-type">parseOp</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">OpDef</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#ParsedOp"><span class="hs-identifier hs-type">ParsedOp</span></a></span><span>
+</span><span id="line-219"></span><span id="parseOp"><span class="annot"><span class="annottext">parseOp :: OpDef -&gt; ParsedOp
+</span><a href="TensorFlow.OpGen.ParsedOp.html#parseOp"><span class="hs-identifier hs-var hs-var">parseOp</span></a></span></span><span> </span><span id="local-6989586621679085791"><span class="annot"><span class="annottext">o :: OpDef
+</span><a href="#local-6989586621679085791"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ParsedOp :: Name
+-&gt; Text
+-&gt; Text
+-&gt; [ParsedArg]
+-&gt; [ParsedArg]
+-&gt; [Attr AttrType]
+-&gt; [Attr TypeParam]
+-&gt; [Attr (NonEmpty Name)]
+-&gt; Bool
+-&gt; ParsedOp
+</span><a href="TensorFlow.OpGen.ParsedOp.html#ParsedOp"><span class="hs-identifier hs-type hs-type">ParsedOp</span></a></span><span>
+</span><span id="line-220"></span><span>    </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">parsedOpName :: Name
+</span><a href="TensorFlow.OpGen.ParsedOp.html#parsedOpName"><span class="hs-identifier hs-var">parsedOpName</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Name
+</span><a href="TensorFlow.OpGen.ParsedOp.html#makeName"><span class="hs-identifier hs-var">makeName</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Name) -&gt; Text -&gt; Name
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">OpDef
+</span><a href="#local-6989586621679085791"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">OpDef -&gt; FoldLike Text OpDef OpDef Text Text -&gt; Text
+forall s a t b. s -&gt; FoldLike a s t a b -&gt; a
+</span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">FoldLike Text OpDef OpDef Text Text
+forall (f :: * -&gt; *) s a.
+(Functor f, HasField s &quot;name&quot; a) =&gt;
+LensLike' f s a
+</span><span class="hs-identifier hs-var">name</span></span><span>
+</span><span id="line-221"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">parsedOpSummary :: Text
+</span><a href="TensorFlow.OpGen.ParsedOp.html#parsedOpSummary"><span class="hs-identifier hs-var">parsedOpSummary</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OpDef
+</span><a href="#local-6989586621679085791"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">OpDef -&gt; FoldLike Text OpDef OpDef Text Text -&gt; Text
+forall s a t b. s -&gt; FoldLike a s t a b -&gt; a
+</span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">FoldLike Text OpDef OpDef Text Text
+forall (f :: * -&gt; *) s a.
+(Functor f, HasField s &quot;summary&quot; a) =&gt;
+LensLike' f s a
+</span><span class="hs-identifier hs-var">summary</span></span><span>
+</span><span id="line-222"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">parsedOpDescription :: Text
+</span><a href="TensorFlow.OpGen.ParsedOp.html#parsedOpDescription"><span class="hs-identifier hs-var">parsedOpDescription</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OpDef
+</span><a href="#local-6989586621679085791"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">OpDef -&gt; FoldLike Text OpDef OpDef Text Text -&gt; Text
+forall s a t b. s -&gt; FoldLike a s t a b -&gt; a
+</span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">FoldLike Text OpDef OpDef Text Text
+forall (f :: * -&gt; *) s a.
+(Functor f, HasField s &quot;description&quot; a) =&gt;
+LensLike' f s a
+</span><span class="hs-identifier hs-var">description</span></span><span>
+</span><span id="line-223"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-glyph">..</span><span>
+</span><span id="line-224"></span><span>    </span><span class="hs-special">}</span><span>
+</span><span id="line-225"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-226"></span><span>    </span><span id="local-6989586621679085790"><span class="annot"><span class="annottext">parsedOpIsMonadic :: Bool
+</span><a href="#local-6989586621679085790"><span class="hs-identifier hs-var hs-var">parsedOpIsMonadic</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OpDef
+</span><a href="#local-6989586621679085791"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">OpDef -&gt; FoldLike Bool OpDef OpDef Bool Bool -&gt; Bool
+forall s a t b. s -&gt; FoldLike a s t a b -&gt; a
+</span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">FoldLike Bool OpDef OpDef Bool Bool
+forall (f :: * -&gt; *) s a.
+(Functor f, HasField s &quot;isStateful&quot; a) =&gt;
+LensLike' f s a
+</span><span class="hs-identifier hs-var">isStateful</span></span><span>
+</span><span id="line-227"></span><span>                    </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><span class="hs-operator hs-var">||</span></span><span> </span><span class="annot"><span class="annottext">(ParsedArg -&gt; Bool) -&gt; [ParsedArg] -&gt; Bool
+forall (t :: * -&gt; *) a. Foldable t =&gt; (a -&gt; Bool) -&gt; t a -&gt; Bool
+</span><span class="hs-identifier hs-var">any</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ParsedArgCase -&gt; Bool
+</span><a href="TensorFlow.OpGen.ParsedOp.html#isRefCase"><span class="hs-identifier hs-var">isRefCase</span></a></span><span> </span><span class="annot"><span class="annottext">(ParsedArgCase -&gt; Bool)
+-&gt; (ParsedArg -&gt; ParsedArgCase) -&gt; ParsedArg -&gt; Bool
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ParsedArg -&gt; ParsedArgCase
+</span><a href="TensorFlow.OpGen.ParsedOp.html#parsedArgCase"><span class="hs-identifier hs-var hs-var">parsedArgCase</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[ParsedArg]
+</span><a href="#local-6989586621679085789"><span class="hs-identifier hs-var">parsedInputs</span></a></span><span>
+</span><span id="line-228"></span><span>                    </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><span class="hs-operator hs-var">||</span></span><span> </span><span class="annot"><span class="annottext">[OpDef'ArgDef] -&gt; Bool
+forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
+</span><span class="hs-identifier hs-var">null</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OpDef
+</span><a href="#local-6989586621679085791"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">OpDef
+-&gt; FoldLike
+     [OpDef'ArgDef] OpDef OpDef [OpDef'ArgDef] [OpDef'ArgDef]
+-&gt; [OpDef'ArgDef]
+forall s a t b. s -&gt; FoldLike a s t a b -&gt; a
+</span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">FoldLike [OpDef'ArgDef] OpDef OpDef [OpDef'ArgDef] [OpDef'ArgDef]
+forall (f :: * -&gt; *) s a.
+(Functor f, HasField s &quot;outputArg&quot; a) =&gt;
+LensLike' f s a
+</span><span class="hs-identifier hs-var">outputArg</span></span><span class="hs-special">)</span><span>
+</span><span id="line-229"></span><span>    </span><span id="local-6989586621679085789"><span class="annot"><span class="annottext">parsedInputs :: [ParsedArg]
+</span><a href="#local-6989586621679085789"><span class="hs-identifier hs-var hs-var">parsedInputs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Text -&gt; OpDef'ArgDef -&gt; ParsedArg)
+-&gt; [Text] -&gt; [OpDef'ArgDef] -&gt; [ParsedArg]
+forall a b c. (a -&gt; b -&gt; c) -&gt; [a] -&gt; [b] -&gt; [c]
+</span><span class="hs-identifier hs-var">zipWith</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621679085778"><span class="annot"><span class="annottext">t :: Text
+</span><a href="#local-6989586621679085778"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span id="local-6989586621679085777"><span class="annot"><span class="annottext">a :: OpDef'ArgDef
+</span><a href="#local-6989586621679085777"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">OpDef'ArgDef -&gt; ArgKind -&gt; ParsedArg
+</span><a href="TensorFlow.OpGen.ParsedOp.html#parseArg"><span class="hs-identifier hs-var">parseArg</span></a></span><span> </span><span class="annot"><span class="annottext">OpDef'ArgDef
+</span><a href="#local-6989586621679085777"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; OpDef'ArgDef -&gt; ArgKind
+</span><a href="TensorFlow.OpGen.ParsedOp.html#inputTensorKind"><span class="hs-identifier hs-var">inputTensorKind</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679085778"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="annot"><span class="annottext">OpDef'ArgDef
+</span><a href="#local-6989586621679085777"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-230"></span><span>                                        </span><span class="annot"><span class="annottext">[Text]
+</span><a href="#local-6989586621679085774"><span class="hs-identifier hs-var">tensorKindParams</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OpDef
+</span><a href="#local-6989586621679085791"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">OpDef
+-&gt; FoldLike
+     [OpDef'ArgDef] OpDef OpDef [OpDef'ArgDef] [OpDef'ArgDef]
+-&gt; [OpDef'ArgDef]
+forall s a t b. s -&gt; FoldLike a s t a b -&gt; a
+</span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">FoldLike [OpDef'ArgDef] OpDef OpDef [OpDef'ArgDef] [OpDef'ArgDef]
+forall (f :: * -&gt; *) s a.
+(Functor f, HasField s &quot;inputArg&quot; a) =&gt;
+LensLike' f s a
+</span><span class="hs-identifier hs-var">inputArg</span></span><span class="hs-special">)</span><span> </span><span>
+</span><span id="line-231"></span><span>    </span><span id="local-6989586621679085774"><span class="annot"><span class="annottext">tensorKindParams :: [Text]
+</span><a href="#local-6989586621679085774"><span class="hs-identifier hs-var hs-var">tensorKindParams</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-string">&quot;v'&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Text
+</span><span class="hs-identifier hs-var">Text.pack</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Integer -&gt; String
+forall a. Show a =&gt; a -&gt; String
+</span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621679085771"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">|</span><span> </span><span id="local-6989586621679085771"><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621679085771"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-number">1</span></span><span class="hs-glyph">::</span><span class="annot"><span class="hs-identifier hs-type">Integer</span></span><span> </span><span class="hs-glyph">..</span><span class="hs-special">]</span><span class="hs-special">]</span><span>
+</span><span id="line-232"></span><span>    </span><span id="local-6989586621679085788"><span class="annot"><span class="annottext">parsedOutputs :: [ParsedArg]
+</span><a href="#local-6989586621679085788"><span class="hs-identifier hs-var hs-var">parsedOutputs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(OpDef'ArgDef -&gt; ParsedArg) -&gt; [OpDef'ArgDef] -&gt; [ParsedArg]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621679085770"><span class="annot"><span class="annottext">a :: OpDef'ArgDef
+</span><a href="#local-6989586621679085770"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">OpDef'ArgDef -&gt; ArgKind -&gt; ParsedArg
+</span><a href="TensorFlow.OpGen.ParsedOp.html#parseArg"><span class="hs-identifier hs-var">parseArg</span></a></span><span> </span><span class="annot"><span class="annottext">OpDef'ArgDef
+</span><a href="#local-6989586621679085770"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool -&gt; OpDef'ArgDef -&gt; ArgKind
+</span><a href="TensorFlow.OpGen.ParsedOp.html#outputTensorKind"><span class="hs-identifier hs-var">outputTensorKind</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679085790"><span class="hs-identifier hs-var">parsedOpIsMonadic</span></a></span><span> </span><span class="annot"><span class="annottext">OpDef'ArgDef
+</span><a href="#local-6989586621679085770"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-233"></span><span>                        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OpDef
+</span><a href="#local-6989586621679085791"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">OpDef
+-&gt; FoldLike
+     [OpDef'ArgDef] OpDef OpDef [OpDef'ArgDef] [OpDef'ArgDef]
+-&gt; [OpDef'ArgDef]
+forall s a t b. s -&gt; FoldLike a s t a b -&gt; a
+</span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">FoldLike [OpDef'ArgDef] OpDef OpDef [OpDef'ArgDef] [OpDef'ArgDef]
+forall (f :: * -&gt; *) s a.
+(Functor f, HasField s &quot;outputArg&quot; a) =&gt;
+LensLike' f s a
+</span><span class="hs-identifier hs-var">outputArg</span></span><span class="hs-special">)</span><span>
+</span><span id="line-234"></span><span>    </span><span class="hs-comment">-- Integer attributes that can be inferred from the size of at least one</span><span>
+</span><span id="line-235"></span><span>    </span><span class="hs-comment">-- input list.</span><span>
+</span><span id="line-236"></span><span>    </span><span id="local-6989586621679085787"><span class="annot"><span class="annottext">inferredListSizeAttrs :: [Attr (NonEmpty Name)]
+</span><a href="#local-6989586621679085787"><span class="hs-identifier hs-var hs-var">inferredListSizeAttrs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(OpDef'AttrDef -&gt; Maybe (NonEmpty Name))
+-&gt; [OpDef'AttrDef] -&gt; [Attr (NonEmpty Name)]
+forall a. (OpDef'AttrDef -&gt; Maybe a) -&gt; [OpDef'AttrDef] -&gt; [Attr a]
+</span><a href="TensorFlow.OpGen.ParsedOp.html#mapMaybeAttrs"><span class="hs-identifier hs-var">mapMaybeAttrs</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[ParsedArg] -&gt; OpDef'AttrDef -&gt; Maybe (NonEmpty Name)
+</span><a href="TensorFlow.OpGen.ParsedOp.html#getInferredListSizeAttr"><span class="hs-identifier hs-var">getInferredListSizeAttr</span></a></span><span> </span><span class="annot"><span class="annottext">[ParsedArg]
+</span><a href="#local-6989586621679085789"><span class="hs-identifier hs-var">parsedInputs</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-237"></span><span>                                </span><span class="annot"><span class="annottext">([OpDef'AttrDef] -&gt; [Attr (NonEmpty Name)])
+-&gt; [OpDef'AttrDef] -&gt; [Attr (NonEmpty Name)]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">OpDef
+</span><a href="#local-6989586621679085791"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">OpDef
+-&gt; FoldLike
+     [OpDef'AttrDef] OpDef OpDef [OpDef'AttrDef] [OpDef'AttrDef]
+-&gt; [OpDef'AttrDef]
+forall s a t b. s -&gt; FoldLike a s t a b -&gt; a
+</span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">FoldLike
+  [OpDef'AttrDef] OpDef OpDef [OpDef'AttrDef] [OpDef'AttrDef]
+forall (f :: * -&gt; *) s a.
+(Functor f, HasField s &quot;attr&quot; a) =&gt;
+LensLike' f s a
+</span><span class="hs-identifier hs-var">attr</span></span><span>
+</span><span id="line-238"></span><span>    </span><span id="local-6989586621679085766"><span class="annot"><span class="annottext">implicitAttrs :: Set TFName
+</span><a href="#local-6989586621679085766"><span class="hs-identifier hs-var hs-var">implicitAttrs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[TFName] -&gt; Set TFName
+forall a. Ord a =&gt; [a] -&gt; Set a
+</span><span class="hs-identifier hs-var">Set.fromList</span></span><span> </span><span class="annot"><span class="annottext">([TFName] -&gt; Set TFName) -&gt; [TFName] -&gt; Set TFName
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(Name -&gt; TFName) -&gt; [Name] -&gt; [TFName]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; TFName
+</span><a href="TensorFlow.OpGen.ParsedOp.html#tfName"><span class="hs-identifier hs-var hs-var">tfName</span></a></span><span> </span><span class="annot"><span class="annottext">([Name] -&gt; [TFName]) -&gt; [Name] -&gt; [TFName]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-239"></span><span>                        </span><span class="annot"><span class="annottext">(Attr TypeParam -&gt; Name) -&gt; [Attr TypeParam] -&gt; [Name]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">Attr TypeParam -&gt; Name
+forall a. Attr a -&gt; Name
+</span><a href="TensorFlow.OpGen.ParsedOp.html#attrName"><span class="hs-identifier hs-var hs-var">attrName</span></a></span><span> </span><span class="annot"><span class="annottext">[Attr TypeParam]
+</span><a href="#local-6989586621679085786"><span class="hs-identifier hs-var">inferredTypeAttrs</span></a></span><span>
+</span><span id="line-240"></span><span>                            </span><span class="annot"><span class="annottext">[Name] -&gt; [Name] -&gt; [Name]
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">(Attr (NonEmpty Name) -&gt; Name) -&gt; [Attr (NonEmpty Name)] -&gt; [Name]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">Attr (NonEmpty Name) -&gt; Name
+forall a. Attr a -&gt; Name
+</span><a href="TensorFlow.OpGen.ParsedOp.html#attrName"><span class="hs-identifier hs-var hs-var">attrName</span></a></span><span> </span><span class="annot"><span class="annottext">[Attr (NonEmpty Name)]
+</span><a href="#local-6989586621679085787"><span class="hs-identifier hs-var">inferredListSizeAttrs</span></a></span><span>
+</span><span id="line-241"></span><span>    </span><span id="local-6989586621679085786"><span class="annot"><span class="annottext">inferredTypeAttrs :: [Attr TypeParam]
+</span><a href="#local-6989586621679085786"><span class="hs-identifier hs-var hs-var">inferredTypeAttrs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(OpDef'AttrDef -&gt; Maybe TypeParam)
+-&gt; [OpDef'AttrDef] -&gt; [Attr TypeParam]
+forall a. (OpDef'AttrDef -&gt; Maybe a) -&gt; [OpDef'AttrDef] -&gt; [Attr a]
+</span><a href="TensorFlow.OpGen.ParsedOp.html#mapMaybeAttrs"><span class="hs-identifier hs-var">mapMaybeAttrs</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Set TFName -&gt; OpDef'AttrDef -&gt; Maybe TypeParam
+</span><a href="TensorFlow.OpGen.ParsedOp.html#getInferredTypeAttr"><span class="hs-identifier hs-var">getInferredTypeAttr</span></a></span><span> </span><span class="annot"><span class="annottext">Set TFName
+</span><a href="#local-6989586621679085764"><span class="hs-identifier hs-var">argTypeParams</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">([OpDef'AttrDef] -&gt; [Attr TypeParam])
+-&gt; [OpDef'AttrDef] -&gt; [Attr TypeParam]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">OpDef
+</span><a href="#local-6989586621679085791"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">OpDef
+-&gt; FoldLike
+     [OpDef'AttrDef] OpDef OpDef [OpDef'AttrDef] [OpDef'AttrDef]
+-&gt; [OpDef'AttrDef]
+forall s a t b. s -&gt; FoldLike a s t a b -&gt; a
+</span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">FoldLike
+  [OpDef'AttrDef] OpDef OpDef [OpDef'AttrDef] [OpDef'AttrDef]
+forall (f :: * -&gt; *) s a.
+(Functor f, HasField s &quot;attr&quot; a) =&gt;
+LensLike' f s a
+</span><span class="hs-identifier hs-var">attr</span></span><span>
+</span><span id="line-242"></span><span>    </span><span id="local-6989586621679085764"><span class="annot"><span class="annottext">argTypeParams :: Set TFName
+</span><a href="#local-6989586621679085764"><span class="hs-identifier hs-var hs-var">argTypeParams</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[TFName] -&gt; Set TFName
+forall a. Ord a =&gt; [a] -&gt; Set a
+</span><span class="hs-identifier hs-var">Set.fromList</span></span><span> </span><span class="annot"><span class="annottext">([TFName] -&gt; Set TFName) -&gt; [TFName] -&gt; Set TFName
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(Name -&gt; TFName) -&gt; [Name] -&gt; [TFName]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; TFName
+</span><a href="TensorFlow.OpGen.ParsedOp.html#tfName"><span class="hs-identifier hs-var hs-var">tfName</span></a></span><span> </span><span class="annot"><span class="annottext">([Name] -&gt; [TFName]) -&gt; [Name] -&gt; [TFName]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-243"></span><span>                        </span><span class="annot"><span class="annottext">(ParsedArg -&gt; Maybe Name) -&gt; [ParsedArg] -&gt; [Name]
+forall a b. (a -&gt; Maybe b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">mapMaybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ParsedArgCase -&gt; Maybe Name
+</span><a href="TensorFlow.OpGen.ParsedOp.html#getArgTypeParam"><span class="hs-identifier hs-var">getArgTypeParam</span></a></span><span> </span><span class="annot"><span class="annottext">(ParsedArgCase -&gt; Maybe Name)
+-&gt; (ParsedArg -&gt; ParsedArgCase) -&gt; ParsedArg -&gt; Maybe Name
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ParsedArg -&gt; ParsedArgCase
+</span><a href="TensorFlow.OpGen.ParsedOp.html#parsedArgCase"><span class="hs-identifier hs-var hs-var">parsedArgCase</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">([ParsedArg] -&gt; [Name]) -&gt; [ParsedArg] -&gt; [Name]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-244"></span><span>                            </span><span class="annot"><span class="annottext">[ParsedArg]
+</span><a href="#local-6989586621679085789"><span class="hs-identifier hs-var">parsedInputs</span></a></span><span> </span><span class="annot"><span class="annottext">[ParsedArg] -&gt; [ParsedArg] -&gt; [ParsedArg]
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">[ParsedArg]
+</span><a href="#local-6989586621679085788"><span class="hs-identifier hs-var">parsedOutputs</span></a></span><span>
+</span><span id="line-245"></span><span>    </span><span class="hs-comment">-- Attributes that can't be inferred and don't have defaults, so must be</span><span>
+</span><span id="line-246"></span><span>    </span><span class="hs-comment">-- passed as separate arguments to the op.</span><span>
+</span><span id="line-247"></span><span>    </span><span id="local-6989586621679085785"><span class="annot"><span class="annottext">explicitInputAttrs :: [Attr AttrType]
+</span><a href="#local-6989586621679085785"><span class="hs-identifier hs-var hs-var">explicitInputAttrs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Attr AttrType -&gt; Attr AttrType -&gt; Ordering)
+-&gt; [Attr AttrType] -&gt; [Attr AttrType]
+forall a. (a -&gt; a -&gt; Ordering) -&gt; [a] -&gt; [a]
+</span><span class="hs-identifier hs-var">sortBy</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Attr AttrType -&gt; TFName)
+-&gt; Attr AttrType -&gt; Attr AttrType -&gt; Ordering
+forall a b. Ord a =&gt; (b -&gt; a) -&gt; b -&gt; b -&gt; Ordering
+</span><span class="hs-identifier hs-var">comparing</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; TFName
+</span><a href="TensorFlow.OpGen.ParsedOp.html#tfName"><span class="hs-identifier hs-var hs-var">tfName</span></a></span><span> </span><span class="annot"><span class="annottext">(Name -&gt; TFName)
+-&gt; (Attr AttrType -&gt; Name) -&gt; Attr AttrType -&gt; TFName
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Attr AttrType -&gt; Name
+forall a. Attr a -&gt; Name
+</span><a href="TensorFlow.OpGen.ParsedOp.html#attrName"><span class="hs-identifier hs-var hs-var">attrName</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-248"></span><span>                        </span><span class="annot"><span class="annottext">([Attr AttrType] -&gt; [Attr AttrType])
+-&gt; [Attr AttrType] -&gt; [Attr AttrType]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(OpDef'AttrDef -&gt; Maybe AttrType)
+-&gt; [OpDef'AttrDef] -&gt; [Attr AttrType]
+forall a. (OpDef'AttrDef -&gt; Maybe a) -&gt; [OpDef'AttrDef] -&gt; [Attr a]
+</span><a href="TensorFlow.OpGen.ParsedOp.html#mapMaybeAttrs"><span class="hs-identifier hs-var">mapMaybeAttrs</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OpDef -&gt; Set TFName -&gt; OpDef'AttrDef -&gt; Maybe AttrType
+</span><a href="TensorFlow.OpGen.ParsedOp.html#getExplicitInputAttr"><span class="hs-identifier hs-var">getExplicitInputAttr</span></a></span><span> </span><span class="annot"><span class="annottext">OpDef
+</span><a href="#local-6989586621679085791"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Set TFName
+</span><a href="#local-6989586621679085766"><span class="hs-identifier hs-var">implicitAttrs</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-249"></span><span>                        </span><span class="annot"><span class="annottext">([OpDef'AttrDef] -&gt; [Attr AttrType])
+-&gt; [OpDef'AttrDef] -&gt; [Attr AttrType]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">OpDef
+</span><a href="#local-6989586621679085791"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">OpDef
+-&gt; FoldLike
+     [OpDef'AttrDef] OpDef OpDef [OpDef'AttrDef] [OpDef'AttrDef]
+-&gt; [OpDef'AttrDef]
+forall s a t b. s -&gt; FoldLike a s t a b -&gt; a
+</span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">FoldLike
+  [OpDef'AttrDef] OpDef OpDef [OpDef'AttrDef] [OpDef'AttrDef]
+forall (f :: * -&gt; *) s a.
+(Functor f, HasField s &quot;attr&quot; a) =&gt;
+LensLike' f s a
+</span><span class="hs-identifier hs-var">attr</span></span><span>
+</span><span id="line-250"></span><span>
+</span><span id="line-251"></span><span class="hs-comment">-- TODO(judahjacobson): Some arguments should be refs.</span><span>
+</span><span id="line-252"></span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#inputTensorKind"><span class="hs-identifier hs-type">inputTensorKind</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">OpDef'ArgDef</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#ArgKind"><span class="hs-identifier hs-type">ArgKind</span></a></span><span>
+</span><span id="line-253"></span><span id="inputTensorKind"><span class="annot"><span class="annottext">inputTensorKind :: Text -&gt; OpDef'ArgDef -&gt; ArgKind
+</span><a href="TensorFlow.OpGen.ParsedOp.html#inputTensorKind"><span class="hs-identifier hs-var hs-var">inputTensorKind</span></a></span></span><span> </span><span id="local-6989586621679085761"><span class="annot"><span class="annottext">v :: Text
+</span><a href="#local-6989586621679085761"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span id="local-6989586621679085760"><span class="annot"><span class="annottext">a :: OpDef'ArgDef
+</span><a href="#local-6989586621679085760"><span class="hs-identifier hs-var">a</span></a></span></span><span>
+</span><span id="line-254"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">OpDef'ArgDef
+</span><a href="#local-6989586621679085760"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">OpDef'ArgDef
+-&gt; FoldLike Bool OpDef'ArgDef OpDef'ArgDef Bool Bool -&gt; Bool
+forall s a t b. s -&gt; FoldLike a s t a b -&gt; a
+</span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">FoldLike Bool OpDef'ArgDef OpDef'ArgDef Bool Bool
+forall (f :: * -&gt; *) s a.
+(Functor f, HasField s &quot;isRef&quot; a) =&gt;
+LensLike' f s a
+</span><span class="hs-identifier hs-var">isRef</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ArgKind
+</span><a href="TensorFlow.OpGen.ParsedOp.html#ArgTensorRef"><span class="hs-identifier hs-var">ArgTensorRef</span></a></span><span>
+</span><span id="line-255"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; ArgKind
+</span><a href="TensorFlow.OpGen.ParsedOp.html#ArgSomeTensor"><span class="hs-identifier hs-var">ArgSomeTensor</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679085761"><span class="hs-identifier hs-var">v</span></a></span><span>
+</span><span id="line-256"></span><span>
+</span><span id="line-257"></span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#outputTensorKind"><span class="hs-identifier hs-type">outputTensorKind</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">OpDef'ArgDef</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#ArgKind"><span class="hs-identifier hs-type">ArgKind</span></a></span><span>
+</span><span id="line-258"></span><span id="outputTensorKind"><span class="annot"><span class="annottext">outputTensorKind :: Bool -&gt; OpDef'ArgDef -&gt; ArgKind
+</span><a href="TensorFlow.OpGen.ParsedOp.html#outputTensorKind"><span class="hs-identifier hs-var hs-var">outputTensorKind</span></a></span></span><span> </span><span id="local-6989586621679085759"><span class="annot"><span class="annottext">isMonadic :: Bool
+</span><a href="#local-6989586621679085759"><span class="hs-identifier hs-var">isMonadic</span></a></span></span><span> </span><span id="local-6989586621679085758"><span class="annot"><span class="annottext">a :: OpDef'ArgDef
+</span><a href="#local-6989586621679085758"><span class="hs-identifier hs-var">a</span></a></span></span><span>
+</span><span id="line-259"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">OpDef'ArgDef
+</span><a href="#local-6989586621679085758"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">OpDef'ArgDef
+-&gt; FoldLike Bool OpDef'ArgDef OpDef'ArgDef Bool Bool -&gt; Bool
+forall s a t b. s -&gt; FoldLike a s t a b -&gt; a
+</span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">FoldLike Bool OpDef'ArgDef OpDef'ArgDef Bool Bool
+forall (f :: * -&gt; *) s a.
+(Functor f, HasField s &quot;isRef&quot; a) =&gt;
+LensLike' f s a
+</span><span class="hs-identifier hs-var">isRef</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ArgKind
+</span><a href="TensorFlow.OpGen.ParsedOp.html#ArgTensorRef"><span class="hs-identifier hs-var">ArgTensorRef</span></a></span><span>
+</span><span id="line-260"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679085759"><span class="hs-identifier hs-var">isMonadic</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ArgKind
+</span><a href="TensorFlow.OpGen.ParsedOp.html#ArgTensorValue"><span class="hs-identifier hs-var">ArgTensorValue</span></a></span><span>
+</span><span id="line-261"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ArgKind
+</span><a href="TensorFlow.OpGen.ParsedOp.html#ArgTensorBuild"><span class="hs-identifier hs-var">ArgTensorBuild</span></a></span><span>
+</span><span id="line-262"></span><span>
+</span><span id="line-263"></span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#getExplicitInputAttr"><span class="hs-identifier hs-type">getExplicitInputAttr</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">OpDef</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Set.Set</span></span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#TFName"><span class="hs-identifier hs-type">TFName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">OpDef'AttrDef</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#AttrType"><span class="hs-identifier hs-type">AttrType</span></a></span><span>
+</span><span id="line-264"></span><span id="getExplicitInputAttr"><span class="annot"><span class="annottext">getExplicitInputAttr :: OpDef -&gt; Set TFName -&gt; OpDef'AttrDef -&gt; Maybe AttrType
+</span><a href="TensorFlow.OpGen.ParsedOp.html#getExplicitInputAttr"><span class="hs-identifier hs-var hs-var">getExplicitInputAttr</span></a></span></span><span> </span><span id="local-6989586621679085757"><span class="annot"><span class="annottext">o :: OpDef
+</span><a href="#local-6989586621679085757"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span id="local-6989586621679085756"><span class="annot"><span class="annottext">implicitAttrs :: Set TFName
+</span><a href="#local-6989586621679085756"><span class="hs-identifier hs-var">implicitAttrs</span></a></span></span><span> </span><span id="local-6989586621679085755"><span class="annot"><span class="annottext">a :: OpDef'AttrDef
+</span><a href="#local-6989586621679085755"><span class="hs-identifier hs-var">a</span></a></span></span><span>
+</span><span id="line-265"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Text -&gt; TFName
+</span><a href="TensorFlow.OpGen.ParsedOp.html#TFName"><span class="hs-identifier hs-var">TFName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OpDef'AttrDef
+</span><a href="#local-6989586621679085755"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">OpDef'AttrDef
+-&gt; FoldLike Text OpDef'AttrDef OpDef'AttrDef Text Text -&gt; Text
+forall s a t b. s -&gt; FoldLike a s t a b -&gt; a
+</span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">FoldLike Text OpDef'AttrDef OpDef'AttrDef Text Text
+forall (f :: * -&gt; *) s a.
+(Functor f, HasField s &quot;name&quot; a) =&gt;
+LensLike' f s a
+</span><span class="hs-identifier hs-var">name</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">TFName -&gt; Set TFName -&gt; Bool
+forall a. Ord a =&gt; a -&gt; Set a -&gt; Bool
+</span><span class="hs-operator hs-var">`Set.notMember`</span></span><span> </span><span class="annot"><span class="annottext">Set TFName
+</span><a href="#local-6989586621679085756"><span class="hs-identifier hs-var">implicitAttrs</span></a></span><span>
+</span><span id="line-266"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">OpDef'AttrDef
+</span><a href="#local-6989586621679085755"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">OpDef'AttrDef
+-&gt; FoldLike
+     (Maybe AttrValue)
+     OpDef'AttrDef
+     OpDef'AttrDef
+     (Maybe AttrValue)
+     (Maybe AttrValue)
+-&gt; Maybe AttrValue
+forall s a t b. s -&gt; FoldLike a s t a b -&gt; a
+</span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">FoldLike
+  (Maybe AttrValue)
+  OpDef'AttrDef
+  OpDef'AttrDef
+  (Maybe AttrValue)
+  (Maybe AttrValue)
+forall (f :: * -&gt; *) s a.
+(Functor f, HasField s &quot;maybe'defaultValue&quot; a) =&gt;
+LensLike' f s a
+</span><span class="hs-identifier hs-var">maybe'defaultValue</span></span><span> </span><span class="annot"><span class="annottext">Maybe AttrValue -&gt; Maybe AttrValue -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Maybe AttrValue
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span>
+</span><span id="line-267"></span><span>    </span><span class="hs-special">,</span><span> </span><span id="local-6989586621679085753"><span class="annot"><span class="annottext">AttrType
+</span><a href="#local-6989586621679085753"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">OpDef -&gt; Text -&gt; AttrType
+</span><a href="TensorFlow.OpGen.ParsedOp.html#parseAttrType"><span class="hs-identifier hs-var">parseAttrType</span></a></span><span> </span><span class="annot"><span class="annottext">OpDef
+</span><a href="#local-6989586621679085757"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OpDef'AttrDef
+</span><a href="#local-6989586621679085755"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">OpDef'AttrDef
+-&gt; FoldLike Text OpDef'AttrDef OpDef'AttrDef Text Text -&gt; Text
+forall s a t b. s -&gt; FoldLike a s t a b -&gt; a
+</span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">FoldLike Text OpDef'AttrDef OpDef'AttrDef Text Text
+forall (f :: * -&gt; *) s a.
+(Functor f, HasField s &quot;type'&quot; a) =&gt;
+LensLike' f s a
+</span><span class="hs-identifier hs-var">type'</span></span><span class="hs-special">)</span><span>
+</span><span id="line-268"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">AttrType
+</span><a href="#local-6989586621679085753"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="annot"><span class="annottext">AttrType -&gt; [AttrType] -&gt; Bool
+forall (t :: * -&gt; *) a. (Foldable t, Eq a) =&gt; a -&gt; t a -&gt; Bool
+</span><span class="hs-operator hs-var">`elem`</span></span><span> </span><span class="annot"><span class="annottext">(AttrBaseType -&gt; AttrType) -&gt; [AttrBaseType] -&gt; [AttrType]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">AttrBaseType -&gt; AttrType
+</span><a href="TensorFlow.OpGen.ParsedOp.html#AttrSingle"><span class="hs-identifier hs-var">AttrSingle</span></a></span><span>
+</span><span id="line-269"></span><span>                    </span><span class="hs-special">[</span><span class="annot"><span class="annottext">AttrBaseType
+</span><a href="TensorFlow.OpGen.ParsedOp.html#AttrBool"><span class="hs-identifier hs-var">AttrBool</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">AttrBaseType
+</span><a href="TensorFlow.OpGen.ParsedOp.html#AttrInt64"><span class="hs-identifier hs-var">AttrInt64</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">AttrBaseType
+</span><a href="TensorFlow.OpGen.ParsedOp.html#AttrFloat"><span class="hs-identifier hs-var">AttrFloat</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">AttrBaseType
+</span><a href="TensorFlow.OpGen.ParsedOp.html#AttrType"><span class="hs-identifier hs-var">AttrType</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">AttrBaseType
+</span><a href="TensorFlow.OpGen.ParsedOp.html#AttrShape"><span class="hs-identifier hs-var">AttrShape</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">AttrBaseType
+</span><a href="TensorFlow.OpGen.ParsedOp.html#AttrBytes"><span class="hs-identifier hs-var">AttrBytes</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-270"></span><span>                </span><span class="annot"><span class="annottext">[AttrType] -&gt; [AttrType] -&gt; [AttrType]
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">AttrBaseType -&gt; AttrType
+</span><a href="TensorFlow.OpGen.ParsedOp.html#AttrList"><span class="hs-identifier hs-var">AttrList</span></a></span><span> </span><span class="annot"><span class="annottext">AttrBaseType
+</span><a href="TensorFlow.OpGen.ParsedOp.html#AttrType"><span class="hs-identifier hs-var">AttrType</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">AttrType -&gt; Maybe AttrType
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">AttrType
+</span><a href="#local-6989586621679085753"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><span id="line-271"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe AttrType
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span>
+</span><span id="line-272"></span><span>
+</span><span id="line-273"></span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#getInferredTypeAttr"><span class="hs-identifier hs-type">getInferredTypeAttr</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Set.Set</span></span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#TFName"><span class="hs-identifier hs-type">TFName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">OpDef'AttrDef</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#TypeParam"><span class="hs-identifier hs-type">TypeParam</span></a></span><span>
+</span><span id="line-274"></span><span id="getInferredTypeAttr"><span class="annot"><span class="annottext">getInferredTypeAttr :: Set TFName -&gt; OpDef'AttrDef -&gt; Maybe TypeParam
+</span><a href="TensorFlow.OpGen.ParsedOp.html#getInferredTypeAttr"><span class="hs-identifier hs-var hs-var">getInferredTypeAttr</span></a></span></span><span> </span><span id="local-6989586621679085750"><span class="annot"><span class="annottext">argTypeParams :: Set TFName
+</span><a href="#local-6989586621679085750"><span class="hs-identifier hs-var">argTypeParams</span></a></span></span><span> </span><span id="local-6989586621679085749"><span class="annot"><span class="annottext">a :: OpDef'AttrDef
+</span><a href="#local-6989586621679085749"><span class="hs-identifier hs-var">a</span></a></span></span><span>
+</span><span id="line-275"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Text -&gt; TFName
+</span><a href="TensorFlow.OpGen.ParsedOp.html#TFName"><span class="hs-identifier hs-var">TFName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OpDef'AttrDef
+</span><a href="#local-6989586621679085749"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">OpDef'AttrDef
+-&gt; FoldLike Text OpDef'AttrDef OpDef'AttrDef Text Text -&gt; Text
+forall s a t b. s -&gt; FoldLike a s t a b -&gt; a
+</span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">FoldLike Text OpDef'AttrDef OpDef'AttrDef Text Text
+forall (f :: * -&gt; *) s a.
+(Functor f, HasField s &quot;name&quot; a) =&gt;
+LensLike' f s a
+</span><span class="hs-identifier hs-var">name</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">TFName -&gt; Set TFName -&gt; Bool
+forall (t :: * -&gt; *) a. (Foldable t, Eq a) =&gt; a -&gt; t a -&gt; Bool
+</span><span class="hs-operator hs-var">`notElem`</span></span><span> </span><span class="annot"><span class="annottext">Set TFName
+</span><a href="#local-6989586621679085750"><span class="hs-identifier hs-var">argTypeParams</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe TypeParam
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span>
+</span><span id="line-276"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">OpDef'AttrDef
+</span><a href="#local-6989586621679085749"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">OpDef'AttrDef
+-&gt; FoldLike Text OpDef'AttrDef OpDef'AttrDef Text Text -&gt; Text
+forall s a t b. s -&gt; FoldLike a s t a b -&gt; a
+</span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">FoldLike Text OpDef'AttrDef OpDef'AttrDef Text Text
+forall (f :: * -&gt; *) s a.
+(Functor f, HasField s &quot;type'&quot; a) =&gt;
+LensLike' f s a
+</span><span class="hs-identifier hs-var">type'</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="hs-string">&quot;type&quot;</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TypeParam -&gt; Maybe TypeParam
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(TypeParam -&gt; Maybe TypeParam) -&gt; TypeParam -&gt; Maybe TypeParam
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Maybe (NonEmpty DataType) -&gt; TypeParam
+</span><a href="TensorFlow.OpGen.ParsedOp.html#TypeParam"><span class="hs-identifier hs-var">TypeParam</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">False</span></span><span> </span><span class="annot"><span class="annottext">Maybe (NonEmpty DataType)
+</span><a href="#local-6989586621679085747"><span class="hs-identifier hs-var">allowed</span></a></span><span>
+</span><span id="line-277"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">OpDef'AttrDef
+</span><a href="#local-6989586621679085749"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">OpDef'AttrDef
+-&gt; FoldLike Text OpDef'AttrDef OpDef'AttrDef Text Text -&gt; Text
+forall s a t b. s -&gt; FoldLike a s t a b -&gt; a
+</span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">FoldLike Text OpDef'AttrDef OpDef'AttrDef Text Text
+forall (f :: * -&gt; *) s a.
+(Functor f, HasField s &quot;type'&quot; a) =&gt;
+LensLike' f s a
+</span><span class="hs-identifier hs-var">type'</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="hs-string">&quot;list(type)&quot;</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TypeParam -&gt; Maybe TypeParam
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(TypeParam -&gt; Maybe TypeParam) -&gt; TypeParam -&gt; Maybe TypeParam
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Maybe (NonEmpty DataType) -&gt; TypeParam
+</span><a href="TensorFlow.OpGen.ParsedOp.html#TypeParam"><span class="hs-identifier hs-var">TypeParam</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">True</span></span><span> </span><span class="annot"><span class="annottext">Maybe (NonEmpty DataType)
+</span><a href="#local-6989586621679085747"><span class="hs-identifier hs-var">allowed</span></a></span><span>
+</span><span id="line-278"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe TypeParam
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span>
+</span><span id="line-279"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-280"></span><span>    </span><span id="local-6989586621679085747"><span class="annot"><span class="annottext">allowed :: Maybe (NonEmpty DataType)
+</span><a href="#local-6989586621679085747"><span class="hs-identifier hs-var hs-var">allowed</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[DataType] -&gt; Maybe (NonEmpty DataType)
+forall a. [a] -&gt; Maybe (NonEmpty a)
+</span><span class="hs-identifier hs-var">nonEmpty</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OpDef'AttrDef
+</span><a href="#local-6989586621679085749"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">OpDef'AttrDef
+-&gt; FoldLike
+     [DataType] OpDef'AttrDef OpDef'AttrDef [DataType] [DataType]
+-&gt; [DataType]
+forall s a t b. s -&gt; FoldLike a s t a b -&gt; a
+</span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">LensLike' (Constant [DataType]) OpDef'AttrDef AttrValue
+forall (f :: * -&gt; *) s a.
+(Functor f, HasField s &quot;allowedValues&quot; a) =&gt;
+LensLike' f s a
+</span><span class="hs-identifier hs-var">allowedValues</span></span><span> </span><span class="annot"><span class="annottext">LensLike' (Constant [DataType]) OpDef'AttrDef AttrValue
+-&gt; (([DataType] -&gt; Constant [DataType] [DataType])
+    -&gt; AttrValue -&gt; Constant [DataType] AttrValue)
+-&gt; FoldLike
+     [DataType] OpDef'AttrDef OpDef'AttrDef [DataType] [DataType]
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">LensLike' (Constant [DataType]) AttrValue AttrValue'ListValue
+forall (f :: * -&gt; *) s a.
+(Functor f, HasField s &quot;list&quot; a) =&gt;
+LensLike' f s a
+</span><span class="hs-identifier hs-var">list</span></span><span> </span><span class="annot"><span class="annottext">LensLike' (Constant [DataType]) AttrValue AttrValue'ListValue
+-&gt; (([DataType] -&gt; Constant [DataType] [DataType])
+    -&gt; AttrValue'ListValue -&gt; Constant [DataType] AttrValue'ListValue)
+-&gt; ([DataType] -&gt; Constant [DataType] [DataType])
+-&gt; AttrValue
+-&gt; Constant [DataType] AttrValue
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">([DataType] -&gt; Constant [DataType] [DataType])
+-&gt; AttrValue'ListValue -&gt; Constant [DataType] AttrValue'ListValue
+forall (f :: * -&gt; *) s a.
+(Functor f, HasField s &quot;type'&quot; a) =&gt;
+LensLike' f s a
+</span><span class="hs-identifier hs-var">type'</span></span><span class="hs-special">)</span><span>
+</span><span id="line-281"></span><span>
+</span><span id="line-282"></span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#getArgTypeParam"><span class="hs-identifier hs-type">getArgTypeParam</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#ParsedArgCase"><span class="hs-identifier hs-type">ParsedArgCase</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#Name"><span class="hs-identifier hs-type">Name</span></a></span><span>
+</span><span id="line-283"></span><span id="getArgTypeParam"><span class="annot"><span class="annottext">getArgTypeParam :: ParsedArgCase -&gt; Maybe Name
+</span><a href="TensorFlow.OpGen.ParsedOp.html#getArgTypeParam"><span class="hs-identifier hs-var hs-var">getArgTypeParam</span></a></span></span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#SimpleArg"><span class="hs-identifier hs-type">SimpleArg</span></a></span><span> </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">argType :: ParsedArgCase -&gt; ArgType
+</span><a href="TensorFlow.OpGen.ParsedOp.html#argType"><span class="hs-identifier hs-var">argType</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#ArgTypeAttr"><span class="hs-identifier hs-type">ArgTypeAttr</span></a></span><span> </span><span id="local-6989586621679085746"><span class="annot"><span class="annottext">n :: Name
+</span><a href="#local-6989586621679085746"><span class="hs-identifier hs-var">n</span></a></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Maybe Name
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621679085746"><span class="hs-identifier hs-var">n</span></a></span><span>
+</span><span id="line-284"></span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#getArgTypeParam"><span class="hs-identifier hs-var">getArgTypeParam</span></a></span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#ListArg"><span class="hs-identifier hs-type">ListArg</span></a></span><span> </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">argType :: ParsedArgCase -&gt; ArgType
+</span><a href="TensorFlow.OpGen.ParsedOp.html#argType"><span class="hs-identifier hs-var">argType</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#ArgTypeAttr"><span class="hs-identifier hs-type">ArgTypeAttr</span></a></span><span> </span><span id="local-6989586621679085745"><span class="annot"><span class="annottext">n :: Name
+</span><a href="#local-6989586621679085745"><span class="hs-identifier hs-var">n</span></a></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Maybe Name
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621679085745"><span class="hs-identifier hs-var">n</span></a></span><span>
+</span><span id="line-285"></span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#getArgTypeParam"><span class="hs-identifier hs-var">getArgTypeParam</span></a></span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#MixedListArg"><span class="hs-identifier hs-type">MixedListArg</span></a></span><span> </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">argTypeAttr :: ParsedArgCase -&gt; Name
+</span><a href="TensorFlow.OpGen.ParsedOp.html#argTypeAttr"><span class="hs-identifier hs-var">argTypeAttr</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="local-6989586621679085744"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621679085744"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Maybe Name
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621679085744"><span class="hs-identifier hs-var">n</span></a></span><span>
+</span><span id="line-286"></span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#getArgTypeParam"><span class="hs-identifier hs-var">getArgTypeParam</span></a></span><span> </span><span class="hs-identifier">_</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Name
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span>
+</span><span id="line-287"></span><span>
+</span><span id="line-288"></span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#getInferredListSizeAttr"><span class="hs-identifier hs-type">getInferredListSizeAttr</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#ParsedArg"><span class="hs-identifier hs-type">ParsedArg</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">OpDef'AttrDef</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">NonEmpty</span></span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#Name"><span class="hs-identifier hs-type">Name</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-289"></span><span id="getInferredListSizeAttr"><span class="annot"><span class="annottext">getInferredListSizeAttr :: [ParsedArg] -&gt; OpDef'AttrDef -&gt; Maybe (NonEmpty Name)
+</span><a href="TensorFlow.OpGen.ParsedOp.html#getInferredListSizeAttr"><span class="hs-identifier hs-var hs-var">getInferredListSizeAttr</span></a></span></span><span> </span><span id="local-6989586621679085743"><span class="annot"><span class="annottext">inputs :: [ParsedArg]
+</span><a href="#local-6989586621679085743"><span class="hs-identifier hs-var">inputs</span></a></span></span><span> </span><span id="local-6989586621679085742"><span class="annot"><span class="annottext">a :: OpDef'AttrDef
+</span><a href="#local-6989586621679085742"><span class="hs-identifier hs-var">a</span></a></span></span><span>
+</span><span id="line-290"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">OpDef'AttrDef
+</span><a href="#local-6989586621679085742"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">OpDef'AttrDef
+-&gt; FoldLike Text OpDef'AttrDef OpDef'AttrDef Text Text -&gt; Text
+forall s a t b. s -&gt; FoldLike a s t a b -&gt; a
+</span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">FoldLike Text OpDef'AttrDef OpDef'AttrDef Text Text
+forall (f :: * -&gt; *) s a.
+(Functor f, HasField s &quot;type'&quot; a) =&gt;
+LensLike' f s a
+</span><span class="hs-identifier hs-var">type'</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="hs-string">&quot;int&quot;</span></span><span>
+</span><span id="line-291"></span><span>        </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Name] -&gt; Maybe (NonEmpty Name)
+forall a. [a] -&gt; Maybe (NonEmpty a)
+</span><span class="hs-identifier hs-var">nonEmpty</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621679085741"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="hs-glyph">|</span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#ParsedArg"><span class="hs-identifier hs-type">ParsedArg</span></a></span><span> </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">parsedArgName :: ParsedArg -&gt; Name
+</span><a href="TensorFlow.OpGen.ParsedOp.html#parsedArgName"><span class="hs-identifier hs-var">parsedArgName</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="local-6989586621679085741"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621679085741"><span class="hs-identifier hs-var">t</span></a></span></span><span>
+</span><span id="line-292"></span><span>                                  </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">parsedArgCase :: ParsedArg -&gt; ParsedArgCase
+</span><a href="TensorFlow.OpGen.ParsedOp.html#parsedArgCase"><span class="hs-identifier hs-var">parsedArgCase</span></a></span><span>
+</span><span id="line-293"></span><span>                                        </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#ListArg"><span class="hs-identifier hs-type">ListArg</span></a></span><span> </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">argLength :: ParsedArgCase -&gt; Name
+</span><a href="TensorFlow.OpGen.ParsedOp.html#argLength"><span class="hs-identifier hs-var">argLength</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="local-6989586621679085740"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621679085740"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="hs-special">}</span><span>
+</span><span id="line-294"></span><span>                                  </span><span class="hs-special">}</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[ParsedArg]
+</span><a href="#local-6989586621679085743"><span class="hs-identifier hs-var">inputs</span></a></span><span>
+</span><span id="line-295"></span><span>                      </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Text -&gt; TFName
+</span><a href="TensorFlow.OpGen.ParsedOp.html#TFName"><span class="hs-identifier hs-var">TFName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OpDef'AttrDef
+</span><a href="#local-6989586621679085742"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">OpDef'AttrDef
+-&gt; FoldLike Text OpDef'AttrDef OpDef'AttrDef Text Text -&gt; Text
+forall s a t b. s -&gt; FoldLike a s t a b -&gt; a
+</span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">FoldLike Text OpDef'AttrDef OpDef'AttrDef Text Text
+forall (f :: * -&gt; *) s a.
+(Functor f, HasField s &quot;name&quot; a) =&gt;
+LensLike' f s a
+</span><span class="hs-identifier hs-var">name</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">TFName -&gt; TFName -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; TFName
+</span><a href="TensorFlow.OpGen.ParsedOp.html#tfName"><span class="hs-identifier hs-var hs-var">tfName</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621679085740"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-296"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe (NonEmpty Name)
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span>
+</span><span id="line-297"></span><span>
+</span><span id="line-298"></span><span class="hs-comment">-- | Like mapMaybe, but associates the attribute name/description with the given info.</span><span>
+</span><span id="line-299"></span><span id="local-6989586621679085969"><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#mapMaybeAttrs"><span class="hs-identifier hs-type">mapMaybeAttrs</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">OpDef'AttrDef</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="#local-6989586621679085969"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">OpDef'AttrDef</span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#Attr"><span class="hs-identifier hs-type">Attr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679085969"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span></span><span>
+</span><span id="line-300"></span><span id="mapMaybeAttrs"><span class="annot"><span class="annottext">mapMaybeAttrs :: (OpDef'AttrDef -&gt; Maybe a) -&gt; [OpDef'AttrDef] -&gt; [Attr a]
+</span><a href="TensorFlow.OpGen.ParsedOp.html#mapMaybeAttrs"><span class="hs-identifier hs-var hs-var">mapMaybeAttrs</span></a></span></span><span> </span><span id="local-6989586621679085739"><span class="annot"><span class="annottext">f :: OpDef'AttrDef -&gt; Maybe a
+</span><a href="#local-6989586621679085739"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(OpDef'AttrDef -&gt; Maybe (Attr a)) -&gt; [OpDef'AttrDef] -&gt; [Attr a]
+forall a b. (a -&gt; Maybe b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">mapMaybe</span></span><span> </span><span class="annot"><span class="annottext">((OpDef'AttrDef -&gt; Maybe (Attr a)) -&gt; [OpDef'AttrDef] -&gt; [Attr a])
+-&gt; (OpDef'AttrDef -&gt; Maybe (Attr a)) -&gt; [OpDef'AttrDef] -&gt; [Attr a]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679085738"><span class="annot"><span class="annottext">a :: OpDef'AttrDef
+</span><a href="#local-6989586621679085738"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-301"></span><span>                            </span><span id="local-6989586621679085737"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679085737"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">OpDef'AttrDef -&gt; Maybe a
+</span><a href="#local-6989586621679085739"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">OpDef'AttrDef
+</span><a href="#local-6989586621679085738"><span class="hs-identifier hs-var">a</span></a></span><span>
+</span><span id="line-302"></span><span>                            </span><span class="annot"><span class="annottext">Attr a -&gt; Maybe (Attr a)
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">Attr :: forall a. Name -&gt; Text -&gt; a -&gt; Attr a
+</span><a href="TensorFlow.OpGen.ParsedOp.html#Attr"><span class="hs-identifier hs-type hs-type">Attr</span></a></span><span>
+</span><span id="line-303"></span><span>                                </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">attrName :: Name
+</span><a href="TensorFlow.OpGen.ParsedOp.html#attrName"><span class="hs-identifier hs-var">attrName</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Name
+</span><a href="TensorFlow.OpGen.ParsedOp.html#makeName"><span class="hs-identifier hs-var">makeName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OpDef'AttrDef
+</span><a href="#local-6989586621679085738"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">OpDef'AttrDef
+-&gt; FoldLike Text OpDef'AttrDef OpDef'AttrDef Text Text -&gt; Text
+forall s a t b. s -&gt; FoldLike a s t a b -&gt; a
+</span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">FoldLike Text OpDef'AttrDef OpDef'AttrDef Text Text
+forall (f :: * -&gt; *) s a.
+(Functor f, HasField s &quot;name&quot; a) =&gt;
+LensLike' f s a
+</span><span class="hs-identifier hs-var">name</span></span><span class="hs-special">)</span><span>
+</span><span id="line-304"></span><span>                                </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">attrDescription :: Text
+</span><a href="TensorFlow.OpGen.ParsedOp.html#attrDescription"><span class="hs-identifier hs-var">attrDescription</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OpDef'AttrDef
+</span><a href="#local-6989586621679085738"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">OpDef'AttrDef
+-&gt; FoldLike Text OpDef'AttrDef OpDef'AttrDef Text Text -&gt; Text
+forall s a t b. s -&gt; FoldLike a s t a b -&gt; a
+</span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">FoldLike Text OpDef'AttrDef OpDef'AttrDef Text Text
+forall (f :: * -&gt; *) s a.
+(Functor f, HasField s &quot;description&quot; a) =&gt;
+LensLike' f s a
+</span><span class="hs-identifier hs-var">description</span></span><span>
+</span><span id="line-305"></span><span>                                </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">attrInfo :: a
+</span><a href="TensorFlow.OpGen.ParsedOp.html#attrInfo"><span class="hs-identifier hs-var">attrInfo</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679085737"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-306"></span><span>                                </span><span class="hs-special">}</span><span>
+</span><span id="line-307"></span><span>
+</span><span id="line-308"></span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#parseArg"><span class="hs-identifier hs-type">parseArg</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">OpDef'ArgDef</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#ArgKind"><span class="hs-identifier hs-type">ArgKind</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#ParsedArg"><span class="hs-identifier hs-type">ParsedArg</span></a></span><span>
+</span><span id="line-309"></span><span id="parseArg"><span class="annot"><span class="annottext">parseArg :: OpDef'ArgDef -&gt; ArgKind -&gt; ParsedArg
+</span><a href="TensorFlow.OpGen.ParsedOp.html#parseArg"><span class="hs-identifier hs-var hs-var">parseArg</span></a></span></span><span> </span><span id="local-6989586621679085735"><span class="annot"><span class="annottext">a :: OpDef'ArgDef
+</span><a href="#local-6989586621679085735"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621679085734"><span class="annot"><span class="annottext">tKind :: ArgKind
+</span><a href="#local-6989586621679085734"><span class="hs-identifier hs-var">tKind</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ParsedArg :: Name -&gt; Text -&gt; ParsedArgCase -&gt; ParsedArg
+</span><a href="TensorFlow.OpGen.ParsedOp.html#ParsedArg"><span class="hs-identifier hs-type hs-type">ParsedArg</span></a></span><span>
+</span><span id="line-310"></span><span>    </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">parsedArgName :: Name
+</span><a href="TensorFlow.OpGen.ParsedOp.html#parsedArgName"><span class="hs-identifier hs-var">parsedArgName</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Name
+</span><a href="TensorFlow.OpGen.ParsedOp.html#makeName"><span class="hs-identifier hs-var">makeName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OpDef'ArgDef
+</span><a href="#local-6989586621679085735"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">OpDef'ArgDef
+-&gt; FoldLike Text OpDef'ArgDef OpDef'ArgDef Text Text -&gt; Text
+forall s a t b. s -&gt; FoldLike a s t a b -&gt; a
+</span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">FoldLike Text OpDef'ArgDef OpDef'ArgDef Text Text
+forall (f :: * -&gt; *) s a.
+(Functor f, HasField s &quot;name&quot; a) =&gt;
+LensLike' f s a
+</span><span class="hs-identifier hs-var">name</span></span><span class="hs-special">)</span><span>
+</span><span id="line-311"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">parsedArgDescription :: Text
+</span><a href="TensorFlow.OpGen.ParsedOp.html#parsedArgDescription"><span class="hs-identifier hs-var">parsedArgDescription</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OpDef'ArgDef
+</span><a href="#local-6989586621679085735"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">OpDef'ArgDef
+-&gt; FoldLike Text OpDef'ArgDef OpDef'ArgDef Text Text -&gt; Text
+forall s a t b. s -&gt; FoldLike a s t a b -&gt; a
+</span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">FoldLike Text OpDef'ArgDef OpDef'ArgDef Text Text
+forall (f :: * -&gt; *) s a.
+(Functor f, HasField s &quot;description&quot; a) =&gt;
+LensLike' f s a
+</span><span class="hs-identifier hs-var">description</span></span><span>
+</span><span id="line-312"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">parsedArgCase :: ParsedArgCase
+</span><a href="TensorFlow.OpGen.ParsedOp.html#parsedArgCase"><span class="hs-identifier hs-var">parsedArgCase</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">OpDef'ArgDef -&gt; ArgKind -&gt; ParsedArgCase
+</span><a href="TensorFlow.OpGen.ParsedOp.html#parseArgCase"><span class="hs-identifier hs-var">parseArgCase</span></a></span><span> </span><span class="annot"><span class="annottext">OpDef'ArgDef
+</span><a href="#local-6989586621679085735"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">ArgKind
+</span><a href="#local-6989586621679085734"><span class="hs-identifier hs-var">tKind</span></a></span><span>
+</span><span id="line-313"></span><span>    </span><span class="hs-special">}</span><span>
+</span><span id="line-314"></span><span>
+</span><span id="line-315"></span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#parseArgCase"><span class="hs-identifier hs-type">parseArgCase</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">OpDef'ArgDef</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#ArgKind"><span class="hs-identifier hs-type">ArgKind</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#ParsedArgCase"><span class="hs-identifier hs-type">ParsedArgCase</span></a></span><span>
+</span><span id="line-316"></span><span id="parseArgCase"><span class="annot"><span class="annottext">parseArgCase :: OpDef'ArgDef -&gt; ArgKind -&gt; ParsedArgCase
+</span><a href="TensorFlow.OpGen.ParsedOp.html#parseArgCase"><span class="hs-identifier hs-var hs-var">parseArgCase</span></a></span></span><span> </span><span id="local-6989586621679085731"><span class="annot"><span class="annottext">a :: OpDef'ArgDef
+</span><a href="#local-6989586621679085731"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621679085730"><span class="annot"><span class="annottext">tKind :: ArgKind
+</span><a href="#local-6989586621679085730"><span class="hs-identifier hs-var">tKind</span></a></span></span><span>
+</span><span id="line-317"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621679085729"><span class="annot"><span class="annottext">n :: Name
+</span><a href="#local-6989586621679085729"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Maybe Name
+</span><a href="#local-6989586621679085728"><span class="hs-identifier hs-var">maybeAttr</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OpDef'ArgDef
+</span><a href="#local-6989586621679085731"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">OpDef'ArgDef
+-&gt; FoldLike Text OpDef'ArgDef OpDef'ArgDef Text Text -&gt; Text
+forall s a t b. s -&gt; FoldLike a s t a b -&gt; a
+</span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">FoldLike Text OpDef'ArgDef OpDef'ArgDef Text Text
+forall (f :: * -&gt; *) s a.
+(Functor f, HasField s &quot;typeListAttr&quot; a) =&gt;
+LensLike' f s a
+</span><span class="hs-identifier hs-var">typeListAttr</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; ArgKind -&gt; ParsedArgCase
+</span><a href="TensorFlow.OpGen.ParsedOp.html#MixedListArg"><span class="hs-identifier hs-var">MixedListArg</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621679085729"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="annot"><span class="annottext">ArgKind
+</span><a href="#local-6989586621679085730"><span class="hs-identifier hs-var">tKind</span></a></span><span>
+</span><span id="line-318"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621679085727"><span class="annot"><span class="annottext">n :: Name
+</span><a href="#local-6989586621679085727"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Maybe Name
+</span><a href="#local-6989586621679085728"><span class="hs-identifier hs-var">maybeAttr</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OpDef'ArgDef
+</span><a href="#local-6989586621679085731"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">OpDef'ArgDef
+-&gt; FoldLike Text OpDef'ArgDef OpDef'ArgDef Text Text -&gt; Text
+forall s a t b. s -&gt; FoldLike a s t a b -&gt; a
+</span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">FoldLike Text OpDef'ArgDef OpDef'ArgDef Text Text
+forall (f :: * -&gt; *) s a.
+(Functor f, HasField s &quot;numberAttr&quot; a) =&gt;
+LensLike' f s a
+</span><span class="hs-identifier hs-var">numberAttr</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; ArgType -&gt; ArgKind -&gt; ParsedArgCase
+</span><a href="TensorFlow.OpGen.ParsedOp.html#ListArg"><span class="hs-identifier hs-var">ListArg</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621679085727"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="annot"><span class="annottext">ArgType
+</span><a href="#local-6989586621679085726"><span class="hs-identifier hs-var">thisArgType</span></a></span><span> </span><span class="annot"><span class="annottext">ArgKind
+</span><a href="#local-6989586621679085730"><span class="hs-identifier hs-var">tKind</span></a></span><span>
+</span><span id="line-319"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ArgType -&gt; ArgKind -&gt; ParsedArgCase
+</span><a href="TensorFlow.OpGen.ParsedOp.html#SimpleArg"><span class="hs-identifier hs-var">SimpleArg</span></a></span><span> </span><span class="annot"><span class="annottext">ArgType
+</span><a href="#local-6989586621679085726"><span class="hs-identifier hs-var">thisArgType</span></a></span><span> </span><span class="annot"><span class="annottext">ArgKind
+</span><a href="#local-6989586621679085730"><span class="hs-identifier hs-var">tKind</span></a></span><span>
+</span><span id="line-320"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-321"></span><span>    </span><span id="local-6989586621679085726"><span class="annot"><span class="annottext">thisArgType :: ArgType
+</span><a href="#local-6989586621679085726"><span class="hs-identifier hs-var hs-var">thisArgType</span></a></span></span><span>
+</span><span id="line-322"></span><span>        </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621679085725"><span class="annot"><span class="annottext">n :: Name
+</span><a href="#local-6989586621679085725"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Maybe Name
+</span><a href="#local-6989586621679085728"><span class="hs-identifier hs-var">maybeAttr</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OpDef'ArgDef
+</span><a href="#local-6989586621679085731"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">OpDef'ArgDef
+-&gt; FoldLike Text OpDef'ArgDef OpDef'ArgDef Text Text -&gt; Text
+forall s a t b. s -&gt; FoldLike a s t a b -&gt; a
+</span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">FoldLike Text OpDef'ArgDef OpDef'ArgDef Text Text
+forall (f :: * -&gt; *) s a.
+(Functor f, HasField s &quot;typeAttr&quot; a) =&gt;
+LensLike' f s a
+</span><span class="hs-identifier hs-var">typeAttr</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; ArgType
+</span><a href="TensorFlow.OpGen.ParsedOp.html#ArgTypeAttr"><span class="hs-identifier hs-var">ArgTypeAttr</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621679085725"><span class="hs-identifier hs-var">n</span></a></span><span>
+</span><span id="line-323"></span><span>        </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">DataType -&gt; ArgType
+</span><a href="TensorFlow.OpGen.ParsedOp.html#ArgTypeFixed"><span class="hs-identifier hs-var">ArgTypeFixed</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OpDef'ArgDef
+</span><a href="#local-6989586621679085731"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">OpDef'ArgDef
+-&gt; FoldLike DataType OpDef'ArgDef OpDef'ArgDef DataType DataType
+-&gt; DataType
+forall s a t b. s -&gt; FoldLike a s t a b -&gt; a
+</span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">FoldLike DataType OpDef'ArgDef OpDef'ArgDef DataType DataType
+forall (f :: * -&gt; *) s a.
+(Functor f, HasField s &quot;type'&quot; a) =&gt;
+LensLike' f s a
+</span><span class="hs-identifier hs-var">type'</span></span><span class="hs-special">)</span><span>
+</span><span id="line-324"></span><span>    </span><span class="annot"><a href="#local-6989586621679085728"><span class="hs-identifier hs-type">maybeAttr</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#Name"><span class="hs-identifier hs-type">Name</span></a></span><span>
+</span><span id="line-325"></span><span>    </span><span id="local-6989586621679085728"><span class="annot"><span class="annottext">maybeAttr :: Text -&gt; Maybe Name
+</span><a href="#local-6989586621679085728"><span class="hs-identifier hs-var hs-var">maybeAttr</span></a></span></span><span> </span><span class="hs-string">&quot;&quot;</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Name
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span>
+</span><span id="line-326"></span><span>    </span><span class="annot"><a href="#local-6989586621679085728"><span class="hs-identifier hs-var">maybeAttr</span></a></span><span> </span><span id="local-6989586621679085724"><span class="annot"><span class="annottext">t :: Text
+</span><a href="#local-6989586621679085724"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Maybe Name
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(Name -&gt; Maybe Name) -&gt; Name -&gt; Maybe Name
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Name
+</span><a href="TensorFlow.OpGen.ParsedOp.html#makeName"><span class="hs-identifier hs-var">makeName</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679085724"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><span id="line-327"></span><span>
+</span><span id="line-328"></span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#parseAttrType"><span class="hs-identifier hs-type">parseAttrType</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">OpDef</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.OpGen.ParsedOp.html#AttrType"><span class="hs-identifier hs-type">AttrType</span></a></span><span>
+</span><span id="line-329"></span><span id="parseAttrType"><span class="annot"><span class="annottext">parseAttrType :: OpDef -&gt; Text -&gt; AttrType
+</span><a href="TensorFlow.OpGen.ParsedOp.html#parseAttrType"><span class="hs-identifier hs-var hs-var">parseAttrType</span></a></span></span><span> </span><span id="local-6989586621679085723"><span class="annot"><span class="annottext">o :: OpDef
+</span><a href="#local-6989586621679085723"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-330"></span><span>    </span><span class="hs-string">&quot;string&quot;</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">AttrBaseType -&gt; AttrType
+</span><a href="TensorFlow.OpGen.ParsedOp.html#AttrSingle"><span class="hs-identifier hs-var">AttrSingle</span></a></span><span> </span><span class="annot"><span class="annottext">AttrBaseType
+</span><a href="TensorFlow.OpGen.ParsedOp.html#AttrBytes"><span class="hs-identifier hs-var">AttrBytes</span></a></span><span>
+</span><span id="line-331"></span><span>    </span><span class="hs-string">&quot;int&quot;</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">AttrBaseType -&gt; AttrType
+</span><a href="TensorFlow.OpGen.ParsedOp.html#AttrSingle"><span class="hs-identifier hs-var">AttrSingle</span></a></span><span> </span><span class="annot"><span class="annottext">AttrBaseType
+</span><a href="TensorFlow.OpGen.ParsedOp.html#AttrInt64"><span class="hs-identifier hs-var">AttrInt64</span></a></span><span>
+</span><span id="line-332"></span><span>    </span><span class="hs-string">&quot;float&quot;</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">AttrBaseType -&gt; AttrType
+</span><a href="TensorFlow.OpGen.ParsedOp.html#AttrSingle"><span class="hs-identifier hs-var">AttrSingle</span></a></span><span> </span><span class="annot"><span class="annottext">AttrBaseType
+</span><a href="TensorFlow.OpGen.ParsedOp.html#AttrFloat"><span class="hs-identifier hs-var">AttrFloat</span></a></span><span>
+</span><span id="line-333"></span><span>    </span><span class="hs-string">&quot;bool&quot;</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">AttrBaseType -&gt; AttrType
+</span><a href="TensorFlow.OpGen.ParsedOp.html#AttrSingle"><span class="hs-identifier hs-var">AttrSingle</span></a></span><span> </span><span class="annot"><span class="annottext">AttrBaseType
+</span><a href="TensorFlow.OpGen.ParsedOp.html#AttrBool"><span class="hs-identifier hs-var">AttrBool</span></a></span><span>
+</span><span id="line-334"></span><span>    </span><span class="hs-string">&quot;type&quot;</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">AttrBaseType -&gt; AttrType
+</span><a href="TensorFlow.OpGen.ParsedOp.html#AttrSingle"><span class="hs-identifier hs-var">AttrSingle</span></a></span><span> </span><span class="annot"><span class="annottext">AttrBaseType
+</span><a href="TensorFlow.OpGen.ParsedOp.html#AttrType"><span class="hs-identifier hs-var">AttrType</span></a></span><span>
+</span><span id="line-335"></span><span>    </span><span class="hs-string">&quot;shape&quot;</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">AttrBaseType -&gt; AttrType
+</span><a href="TensorFlow.OpGen.ParsedOp.html#AttrSingle"><span class="hs-identifier hs-var">AttrSingle</span></a></span><span> </span><span class="annot"><span class="annottext">AttrBaseType
+</span><a href="TensorFlow.OpGen.ParsedOp.html#AttrShape"><span class="hs-identifier hs-var">AttrShape</span></a></span><span>
+</span><span id="line-336"></span><span>    </span><span class="hs-string">&quot;tensor&quot;</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">AttrBaseType -&gt; AttrType
+</span><a href="TensorFlow.OpGen.ParsedOp.html#AttrSingle"><span class="hs-identifier hs-var">AttrSingle</span></a></span><span> </span><span class="annot"><span class="annottext">AttrBaseType
+</span><a href="TensorFlow.OpGen.ParsedOp.html#AttrTensor"><span class="hs-identifier hs-var">AttrTensor</span></a></span><span>
+</span><span id="line-337"></span><span>    </span><span class="hs-string">&quot;list(string)&quot;</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">AttrBaseType -&gt; AttrType
+</span><a href="TensorFlow.OpGen.ParsedOp.html#AttrList"><span class="hs-identifier hs-var">AttrList</span></a></span><span> </span><span class="annot"><span class="annottext">AttrBaseType
+</span><a href="TensorFlow.OpGen.ParsedOp.html#AttrBytes"><span class="hs-identifier hs-var">AttrBytes</span></a></span><span>
+</span><span id="line-338"></span><span>    </span><span class="hs-string">&quot;list(int)&quot;</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">AttrBaseType -&gt; AttrType
+</span><a href="TensorFlow.OpGen.ParsedOp.html#AttrList"><span class="hs-identifier hs-var">AttrList</span></a></span><span> </span><span class="annot"><span class="annottext">AttrBaseType
+</span><a href="TensorFlow.OpGen.ParsedOp.html#AttrInt64"><span class="hs-identifier hs-var">AttrInt64</span></a></span><span>
+</span><span id="line-339"></span><span>    </span><span class="hs-string">&quot;list(float)&quot;</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">AttrBaseType -&gt; AttrType
+</span><a href="TensorFlow.OpGen.ParsedOp.html#AttrList"><span class="hs-identifier hs-var">AttrList</span></a></span><span> </span><span class="annot"><span class="annottext">AttrBaseType
+</span><a href="TensorFlow.OpGen.ParsedOp.html#AttrFloat"><span class="hs-identifier hs-var">AttrFloat</span></a></span><span>
+</span><span id="line-340"></span><span>    </span><span class="hs-string">&quot;list(bool)&quot;</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">AttrBaseType -&gt; AttrType
+</span><a href="TensorFlow.OpGen.ParsedOp.html#AttrList"><span class="hs-identifier hs-var">AttrList</span></a></span><span> </span><span class="annot"><span class="annottext">AttrBaseType
+</span><a href="TensorFlow.OpGen.ParsedOp.html#AttrBool"><span class="hs-identifier hs-var">AttrBool</span></a></span><span>
+</span><span id="line-341"></span><span>    </span><span class="hs-string">&quot;list(type)&quot;</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">AttrBaseType -&gt; AttrType
+</span><a href="TensorFlow.OpGen.ParsedOp.html#AttrList"><span class="hs-identifier hs-var">AttrList</span></a></span><span> </span><span class="annot"><span class="annottext">AttrBaseType
+</span><a href="TensorFlow.OpGen.ParsedOp.html#AttrType"><span class="hs-identifier hs-var">AttrType</span></a></span><span>
+</span><span id="line-342"></span><span>    </span><span class="hs-string">&quot;list(shape)&quot;</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">AttrBaseType -&gt; AttrType
+</span><a href="TensorFlow.OpGen.ParsedOp.html#AttrList"><span class="hs-identifier hs-var">AttrList</span></a></span><span> </span><span class="annot"><span class="annottext">AttrBaseType
+</span><a href="TensorFlow.OpGen.ParsedOp.html#AttrShape"><span class="hs-identifier hs-var">AttrShape</span></a></span><span>
+</span><span id="line-343"></span><span>    </span><span class="hs-string">&quot;list(tensor)&quot;</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">AttrBaseType -&gt; AttrType
+</span><a href="TensorFlow.OpGen.ParsedOp.html#AttrList"><span class="hs-identifier hs-var">AttrList</span></a></span><span> </span><span class="annot"><span class="annottext">AttrBaseType
+</span><a href="TensorFlow.OpGen.ParsedOp.html#AttrTensor"><span class="hs-identifier hs-var">AttrTensor</span></a></span><span>
+</span><span id="line-344"></span><span>    </span><span id="local-6989586621679085722"><span class="annot"><span class="annottext">t :: Text
+</span><a href="#local-6989586621679085722"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; AttrType
+forall a. HasCallStack =&gt; String -&gt; a
+</span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; AttrType) -&gt; String -&gt; AttrType
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="hs-string">&quot;parseAttrType: unrecognized type &quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
+forall a. Show a =&gt; a -&gt; String
+</span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679085722"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><span id="line-345"></span><span>              </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="hs-string">&quot; for op &quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
+forall a. Show a =&gt; a -&gt; String
+</span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OpDef
+</span><a href="#local-6989586621679085723"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">OpDef -&gt; FoldLike Text OpDef OpDef Text Text -&gt; Text
+forall s a t b. s -&gt; FoldLike a s t a b -&gt; a
+</span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">FoldLike Text OpDef OpDef Text Text
+forall (f :: * -&gt; *) s a.
+(Functor f, HasField s &quot;name&quot; a) =&gt;
+LensLike' f s a
+</span><span class="hs-identifier hs-var">name</span></span><span class="hs-special">)</span><span>
+</span><span id="line-346"></span></pre></body></html>

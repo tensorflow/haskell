@@ -1,0 +1,960 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">{- This file was auto-generated from tensorflow/core/framework/versions.proto by the proto-lens-protoc program. -}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE ScopedTypeVariables, DataKinds, TypeFamilies, UndecidableInstances, GeneralizedNewtypeDeriving, MultiParamTypeClasses, FlexibleContexts, FlexibleInstances, PatternSynonyms, MagicHash, NoImplicitPrelude, DataKinds, BangPatterns, TypeApplications, OverloadedStrings, DerivingStrategies#-}</span><span>
+</span><span id="line-3"></span><span class="hs-pragma">{-# OPTIONS_GHC -Wno-unused-imports#-}</span><span>
+</span><span id="line-4"></span><span class="hs-pragma">{-# OPTIONS_GHC -Wno-duplicate-exports#-}</span><span>
+</span><span id="line-5"></span><span class="hs-pragma">{-# OPTIONS_GHC -Wno-dodgy-exports#-}</span><span>
+</span><span id="line-6"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Proto.Tensorflow.Core.Framework.Versions</span><span> </span><span class="hs-special">(</span><span>
+</span><span id="line-7"></span><span>        </span><span class="annot"><a href="Proto.Tensorflow.Core.Framework.Versions.html#VersionDef"><span class="hs-identifier">VersionDef</span></a></span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-8"></span><span>    </span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Control.DeepSeq</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Control.DeepSeq</span></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.ProtoLens.Prism</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Prism</span></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Prelude</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Prelude</span></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.Int</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.Int</span></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.Monoid</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.Monoid</span></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.Word</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.Word</span></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.ProtoLens</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens</span></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.ProtoLens.Encoding.Bytes</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Encoding.Bytes</span></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.ProtoLens.Encoding.Growing</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Encoding.Growing</span></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.ProtoLens.Encoding.Parser.Unsafe</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Encoding.Parser.Unsafe</span></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.ProtoLens.Encoding.Wire</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Encoding.Wire</span></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.ProtoLens.Field</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Field</span></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.ProtoLens.Message.Enum</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Message.Enum</span></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.ProtoLens.Service.Types</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Service.Types</span></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Lens.Family2</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Lens.Family2</span></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Lens.Family2.Unchecked</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Lens.Family2.Unchecked</span></span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.Text</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text</span></span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.Map</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.Map</span></span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.ByteString</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.ByteString</span></span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.ByteString.Char8</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.ByteString.Char8</span></span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.Text.Encoding</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text.Encoding</span></span><span>
+</span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.Vector</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.Vector</span></span><span>
+</span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.Vector.Generic</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.Vector.Generic</span></span><span>
+</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.Vector.Unboxed</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.Vector.Unboxed</span></span><span>
+</span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Text.Read</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Text.Read</span></span><span>
+</span><span id="line-34"></span><span class="hs-comment">{- | Fields :
+     
+         * 'Proto.Tensorflow.Core.Framework.Versions_Fields.producer' @:: Lens' VersionDef Data.Int.Int32@
+         * 'Proto.Tensorflow.Core.Framework.Versions_Fields.minConsumer' @:: Lens' VersionDef Data.Int.Int32@
+         * 'Proto.Tensorflow.Core.Framework.Versions_Fields.badConsumers' @:: Lens' VersionDef [Data.Int.Int32]@
+         * 'Proto.Tensorflow.Core.Framework.Versions_Fields.vec'badConsumers' @:: Lens' VersionDef (Data.Vector.Unboxed.Vector Data.Int.Int32)@ -}</span><span>
+</span><span id="line-40"></span><span class="hs-keyword">data</span><span> </span><span id="VersionDef"><span class="annot"><a href="Proto.Tensorflow.Core.Framework.Versions.html#VersionDef"><span class="hs-identifier hs-var">VersionDef</span></a></span></span><span>
+</span><span id="line-41"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="VersionDef%27_constructor"><span class="annot"><a href="Proto.Tensorflow.Core.Framework.Versions.html#VersionDef%27_constructor"><span class="hs-identifier hs-var">VersionDef'_constructor</span></a></span></span><span> </span><span class="hs-special">{</span><span id="_VersionDef%27producer"><span class="annot"><span class="annottext">VersionDef -&gt; Int32
+</span><a href="Proto.Tensorflow.Core.Framework.Versions.html#_VersionDef%27producer"><span class="hs-identifier hs-var hs-var">_VersionDef'producer</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Data.Int.Int32</span></span><span class="hs-special">,</span><span>
+</span><span id="line-42"></span><span>                             </span><span id="_VersionDef%27minConsumer"><span class="annot"><span class="annottext">VersionDef -&gt; Int32
+</span><a href="Proto.Tensorflow.Core.Framework.Versions.html#_VersionDef%27minConsumer"><span class="hs-identifier hs-var hs-var">_VersionDef'minConsumer</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Data.Int.Int32</span></span><span class="hs-special">,</span><span>
+</span><span id="line-43"></span><span>                             </span><span id="_VersionDef%27badConsumers"><span class="annot"><span class="annottext">VersionDef -&gt; Vector Int32
+</span><a href="Proto.Tensorflow.Core.Framework.Versions.html#_VersionDef%27badConsumers"><span class="hs-identifier hs-var hs-var">_VersionDef'badConsumers</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Data.Vector.Unboxed.Vector</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data.Int.Int32</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-44"></span><span>                             </span><span id="_VersionDef%27_unknownFields"><span class="annot"><span class="annottext">VersionDef -&gt; FieldSet
+</span><a href="Proto.Tensorflow.Core.Framework.Versions.html#_VersionDef%27_unknownFields"><span class="hs-identifier hs-var hs-var">_VersionDef'_unknownFields</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.FieldSet</span></span><span class="hs-special">}</span><span>
+</span><span id="line-45"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679490862"><span id="local-6989586621679490864"><span class="annot"><span class="annottext">VersionDef -&gt; VersionDef -&gt; Bool
+(VersionDef -&gt; VersionDef -&gt; Bool)
+-&gt; (VersionDef -&gt; VersionDef -&gt; Bool) -&gt; Eq VersionDef
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: VersionDef -&gt; VersionDef -&gt; Bool
+$c/= :: VersionDef -&gt; VersionDef -&gt; Bool
+== :: VersionDef -&gt; VersionDef -&gt; Bool
+$c== :: VersionDef -&gt; VersionDef -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Prelude.Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679490846"><span id="local-6989586621679490848"><span id="local-6989586621679490850"><span id="local-6989586621679490852"><span id="local-6989586621679490854"><span id="local-6989586621679490856"><span id="local-6989586621679490858"><span class="annot"><span class="annottext">Eq VersionDef
+Eq VersionDef =&gt;
+(VersionDef -&gt; VersionDef -&gt; Ordering)
+-&gt; (VersionDef -&gt; VersionDef -&gt; Bool)
+-&gt; (VersionDef -&gt; VersionDef -&gt; Bool)
+-&gt; (VersionDef -&gt; VersionDef -&gt; Bool)
+-&gt; (VersionDef -&gt; VersionDef -&gt; Bool)
+-&gt; (VersionDef -&gt; VersionDef -&gt; VersionDef)
+-&gt; (VersionDef -&gt; VersionDef -&gt; VersionDef)
+-&gt; Ord VersionDef
+VersionDef -&gt; VersionDef -&gt; Bool
+VersionDef -&gt; VersionDef -&gt; Ordering
+VersionDef -&gt; VersionDef -&gt; VersionDef
+forall a.
+Eq a =&gt;
+(a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+min :: VersionDef -&gt; VersionDef -&gt; VersionDef
+$cmin :: VersionDef -&gt; VersionDef -&gt; VersionDef
+max :: VersionDef -&gt; VersionDef -&gt; VersionDef
+$cmax :: VersionDef -&gt; VersionDef -&gt; VersionDef
+&gt;= :: VersionDef -&gt; VersionDef -&gt; Bool
+$c&gt;= :: VersionDef -&gt; VersionDef -&gt; Bool
+&gt; :: VersionDef -&gt; VersionDef -&gt; Bool
+$c&gt; :: VersionDef -&gt; VersionDef -&gt; Bool
+&lt;= :: VersionDef -&gt; VersionDef -&gt; Bool
+$c&lt;= :: VersionDef -&gt; VersionDef -&gt; Bool
+&lt; :: VersionDef -&gt; VersionDef -&gt; Bool
+$c&lt; :: VersionDef -&gt; VersionDef -&gt; Bool
+compare :: VersionDef -&gt; VersionDef -&gt; Ordering
+$ccompare :: VersionDef -&gt; VersionDef -&gt; Ordering
+$cp1Ord :: Eq VersionDef
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Prelude.Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-46"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679490840"><span id="local-6989586621679490842"><span class="annot"><span class="hs-identifier hs-type">Prelude.Show</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Framework.Versions.html#VersionDef"><span class="hs-identifier hs-type">VersionDef</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-47"></span><span>  </span><span id="local-6989586621679490838"><span class="annot"><span class="annottext">showsPrec :: Int -&gt; VersionDef -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">showsPrec</span></span></span><span> </span><span class="hs-identifier">_</span><span> </span><span id="local-6989586621679490836"><span class="annot"><span class="annottext">__x :: VersionDef
+</span><a href="#local-6989586621679490836"><span class="hs-identifier hs-var">__x</span></a></span></span><span> </span><span id="local-6989586621679490835"><span class="annot"><span class="annottext">__s :: String
+</span><a href="#local-6989586621679490835"><span class="hs-identifier hs-var">__s</span></a></span></span><span>
+</span><span id="line-48"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Char -&gt; ShowS
+</span><span class="hs-identifier hs-var">Prelude.showChar</span></span><span>
+</span><span id="line-49"></span><span>        </span><span class="annot"><span class="hs-char">'{'</span></span><span>
+</span><span id="line-50"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; ShowS
+</span><span class="hs-identifier hs-var">Prelude.showString</span></span><span>
+</span><span id="line-51"></span><span>           </span><span class="hs-special">(</span><span class="annot"><span class="annottext">VersionDef -&gt; String
+forall msg. Message msg =&gt; msg -&gt; String
+</span><span class="hs-identifier hs-var">Data.ProtoLens.showMessageShort</span></span><span> </span><span class="annot"><span class="annottext">VersionDef
+</span><a href="#local-6989586621679490836"><span class="hs-identifier hs-var">__x</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Char -&gt; ShowS
+</span><span class="hs-identifier hs-var">Prelude.showChar</span></span><span> </span><span class="annot"><span class="hs-char">'}'</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679490835"><span class="hs-identifier hs-var">__s</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-52"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.Field.HasField</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Framework.Versions.html#VersionDef"><span class="hs-identifier hs-type">VersionDef</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;producer&quot;</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data.Int.Int32</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-53"></span><span>  </span><span id="local-6989586621679490829"><span class="annot"><span class="annottext">fieldOf :: Proxy# &quot;producer&quot;
+-&gt; (Int32 -&gt; f Int32) -&gt; VersionDef -&gt; f VersionDef
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">fieldOf</span></span></span><span> </span><span class="hs-identifier">_</span><span>
+</span><span id="line-54"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((Int32 -&gt; f Int32) -&gt; VersionDef -&gt; f VersionDef)
+-&gt; ((Int32 -&gt; f Int32) -&gt; Int32 -&gt; f Int32)
+-&gt; (Int32 -&gt; f Int32)
+-&gt; VersionDef
+-&gt; f VersionDef
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">(Prelude..)</span></span><span>
+</span><span id="line-55"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(VersionDef -&gt; Int32)
+-&gt; (VersionDef -&gt; Int32 -&gt; VersionDef)
+-&gt; Lens VersionDef VersionDef Int32 Int32
+forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span class="hs-identifier hs-var">Lens.Family2.Unchecked.lens</span></span><span>
+</span><span id="line-56"></span><span>           </span><span class="annot"><span class="annottext">VersionDef -&gt; Int32
+</span><a href="Proto.Tensorflow.Core.Framework.Versions.html#_VersionDef%27producer"><span class="hs-identifier hs-var hs-var">_VersionDef'producer</span></a></span><span>
+</span><span id="line-57"></span><span>           </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span> </span><span id="local-6989586621679490825"><span class="annot"><span class="annottext">x__ :: VersionDef
+</span><a href="#local-6989586621679490825"><span class="hs-identifier hs-var">x__</span></a></span></span><span> </span><span id="local-6989586621679490824"><span class="annot"><span class="annottext">y__ :: Int32
+</span><a href="#local-6989586621679490824"><span class="hs-identifier hs-var">y__</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">VersionDef
+</span><a href="#local-6989586621679490825"><span class="hs-identifier hs-var">x__</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_VersionDef'producer :: Int32
+</span><a href="Proto.Tensorflow.Core.Framework.Versions.html#_VersionDef%27producer"><span class="hs-identifier hs-var">_VersionDef'producer</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int32
+</span><a href="#local-6989586621679490824"><span class="hs-identifier hs-var">y__</span></a></span><span class="hs-special">}</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-58"></span><span>        </span><span class="annot"><span class="annottext">(Int32 -&gt; f Int32) -&gt; Int32 -&gt; f Int32
+forall a. a -&gt; a
+</span><span class="hs-identifier hs-var">Prelude.id</span></span><span>
+</span><span id="line-59"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.Field.HasField</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Framework.Versions.html#VersionDef"><span class="hs-identifier hs-type">VersionDef</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;minConsumer&quot;</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data.Int.Int32</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-60"></span><span>  </span><span id="local-6989586621679490821"><span class="annot"><span class="annottext">fieldOf :: Proxy# &quot;minConsumer&quot;
+-&gt; (Int32 -&gt; f Int32) -&gt; VersionDef -&gt; f VersionDef
+</span><a href="#local-6989586621679490821"><span class="hs-identifier hs-var hs-var hs-var hs-var">fieldOf</span></a></span></span><span> </span><span class="hs-identifier">_</span><span>
+</span><span id="line-61"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((Int32 -&gt; f Int32) -&gt; VersionDef -&gt; f VersionDef)
+-&gt; ((Int32 -&gt; f Int32) -&gt; Int32 -&gt; f Int32)
+-&gt; (Int32 -&gt; f Int32)
+-&gt; VersionDef
+-&gt; f VersionDef
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">(Prelude..)</span></span><span>
+</span><span id="line-62"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(VersionDef -&gt; Int32)
+-&gt; (VersionDef -&gt; Int32 -&gt; VersionDef)
+-&gt; Lens VersionDef VersionDef Int32 Int32
+forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span class="hs-identifier hs-var">Lens.Family2.Unchecked.lens</span></span><span>
+</span><span id="line-63"></span><span>           </span><span class="annot"><span class="annottext">VersionDef -&gt; Int32
+</span><a href="Proto.Tensorflow.Core.Framework.Versions.html#_VersionDef%27minConsumer"><span class="hs-identifier hs-var hs-var">_VersionDef'minConsumer</span></a></span><span>
+</span><span id="line-64"></span><span>           </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span> </span><span id="local-6989586621679490820"><span class="annot"><span class="annottext">x__ :: VersionDef
+</span><a href="#local-6989586621679490820"><span class="hs-identifier hs-var">x__</span></a></span></span><span> </span><span id="local-6989586621679490819"><span class="annot"><span class="annottext">y__ :: Int32
+</span><a href="#local-6989586621679490819"><span class="hs-identifier hs-var">y__</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">VersionDef
+</span><a href="#local-6989586621679490820"><span class="hs-identifier hs-var">x__</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_VersionDef'minConsumer :: Int32
+</span><a href="Proto.Tensorflow.Core.Framework.Versions.html#_VersionDef%27minConsumer"><span class="hs-identifier hs-var">_VersionDef'minConsumer</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int32
+</span><a href="#local-6989586621679490819"><span class="hs-identifier hs-var">y__</span></a></span><span class="hs-special">}</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-65"></span><span>        </span><span class="annot"><span class="annottext">(Int32 -&gt; f Int32) -&gt; Int32 -&gt; f Int32
+forall a. a -&gt; a
+</span><span class="hs-identifier hs-var">Prelude.id</span></span><span>
+</span><span id="line-66"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.Field.HasField</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Framework.Versions.html#VersionDef"><span class="hs-identifier hs-type">VersionDef</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;badConsumers&quot;</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Data.Int.Int32</span></span><span class="hs-special">]</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-67"></span><span>  </span><span id="local-6989586621679490817"><span class="annot"><span class="annottext">fieldOf :: Proxy# &quot;badConsumers&quot;
+-&gt; ([Int32] -&gt; f [Int32]) -&gt; VersionDef -&gt; f VersionDef
+</span><a href="#local-6989586621679490817"><span class="hs-identifier hs-var hs-var hs-var hs-var">fieldOf</span></a></span></span><span> </span><span class="hs-identifier">_</span><span>
+</span><span id="line-68"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((Vector Int32 -&gt; f (Vector Int32)) -&gt; VersionDef -&gt; f VersionDef)
+-&gt; (([Int32] -&gt; f [Int32]) -&gt; Vector Int32 -&gt; f (Vector Int32))
+-&gt; ([Int32] -&gt; f [Int32])
+-&gt; VersionDef
+-&gt; f VersionDef
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">(Prelude..)</span></span><span>
+</span><span id="line-69"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(VersionDef -&gt; Vector Int32)
+-&gt; (VersionDef -&gt; Vector Int32 -&gt; VersionDef)
+-&gt; Lens VersionDef VersionDef (Vector Int32) (Vector Int32)
+forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span class="hs-identifier hs-var">Lens.Family2.Unchecked.lens</span></span><span>
+</span><span id="line-70"></span><span>           </span><span class="annot"><span class="annottext">VersionDef -&gt; Vector Int32
+</span><a href="Proto.Tensorflow.Core.Framework.Versions.html#_VersionDef%27badConsumers"><span class="hs-identifier hs-var hs-var">_VersionDef'badConsumers</span></a></span><span>
+</span><span id="line-71"></span><span>           </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span> </span><span id="local-6989586621679490816"><span class="annot"><span class="annottext">x__ :: VersionDef
+</span><a href="#local-6989586621679490816"><span class="hs-identifier hs-var">x__</span></a></span></span><span> </span><span id="local-6989586621679490815"><span class="annot"><span class="annottext">y__ :: Vector Int32
+</span><a href="#local-6989586621679490815"><span class="hs-identifier hs-var">y__</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">VersionDef
+</span><a href="#local-6989586621679490816"><span class="hs-identifier hs-var">x__</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_VersionDef'badConsumers :: Vector Int32
+</span><a href="Proto.Tensorflow.Core.Framework.Versions.html#_VersionDef%27badConsumers"><span class="hs-identifier hs-var">_VersionDef'badConsumers</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Vector Int32
+</span><a href="#local-6989586621679490815"><span class="hs-identifier hs-var">y__</span></a></span><span class="hs-special">}</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-72"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Vector Int32 -&gt; [Int32])
+-&gt; (Vector Int32 -&gt; [Int32] -&gt; Vector Int32)
+-&gt; Lens (Vector Int32) (Vector Int32) [Int32] [Int32]
+forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span class="hs-identifier hs-var">Lens.Family2.Unchecked.lens</span></span><span>
+</span><span id="line-73"></span><span>           </span><span class="annot"><span class="annottext">Vector Int32 -&gt; [Int32]
+forall (v :: * -&gt; *) a. Vector v a =&gt; v a -&gt; [a]
+</span><span class="hs-identifier hs-var">Data.Vector.Generic.toList</span></span><span>
+</span><span id="line-74"></span><span>           </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span> </span><span class="hs-identifier">_</span><span> </span><span id="local-6989586621679490813"><span class="annot"><span class="annottext">y__ :: [Int32]
+</span><a href="#local-6989586621679490813"><span class="hs-identifier hs-var">y__</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Int32] -&gt; Vector Int32
+forall (v :: * -&gt; *) a. Vector v a =&gt; [a] -&gt; v a
+</span><span class="hs-identifier hs-var">Data.Vector.Generic.fromList</span></span><span> </span><span class="annot"><span class="annottext">[Int32]
+</span><a href="#local-6989586621679490813"><span class="hs-identifier hs-var">y__</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-75"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.Field.HasField</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Framework.Versions.html#VersionDef"><span class="hs-identifier hs-type">VersionDef</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;vec'badConsumers&quot;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Data.Vector.Unboxed.Vector</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data.Int.Int32</span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-76"></span><span>  </span><span id="local-6989586621679490810"><span class="annot"><span class="annottext">fieldOf :: Proxy# &quot;vec'badConsumers&quot;
+-&gt; (Vector Int32 -&gt; f (Vector Int32)) -&gt; VersionDef -&gt; f VersionDef
+</span><a href="#local-6989586621679490810"><span class="hs-identifier hs-var hs-var hs-var hs-var">fieldOf</span></a></span></span><span> </span><span class="hs-identifier">_</span><span>
+</span><span id="line-77"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((Vector Int32 -&gt; f (Vector Int32)) -&gt; VersionDef -&gt; f VersionDef)
+-&gt; ((Vector Int32 -&gt; f (Vector Int32))
+    -&gt; Vector Int32 -&gt; f (Vector Int32))
+-&gt; (Vector Int32 -&gt; f (Vector Int32))
+-&gt; VersionDef
+-&gt; f VersionDef
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">(Prelude..)</span></span><span>
+</span><span id="line-78"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(VersionDef -&gt; Vector Int32)
+-&gt; (VersionDef -&gt; Vector Int32 -&gt; VersionDef)
+-&gt; Lens VersionDef VersionDef (Vector Int32) (Vector Int32)
+forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span class="hs-identifier hs-var">Lens.Family2.Unchecked.lens</span></span><span>
+</span><span id="line-79"></span><span>           </span><span class="annot"><span class="annottext">VersionDef -&gt; Vector Int32
+</span><a href="Proto.Tensorflow.Core.Framework.Versions.html#_VersionDef%27badConsumers"><span class="hs-identifier hs-var hs-var">_VersionDef'badConsumers</span></a></span><span>
+</span><span id="line-80"></span><span>           </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span> </span><span id="local-6989586621679490809"><span class="annot"><span class="annottext">x__ :: VersionDef
+</span><a href="#local-6989586621679490809"><span class="hs-identifier hs-var">x__</span></a></span></span><span> </span><span id="local-6989586621679490808"><span class="annot"><span class="annottext">y__ :: Vector Int32
+</span><a href="#local-6989586621679490808"><span class="hs-identifier hs-var">y__</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">VersionDef
+</span><a href="#local-6989586621679490809"><span class="hs-identifier hs-var">x__</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_VersionDef'badConsumers :: Vector Int32
+</span><a href="Proto.Tensorflow.Core.Framework.Versions.html#_VersionDef%27badConsumers"><span class="hs-identifier hs-var">_VersionDef'badConsumers</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Vector Int32
+</span><a href="#local-6989586621679490808"><span class="hs-identifier hs-var">y__</span></a></span><span class="hs-special">}</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-81"></span><span>        </span><span class="annot"><span class="annottext">(Vector Int32 -&gt; f (Vector Int32))
+-&gt; Vector Int32 -&gt; f (Vector Int32)
+forall a. a -&gt; a
+</span><span class="hs-identifier hs-var">Prelude.id</span></span><span>
+</span><span id="line-82"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679490801"><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.Message</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Framework.Versions.html#VersionDef"><span class="hs-identifier hs-type">VersionDef</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-83"></span><span>  </span><span id="local-6989586621679490796"><span class="annot"><span class="annottext">messageName :: Proxy VersionDef -&gt; Text
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">messageName</span></span></span><span> </span><span class="hs-identifier">_</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Text
+</span><span class="hs-identifier hs-var">Data.Text.pack</span></span><span> </span><span class="annot"><span class="hs-string">&quot;tensorflow.VersionDef&quot;</span></span><span>
+</span><span id="line-84"></span><span>  </span><span id="local-6989586621679490793"><span class="annot"><span class="annottext">packedMessageDescriptor :: Proxy VersionDef -&gt; ByteString
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">packedMessageDescriptor</span></span></span><span> </span><span class="hs-identifier">_</span><span>
+</span><span id="line-85"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-string">&quot;\n\
+      \\n\
+      \VersionDef\DC2\SUB\n\
+      \\bproducer\CAN\SOH \SOH(\ENQR\bproducer\DC2!\n\
+      \\fmin_consumer\CAN\STX \SOH(\ENQR\vminConsumer\DC2#\n\
+      \\rbad_consumers\CAN\ETX \ETX(\ENQR\fbadConsumers&quot;</span></span><span>
+</span><span id="line-91"></span><span>  </span><span id="local-6989586621679490791"><span class="annot"><span class="annottext">packedFileDescriptor :: Proxy VersionDef -&gt; ByteString
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">packedFileDescriptor</span></span></span><span> </span><span class="hs-identifier">_</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="Proto.Tensorflow.Core.Framework.Versions.html#packedFileDescriptor"><span class="hs-identifier hs-var">packedFileDescriptor</span></a></span><span>
+</span><span id="line-92"></span><span>  </span><span id="local-6989586621679490788"><span class="annot"><span class="annottext">fieldsByTag :: Map Tag (FieldDescriptor VersionDef)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">fieldsByTag</span></span></span><span>
+</span><span id="line-93"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">let</span><span>
+</span><span id="line-94"></span><span>        </span><span id="local-6989586621679490786"><span class="annot"><span class="annottext">producer__field_descriptor :: FieldDescriptor VersionDef
+</span><a href="#local-6989586621679490786"><span class="hs-identifier hs-var hs-var">producer__field_descriptor</span></a></span></span><span>
+</span><span id="line-95"></span><span>          </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+-&gt; FieldTypeDescriptor Int32
+-&gt; FieldAccessor VersionDef Int32
+-&gt; FieldDescriptor VersionDef
+forall value msg.
+String
+-&gt; FieldTypeDescriptor value
+-&gt; FieldAccessor msg value
+-&gt; FieldDescriptor msg
+</span><span class="hs-identifier hs-var">Data.ProtoLens.FieldDescriptor</span></span><span>
+</span><span id="line-96"></span><span>              </span><span class="annot"><span class="hs-string">&quot;producer&quot;</span></span><span>
+</span><span id="line-97"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ScalarField Int32 -&gt; FieldTypeDescriptor Int32
+forall value. ScalarField value -&gt; FieldTypeDescriptor value
+</span><span class="hs-identifier hs-var">Data.ProtoLens.ScalarField</span></span><span> </span><span class="annot"><span class="annottext">ScalarField Int32
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Int32Field</span></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-98"></span><span>                 </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.FieldTypeDescriptor</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data.Int.Int32</span></span><span class="hs-special">)</span><span>
+</span><span id="line-99"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">WireDefault Int32
+-&gt; Lens VersionDef VersionDef Int32 Int32
+-&gt; FieldAccessor VersionDef Int32
+forall value msg.
+WireDefault value -&gt; Lens' msg value -&gt; FieldAccessor msg value
+</span><span class="hs-identifier hs-var">Data.ProtoLens.PlainField</span></span><span>
+</span><span id="line-100"></span><span>                 </span><span class="annot"><span class="annottext">WireDefault Int32
+forall value. (FieldDefault value, Eq value) =&gt; WireDefault value
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Optional</span></span><span>
+</span><span id="line-101"></span><span>                 </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall s a (f :: * -&gt; *).
+(HasField s &quot;producer&quot; a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+forall (x :: Symbol) s a (f :: * -&gt; *).
+(HasField s x a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Field.field</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-string">&quot;producer&quot;</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-102"></span><span>              </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.FieldDescriptor</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Framework.Versions.html#VersionDef"><span class="hs-identifier hs-type">VersionDef</span></a></span><span>
+</span><span id="line-103"></span><span>        </span><span id="local-6989586621679490779"><span class="annot"><span class="annottext">minConsumer__field_descriptor :: FieldDescriptor VersionDef
+</span><a href="#local-6989586621679490779"><span class="hs-identifier hs-var hs-var">minConsumer__field_descriptor</span></a></span></span><span>
+</span><span id="line-104"></span><span>          </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+-&gt; FieldTypeDescriptor Int32
+-&gt; FieldAccessor VersionDef Int32
+-&gt; FieldDescriptor VersionDef
+forall value msg.
+String
+-&gt; FieldTypeDescriptor value
+-&gt; FieldAccessor msg value
+-&gt; FieldDescriptor msg
+</span><span class="hs-identifier hs-var">Data.ProtoLens.FieldDescriptor</span></span><span>
+</span><span id="line-105"></span><span>              </span><span class="annot"><span class="hs-string">&quot;min_consumer&quot;</span></span><span>
+</span><span id="line-106"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ScalarField Int32 -&gt; FieldTypeDescriptor Int32
+forall value. ScalarField value -&gt; FieldTypeDescriptor value
+</span><span class="hs-identifier hs-var">Data.ProtoLens.ScalarField</span></span><span> </span><span class="annot"><span class="annottext">ScalarField Int32
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Int32Field</span></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-107"></span><span>                 </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.FieldTypeDescriptor</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data.Int.Int32</span></span><span class="hs-special">)</span><span>
+</span><span id="line-108"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">WireDefault Int32
+-&gt; Lens VersionDef VersionDef Int32 Int32
+-&gt; FieldAccessor VersionDef Int32
+forall value msg.
+WireDefault value -&gt; Lens' msg value -&gt; FieldAccessor msg value
+</span><span class="hs-identifier hs-var">Data.ProtoLens.PlainField</span></span><span>
+</span><span id="line-109"></span><span>                 </span><span class="annot"><span class="annottext">WireDefault Int32
+forall value. (FieldDefault value, Eq value) =&gt; WireDefault value
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Optional</span></span><span>
+</span><span id="line-110"></span><span>                 </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall s a (f :: * -&gt; *).
+(HasField s &quot;minConsumer&quot; a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+forall (x :: Symbol) s a (f :: * -&gt; *).
+(HasField s x a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Field.field</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-string">&quot;minConsumer&quot;</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-111"></span><span>              </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.FieldDescriptor</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Framework.Versions.html#VersionDef"><span class="hs-identifier hs-type">VersionDef</span></a></span><span>
+</span><span id="line-112"></span><span>        </span><span id="local-6989586621679490778"><span class="annot"><span class="annottext">badConsumers__field_descriptor :: FieldDescriptor VersionDef
+</span><a href="#local-6989586621679490778"><span class="hs-identifier hs-var hs-var">badConsumers__field_descriptor</span></a></span></span><span>
+</span><span id="line-113"></span><span>          </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+-&gt; FieldTypeDescriptor Int32
+-&gt; FieldAccessor VersionDef Int32
+-&gt; FieldDescriptor VersionDef
+forall value msg.
+String
+-&gt; FieldTypeDescriptor value
+-&gt; FieldAccessor msg value
+-&gt; FieldDescriptor msg
+</span><span class="hs-identifier hs-var">Data.ProtoLens.FieldDescriptor</span></span><span>
+</span><span id="line-114"></span><span>              </span><span class="annot"><span class="hs-string">&quot;bad_consumers&quot;</span></span><span>
+</span><span id="line-115"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ScalarField Int32 -&gt; FieldTypeDescriptor Int32
+forall value. ScalarField value -&gt; FieldTypeDescriptor value
+</span><span class="hs-identifier hs-var">Data.ProtoLens.ScalarField</span></span><span> </span><span class="annot"><span class="annottext">ScalarField Int32
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Int32Field</span></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-116"></span><span>                 </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.FieldTypeDescriptor</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data.Int.Int32</span></span><span class="hs-special">)</span><span>
+</span><span id="line-117"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Packing
+-&gt; Lens' VersionDef [Int32] -&gt; FieldAccessor VersionDef Int32
+forall msg value.
+Packing -&gt; Lens' msg [value] -&gt; FieldAccessor msg value
+</span><span class="hs-identifier hs-var">Data.ProtoLens.RepeatedField</span></span><span>
+</span><span id="line-118"></span><span>                 </span><span class="annot"><span class="annottext">Packing
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Packed</span></span><span>
+</span><span id="line-119"></span><span>                 </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall s a (f :: * -&gt; *).
+(HasField s &quot;badConsumers&quot; a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+forall (x :: Symbol) s a (f :: * -&gt; *).
+(HasField s x a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Field.field</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-string">&quot;badConsumers&quot;</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-120"></span><span>              </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.FieldDescriptor</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Framework.Versions.html#VersionDef"><span class="hs-identifier hs-type">VersionDef</span></a></span><span>
+</span><span id="line-121"></span><span>      </span><span class="hs-keyword">in</span><span>
+</span><span id="line-122"></span><span>        </span><span class="annot"><span class="annottext">[(Tag, FieldDescriptor VersionDef)]
+-&gt; Map Tag (FieldDescriptor VersionDef)
+forall k a. Ord k =&gt; [(k, a)] -&gt; Map k a
+</span><span class="hs-identifier hs-var">Data.Map.fromList</span></span><span>
+</span><span id="line-123"></span><span>          </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; Tag
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Tag</span></span><span> </span><span class="annot"><span class="hs-number">1</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">FieldDescriptor VersionDef
+</span><a href="#local-6989586621679490786"><span class="hs-identifier hs-var">producer__field_descriptor</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-124"></span><span>           </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; Tag
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Tag</span></span><span> </span><span class="annot"><span class="hs-number">2</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">FieldDescriptor VersionDef
+</span><a href="#local-6989586621679490779"><span class="hs-identifier hs-var">minConsumer__field_descriptor</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-125"></span><span>           </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; Tag
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Tag</span></span><span> </span><span class="annot"><span class="hs-number">3</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">FieldDescriptor VersionDef
+</span><a href="#local-6989586621679490778"><span class="hs-identifier hs-var">badConsumers__field_descriptor</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
+</span><span id="line-126"></span><span>  </span><span id="local-6989586621679490773"><span class="annot"><span class="annottext">unknownFields :: LensLike' f VersionDef FieldSet
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">unknownFields</span></span></span><span>
+</span><span id="line-127"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(VersionDef -&gt; FieldSet)
+-&gt; (VersionDef -&gt; FieldSet -&gt; VersionDef)
+-&gt; Lens' VersionDef FieldSet
+forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span class="hs-identifier hs-var">Lens.Family2.Unchecked.lens</span></span><span>
+</span><span id="line-128"></span><span>        </span><span class="annot"><span class="annottext">VersionDef -&gt; FieldSet
+</span><a href="Proto.Tensorflow.Core.Framework.Versions.html#_VersionDef%27_unknownFields"><span class="hs-identifier hs-var hs-var">_VersionDef'_unknownFields</span></a></span><span>
+</span><span id="line-129"></span><span>        </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span> </span><span id="local-6989586621679490771"><span class="annot"><span class="annottext">x__ :: VersionDef
+</span><a href="#local-6989586621679490771"><span class="hs-identifier hs-var">x__</span></a></span></span><span> </span><span id="local-6989586621679490770"><span class="annot"><span class="annottext">y__ :: FieldSet
+</span><a href="#local-6989586621679490770"><span class="hs-identifier hs-var">y__</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">VersionDef
+</span><a href="#local-6989586621679490771"><span class="hs-identifier hs-var">x__</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_VersionDef'_unknownFields :: FieldSet
+</span><a href="Proto.Tensorflow.Core.Framework.Versions.html#_VersionDef%27_unknownFields"><span class="hs-identifier hs-var">_VersionDef'_unknownFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">FieldSet
+</span><a href="#local-6989586621679490770"><span class="hs-identifier hs-var">y__</span></a></span><span class="hs-special">}</span><span class="hs-special">)</span><span>
+</span><span id="line-130"></span><span>  </span><span id="local-6989586621679490769"><span class="annot"><span class="annottext">defMessage :: VersionDef
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">defMessage</span></span></span><span>
+</span><span id="line-131"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">$WVersionDef'_constructor :: Int32 -&gt; Int32 -&gt; Vector Int32 -&gt; FieldSet -&gt; VersionDef
+</span><a href="Proto.Tensorflow.Core.Framework.Versions.html#%24WVersionDef%27_constructor"><span class="hs-identifier hs-type hs-type">VersionDef'_constructor</span></a></span><span>
+</span><span id="line-132"></span><span>        </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_VersionDef'producer :: Int32
+</span><a href="Proto.Tensorflow.Core.Framework.Versions.html#_VersionDef%27producer"><span class="hs-identifier hs-var">_VersionDef'producer</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int32
+forall value. FieldDefault value =&gt; value
+</span><span class="hs-identifier hs-var">Data.ProtoLens.fieldDefault</span></span><span class="hs-special">,</span><span>
+</span><span id="line-133"></span><span>         </span><span class="annot"><span class="annottext">_VersionDef'minConsumer :: Int32
+</span><a href="Proto.Tensorflow.Core.Framework.Versions.html#_VersionDef%27minConsumer"><span class="hs-identifier hs-var">_VersionDef'minConsumer</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int32
+forall value. FieldDefault value =&gt; value
+</span><span class="hs-identifier hs-var">Data.ProtoLens.fieldDefault</span></span><span class="hs-special">,</span><span>
+</span><span id="line-134"></span><span>         </span><span class="annot"><span class="annottext">_VersionDef'badConsumers :: Vector Int32
+</span><a href="Proto.Tensorflow.Core.Framework.Versions.html#_VersionDef%27badConsumers"><span class="hs-identifier hs-var">_VersionDef'badConsumers</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Vector Int32
+forall (v :: * -&gt; *) a. Vector v a =&gt; v a
+</span><span class="hs-identifier hs-var">Data.Vector.Generic.empty</span></span><span class="hs-special">,</span><span>
+</span><span id="line-135"></span><span>         </span><span class="annot"><span class="annottext">_VersionDef'_unknownFields :: FieldSet
+</span><a href="Proto.Tensorflow.Core.Framework.Versions.html#_VersionDef%27_unknownFields"><span class="hs-identifier hs-var">_VersionDef'_unknownFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span class="hs-special">}</span><span>
+</span><span id="line-136"></span><span>  </span><span id="local-6989586621679490764"><span class="annot"><span class="annottext">parseMessage :: Parser VersionDef
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseMessage</span></span></span><span>
+</span><span id="line-137"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">let</span><span>
+</span><span id="line-138"></span><span>        </span><span class="annot"><a href="#local-6989586621679490762"><span class="hs-identifier hs-type">loop</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-139"></span><span>          </span><span class="annot"><a href="Proto.Tensorflow.Core.Framework.Versions.html#VersionDef"><span class="hs-identifier hs-type">VersionDef</span></a></span><span>
+</span><span id="line-140"></span><span>          </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.Encoding.Growing.Growing</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data.Vector.Unboxed.Vector</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.Encoding.Growing.RealWorld</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data.Int.Int32</span></span><span>
+</span><span id="line-141"></span><span>             </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.Encoding.Bytes.Parser</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Framework.Versions.html#VersionDef"><span class="hs-identifier hs-type">VersionDef</span></a></span><span>
+</span><span id="line-142"></span><span>        </span><span id="local-6989586621679490762"><span class="annot"><span class="annottext">loop :: VersionDef -&gt; Growing Vector RealWorld Int32 -&gt; Parser VersionDef
+</span><a href="#local-6989586621679490762"><span class="hs-identifier hs-var hs-var">loop</span></a></span></span><span> </span><span id="local-6989586621679490761"><span class="annot"><span class="annottext">x :: VersionDef
+</span><a href="#local-6989586621679490761"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span id="local-6989586621679490760"><span class="annot"><span class="annottext">mutable'badConsumers :: Growing Vector RealWorld Int32
+</span><a href="#local-6989586621679490760"><span class="hs-identifier hs-var">mutable'badConsumers</span></a></span></span><span>
+</span><span id="line-143"></span><span>          </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span> </span><span id="local-6989586621679490759"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679490759"><span class="hs-identifier hs-var">end</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Bool
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.atEnd</span></span><span>
+</span><span id="line-144"></span><span>               </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679490759"><span class="hs-identifier hs-var">end</span></a></span><span> </span><span class="hs-keyword">then</span><span>
+</span><span id="line-145"></span><span>                   </span><span class="hs-keyword">do</span><span> </span><span id="local-6989586621679490757"><span class="annot"><span class="annottext">Vector Int32
+</span><a href="#local-6989586621679490757"><span class="hs-identifier hs-var">frozen'badConsumers</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (Vector Int32) -&gt; Parser (Vector Int32)
+forall a. IO a -&gt; Parser a
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Parser.Unsafe.unsafeLiftIO</span></span><span>
+</span><span id="line-146"></span><span>                                               </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Growing Vector (PrimState IO) Int32 -&gt; IO (Vector Int32)
+forall (m :: * -&gt; *) (v :: * -&gt; *) a.
+(PrimMonad m, Vector v a) =&gt;
+Growing v (PrimState m) a -&gt; m (v a)
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Growing.unsafeFreeze</span></span><span>
+</span><span id="line-147"></span><span>                                                  </span><span class="annot"><span class="annottext">Growing Vector RealWorld Int32
+Growing Vector (PrimState IO) Int32
+</span><a href="#local-6989586621679490760"><span class="hs-identifier hs-var">mutable'badConsumers</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-148"></span><span>                      </span><span class="hs-special">(</span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679490754"><span class="annot"><span class="annottext">missing :: [a]
+</span><a href="#local-6989586621679490754"><span class="hs-identifier hs-var hs-var">missing</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
+</span><span id="line-149"></span><span>                       </span><span class="hs-keyword">in</span><span>
+</span><span id="line-150"></span><span>                         </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">[Any] -&gt; Bool
+forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
+</span><span class="hs-identifier hs-var">Prelude.null</span></span><span> </span><span class="annot"><span class="annottext">[Any]
+forall a. [a]
+</span><a href="#local-6989586621679490754"><span class="hs-identifier hs-var">missing</span></a></span><span> </span><span class="hs-keyword">then</span><span>
+</span><span id="line-151"></span><span>                             </span><span class="annot"><span class="annottext">() -&gt; Parser ()
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span class="hs-identifier hs-var">Prelude.return</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-152"></span><span>                         </span><span class="hs-keyword">else</span><span>
+</span><span id="line-153"></span><span>                             </span><span class="annot"><span class="annottext">String -&gt; Parser ()
+forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
+</span><span class="hs-identifier hs-var">Prelude.fail</span></span><span>
+</span><span id="line-154"></span><span>                               </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; ShowS
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">(Prelude.++)</span></span><span>
+</span><span id="line-155"></span><span>                                  </span><span class="annot"><span class="hs-string">&quot;Missing required fields: &quot;</span></span><span>
+</span><span id="line-156"></span><span>                                  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[String] -&gt; String
+forall a. Show a =&gt; a -&gt; String
+</span><span class="hs-identifier hs-var">Prelude.show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[String]
+forall a. [a]
+</span><a href="#local-6989586621679490754"><span class="hs-identifier hs-var">missing</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Prelude.String</span></span><span class="hs-special">]</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-157"></span><span>                      </span><span class="annot"><span class="annottext">VersionDef -&gt; Parser VersionDef
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span class="hs-identifier hs-var">Prelude.return</span></span><span>
+</span><span id="line-158"></span><span>                        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Setter VersionDef VersionDef FieldSet FieldSet
+-&gt; (FieldSet -&gt; FieldSet) -&gt; VersionDef -&gt; VersionDef
+forall s t a b. Setter s t a b -&gt; (a -&gt; b) -&gt; s -&gt; t
+</span><span class="hs-identifier hs-var">Lens.Family2.over</span></span><span>
+</span><span id="line-159"></span><span>                           </span><span class="annot"><span class="annottext">forall msg. Message msg =&gt; Lens' msg FieldSet
+Setter VersionDef VersionDef FieldSet FieldSet
+</span><span class="hs-identifier hs-var">Data.ProtoLens.unknownFields</span></span><span>
+</span><span id="line-160"></span><span>                           </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621679490750"><span class="annot"><span class="annottext">FieldSet
+</span><a href="#local-6989586621679490750"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">FieldSet -&gt; FieldSet
+forall a. [a] -&gt; [a]
+</span><span class="hs-identifier hs-var">Prelude.reverse</span></span><span> </span><span class="annot"><span class="annottext">FieldSet
+</span><a href="#local-6989586621679490750"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-161"></span><span>                           </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Setter VersionDef VersionDef (Vector Int32) (Vector Int32)
+-&gt; Vector Int32 -&gt; VersionDef -&gt; VersionDef
+forall s t a b. Setter s t a b -&gt; b -&gt; s -&gt; t
+</span><span class="hs-identifier hs-var">Lens.Family2.set</span></span><span>
+</span><span id="line-162"></span><span>                              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall s a (f :: * -&gt; *).
+(HasField s &quot;vec'badConsumers&quot; a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+forall (x :: Symbol) s a (f :: * -&gt; *).
+(HasField s x a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Field.field</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-string">&quot;vec'badConsumers&quot;</span></span><span class="hs-special">)</span><span>
+</span><span id="line-163"></span><span>                              </span><span class="annot"><span class="annottext">Vector Int32
+</span><a href="#local-6989586621679490757"><span class="hs-identifier hs-var">frozen'badConsumers</span></a></span><span>
+</span><span id="line-164"></span><span>                              </span><span class="annot"><span class="annottext">VersionDef
+</span><a href="#local-6989586621679490761"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-165"></span><span>               </span><span class="hs-keyword">else</span><span>
+</span><span id="line-166"></span><span>                   </span><span class="hs-keyword">do</span><span> </span><span id="local-6989586621679490747"><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679490747"><span class="hs-identifier hs-var">tag</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Word64
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.getVarInt</span></span><span>
+</span><span id="line-167"></span><span>                      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679490747"><span class="hs-identifier hs-var">tag</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-168"></span><span>                        </span><span class="hs-number">8</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span> </span><span id="local-6989586621679490745"><span class="annot"><span class="annottext">Int32
+</span><a href="#local-6989586621679490745"><span class="hs-identifier hs-var">y</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Int32 -&gt; String -&gt; Parser Int32
+forall a. Parser a -&gt; String -&gt; Parser a
+</span><span class="hs-operator hs-var">(Data.ProtoLens.Encoding.Bytes.&lt;?&gt;)</span></span><span>
+</span><span id="line-169"></span><span>                                       </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Word64 -&gt; Int32) -&gt; Parser Word64 -&gt; Parser Int32
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">Prelude.fmap</span></span><span>
+</span><span id="line-170"></span><span>                                          </span><span class="annot"><span class="annottext">Word64 -&gt; Int32
+forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">Prelude.fromIntegral</span></span><span>
+</span><span id="line-171"></span><span>                                          </span><span class="annot"><span class="annottext">Parser Word64
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.getVarInt</span></span><span class="hs-special">)</span><span>
+</span><span id="line-172"></span><span>                                       </span><span class="annot"><span class="hs-string">&quot;producer&quot;</span></span><span>
+</span><span id="line-173"></span><span>                                </span><span class="annot"><span class="annottext">VersionDef -&gt; Growing Vector RealWorld Int32 -&gt; Parser VersionDef
+</span><a href="#local-6989586621679490762"><span class="hs-identifier hs-var">loop</span></a></span><span>
+</span><span id="line-174"></span><span>                                  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Setter VersionDef VersionDef Int32 Int32
+-&gt; Int32 -&gt; VersionDef -&gt; VersionDef
+forall s t a b. Setter s t a b -&gt; b -&gt; s -&gt; t
+</span><span class="hs-identifier hs-var">Lens.Family2.set</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall s a (f :: * -&gt; *).
+(HasField s &quot;producer&quot; a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+forall (x :: Symbol) s a (f :: * -&gt; *).
+(HasField s x a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Field.field</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-string">&quot;producer&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Int32
+</span><a href="#local-6989586621679490745"><span class="hs-identifier hs-var">y</span></a></span><span> </span><span class="annot"><span class="annottext">VersionDef
+</span><a href="#local-6989586621679490761"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-175"></span><span>                                  </span><span class="annot"><span class="annottext">Growing Vector RealWorld Int32
+</span><a href="#local-6989586621679490760"><span class="hs-identifier hs-var">mutable'badConsumers</span></a></span><span>
+</span><span id="line-176"></span><span>                        </span><span class="hs-number">16</span><span>
+</span><span id="line-177"></span><span>                          </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span> </span><span id="local-6989586621679490743"><span class="annot"><span class="annottext">Int32
+</span><a href="#local-6989586621679490743"><span class="hs-identifier hs-var">y</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Int32 -&gt; String -&gt; Parser Int32
+forall a. Parser a -&gt; String -&gt; Parser a
+</span><span class="hs-operator hs-var">(Data.ProtoLens.Encoding.Bytes.&lt;?&gt;)</span></span><span>
+</span><span id="line-178"></span><span>                                       </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Word64 -&gt; Int32) -&gt; Parser Word64 -&gt; Parser Int32
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">Prelude.fmap</span></span><span>
+</span><span id="line-179"></span><span>                                          </span><span class="annot"><span class="annottext">Word64 -&gt; Int32
+forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">Prelude.fromIntegral</span></span><span>
+</span><span id="line-180"></span><span>                                          </span><span class="annot"><span class="annottext">Parser Word64
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.getVarInt</span></span><span class="hs-special">)</span><span>
+</span><span id="line-181"></span><span>                                       </span><span class="annot"><span class="hs-string">&quot;min_consumer&quot;</span></span><span>
+</span><span id="line-182"></span><span>                                </span><span class="annot"><span class="annottext">VersionDef -&gt; Growing Vector RealWorld Int32 -&gt; Parser VersionDef
+</span><a href="#local-6989586621679490762"><span class="hs-identifier hs-var">loop</span></a></span><span>
+</span><span id="line-183"></span><span>                                  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Setter VersionDef VersionDef Int32 Int32
+-&gt; Int32 -&gt; VersionDef -&gt; VersionDef
+forall s t a b. Setter s t a b -&gt; b -&gt; s -&gt; t
+</span><span class="hs-identifier hs-var">Lens.Family2.set</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall s a (f :: * -&gt; *).
+(HasField s &quot;minConsumer&quot; a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+forall (x :: Symbol) s a (f :: * -&gt; *).
+(HasField s x a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Field.field</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-string">&quot;minConsumer&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Int32
+</span><a href="#local-6989586621679490743"><span class="hs-identifier hs-var">y</span></a></span><span> </span><span class="annot"><span class="annottext">VersionDef
+</span><a href="#local-6989586621679490761"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-184"></span><span>                                  </span><span class="annot"><span class="annottext">Growing Vector RealWorld Int32
+</span><a href="#local-6989586621679490760"><span class="hs-identifier hs-var">mutable'badConsumers</span></a></span><span>
+</span><span id="line-185"></span><span>                        </span><span class="hs-number">24</span><span>
+</span><span id="line-186"></span><span>                          </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621679490742"><span class="annot"><span class="annottext">Int32
+</span><a href="#local-6989586621679490742"><span class="hs-identifier hs-var">y</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Int32 -&gt; String -&gt; Parser Int32
+forall a. Parser a -&gt; String -&gt; Parser a
+</span><span class="hs-operator hs-var">(Data.ProtoLens.Encoding.Bytes.&lt;?&gt;)</span></span><span>
+</span><span id="line-187"></span><span>                                        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Word64 -&gt; Int32) -&gt; Parser Word64 -&gt; Parser Int32
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">Prelude.fmap</span></span><span>
+</span><span id="line-188"></span><span>                                           </span><span class="annot"><span class="annottext">Word64 -&gt; Int32
+forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">Prelude.fromIntegral</span></span><span>
+</span><span id="line-189"></span><span>                                           </span><span class="annot"><span class="annottext">Parser Word64
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.getVarInt</span></span><span class="hs-special">)</span><span>
+</span><span id="line-190"></span><span>                                        </span><span class="annot"><span class="hs-string">&quot;bad_consumers&quot;</span></span><span>
+</span><span id="line-191"></span><span>                                </span><span id="local-6989586621679490741"><span class="annot"><span class="annottext">Growing Vector RealWorld Int32
+</span><a href="#local-6989586621679490741"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (Growing Vector RealWorld Int32)
+-&gt; Parser (Growing Vector RealWorld Int32)
+forall a. IO a -&gt; Parser a
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Parser.Unsafe.unsafeLiftIO</span></span><span>
+</span><span id="line-192"></span><span>                                       </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Growing Vector (PrimState IO) Int32
+-&gt; Int32 -&gt; IO (Growing Vector (PrimState IO) Int32)
+forall (m :: * -&gt; *) (v :: * -&gt; *) a.
+(PrimMonad m, Vector v a) =&gt;
+Growing v (PrimState m) a -&gt; a -&gt; m (Growing v (PrimState m) a)
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Growing.append</span></span><span>
+</span><span id="line-193"></span><span>                                          </span><span class="annot"><span class="annottext">Growing Vector RealWorld Int32
+Growing Vector (PrimState IO) Int32
+</span><a href="#local-6989586621679490760"><span class="hs-identifier hs-var">mutable'badConsumers</span></a></span><span> </span><span class="annot"><span class="annottext">Int32
+</span><a href="#local-6989586621679490742"><span class="hs-identifier hs-var">y</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-194"></span><span>                                </span><span class="annot"><span class="annottext">VersionDef -&gt; Growing Vector RealWorld Int32 -&gt; Parser VersionDef
+</span><a href="#local-6989586621679490762"><span class="hs-identifier hs-var">loop</span></a></span><span> </span><span class="annot"><span class="annottext">VersionDef
+</span><a href="#local-6989586621679490761"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">Growing Vector RealWorld Int32
+</span><a href="#local-6989586621679490741"><span class="hs-identifier hs-var">v</span></a></span><span>
+</span><span id="line-195"></span><span>                        </span><span class="hs-number">26</span><span>
+</span><span id="line-196"></span><span>                          </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span> </span><span id="local-6989586621679490739"><span class="annot"><span class="annottext">Growing Vector RealWorld Int32
+</span><a href="#local-6989586621679490739"><span class="hs-identifier hs-var">y</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">do</span><span> </span><span id="local-6989586621679490738"><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679490738"><span class="hs-identifier hs-var">len</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Word64
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.getVarInt</span></span><span>
+</span><span id="line-197"></span><span>                                        </span><span class="annot"><span class="annottext">Int
+-&gt; Parser (Growing Vector RealWorld Int32)
+-&gt; Parser (Growing Vector RealWorld Int32)
+forall a. Int -&gt; Parser a -&gt; Parser a
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.isolate</span></span><span>
+</span><span id="line-198"></span><span>                                          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word64 -&gt; Int
+forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">Prelude.fromIntegral</span></span><span> </span><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679490738"><span class="hs-identifier hs-var">len</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-199"></span><span>                                          </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="hs-keyword">let</span><span>
+</span><span id="line-200"></span><span>                                              </span><span id="local-6989586621679490736"><span class="annot"><span class="annottext">ploop :: Growing v RealWorld a -&gt; Parser (Growing v RealWorld a)
+</span><a href="#local-6989586621679490736"><span class="hs-identifier hs-var hs-var">ploop</span></a></span></span><span> </span><span id="local-6989586621679490735"><span class="annot"><span class="annottext">qs :: Growing v RealWorld a
+</span><a href="#local-6989586621679490735"><span class="hs-identifier hs-var">qs</span></a></span></span><span>
+</span><span id="line-201"></span><span>                                                </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span> </span><span id="local-6989586621679490734"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679490734"><span class="hs-identifier hs-var">packedEnd</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Bool
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.atEnd</span></span><span>
+</span><span id="line-202"></span><span>                                                     </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679490734"><span class="hs-identifier hs-var">packedEnd</span></a></span><span> </span><span class="hs-keyword">then</span><span>
+</span><span id="line-203"></span><span>                                                         </span><span class="annot"><span class="annottext">Growing v RealWorld a -&gt; Parser (Growing v RealWorld a)
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span class="hs-identifier hs-var">Prelude.return</span></span><span> </span><span class="annot"><span class="annottext">Growing v RealWorld a
+</span><a href="#local-6989586621679490735"><span class="hs-identifier hs-var">qs</span></a></span><span>
+</span><span id="line-204"></span><span>                                                     </span><span class="hs-keyword">else</span><span>
+</span><span id="line-205"></span><span>                                                         </span><span class="hs-keyword">do</span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621679490733"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679490733"><span class="hs-identifier hs-var">q</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser a -&gt; String -&gt; Parser a
+forall a. Parser a -&gt; String -&gt; Parser a
+</span><span class="hs-operator hs-var">(Data.ProtoLens.Encoding.Bytes.&lt;?&gt;)</span></span><span>
+</span><span id="line-206"></span><span>                                                                    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Word64 -&gt; a) -&gt; Parser Word64 -&gt; Parser a
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">Prelude.fmap</span></span><span>
+</span><span id="line-207"></span><span>                                                                       </span><span class="annot"><span class="annottext">Word64 -&gt; a
+forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">Prelude.fromIntegral</span></span><span>
+</span><span id="line-208"></span><span>                                                                       </span><span class="annot"><span class="annottext">Parser Word64
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.getVarInt</span></span><span class="hs-special">)</span><span>
+</span><span id="line-209"></span><span>                                                                    </span><span class="annot"><span class="hs-string">&quot;bad_consumers&quot;</span></span><span>
+</span><span id="line-210"></span><span>                                                            </span><span id="local-6989586621679490732"><span class="annot"><span class="annottext">Growing v RealWorld a
+</span><a href="#local-6989586621679490732"><span class="hs-identifier hs-var">qs'</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (Growing v RealWorld a) -&gt; Parser (Growing v RealWorld a)
+forall a. IO a -&gt; Parser a
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Parser.Unsafe.unsafeLiftIO</span></span><span>
+</span><span id="line-211"></span><span>                                                                     </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Growing v (PrimState IO) a -&gt; a -&gt; IO (Growing v (PrimState IO) a)
+forall (m :: * -&gt; *) (v :: * -&gt; *) a.
+(PrimMonad m, Vector v a) =&gt;
+Growing v (PrimState m) a -&gt; a -&gt; m (Growing v (PrimState m) a)
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Growing.append</span></span><span>
+</span><span id="line-212"></span><span>                                                                        </span><span class="annot"><span class="annottext">Growing v RealWorld a
+Growing v (PrimState IO) a
+</span><a href="#local-6989586621679490735"><span class="hs-identifier hs-var">qs</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679490733"><span class="hs-identifier hs-var">q</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-213"></span><span>                                                            </span><span class="annot"><span class="annottext">Growing v RealWorld a -&gt; Parser (Growing v RealWorld a)
+</span><a href="#local-6989586621679490736"><span class="hs-identifier hs-var">ploop</span></a></span><span> </span><span class="annot"><span class="annottext">Growing v RealWorld a
+</span><a href="#local-6989586621679490732"><span class="hs-identifier hs-var">qs'</span></a></span><span>
+</span><span id="line-214"></span><span>                                            </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">forall a (v :: * -&gt; *).
+(Num a, Vector v a) =&gt;
+Growing v RealWorld a -&gt; Parser (Growing v RealWorld a)
+</span><a href="#local-6989586621679490736"><span class="hs-identifier hs-var">ploop</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-215"></span><span>                                             </span><span class="annot"><span class="annottext">Growing Vector RealWorld Int32
+</span><a href="#local-6989586621679490760"><span class="hs-identifier hs-var">mutable'badConsumers</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-216"></span><span>                                </span><span class="annot"><span class="annottext">VersionDef -&gt; Growing Vector RealWorld Int32 -&gt; Parser VersionDef
+</span><a href="#local-6989586621679490762"><span class="hs-identifier hs-var">loop</span></a></span><span> </span><span class="annot"><span class="annottext">VersionDef
+</span><a href="#local-6989586621679490761"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">Growing Vector RealWorld Int32
+</span><a href="#local-6989586621679490739"><span class="hs-identifier hs-var">y</span></a></span><span>
+</span><span id="line-217"></span><span>                        </span><span id="local-6989586621679490731"><span class="annot"><span class="annottext">wire :: Word64
+</span><a href="#local-6989586621679490731"><span class="hs-identifier hs-var">wire</span></a></span></span><span>
+</span><span id="line-218"></span><span>                          </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621679490730"><span class="annot"><span class="annottext">TaggedValue
+</span><a href="#local-6989586621679490730"><span class="hs-identifier hs-var">y</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Word64 -&gt; Parser TaggedValue
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Wire.parseTaggedValueFromWire</span></span><span>
+</span><span id="line-219"></span><span>                                        </span><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679490731"><span class="hs-identifier hs-var">wire</span></a></span><span>
+</span><span id="line-220"></span><span>                                </span><span class="annot"><span class="annottext">VersionDef -&gt; Growing Vector RealWorld Int32 -&gt; Parser VersionDef
+</span><a href="#local-6989586621679490762"><span class="hs-identifier hs-var">loop</span></a></span><span>
+</span><span id="line-221"></span><span>                                  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Setter VersionDef VersionDef FieldSet FieldSet
+-&gt; (FieldSet -&gt; FieldSet) -&gt; VersionDef -&gt; VersionDef
+forall s t a b. Setter s t a b -&gt; (a -&gt; b) -&gt; s -&gt; t
+</span><span class="hs-identifier hs-var">Lens.Family2.over</span></span><span>
+</span><span id="line-222"></span><span>                                     </span><span class="annot"><span class="annottext">forall msg. Message msg =&gt; Lens' msg FieldSet
+Setter VersionDef VersionDef FieldSet FieldSet
+</span><span class="hs-identifier hs-var">Data.ProtoLens.unknownFields</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621679490728"><span class="annot"><span class="annottext">FieldSet
+</span><a href="#local-6989586621679490728"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="hs-glyph">:</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">TaggedValue
+</span><a href="#local-6989586621679490730"><span class="hs-identifier hs-var">y</span></a></span><span> </span><span class="annot"><span class="annottext">FieldSet
+</span><a href="#local-6989586621679490728"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">VersionDef
+</span><a href="#local-6989586621679490761"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-223"></span><span>                                  </span><span class="annot"><span class="annottext">Growing Vector RealWorld Int32
+</span><a href="#local-6989586621679490760"><span class="hs-identifier hs-var">mutable'badConsumers</span></a></span><span>
+</span><span id="line-224"></span><span>      </span><span class="hs-keyword">in</span><span>
+</span><span id="line-225"></span><span>        </span><span class="annot"><span class="annottext">Parser VersionDef -&gt; String -&gt; Parser VersionDef
+forall a. Parser a -&gt; String -&gt; Parser a
+</span><span class="hs-operator hs-var">(Data.ProtoLens.Encoding.Bytes.&lt;?&gt;)</span></span><span>
+</span><span id="line-226"></span><span>          </span><span class="hs-special">(</span><span class="hs-keyword">do</span><span> </span><span id="local-6989586621679490727"><span class="annot"><span class="annottext">Growing Vector RealWorld Int32
+</span><a href="#local-6989586621679490727"><span class="hs-identifier hs-var">mutable'badConsumers</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (Growing Vector RealWorld Int32)
+-&gt; Parser (Growing Vector RealWorld Int32)
+forall a. IO a -&gt; Parser a
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Parser.Unsafe.unsafeLiftIO</span></span><span>
+</span><span id="line-227"></span><span>                                        </span><span class="annot"><span class="annottext">IO (Growing Vector RealWorld Int32)
+forall (m :: * -&gt; *) (v :: * -&gt; *) a.
+(PrimMonad m, Vector v a) =&gt;
+m (Growing v (PrimState m) a)
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Growing.new</span></span><span>
+</span><span id="line-228"></span><span>              </span><span class="annot"><span class="annottext">VersionDef -&gt; Growing Vector RealWorld Int32 -&gt; Parser VersionDef
+</span><a href="#local-6989586621679490762"><span class="hs-identifier hs-var">loop</span></a></span><span> </span><span class="annot"><span class="annottext">VersionDef
+forall msg. Message msg =&gt; msg
+</span><span class="hs-identifier hs-var">Data.ProtoLens.defMessage</span></span><span> </span><span class="annot"><span class="annottext">Growing Vector RealWorld Int32
+</span><a href="#local-6989586621679490727"><span class="hs-identifier hs-var">mutable'badConsumers</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-229"></span><span>          </span><span class="annot"><span class="hs-string">&quot;VersionDef&quot;</span></span><span>
+</span><span id="line-230"></span><span>  </span><span id="local-6989586621679490725"><span class="annot"><span class="annottext">buildMessage :: VersionDef -&gt; Builder
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">buildMessage</span></span></span><span>
+</span><span id="line-231"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span> </span><span id="local-6989586621679490723"><span class="annot"><span class="annottext">_x :: VersionDef
+</span><a href="#local-6989586621679490723"><span class="hs-identifier hs-var">_x</span></a></span></span><span>
+</span><span id="line-232"></span><span>        </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Builder -&gt; Builder -&gt; Builder
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">(Data.Monoid.&lt;&gt;)</span></span><span>
+</span><span id="line-233"></span><span>             </span><span class="hs-special">(</span><span class="hs-keyword">let</span><span>
+</span><span id="line-234"></span><span>                </span><span id="local-6989586621679490722"><span class="annot"><span class="annottext">_v :: Int32
+</span><a href="#local-6989586621679490722"><span class="hs-identifier hs-var hs-var">_v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">FoldLike Int32 VersionDef VersionDef Int32 Int32
+-&gt; VersionDef -&gt; Int32
+forall a s t b. FoldLike a s t a b -&gt; s -&gt; a
+</span><span class="hs-identifier hs-var">Lens.Family2.view</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall s a (f :: * -&gt; *).
+(HasField s &quot;producer&quot; a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+forall (x :: Symbol) s a (f :: * -&gt; *).
+(HasField s x a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Field.field</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-string">&quot;producer&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">VersionDef
+</span><a href="#local-6989586621679490723"><span class="hs-identifier hs-var">_x</span></a></span><span>
+</span><span id="line-235"></span><span>              </span><span class="hs-keyword">in</span><span>
+</span><span id="line-236"></span><span>                </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Int32 -&gt; Int32 -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">(Prelude.==)</span></span><span> </span><span class="annot"><span class="annottext">Int32
+</span><a href="#local-6989586621679490722"><span class="hs-identifier hs-var">_v</span></a></span><span> </span><span class="annot"><span class="annottext">Int32
+forall value. FieldDefault value =&gt; value
+</span><span class="hs-identifier hs-var">Data.ProtoLens.fieldDefault</span></span><span> </span><span class="hs-keyword">then</span><span>
+</span><span id="line-237"></span><span>                    </span><span class="annot"><span class="annottext">Builder
+forall a. Monoid a =&gt; a
+</span><span class="hs-identifier hs-var">Data.Monoid.mempty</span></span><span>
+</span><span id="line-238"></span><span>                </span><span class="hs-keyword">else</span><span>
+</span><span id="line-239"></span><span>                    </span><span class="annot"><span class="annottext">Builder -&gt; Builder -&gt; Builder
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">(Data.Monoid.&lt;&gt;)</span></span><span>
+</span><span id="line-240"></span><span>                      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word64 -&gt; Builder
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.putVarInt</span></span><span> </span><span class="annot"><span class="hs-number">8</span></span><span class="hs-special">)</span><span>
+</span><span id="line-241"></span><span>                      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Word64 -&gt; Builder) -&gt; (Int32 -&gt; Word64) -&gt; Int32 -&gt; Builder
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">(Prelude..)</span></span><span>
+</span><span id="line-242"></span><span>                         </span><span class="annot"><span class="annottext">Word64 -&gt; Builder
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.putVarInt</span></span><span> </span><span class="annot"><span class="annottext">Int32 -&gt; Word64
+forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">Prelude.fromIntegral</span></span><span> </span><span class="annot"><span class="annottext">Int32
+</span><a href="#local-6989586621679490722"><span class="hs-identifier hs-var">_v</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-243"></span><span>             </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Builder -&gt; Builder -&gt; Builder
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">(Data.Monoid.&lt;&gt;)</span></span><span>
+</span><span id="line-244"></span><span>                </span><span class="hs-special">(</span><span class="hs-keyword">let</span><span>
+</span><span id="line-245"></span><span>                   </span><span id="local-6989586621679490719"><span class="annot"><span class="annottext">_v :: Int32
+</span><a href="#local-6989586621679490719"><span class="hs-identifier hs-var hs-var">_v</span></a></span></span><span>
+</span><span id="line-246"></span><span>                     </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">FoldLike Int32 VersionDef VersionDef Int32 Int32
+-&gt; VersionDef -&gt; Int32
+forall a s t b. FoldLike a s t a b -&gt; s -&gt; a
+</span><span class="hs-identifier hs-var">Lens.Family2.view</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall s a (f :: * -&gt; *).
+(HasField s &quot;minConsumer&quot; a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+forall (x :: Symbol) s a (f :: * -&gt; *).
+(HasField s x a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Field.field</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-string">&quot;minConsumer&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">VersionDef
+</span><a href="#local-6989586621679490723"><span class="hs-identifier hs-var">_x</span></a></span><span>
+</span><span id="line-247"></span><span>                 </span><span class="hs-keyword">in</span><span>
+</span><span id="line-248"></span><span>                   </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Int32 -&gt; Int32 -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">(Prelude.==)</span></span><span> </span><span class="annot"><span class="annottext">Int32
+</span><a href="#local-6989586621679490719"><span class="hs-identifier hs-var">_v</span></a></span><span> </span><span class="annot"><span class="annottext">Int32
+forall value. FieldDefault value =&gt; value
+</span><span class="hs-identifier hs-var">Data.ProtoLens.fieldDefault</span></span><span> </span><span class="hs-keyword">then</span><span>
+</span><span id="line-249"></span><span>                       </span><span class="annot"><span class="annottext">Builder
+forall a. Monoid a =&gt; a
+</span><span class="hs-identifier hs-var">Data.Monoid.mempty</span></span><span>
+</span><span id="line-250"></span><span>                   </span><span class="hs-keyword">else</span><span>
+</span><span id="line-251"></span><span>                       </span><span class="annot"><span class="annottext">Builder -&gt; Builder -&gt; Builder
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">(Data.Monoid.&lt;&gt;)</span></span><span>
+</span><span id="line-252"></span><span>                         </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word64 -&gt; Builder
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.putVarInt</span></span><span> </span><span class="annot"><span class="hs-number">16</span></span><span class="hs-special">)</span><span>
+</span><span id="line-253"></span><span>                         </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Word64 -&gt; Builder) -&gt; (Int32 -&gt; Word64) -&gt; Int32 -&gt; Builder
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">(Prelude..)</span></span><span>
+</span><span id="line-254"></span><span>                            </span><span class="annot"><span class="annottext">Word64 -&gt; Builder
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.putVarInt</span></span><span> </span><span class="annot"><span class="annottext">Int32 -&gt; Word64
+forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">Prelude.fromIntegral</span></span><span> </span><span class="annot"><span class="annottext">Int32
+</span><a href="#local-6989586621679490719"><span class="hs-identifier hs-var">_v</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-255"></span><span>                </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Builder -&gt; Builder -&gt; Builder
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">(Data.Monoid.&lt;&gt;)</span></span><span>
+</span><span id="line-256"></span><span>                   </span><span class="hs-special">(</span><span class="hs-keyword">let</span><span>
+</span><span id="line-257"></span><span>                      </span><span id="local-6989586621679490718"><span class="annot"><span class="annottext">p :: Vector Int32
+</span><a href="#local-6989586621679490718"><span class="hs-identifier hs-var hs-var">p</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">FoldLike
+  (Vector Int32) VersionDef VersionDef (Vector Int32) (Vector Int32)
+-&gt; VersionDef -&gt; Vector Int32
+forall a s t b. FoldLike a s t a b -&gt; s -&gt; a
+</span><span class="hs-identifier hs-var">Lens.Family2.view</span></span><span>
+</span><span id="line-258"></span><span>                            </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall s a (f :: * -&gt; *).
+(HasField s &quot;vec'badConsumers&quot; a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+forall (x :: Symbol) s a (f :: * -&gt; *).
+(HasField s x a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Field.field</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-string">&quot;vec'badConsumers&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">VersionDef
+</span><a href="#local-6989586621679490723"><span class="hs-identifier hs-var">_x</span></a></span><span>
+</span><span id="line-259"></span><span>                    </span><span class="hs-keyword">in</span><span>
+</span><span id="line-260"></span><span>                      </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Vector Int32 -&gt; Bool
+forall (v :: * -&gt; *) a. Vector v a =&gt; v a -&gt; Bool
+</span><span class="hs-identifier hs-var">Data.Vector.Generic.null</span></span><span> </span><span class="annot"><span class="annottext">Vector Int32
+</span><a href="#local-6989586621679490718"><span class="hs-identifier hs-var">p</span></a></span><span> </span><span class="hs-keyword">then</span><span>
+</span><span id="line-261"></span><span>                          </span><span class="annot"><span class="annottext">Builder
+forall a. Monoid a =&gt; a
+</span><span class="hs-identifier hs-var">Data.Monoid.mempty</span></span><span>
+</span><span id="line-262"></span><span>                      </span><span class="hs-keyword">else</span><span>
+</span><span id="line-263"></span><span>                          </span><span class="annot"><span class="annottext">Builder -&gt; Builder -&gt; Builder
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">(Data.Monoid.&lt;&gt;)</span></span><span>
+</span><span id="line-264"></span><span>                            </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word64 -&gt; Builder
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.putVarInt</span></span><span> </span><span class="annot"><span class="hs-number">26</span></span><span class="hs-special">)</span><span>
+</span><span id="line-265"></span><span>                            </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="hs-glyph">\</span><span> </span><span id="local-6989586621679490716"><span class="annot"><span class="annottext">bs :: ByteString
+</span><a href="#local-6989586621679490716"><span class="hs-identifier hs-var">bs</span></a></span></span><span>
+</span><span id="line-266"></span><span>                                </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Builder -&gt; Builder -&gt; Builder
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">(Data.Monoid.&lt;&gt;)</span></span><span>
+</span><span id="line-267"></span><span>                                     </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word64 -&gt; Builder
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.putVarInt</span></span><span>
+</span><span id="line-268"></span><span>                                        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; Word64
+forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">Prelude.fromIntegral</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; Int
+</span><span class="hs-identifier hs-var">Data.ByteString.length</span></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679490716"><span class="hs-identifier hs-var">bs</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-269"></span><span>                                     </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; Builder
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.putBytes</span></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679490716"><span class="hs-identifier hs-var">bs</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-270"></span><span>                               </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Builder -&gt; ByteString
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.runBuilder</span></span><span>
+</span><span id="line-271"></span><span>                                  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Int32 -&gt; Builder) -&gt; Vector Int32 -&gt; Builder
+forall (v :: * -&gt; *) a.
+Vector v a =&gt;
+(a -&gt; Builder) -&gt; v a -&gt; Builder
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.foldMapBuilder</span></span><span>
+</span><span id="line-272"></span><span>                                     </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Word64 -&gt; Builder) -&gt; (Int32 -&gt; Word64) -&gt; Int32 -&gt; Builder
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">(Prelude..)</span></span><span>
+</span><span id="line-273"></span><span>                                        </span><span class="annot"><span class="annottext">Word64 -&gt; Builder
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.putVarInt</span></span><span>
+</span><span id="line-274"></span><span>                                        </span><span class="annot"><span class="annottext">Int32 -&gt; Word64
+forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">Prelude.fromIntegral</span></span><span class="hs-special">)</span><span>
+</span><span id="line-275"></span><span>                                     </span><span class="annot"><span class="annottext">Vector Int32
+</span><a href="#local-6989586621679490718"><span class="hs-identifier hs-var">p</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-276"></span><span>                   </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FieldSet -&gt; Builder
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Wire.buildFieldSet</span></span><span>
+</span><span id="line-277"></span><span>                      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FoldLike FieldSet VersionDef VersionDef FieldSet FieldSet
+-&gt; VersionDef -&gt; FieldSet
+forall a s t b. FoldLike a s t a b -&gt; s -&gt; a
+</span><span class="hs-identifier hs-var">Lens.Family2.view</span></span><span> </span><span class="annot"><span class="annottext">FoldLike FieldSet VersionDef VersionDef FieldSet FieldSet
+forall msg. Message msg =&gt; Lens' msg FieldSet
+</span><span class="hs-identifier hs-var">Data.ProtoLens.unknownFields</span></span><span> </span><span class="annot"><span class="annottext">VersionDef
+</span><a href="#local-6989586621679490723"><span class="hs-identifier hs-var">_x</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-278"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Control.DeepSeq.NFData</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Framework.Versions.html#VersionDef"><span class="hs-identifier hs-type">VersionDef</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-279"></span><span>  </span><span id="local-6989586621679490708"><span class="annot"><span class="annottext">rnf :: VersionDef -&gt; ()
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">rnf</span></span></span><span>
+</span><span id="line-280"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span> </span><span id="local-6989586621679490706"><span class="annot"><span class="annottext">x__ :: VersionDef
+</span><a href="#local-6989586621679490706"><span class="hs-identifier hs-var">x__</span></a></span></span><span>
+</span><span id="line-281"></span><span>        </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">FieldSet -&gt; () -&gt; ()
+forall a b. NFData a =&gt; a -&gt; b -&gt; b
+</span><span class="hs-identifier hs-var">Control.DeepSeq.deepseq</span></span><span>
+</span><span id="line-282"></span><span>             </span><span class="hs-special">(</span><span class="annot"><span class="annottext">VersionDef -&gt; FieldSet
+</span><a href="Proto.Tensorflow.Core.Framework.Versions.html#_VersionDef%27_unknownFields"><span class="hs-identifier hs-var hs-var">_VersionDef'_unknownFields</span></a></span><span> </span><span class="annot"><span class="annottext">VersionDef
+</span><a href="#local-6989586621679490706"><span class="hs-identifier hs-var">x__</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-283"></span><span>             </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int32 -&gt; () -&gt; ()
+forall a b. NFData a =&gt; a -&gt; b -&gt; b
+</span><span class="hs-identifier hs-var">Control.DeepSeq.deepseq</span></span><span>
+</span><span id="line-284"></span><span>                </span><span class="hs-special">(</span><span class="annot"><span class="annottext">VersionDef -&gt; Int32
+</span><a href="Proto.Tensorflow.Core.Framework.Versions.html#_VersionDef%27producer"><span class="hs-identifier hs-var hs-var">_VersionDef'producer</span></a></span><span> </span><span class="annot"><span class="annottext">VersionDef
+</span><a href="#local-6989586621679490706"><span class="hs-identifier hs-var">x__</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-285"></span><span>                </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int32 -&gt; () -&gt; ()
+forall a b. NFData a =&gt; a -&gt; b -&gt; b
+</span><span class="hs-identifier hs-var">Control.DeepSeq.deepseq</span></span><span>
+</span><span id="line-286"></span><span>                   </span><span class="hs-special">(</span><span class="annot"><span class="annottext">VersionDef -&gt; Int32
+</span><a href="Proto.Tensorflow.Core.Framework.Versions.html#_VersionDef%27minConsumer"><span class="hs-identifier hs-var hs-var">_VersionDef'minConsumer</span></a></span><span> </span><span class="annot"><span class="annottext">VersionDef
+</span><a href="#local-6989586621679490706"><span class="hs-identifier hs-var">x__</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-287"></span><span>                   </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Vector Int32 -&gt; () -&gt; ()
+forall a b. NFData a =&gt; a -&gt; b -&gt; b
+</span><span class="hs-identifier hs-var">Control.DeepSeq.deepseq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">VersionDef -&gt; Vector Int32
+</span><a href="Proto.Tensorflow.Core.Framework.Versions.html#_VersionDef%27badConsumers"><span class="hs-identifier hs-var hs-var">_VersionDef'badConsumers</span></a></span><span> </span><span class="annot"><span class="annottext">VersionDef
+</span><a href="#local-6989586621679490706"><span class="hs-identifier hs-var">x__</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-288"></span><span class="annot"><a href="Proto.Tensorflow.Core.Framework.Versions.html#packedFileDescriptor"><span class="hs-identifier hs-type">packedFileDescriptor</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data.ByteString.ByteString</span></span><span>
+</span><span id="line-289"></span><span id="packedFileDescriptor"><span class="annot"><span class="annottext">packedFileDescriptor :: ByteString
+</span><a href="Proto.Tensorflow.Core.Framework.Versions.html#packedFileDescriptor"><span class="hs-identifier hs-var hs-var">packedFileDescriptor</span></a></span></span><span>
+</span><span id="line-290"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-string">&quot;\n\
+    \(tensorflow/core/framework/versions.proto\DC2\n\
+    \tensorflow\&quot;p\n\
+    \\n\
+    \VersionDef\DC2\SUB\n\
+    \\bproducer\CAN\SOH \SOH(\ENQR\bproducer\DC2!\n\
+    \\fmin_consumer\CAN\STX \SOH(\ENQR\vminConsumer\DC2#\n\
+    \\rbad_consumers\CAN\ETX \ETX(\ENQR\fbadConsumersB\128\SOH\n\
+    \\CANorg.tensorflow.frameworkB\SOVersionsProtosP\SOHZOgithub.com/tensorflow/tensorflow/tensorflow/go/core/framework/versions_go_proto\248\SOH\SOHJ\178\a\n\
+    \\ACK\DC2\EOT\NUL\NUL \SOH\n\
+    \\b\n\
+    \\SOH\f\DC2\ETX\NUL\NUL\DC2\n\
+    \\b\n\
+    \\SOH\STX\DC2\ETX\STX\NUL\DC3\n\
+    \\b\n\
+    \\SOH\b\DC2\ETX\EOT\NUL\US\n\
+    \\t\n\
+    \\STX\b\US\DC2\ETX\EOT\NUL\US\n\
+    \\b\n\
+    \\SOH\b\DC2\ETX\ENQ\NUL/\n\
+    \\t\n\
+    \\STX\b\b\DC2\ETX\ENQ\NUL/\n\
+    \\b\n\
+    \\SOH\b\DC2\ETX\ACK\NUL\&quot;\n\
+    \\t\n\
+    \\STX\b\n\
+    \\DC2\ETX\ACK\NUL\&quot;\n\
+    \\b\n\
+    \\SOH\b\DC2\ETX\a\NUL1\n\
+    \\t\n\
+    \\STX\b\SOH\DC2\ETX\a\NUL1\n\
+    \\b\n\
+    \\SOH\b\DC2\ETX\b\NULf\n\
+    \\t\n\
+    \\STX\b\v\DC2\ETX\b\NULf\n\
+    \\168\ETX\n\
+    \\STX\EOT\NUL\DC2\EOT\ETB\NUL \SOH\SUB\155\ETX Version information for a piece of serialized data\n\
+    \\n\
+    \ There are different types of versions for each type of data\n\
+    \ (GraphDef, etc.), but they all have the same common shape\n\
+    \ described here.\n\
+    \\n\
+    \ Each consumer has \&quot;consumer\&quot; and \&quot;min_producer\&quot; versions (specified\n\
+    \ elsewhere).  A consumer is allowed to consume this data if\n\
+    \\n\
+    \   producer &gt;= min_producer\n\
+    \   consumer &gt;= min_consumer\n\
+    \   consumer not in bad_consumers\n\
+    \\n\
+    \\n\
+    \\n\
+    \\n\
+    \\ETX\EOT\NUL\SOH\DC2\ETX\ETB\b\DC2\n\
+    \?\n\
+    \\EOT\EOT\NUL\STX\NUL\DC2\ETX\EM\STX\NAK\SUB2 The version of the code that produced this data.\n\
+    \\n\
+    \\f\n\
+    \\ENQ\EOT\NUL\STX\NUL\ENQ\DC2\ETX\EM\STX\a\n\
+    \\f\n\
+    \\ENQ\EOT\NUL\STX\NUL\SOH\DC2\ETX\EM\b\DLE\n\
+    \\f\n\
+    \\ENQ\EOT\NUL\STX\NUL\ETX\DC2\ETX\EM\DC3\DC4\n\
+    \S\n\
+    \\EOT\EOT\NUL\STX\SOH\DC2\ETX\FS\STX\EM\SUBF Any consumer below this version is not allowed to consume this data.\n\
+    \\n\
+    \\f\n\
+    \\ENQ\EOT\NUL\STX\SOH\ENQ\DC2\ETX\FS\STX\a\n\
+    \\f\n\
+    \\ENQ\EOT\NUL\STX\SOH\SOH\DC2\ETX\FS\b\DC4\n\
+    \\f\n\
+    \\ENQ\EOT\NUL\STX\SOH\ETX\DC2\ETX\FS\ETB\CAN\n\
+    \R\n\
+    \\EOT\EOT\NUL\STX\STX\DC2\ETX\US\STX#\SUBE Specific consumer versions which are disallowed (e.g. due to bugs).\n\
+    \\n\
+    \\f\n\
+    \\ENQ\EOT\NUL\STX\STX\EOT\DC2\ETX\US\STX\n\
+    \\n\
+    \\f\n\
+    \\ENQ\EOT\NUL\STX\STX\ENQ\DC2\ETX\US\v\DLE\n\
+    \\f\n\
+    \\ENQ\EOT\NUL\STX\STX\SOH\DC2\ETX\US\DC1\RS\n\
+    \\f\n\
+    \\ENQ\EOT\NUL\STX\STX\ETX\DC2\ETX\US!\&quot;b\ACKproto3&quot;</span></span></pre></body></html>
