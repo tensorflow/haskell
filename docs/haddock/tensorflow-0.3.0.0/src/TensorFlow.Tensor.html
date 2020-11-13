@@ -1,0 +1,498 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">-- Copyright 2016 TensorFlow authors.</span><span>
+</span><span id="line-2"></span><span class="hs-comment">--</span><span>
+</span><span id="line-3"></span><span class="hs-comment">-- Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span><span>
+</span><span id="line-4"></span><span class="hs-comment">-- you may not use this file except in compliance with the License.</span><span>
+</span><span id="line-5"></span><span class="hs-comment">-- You may obtain a copy of the License at</span><span>
+</span><span id="line-6"></span><span class="hs-comment">--</span><span>
+</span><span id="line-7"></span><span class="hs-comment">--     http://www.apache.org/licenses/LICENSE-2.0</span><span>
+</span><span id="line-8"></span><span class="hs-comment">--</span><span>
+</span><span id="line-9"></span><span class="hs-comment">-- Unless required by applicable law or agreed to in writing, software</span><span>
+</span><span id="line-10"></span><span class="hs-comment">-- distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span><span>
+</span><span id="line-11"></span><span class="hs-comment">-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span><span>
+</span><span id="line-12"></span><span class="hs-comment">-- See the License for the specific language governing permissions and</span><span>
+</span><span id="line-13"></span><span class="hs-comment">-- limitations under the License.</span><span>
+</span><span id="line-14"></span><span>
+</span><span id="line-15"></span><span class="hs-pragma">{-# LANGUAGE DataKinds #-}</span><span>
+</span><span id="line-16"></span><span class="hs-pragma">{-# LANGUAGE FlexibleContexts #-}</span><span>
+</span><span id="line-17"></span><span class="hs-pragma">{-# LANGUAGE FlexibleInstances #-}</span><span>
+</span><span id="line-18"></span><span class="hs-pragma">{-# LANGUAGE FunctionalDependencies #-}</span><span>
+</span><span id="line-19"></span><span class="hs-pragma">{-# LANGUAGE GADTs #-}</span><span>
+</span><span id="line-20"></span><span class="hs-pragma">{-# LANGUAGE DeriveFunctor #-}</span><span>
+</span><span id="line-21"></span><span class="hs-pragma">{-# LANGUAGE KindSignatures #-}</span><span>
+</span><span id="line-22"></span><span class="hs-pragma">{-# LANGUAGE MultiParamTypeClasses #-}</span><span>
+</span><span id="line-23"></span><span class="hs-pragma">{-# LANGUAGE OverloadedStrings #-}</span><span>
+</span><span id="line-24"></span><span class="hs-pragma">{-# LANGUAGE Rank2Types #-}</span><span>
+</span><span id="line-25"></span><span class="hs-pragma">{-# LANGUAGE TypeFamilies #-}</span><span>
+</span><span id="line-26"></span><span class="hs-pragma">{-# LANGUAGE TypeOperators #-}</span><span>
+</span><span id="line-27"></span><span class="hs-pragma">{-# LANGUAGE UndecidableInstances #-}</span><span>  </span><span class="hs-comment">-- For the Render class</span><span>
+</span><span id="line-28"></span><span>
+</span><span id="line-29"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">TensorFlow.Tensor</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-30"></span><span>
+</span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.ByteString</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">ByteString</span></span><span class="hs-special">)</span><span>
+</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.String</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">IsString</span></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Text</span></span><span>
+</span><span id="line-34"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Lens.Family2</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-operator">(^.)</span></span><span class="hs-special">)</span><span>
+</span><span id="line-35"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Lens.Family2.State</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-operator">(%=)</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">use</span></span><span class="hs-special">)</span><span>
+</span><span id="line-36"></span><span>
+</span><span id="line-37"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Proto.Tensorflow.Core.Framework.NodeDef_Fields</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">device</span></span><span class="hs-special">)</span><span>
+</span><span id="line-38"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="TensorFlow.Build.html"><span class="hs-identifier">TensorFlow.Build</span></a></span><span>
+</span><span id="line-39"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="TensorFlow.Output.html"><span class="hs-identifier">TensorFlow.Output</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="TensorFlow.Output.html#Output"><span class="hs-identifier">Output</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Output.html#NodeName"><span class="hs-identifier">NodeName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Output.html#outputNodeName"><span class="hs-identifier">outputNodeName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Output.html#Device"><span class="hs-identifier">Device</span></a></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-40"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="TensorFlow.Types.html"><span class="hs-identifier">TensorFlow.Types</span></a></span><span>
+</span><span id="line-41"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="TensorFlow.Types.html#TensorType"><span class="hs-identifier">TensorType</span></a></span><span>
+</span><span id="line-42"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Types.html#TensorData"><span class="hs-identifier">TensorData</span></a></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-43"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Types.html#ListOf"><span class="hs-identifier">ListOf</span></a></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-44"></span><span>    </span><span class="hs-special">)</span><span>
+</span><span id="line-45"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><a href="TensorFlow.Internal.FFI.html"><span class="hs-identifier">TensorFlow.Internal.FFI</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">FFI</span></span><span>
+</span><span id="line-46"></span><span>
+</span><span id="line-47"></span><span class="hs-comment">-- | A named output of a TensorFlow operation.</span><span>
+</span><span id="line-48"></span><span class="hs-comment">--</span><span>
+</span><span id="line-49"></span><span class="hs-comment">-- The type parameter @a@ is the type of the elements in the 'Tensor'.  The</span><span>
+</span><span id="line-50"></span><span class="hs-comment">-- parameter @v@ is either:</span><span>
+</span><span id="line-51"></span><span class="hs-comment">--</span><span>
+</span><span id="line-52"></span><span class="hs-comment">--   * 'Build': An unrendered, immutable value.</span><span>
+</span><span id="line-53"></span><span class="hs-comment">--   * 'Value': A rendered, immutable value.</span><span>
+</span><span id="line-54"></span><span class="hs-comment">--   * 'Ref': A rendered stateful handle (e.g., a variable).</span><span>
+</span><span id="line-55"></span><span class="hs-comment">--</span><span>
+</span><span id="line-56"></span><span class="hs-comment">-- Note that 'expr', 'value', 'render' and 'renderValue' can help convert between</span><span>
+</span><span id="line-57"></span><span class="hs-comment">-- the different types of 'Tensor'.</span><span>
+</span><span id="line-58"></span><span class="hs-keyword">data</span><span> </span><span id="Tensor"><span class="annot"><a href="TensorFlow.Tensor.html#Tensor"><span class="hs-identifier hs-var">Tensor</span></a></span></span><span> </span><span id="local-6989586621679166072"><span class="annot"><a href="#local-6989586621679166072"><span class="hs-identifier hs-type">v</span></a></span></span><span> </span><span id="local-6989586621679166071"><span class="annot"><a href="#local-6989586621679166071"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-59"></span><span>    </span><span id="local-6989586621679166184"><span id="local-6989586621679166186"><span id="Tensor"><span class="annot"><a href="TensorFlow.Tensor.html#Tensor"><span class="hs-identifier hs-var">Tensor</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html#TensorKind"><span class="hs-identifier hs-type">TensorKind</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679166186"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-special">{</span><span id="tensorOutput"><span class="annot"><span class="annottext">Tensor v a -&gt; v Output
+</span><a href="TensorFlow.Tensor.html#tensorOutput"><span class="hs-identifier hs-var hs-var">tensorOutput</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621679166186"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="annot"><a href="TensorFlow.Output.html#Output"><span class="hs-identifier hs-type">Output</span></a></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html#Tensor"><span class="hs-identifier hs-type">Tensor</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679166186"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679166184"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
+</span><span id="line-60"></span><span>
+</span><span id="line-61"></span><span class="hs-keyword">newtype</span><span> </span><span id="Value"><span class="annot"><a href="TensorFlow.Tensor.html#Value"><span class="hs-identifier hs-var">Value</span></a></span></span><span> </span><span id="local-6989586621679166210"><span class="annot"><a href="#local-6989586621679166210"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Value"><span class="annot"><a href="TensorFlow.Tensor.html#Value"><span class="hs-identifier hs-var">Value</span></a></span></span><span> </span><span class="hs-special">{</span><span id="runValue"><span class="annot"><span class="annottext">Value a -&gt; a
+</span><a href="TensorFlow.Tensor.html#runValue"><span class="hs-identifier hs-var hs-var">runValue</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621679166210"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-62"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621679166063"><span id="local-6989586621679166065"><span class="annot"><span class="annottext">a -&gt; Value b -&gt; Value a
+(a -&gt; b) -&gt; Value a -&gt; Value b
+(forall a b. (a -&gt; b) -&gt; Value a -&gt; Value b)
+-&gt; (forall a b. a -&gt; Value b -&gt; Value a) -&gt; Functor Value
+forall a b. a -&gt; Value b -&gt; Value a
+forall a b. (a -&gt; b) -&gt; Value a -&gt; Value b
+forall (f :: * -&gt; *).
+(forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
+&lt;$ :: a -&gt; Value b -&gt; Value a
+$c&lt;$ :: forall a b. a -&gt; Value b -&gt; Value a
+fmap :: (a -&gt; b) -&gt; Value a -&gt; Value b
+$cfmap :: forall a b. (a -&gt; b) -&gt; Value a -&gt; Value b
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span>
+</span><span id="line-63"></span><span>
+</span><span id="line-64"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679166053"><span id="local-6989586621679166055"><span id="local-6989586621679166057"><span class="annot"><span class="hs-identifier hs-type">Applicative</span></span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html#Value"><span class="hs-identifier hs-type">Value</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-65"></span><span>    </span><span id="local-6989586621679166051"><span class="annot"><span class="annottext">pure :: a -&gt; Value a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">pure</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; Value a
+forall a. a -&gt; Value a
+</span><a href="TensorFlow.Tensor.html#Value"><span class="hs-identifier hs-var">Value</span></a></span><span>
+</span><span id="line-66"></span><span>    </span><span class="annot"><a href="TensorFlow.Tensor.html#Value"><span class="hs-identifier hs-type">Value</span></a></span><span> </span><span id="local-6989586621679166050"><span class="annot"><span class="annottext">f :: a -&gt; b
+</span><a href="#local-6989586621679166050"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span id="local-6989586621679166049"><span class="annot"><span class="annottext">&lt;*&gt; :: Value (a -&gt; b) -&gt; Value a -&gt; Value b
+</span><span class="hs-operator hs-var hs-var hs-var hs-var">&lt;*&gt;</span></span></span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html#Value"><span class="hs-identifier hs-type">Value</span></a></span><span> </span><span id="local-6989586621679166048"><span class="annot"><span class="annottext">x :: a
+</span><a href="#local-6989586621679166048"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">b -&gt; Value b
+forall a. a -&gt; Value a
+</span><a href="TensorFlow.Tensor.html#Value"><span class="hs-identifier hs-var">Value</span></a></span><span> </span><span class="annot"><span class="annottext">(b -&gt; Value b) -&gt; b -&gt; Value b
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; b
+</span><a href="#local-6989586621679166050"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679166048"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-67"></span><span>
+</span><span id="line-68"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679166042"><span id="local-6989586621679166044"><span class="annot"><span class="hs-identifier hs-type">Monad</span></span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html#Value"><span class="hs-identifier hs-type">Value</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-69"></span><span>    </span><span id="local-6989586621679166040"><span class="annot"><span class="annottext">f :: Value a
+</span><a href="#local-6989586621679166040"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span id="local-6989586621679166039"><span class="annot"><span class="annottext">&gt;&gt;= :: Value a -&gt; (a -&gt; Value b) -&gt; Value b
+</span><span class="hs-operator hs-var hs-var hs-var hs-var">&gt;&gt;=</span></span></span><span> </span><span id="local-6989586621679166038"><span class="annot"><span class="annottext">g :: a -&gt; Value b
+</span><a href="#local-6989586621679166038"><span class="hs-identifier hs-var">g</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; Value b
+</span><a href="#local-6989586621679166038"><span class="hs-identifier hs-var">g</span></a></span><span> </span><span class="annot"><span class="annottext">(a -&gt; Value b) -&gt; a -&gt; Value b
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Value a -&gt; a
+forall a. Value a -&gt; a
+</span><a href="TensorFlow.Tensor.html#runValue"><span class="hs-identifier hs-var hs-var">runValue</span></a></span><span> </span><span class="annot"><span class="annottext">Value a
+</span><a href="#local-6989586621679166040"><span class="hs-identifier hs-var">f</span></a></span><span>
+</span><span id="line-70"></span><span>
+</span><span id="line-71"></span><span class="hs-keyword">newtype</span><span> </span><span id="Ref"><span class="annot"><a href="TensorFlow.Tensor.html#Ref"><span class="hs-identifier hs-var">Ref</span></a></span></span><span> </span><span id="local-6989586621679166188"><span class="annot"><a href="#local-6989586621679166188"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Ref"><span class="annot"><a href="TensorFlow.Tensor.html#Ref"><span class="hs-identifier hs-var">Ref</span></a></span></span><span> </span><span class="hs-special">{</span><span id="runRef"><span class="annot"><span class="annottext">Ref a -&gt; a
+</span><a href="TensorFlow.Tensor.html#runRef"><span class="hs-identifier hs-var hs-var">runRef</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621679166188"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-72"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621679166032"><span id="local-6989586621679166034"><span class="annot"><span class="annottext">a -&gt; Ref b -&gt; Ref a
+(a -&gt; b) -&gt; Ref a -&gt; Ref b
+(forall a b. (a -&gt; b) -&gt; Ref a -&gt; Ref b)
+-&gt; (forall a b. a -&gt; Ref b -&gt; Ref a) -&gt; Functor Ref
+forall a b. a -&gt; Ref b -&gt; Ref a
+forall a b. (a -&gt; b) -&gt; Ref a -&gt; Ref b
+forall (f :: * -&gt; *).
+(forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
+&lt;$ :: a -&gt; Ref b -&gt; Ref a
+$c&lt;$ :: forall a b. a -&gt; Ref b -&gt; Ref a
+fmap :: (a -&gt; b) -&gt; Ref a -&gt; Ref b
+$cfmap :: forall a b. (a -&gt; b) -&gt; Ref a -&gt; Ref b
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span>
+</span><span id="line-73"></span><span>
+</span><span id="line-74"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679166023"><span id="local-6989586621679166025"><span id="local-6989586621679166027"><span class="annot"><span class="hs-identifier hs-type">Applicative</span></span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html#Ref"><span class="hs-identifier hs-type">Ref</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-75"></span><span>    </span><span id="local-6989586621679166022"><span class="annot"><span class="annottext">pure :: a -&gt; Ref a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">pure</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; Ref a
+forall a. a -&gt; Ref a
+</span><a href="TensorFlow.Tensor.html#Ref"><span class="hs-identifier hs-var">Ref</span></a></span><span>
+</span><span id="line-76"></span><span>    </span><span class="annot"><a href="TensorFlow.Tensor.html#Ref"><span class="hs-identifier hs-type">Ref</span></a></span><span> </span><span id="local-6989586621679166021"><span class="annot"><span class="annottext">f :: a -&gt; b
+</span><a href="#local-6989586621679166021"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span id="local-6989586621679166020"><span class="annot"><span class="annottext">&lt;*&gt; :: Ref (a -&gt; b) -&gt; Ref a -&gt; Ref b
+</span><span class="hs-operator hs-var hs-var hs-var hs-var">&lt;*&gt;</span></span></span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html#Ref"><span class="hs-identifier hs-type">Ref</span></a></span><span> </span><span id="local-6989586621679166019"><span class="annot"><span class="annottext">x :: a
+</span><a href="#local-6989586621679166019"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">b -&gt; Ref b
+forall a. a -&gt; Ref a
+</span><a href="TensorFlow.Tensor.html#Ref"><span class="hs-identifier hs-var">Ref</span></a></span><span> </span><span class="annot"><span class="annottext">(b -&gt; Ref b) -&gt; b -&gt; Ref b
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; b
+</span><a href="#local-6989586621679166021"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679166019"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-77"></span><span>
+</span><span id="line-78"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679166013"><span id="local-6989586621679166015"><span class="annot"><span class="hs-identifier hs-type">Monad</span></span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html#Ref"><span class="hs-identifier hs-type">Ref</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-79"></span><span>    </span><span id="local-6989586621679166012"><span class="annot"><span class="annottext">f :: Ref a
+</span><a href="#local-6989586621679166012"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span id="local-6989586621679166011"><span class="annot"><span class="annottext">&gt;&gt;= :: Ref a -&gt; (a -&gt; Ref b) -&gt; Ref b
+</span><span class="hs-operator hs-var hs-var hs-var hs-var">&gt;&gt;=</span></span></span><span> </span><span id="local-6989586621679166010"><span class="annot"><span class="annottext">g :: a -&gt; Ref b
+</span><a href="#local-6989586621679166010"><span class="hs-identifier hs-var">g</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; Ref b
+</span><a href="#local-6989586621679166010"><span class="hs-identifier hs-var">g</span></a></span><span> </span><span class="annot"><span class="annottext">(a -&gt; Ref b) -&gt; a -&gt; Ref b
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Ref a -&gt; a
+forall a. Ref a -&gt; a
+</span><a href="TensorFlow.Tensor.html#runRef"><span class="hs-identifier hs-var hs-var">runRef</span></a></span><span> </span><span class="annot"><span class="annottext">Ref a
+</span><a href="#local-6989586621679166012"><span class="hs-identifier hs-var">f</span></a></span><span>
+</span><span id="line-80"></span><span>
+</span><span id="line-81"></span><span class="hs-comment">-- | Cast a 'Tensor Ref' into a 'Tensor Value'. This behaves like a no-op.</span><span>
+</span><span id="line-82"></span><span id="local-6989586621679166009"><span class="annot"><a href="TensorFlow.Tensor.html#value"><span class="hs-identifier hs-type">value</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html#Tensor"><span class="hs-identifier hs-type">Tensor</span></a></span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html#Ref"><span class="hs-identifier hs-type">Ref</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679166009"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html#Tensor"><span class="hs-identifier hs-type">Tensor</span></a></span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html#Value"><span class="hs-identifier hs-type">Value</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679166009"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-83"></span><span id="value"><span class="annot"><span class="annottext">value :: Tensor Ref a -&gt; Tensor Value a
+</span><a href="TensorFlow.Tensor.html#value"><span class="hs-identifier hs-var hs-var">value</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="TensorFlow.Tensor.html#Tensor"><span class="hs-identifier hs-type">Tensor</span></a></span><span> </span><span id="local-6989586621679166007"><span class="annot"><span class="annottext">o :: Ref Output
+</span><a href="#local-6989586621679166007"><span class="hs-identifier hs-var">o</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Value Output -&gt; Tensor Value a
+forall (v :: * -&gt; *) a. TensorKind v =&gt; v Output -&gt; Tensor v a
+</span><a href="TensorFlow.Tensor.html#Tensor"><span class="hs-identifier hs-var">Tensor</span></a></span><span> </span><span class="annot"><span class="annottext">(Value Output -&gt; Tensor Value a) -&gt; Value Output -&gt; Tensor Value a
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Output -&gt; Value Output
+forall a. a -&gt; Value a
+</span><a href="TensorFlow.Tensor.html#Value"><span class="hs-identifier hs-var">Value</span></a></span><span> </span><span class="annot"><span class="annottext">(Output -&gt; Value Output) -&gt; Output -&gt; Value Output
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Ref Output -&gt; Output
+forall a. Ref a -&gt; a
+</span><a href="TensorFlow.Tensor.html#runRef"><span class="hs-identifier hs-var hs-var">runRef</span></a></span><span> </span><span class="annot"><span class="annottext">Ref Output
+</span><a href="#local-6989586621679166007"><span class="hs-identifier hs-var">o</span></a></span><span>
+</span><span id="line-84"></span><span>
+</span><span id="line-85"></span><span id="local-6989586621679166004"><span id="local-6989586621679166005"><span id="local-6989586621679166006"><span class="annot"><a href="TensorFlow.Tensor.html#renderValue"><span class="hs-identifier hs-type">renderValue</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="TensorFlow.Build.html#MonadBuild"><span class="hs-identifier hs-type">MonadBuild</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679166006"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html#Tensor"><span class="hs-identifier hs-type">Tensor</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679166005"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679166004"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679166006"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="TensorFlow.Tensor.html#Tensor"><span class="hs-identifier hs-type">Tensor</span></a></span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html#Value"><span class="hs-identifier hs-type">Value</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679166004"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-86"></span><span id="renderValue"><span class="annot"><span class="annottext">renderValue :: Tensor v a -&gt; m (Tensor Value a)
+</span><a href="TensorFlow.Tensor.html#renderValue"><span class="hs-identifier hs-var hs-var">renderValue</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="TensorFlow.Tensor.html#Tensor"><span class="hs-identifier hs-type">Tensor</span></a></span><span> </span><span id="local-6989586621679166002"><span class="annot"><span class="annottext">o :: v Output
+</span><a href="#local-6989586621679166002"><span class="hs-identifier hs-var">o</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Tensor Build a -&gt; m (Tensor Value a)
+forall (m :: * -&gt; *) a.
+MonadBuild m =&gt;
+Tensor Build a -&gt; m (Tensor Value a)
+</span><a href="TensorFlow.Tensor.html#render"><span class="hs-identifier hs-var">render</span></a></span><span> </span><span class="annot"><span class="annottext">(Tensor Build a -&gt; m (Tensor Value a))
+-&gt; Tensor Build a -&gt; m (Tensor Value a)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">BuildT Identity Output -&gt; Tensor Build a
+forall (v :: * -&gt; *) a. TensorKind v =&gt; v Output -&gt; Tensor v a
+</span><a href="TensorFlow.Tensor.html#Tensor"><span class="hs-identifier hs-var">Tensor</span></a></span><span> </span><span class="annot"><span class="annottext">(BuildT Identity Output -&gt; Tensor Build a)
+-&gt; BuildT Identity Output -&gt; Tensor Build a
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">v Output -&gt; BuildT Identity Output
+forall (v :: * -&gt; *) a. TensorKind v =&gt; v a -&gt; Build a
+</span><a href="TensorFlow.Tensor.html#toBuild"><span class="hs-identifier hs-var">toBuild</span></a></span><span> </span><span class="annot"><span class="annottext">v Output
+</span><a href="#local-6989586621679166002"><span class="hs-identifier hs-var">o</span></a></span><span>
+</span><span id="line-87"></span><span>
+</span><span id="line-88"></span><span class="hs-comment">-- | A pair of a 'Tensor' and some data that should be fed into that 'Tensor'</span><span>
+</span><span id="line-89"></span><span class="hs-comment">-- when running the graph.</span><span>
+</span><span id="line-90"></span><span class="hs-keyword">data</span><span> </span><span id="Feed"><span class="annot"><a href="TensorFlow.Tensor.html#Feed"><span class="hs-identifier hs-var">Feed</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Feed"><span class="annot"><a href="TensorFlow.Tensor.html#Feed"><span class="hs-identifier hs-var">Feed</span></a></span></span><span> </span><span class="annot"><a href="TensorFlow.Output.html#Output"><span class="hs-identifier hs-type">Output</span></a></span><span> </span><span class="annot"><a href="TensorFlow.Internal.FFI.html#TensorData"><span class="hs-identifier hs-type">FFI.TensorData</span></a></span><span>
+</span><span id="line-91"></span><span>
+</span><span id="line-92"></span><span class="hs-comment">-- | A class ensuring that a given tensor is rendered, i.e., has a fixed</span><span>
+</span><span id="line-93"></span><span class="hs-comment">-- name, device, etc.</span><span>
+</span><span id="line-94"></span><span class="hs-keyword">class</span><span> </span><span id="Rendered"><span class="annot"><a href="TensorFlow.Tensor.html#Rendered"><span class="hs-identifier hs-var">Rendered</span></a></span></span><span> </span><span id="local-6989586621679166170"><span class="annot"><a href="#local-6989586621679166170"><span class="hs-identifier hs-type">t</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-95"></span><span>    </span><span id="local-6989586621679166172"><span id="renderedOutput"><span class="annot"><a href="TensorFlow.Tensor.html#renderedOutput"><span class="hs-identifier hs-type">renderedOutput</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621679166170"><span class="hs-identifier hs-type">t</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679166172"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Output.html#Output"><span class="hs-identifier hs-type">Output</span></a></span></span><span>
+</span><span id="line-96"></span><span>
+</span><span id="line-97"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html#Rendered"><span class="hs-identifier hs-type">Rendered</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="TensorFlow.Tensor.html#Tensor"><span class="hs-identifier hs-type">Tensor</span></a></span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html#Value"><span class="hs-identifier hs-type">Value</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-98"></span><span>    </span><span id="local-6989586621679165995"><span class="annot"><span class="annottext">renderedOutput :: Tensor Value a -&gt; Output
+</span><a href="#local-6989586621679165995"><span class="hs-identifier hs-var hs-var hs-var hs-var">renderedOutput</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Value Output -&gt; Output
+forall a. Value a -&gt; a
+</span><a href="TensorFlow.Tensor.html#runValue"><span class="hs-identifier hs-var hs-var">runValue</span></a></span><span> </span><span class="annot"><span class="annottext">(Value Output -&gt; Output)
+-&gt; (Tensor Value a -&gt; Value Output) -&gt; Tensor Value a -&gt; Output
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Tensor Value a -&gt; Value Output
+forall (v :: * -&gt; *) a. Tensor v a -&gt; v Output
+</span><a href="TensorFlow.Tensor.html#tensorOutput"><span class="hs-identifier hs-var hs-var">tensorOutput</span></a></span><span>
+</span><span id="line-99"></span><span>
+</span><span id="line-100"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html#Rendered"><span class="hs-identifier hs-type">Rendered</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="TensorFlow.Tensor.html#Tensor"><span class="hs-identifier hs-type">Tensor</span></a></span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html#Ref"><span class="hs-identifier hs-type">Ref</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-101"></span><span>    </span><span id="local-6989586621679165992"><span class="annot"><span class="annottext">renderedOutput :: Tensor Ref a -&gt; Output
+</span><a href="#local-6989586621679165992"><span class="hs-identifier hs-var hs-var hs-var hs-var">renderedOutput</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Ref Output -&gt; Output
+forall a. Ref a -&gt; a
+</span><a href="TensorFlow.Tensor.html#runRef"><span class="hs-identifier hs-var hs-var">runRef</span></a></span><span> </span><span class="annot"><span class="annottext">(Ref Output -&gt; Output)
+-&gt; (Tensor Ref a -&gt; Ref Output) -&gt; Tensor Ref a -&gt; Output
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Tensor Ref a -&gt; Ref Output
+forall (v :: * -&gt; *) a. Tensor v a -&gt; v Output
+</span><a href="TensorFlow.Tensor.html#tensorOutput"><span class="hs-identifier hs-var hs-var">tensorOutput</span></a></span><span>
+</span><span id="line-102"></span><span>
+</span><span id="line-103"></span><span id="local-6989586621679165990"><span id="local-6989586621679165991"><span class="annot"><a href="TensorFlow.Tensor.html#tensorNodeName"><span class="hs-identifier hs-type">tensorNodeName</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html#Rendered"><span class="hs-identifier hs-type">Rendered</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679165991"><span class="hs-identifier hs-type">t</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679165991"><span class="hs-identifier hs-type">t</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679165990"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Output.html#NodeName"><span class="hs-identifier hs-type">NodeName</span></a></span></span></span><span>
+</span><span id="line-104"></span><span id="tensorNodeName"><span class="annot"><span class="annottext">tensorNodeName :: t a -&gt; NodeName
+</span><a href="TensorFlow.Tensor.html#tensorNodeName"><span class="hs-identifier hs-var hs-var">tensorNodeName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Output -&gt; NodeName
+</span><a href="TensorFlow.Output.html#outputNodeName"><span class="hs-identifier hs-var hs-var">outputNodeName</span></a></span><span> </span><span class="annot"><span class="annottext">(Output -&gt; NodeName) -&gt; (t a -&gt; Output) -&gt; t a -&gt; NodeName
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">t a -&gt; Output
+forall (t :: * -&gt; *) a. Rendered t =&gt; t a -&gt; Output
+</span><a href="TensorFlow.Tensor.html#renderedOutput"><span class="hs-identifier hs-var">renderedOutput</span></a></span><span>
+</span><span id="line-105"></span><span>
+</span><span id="line-106"></span><span>
+</span><span id="line-107"></span><span class="hs-comment">-- | Create a 'Feed' for feeding the given data into a 'Tensor' when running</span><span>
+</span><span id="line-108"></span><span class="hs-comment">-- the graph.</span><span>
+</span><span id="line-109"></span><span class="hs-comment">--</span><span>
+</span><span id="line-110"></span><span class="hs-comment">-- Note that if a 'Tensor' is rendered, its identity may change; so feeding the</span><span>
+</span><span id="line-111"></span><span class="hs-comment">-- rendered 'Tensor' may be different than feeding the original 'Tensor'.</span><span>
+</span><span id="line-112"></span><span id="local-6989586621679165987"><span id="local-6989586621679165988"><span class="annot"><a href="TensorFlow.Tensor.html#feed"><span class="hs-identifier hs-type">feed</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html#Rendered"><span class="hs-identifier hs-type">Rendered</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679165988"><span class="hs-identifier hs-type">t</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679165988"><span class="hs-identifier hs-type">t</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679165987"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Types.html#TensorData"><span class="hs-identifier hs-type">TensorData</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679165987"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html#Feed"><span class="hs-identifier hs-type">Feed</span></a></span></span></span><span>
+</span><span id="line-113"></span><span id="feed"><span class="annot"><span class="annottext">feed :: t a -&gt; TensorData a -&gt; Feed
+</span><a href="TensorFlow.Tensor.html#feed"><span class="hs-identifier hs-var hs-var">feed</span></a></span></span><span> </span><span id="local-6989586621679165985"><span class="annot"><span class="annottext">t :: t a
+</span><a href="#local-6989586621679165985"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="TensorFlow.Types.html#TensorData"><span class="hs-identifier hs-type">TensorData</span></a></span><span> </span><span id="local-6989586621679165983"><span class="annot"><span class="annottext">td :: TensorData
+</span><a href="#local-6989586621679165983"><span class="hs-identifier hs-var">td</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Output -&gt; TensorData -&gt; Feed
+</span><a href="TensorFlow.Tensor.html#Feed"><span class="hs-identifier hs-var">Feed</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">t a -&gt; Output
+forall (t :: * -&gt; *) a. Rendered t =&gt; t a -&gt; Output
+</span><a href="TensorFlow.Tensor.html#renderedOutput"><span class="hs-identifier hs-var">renderedOutput</span></a></span><span> </span><span class="annot"><span class="annottext">t a
+</span><a href="#local-6989586621679165985"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">TensorData
+</span><a href="#local-6989586621679165983"><span class="hs-identifier hs-var">td</span></a></span><span>
+</span><span id="line-114"></span><span>
+</span><span id="line-115"></span><span class="hs-comment">-- | Create a 'Tensor' for a given name.  This can be used to reference nodes</span><span>
+</span><span id="line-116"></span><span class="hs-comment">-- in a 'GraphDef' that was loaded via 'addGraphDef'.</span><span>
+</span><span id="line-117"></span><span class="hs-comment">-- TODO(judahjacobson): add more safety checks here.</span><span>
+</span><span id="line-118"></span><span id="local-6989586621679166149"><span id="local-6989586621679166150"><span class="annot"><a href="TensorFlow.Tensor.html#tensorFromName"><span class="hs-identifier hs-type">tensorFromName</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html#TensorKind"><span class="hs-identifier hs-type">TensorKind</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679166150"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text.Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html#Tensor"><span class="hs-identifier hs-type">Tensor</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679166150"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679166149"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
+</span><span id="line-119"></span><span id="tensorFromName"><span class="annot"><span class="annottext">tensorFromName :: Text -&gt; Tensor v a
+</span><a href="TensorFlow.Tensor.html#tensorFromName"><span class="hs-identifier hs-var hs-var">tensorFromName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">v Output -&gt; Tensor v a
+forall (v :: * -&gt; *) a. TensorKind v =&gt; v Output -&gt; Tensor v a
+</span><a href="TensorFlow.Tensor.html#Tensor"><span class="hs-identifier hs-var">Tensor</span></a></span><span> </span><span class="annot"><span class="annottext">(v Output -&gt; Tensor v a)
+-&gt; (Text -&gt; v Output) -&gt; Text -&gt; Tensor v a
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Output -&gt; v Output
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Output -&gt; v Output) -&gt; (Text -&gt; Output) -&gt; Text -&gt; v Output
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Output
+forall a. IsString a =&gt; String -&gt; a
+</span><span class="hs-identifier hs-var">fromString</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Output) -&gt; (Text -&gt; String) -&gt; Text -&gt; Output
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
+</span><span class="hs-identifier hs-var">Text.unpack</span></span><span>
+</span><span id="line-120"></span><span>
+</span><span id="line-121"></span><span class="hs-comment">-- | Like 'tensorFromName', but type-restricted to 'Value'.</span><span>
+</span><span id="line-122"></span><span id="local-6989586621679165980"><span class="annot"><a href="TensorFlow.Tensor.html#tensorValueFromName"><span class="hs-identifier hs-type">tensorValueFromName</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text.Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html#Tensor"><span class="hs-identifier hs-type">Tensor</span></a></span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html#Value"><span class="hs-identifier hs-type">Value</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679165980"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-123"></span><span id="tensorValueFromName"><span class="annot"><span class="annottext">tensorValueFromName :: Text -&gt; Tensor Value a
+</span><a href="TensorFlow.Tensor.html#tensorValueFromName"><span class="hs-identifier hs-var hs-var">tensorValueFromName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Tensor Value a
+forall (v :: * -&gt; *) a. TensorKind v =&gt; Text -&gt; Tensor v a
+</span><a href="TensorFlow.Tensor.html#tensorFromName"><span class="hs-identifier hs-var">tensorFromName</span></a></span><span>
+</span><span id="line-124"></span><span>
+</span><span id="line-125"></span><span class="hs-comment">-- | Like 'tensorFromName', but type-restricted to 'Ref'.</span><span>
+</span><span id="line-126"></span><span id="local-6989586621679165978"><span class="annot"><a href="TensorFlow.Tensor.html#tensorRefFromName"><span class="hs-identifier hs-type">tensorRefFromName</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text.Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html#Tensor"><span class="hs-identifier hs-type">Tensor</span></a></span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html#Ref"><span class="hs-identifier hs-type">Ref</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679165978"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-127"></span><span id="tensorRefFromName"><span class="annot"><span class="annottext">tensorRefFromName :: Text -&gt; Tensor Ref a
+</span><a href="TensorFlow.Tensor.html#tensorRefFromName"><span class="hs-identifier hs-var hs-var">tensorRefFromName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Tensor Ref a
+forall (v :: * -&gt; *) a. TensorKind v =&gt; Text -&gt; Tensor v a
+</span><a href="TensorFlow.Tensor.html#tensorFromName"><span class="hs-identifier hs-var">tensorFromName</span></a></span><span>
+</span><span id="line-128"></span><span>
+</span><span id="line-129"></span><span class="hs-keyword">type</span><span> </span><span id="TensorList"><span class="annot"><a href="TensorFlow.Tensor.html#TensorList"><span class="hs-identifier hs-var">TensorList</span></a></span></span><span> </span><span id="local-6989586621679165976"><span class="annot"><a href="#local-6989586621679165976"><span class="hs-identifier hs-type">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="TensorFlow.Types.html#ListOf"><span class="hs-identifier hs-type">ListOf</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="TensorFlow.Tensor.html#Tensor"><span class="hs-identifier hs-type">Tensor</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679165976"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-130"></span><span>
+</span><span id="line-131"></span><span id="local-6989586621679166139"><span id="local-6989586621679166140"><span class="annot"><a href="TensorFlow.Tensor.html#tensorListOutputs"><span class="hs-identifier hs-type">tensorListOutputs</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html#Rendered"><span class="hs-identifier hs-type">Rendered</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="TensorFlow.Tensor.html#Tensor"><span class="hs-identifier hs-type">Tensor</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679166140"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html#TensorList"><span class="hs-identifier hs-type">TensorList</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679166140"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679166139"><span class="hs-keyword hs-type">as</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="TensorFlow.Output.html#Output"><span class="hs-identifier hs-type">Output</span></a></span><span class="hs-special">]</span></span></span><span>
+</span><span id="line-132"></span><span id="tensorListOutputs"><span class="annot"><span class="annottext">tensorListOutputs :: TensorList v as -&gt; [Output]
+</span><a href="TensorFlow.Tensor.html#tensorListOutputs"><span class="hs-identifier hs-var hs-var">tensorListOutputs</span></a></span></span><span> </span><span class="annot"><a href="TensorFlow.Types.html#Nil"><span class="hs-identifier hs-type">Nil</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
+</span><span id="line-133"></span><span class="annot"><a href="TensorFlow.Tensor.html#tensorListOutputs"><span class="hs-identifier hs-var">tensorListOutputs</span></a></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679165973"><span class="annot"><span class="annottext">t :: Tensor v a
+</span><a href="#local-6989586621679165973"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="annot"><a href="TensorFlow.Types.html#%3A%2F"><span class="hs-operator hs-type">:/</span></a></span><span> </span><span id="local-6989586621679165971"><span class="annot"><span class="annottext">ts :: ListOf (Tensor v) as
+</span><a href="#local-6989586621679165971"><span class="hs-identifier hs-var">ts</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Tensor v a -&gt; Output
+forall (t :: * -&gt; *) a. Rendered t =&gt; t a -&gt; Output
+</span><a href="TensorFlow.Tensor.html#renderedOutput"><span class="hs-identifier hs-var">renderedOutput</span></a></span><span> </span><span class="annot"><span class="annottext">Tensor v a
+</span><a href="#local-6989586621679165973"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="annot"><span class="annottext">Output -&gt; [Output] -&gt; [Output]
+forall a. a -&gt; [a] -&gt; [a]
+</span><span class="hs-glyph hs-var">:</span></span><span> </span><span class="annot"><span class="annottext">ListOf (Tensor v) as -&gt; [Output]
+forall (v :: * -&gt; *) (as :: [*]).
+Rendered (Tensor v) =&gt;
+TensorList v as -&gt; [Output]
+</span><a href="TensorFlow.Tensor.html#tensorListOutputs"><span class="hs-identifier hs-var">tensorListOutputs</span></a></span><span> </span><span class="annot"><span class="annottext">ListOf (Tensor v) as
+</span><a href="#local-6989586621679165971"><span class="hs-identifier hs-var">ts</span></a></span><span>
+</span><span id="line-134"></span><span>
+</span><span id="line-135"></span><span class="hs-comment">-- | Places all nodes rendered in the given 'Build' action on the same</span><span>
+</span><span id="line-136"></span><span class="hs-comment">-- device as the given Tensor (see also 'withDevice'). Make sure that</span><span>
+</span><span id="line-137"></span><span class="hs-comment">-- the action has side effects of rendering the desired tensors. A pure</span><span>
+</span><span id="line-138"></span><span class="hs-comment">-- return would not have the desired effect.</span><span>
+</span><span id="line-139"></span><span id="local-6989586621679165967"><span id="local-6989586621679165968"><span id="local-6989586621679165969"><span id="local-6989586621679165970"><span class="annot"><a href="TensorFlow.Tensor.html#colocateWith"><span class="hs-identifier hs-type">colocateWith</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="TensorFlow.Build.html#MonadBuild"><span class="hs-identifier hs-type">MonadBuild</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679165970"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html#Rendered"><span class="hs-identifier hs-type">Rendered</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679165969"><span class="hs-identifier hs-type">t</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679165969"><span class="hs-identifier hs-type">t</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679165968"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679165970"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679165967"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679165970"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679165967"><span class="hs-identifier hs-type">a</span></a></span></span></span></span></span><span>
+</span><span id="line-140"></span><span id="colocateWith"><span class="annot"><span class="annottext">colocateWith :: t b -&gt; m a -&gt; m a
+</span><a href="TensorFlow.Tensor.html#colocateWith"><span class="hs-identifier hs-var hs-var">colocateWith</span></a></span></span><span> </span><span id="local-6989586621679165965"><span class="annot"><span class="annottext">t :: t b
+</span><a href="#local-6989586621679165965"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span id="local-6989586621679165964"><span class="annot"><span class="annottext">x :: m a
+</span><a href="#local-6989586621679165964"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-141"></span><span>    </span><span id="local-6989586621679165963"><span class="annot"><span class="annottext">Device
+</span><a href="#local-6989586621679165963"><span class="hs-identifier hs-var">d</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Build Device -&gt; m Device
+forall (m :: * -&gt; *) a. MonadBuild m =&gt; Build a -&gt; m a
+</span><a href="TensorFlow.Build.html#build"><span class="hs-identifier hs-var">build</span></a></span><span> </span><span class="annot"><span class="annottext">(Build Device -&gt; m Device) -&gt; Build Device -&gt; m Device
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Device
+</span><a href="TensorFlow.Output.html#Device"><span class="hs-identifier hs-var">Device</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Device) -&gt; (NodeDef -&gt; Text) -&gt; NodeDef -&gt; Device
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">NodeDef -&gt; FoldLike Text NodeDef NodeDef Text Text -&gt; Text
+forall s a t b. s -&gt; FoldLike a s t a b -&gt; a
+</span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">FoldLike Text NodeDef NodeDef Text Text
+forall (f :: * -&gt; *) s a.
+(Functor f, HasField s &quot;device&quot; a) =&gt;
+LensLike' f s a
+</span><span class="hs-identifier hs-var">device</span></span><span class="hs-special">)</span><span>
+</span><span id="line-142"></span><span>               </span><span class="annot"><span class="annottext">(NodeDef -&gt; Device) -&gt; BuildT Identity NodeDef -&gt; Build Device
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">NodeName -&gt; BuildT Identity NodeDef
+</span><a href="TensorFlow.Build.html#lookupNode"><span class="hs-identifier hs-var">lookupNode</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Output -&gt; NodeName
+</span><a href="TensorFlow.Output.html#outputNodeName"><span class="hs-identifier hs-var hs-var">outputNodeName</span></a></span><span> </span><span class="annot"><span class="annottext">(Output -&gt; NodeName) -&gt; Output -&gt; NodeName
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">t b -&gt; Output
+forall (t :: * -&gt; *) a. Rendered t =&gt; t a -&gt; Output
+</span><a href="TensorFlow.Tensor.html#renderedOutput"><span class="hs-identifier hs-var">renderedOutput</span></a></span><span> </span><span class="annot"><span class="annottext">t b
+</span><a href="#local-6989586621679165965"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-143"></span><span>    </span><span class="annot"><span class="annottext">Maybe Device -&gt; m a -&gt; m a
+forall (m :: * -&gt; *) a. MonadBuild m =&gt; Maybe Device -&gt; m a -&gt; m a
+</span><a href="TensorFlow.Build.html#withDevice"><span class="hs-identifier hs-var">withDevice</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Device -&gt; Maybe Device
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">Device
+</span><a href="#local-6989586621679165963"><span class="hs-identifier hs-var">d</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">m a
+</span><a href="#local-6989586621679165964"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-144"></span><span>
+</span><span id="line-145"></span><span>
+</span><span id="line-146"></span><span class="hs-comment">-- | Render a 'Tensor', fixing its name, scope, device and control inputs from</span><span>
+</span><span id="line-147"></span><span class="hs-comment">-- the 'MonadBuild' context.  Also renders any dependencies of the 'Tensor' that</span><span>
+</span><span id="line-148"></span><span class="hs-comment">-- weren't already rendered.</span><span>
+</span><span id="line-149"></span><span class="hs-comment">--</span><span>
+</span><span id="line-150"></span><span class="hs-comment">-- This operation is idempotent; calling 'render' on the same input in the same</span><span>
+</span><span id="line-151"></span><span class="hs-comment">-- context will produce the same result.  However, rendering the same</span><span>
+</span><span id="line-152"></span><span class="hs-comment">-- @Tensor Build@ in two different contexts may result in two different</span><span>
+</span><span id="line-153"></span><span class="hs-comment">-- @Tensor Value@s.</span><span>
+</span><span id="line-154"></span><span id="local-6989586621679166177"><span id="local-6989586621679166179"><span class="annot"><a href="TensorFlow.Tensor.html#render"><span class="hs-identifier hs-type">render</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="TensorFlow.Build.html#MonadBuild"><span class="hs-identifier hs-type">MonadBuild</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679166179"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html#Tensor"><span class="hs-identifier hs-type">Tensor</span></a></span><span> </span><span class="annot"><a href="TensorFlow.Build.html#Build"><span class="hs-identifier hs-type">Build</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679166177"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679166179"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="TensorFlow.Tensor.html#Tensor"><span class="hs-identifier hs-type">Tensor</span></a></span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html#Value"><span class="hs-identifier hs-type">Value</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679166177"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-155"></span><span id="render"><span class="annot"><span class="annottext">render :: Tensor Build a -&gt; m (Tensor Value a)
+</span><a href="TensorFlow.Tensor.html#render"><span class="hs-identifier hs-var hs-var">render</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="TensorFlow.Tensor.html#Tensor"><span class="hs-identifier hs-type">Tensor</span></a></span><span> </span><span id="local-6989586621679165957"><span class="annot"><span class="annottext">t :: BuildT Identity Output
+</span><a href="#local-6989586621679165957"><span class="hs-identifier hs-var">t</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Value Output -&gt; Tensor Value a
+forall (v :: * -&gt; *) a. TensorKind v =&gt; v Output -&gt; Tensor v a
+</span><a href="TensorFlow.Tensor.html#Tensor"><span class="hs-identifier hs-var">Tensor</span></a></span><span> </span><span class="annot"><span class="annottext">(Value Output -&gt; Tensor Value a)
+-&gt; (Output -&gt; Value Output) -&gt; Output -&gt; Tensor Value a
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Output -&gt; Value Output
+forall a. a -&gt; Value a
+</span><a href="TensorFlow.Tensor.html#Value"><span class="hs-identifier hs-var">Value</span></a></span><span> </span><span class="annot"><span class="annottext">(Output -&gt; Tensor Value a) -&gt; m Output -&gt; m (Tensor Value a)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">BuildT Identity Output -&gt; m Output
+forall (m :: * -&gt; *) a. MonadBuild m =&gt; Build a -&gt; m a
+</span><a href="TensorFlow.Build.html#build"><span class="hs-identifier hs-var">build</span></a></span><span> </span><span class="annot"><span class="annottext">BuildT Identity Output
+</span><a href="#local-6989586621679165957"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><span id="line-156"></span><span>
+</span><span id="line-157"></span><span class="hs-comment">-- TODO: better name.</span><span>
+</span><span id="line-158"></span><span id="local-6989586621679166078"><span id="local-6989586621679166079"><span class="annot"><a href="TensorFlow.Tensor.html#expr"><span class="hs-identifier hs-type">expr</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html#TensorKind"><span class="hs-identifier hs-type">TensorKind</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679166079"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html#Tensor"><span class="hs-identifier hs-type">Tensor</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679166079"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679166078"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html#Tensor"><span class="hs-identifier hs-type">Tensor</span></a></span><span> </span><span class="annot"><a href="TensorFlow.Build.html#Build"><span class="hs-identifier hs-type">Build</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679166078"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
+</span><span id="line-159"></span><span id="expr"><span class="annot"><span class="annottext">expr :: Tensor v a -&gt; Tensor Build a
+</span><a href="TensorFlow.Tensor.html#expr"><span class="hs-identifier hs-var hs-var">expr</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="TensorFlow.Tensor.html#Tensor"><span class="hs-identifier hs-type">Tensor</span></a></span><span> </span><span id="local-6989586621679165955"><span class="annot"><span class="annottext">o :: v Output
+</span><a href="#local-6989586621679165955"><span class="hs-identifier hs-var">o</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">BuildT Identity Output -&gt; Tensor Build a
+forall (v :: * -&gt; *) a. TensorKind v =&gt; v Output -&gt; Tensor v a
+</span><a href="TensorFlow.Tensor.html#Tensor"><span class="hs-identifier hs-var">Tensor</span></a></span><span> </span><span class="annot"><span class="annottext">(BuildT Identity Output -&gt; Tensor Build a)
+-&gt; BuildT Identity Output -&gt; Tensor Build a
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">v Output -&gt; BuildT Identity Output
+forall (v :: * -&gt; *) a. TensorKind v =&gt; v a -&gt; Build a
+</span><a href="TensorFlow.Tensor.html#toBuild"><span class="hs-identifier hs-var">toBuild</span></a></span><span> </span><span class="annot"><span class="annottext">v Output
+</span><a href="#local-6989586621679165955"><span class="hs-identifier hs-var">o</span></a></span><span>
+</span><span id="line-160"></span><span>
+</span><span id="line-161"></span><span class="hs-comment">-- | Records the given summary action in Build for retrieval with</span><span>
+</span><span id="line-162"></span><span class="hs-comment">-- Summary protocol buffer in string form. For safety, use the</span><span>
+</span><span id="line-163"></span><span class="hs-comment">-- pre-composed functions: Logging.scalarSummary and</span><span>
+</span><span id="line-164"></span><span class="hs-comment">-- Logging.histogramSummary.</span><span>
+</span><span id="line-165"></span><span id="local-6989586621679165953"><span id="local-6989586621679165954"><span class="annot"><a href="TensorFlow.Tensor.html#addSummary"><span class="hs-identifier hs-type">addSummary</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="TensorFlow.Build.html#MonadBuild"><span class="hs-identifier hs-type">MonadBuild</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679165954"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html#TensorKind"><span class="hs-identifier hs-type">TensorKind</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679165953"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html#Tensor"><span class="hs-identifier hs-type">Tensor</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679165953"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span> </span><span class="hs-comment">-- ^ A 'SummaryTensor'</span><span>
+</span><span id="line-166"></span><span>                        </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679165954"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-167"></span><span id="addSummary"><span class="annot"><span class="annottext">addSummary :: Tensor v ByteString -&gt; m ()
+</span><a href="TensorFlow.Tensor.html#addSummary"><span class="hs-identifier hs-var hs-var">addSummary</span></a></span></span><span> </span><span id="local-6989586621679165951"><span class="annot"><span class="annottext">t :: Tensor v ByteString
+</span><a href="#local-6989586621679165951"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Build () -&gt; m ()
+forall (m :: * -&gt; *) a. MonadBuild m =&gt; Build a -&gt; m a
+</span><a href="TensorFlow.Build.html#build"><span class="hs-identifier hs-var">build</span></a></span><span> </span><span class="annot"><span class="annottext">(Build () -&gt; m ()) -&gt; Build () -&gt; m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-168"></span><span>    </span><span class="hs-comment">-- TODO: more generic way</span><span>
+</span><span id="line-169"></span><span>    </span><span id="local-6989586621679165950"><span class="annot"><span class="annottext">Output
+</span><a href="#local-6989586621679165950"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">v Output -&gt; BuildT Identity Output
+forall (v :: * -&gt; *) a. TensorKind v =&gt; v a -&gt; Build a
+</span><a href="TensorFlow.Tensor.html#toBuild"><span class="hs-identifier hs-var">toBuild</span></a></span><span> </span><span class="annot"><span class="annottext">(v Output -&gt; BuildT Identity Output)
+-&gt; v Output -&gt; BuildT Identity Output
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Tensor v ByteString -&gt; v Output
+forall (v :: * -&gt; *) a. Tensor v a -&gt; v Output
+</span><a href="TensorFlow.Tensor.html#tensorOutput"><span class="hs-identifier hs-var hs-var">tensorOutput</span></a></span><span> </span><span class="annot"><span class="annottext">Tensor v ByteString
+</span><a href="#local-6989586621679165951"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><span id="line-170"></span><span>    </span><span class="annot"><span class="annottext">Lens' GraphState [Output]
+forall (f :: * -&gt; *).
+Identical f =&gt;
+LensLike' f GraphState [Output]
+</span><a href="TensorFlow.Build.html#summaries"><span class="hs-identifier hs-var">summaries</span></a></span><span> </span><span class="annot"><span class="annottext">(forall (f :: * -&gt; *).
+ Identical f =&gt;
+ LensLike' f GraphState [Output])
+-&gt; ([Output] -&gt; [Output]) -&gt; Build ()
+forall s (m :: * -&gt; *) a b.
+MonadState s m =&gt;
+Setter s s a b -&gt; (a -&gt; b) -&gt; m ()
+</span><span class="hs-operator hs-var">%=</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Output
+</span><a href="#local-6989586621679165950"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Output -&gt; [Output] -&gt; [Output]
+forall a. a -&gt; [a] -&gt; [a]
+</span><span class="hs-glyph hs-var">:</span></span><span class="hs-special">)</span><span>
+</span><span id="line-171"></span><span>
+</span><span id="line-172"></span><span class="hs-comment">-- | Retrieves the summary ops collected thus far. Typically this only</span><span>
+</span><span id="line-173"></span><span class="hs-comment">-- happens once, but if 'TensorFlow.Session.buildWithSummary' is used</span><span>
+</span><span id="line-174"></span><span class="hs-comment">-- repeatedly, the values accumulate.</span><span>
+</span><span id="line-175"></span><span id="local-6989586621679165948"><span class="annot"><a href="TensorFlow.Tensor.html#collectAllSummaries"><span class="hs-identifier hs-type">collectAllSummaries</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="TensorFlow.Build.html#MonadBuild"><span class="hs-identifier hs-type">MonadBuild</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679165948"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679165948"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="TensorFlow.Tensor.html#SummaryTensor"><span class="hs-identifier hs-type">SummaryTensor</span></a></span><span class="hs-special">]</span></span><span>
+</span><span id="line-176"></span><span id="collectAllSummaries"><span class="annot"><span class="annottext">collectAllSummaries :: m [SummaryTensor]
+</span><a href="TensorFlow.Tensor.html#collectAllSummaries"><span class="hs-identifier hs-var hs-var">collectAllSummaries</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Build [SummaryTensor] -&gt; m [SummaryTensor]
+forall (m :: * -&gt; *) a. MonadBuild m =&gt; Build a -&gt; m a
+</span><a href="TensorFlow.Build.html#build"><span class="hs-identifier hs-var">build</span></a></span><span> </span><span class="annot"><span class="annottext">(Build [SummaryTensor] -&gt; m [SummaryTensor])
+-&gt; Build [SummaryTensor] -&gt; m [SummaryTensor]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(Output -&gt; SummaryTensor) -&gt; [Output] -&gt; [SummaryTensor]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Value Output -&gt; SummaryTensor
+forall (v :: * -&gt; *) a. TensorKind v =&gt; v Output -&gt; Tensor v a
+</span><a href="TensorFlow.Tensor.html#Tensor"><span class="hs-identifier hs-var">Tensor</span></a></span><span> </span><span class="annot"><span class="annottext">(Value Output -&gt; SummaryTensor)
+-&gt; (Output -&gt; Value Output) -&gt; Output -&gt; SummaryTensor
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Output -&gt; Value Output
+forall a. a -&gt; Value a
+</span><a href="TensorFlow.Tensor.html#Value"><span class="hs-identifier hs-var">Value</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">([Output] -&gt; [SummaryTensor])
+-&gt; BuildT Identity [Output] -&gt; Build [SummaryTensor]
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">FoldLike [Output] GraphState GraphState [Output] [Output]
+-&gt; BuildT Identity [Output]
+forall s (m :: * -&gt; *) a t b.
+MonadState s m =&gt;
+FoldLike a s t a b -&gt; m a
+</span><span class="hs-identifier hs-var">use</span></span><span> </span><span class="annot"><span class="annottext">FoldLike [Output] GraphState GraphState [Output] [Output]
+Lens' GraphState [Output]
+</span><a href="TensorFlow.Build.html#summaries"><span class="hs-identifier hs-var">summaries</span></a></span><span>
+</span><span id="line-177"></span><span>
+</span><span id="line-178"></span><span class="hs-comment">-- | Synonym for the tensors that return serialized Summary proto.</span><span>
+</span><span id="line-179"></span><span class="hs-keyword">type</span><span> </span><span id="SummaryTensor"><span class="annot"><a href="TensorFlow.Tensor.html#SummaryTensor"><span class="hs-identifier hs-var">SummaryTensor</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html#Tensor"><span class="hs-identifier hs-type">Tensor</span></a></span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html#Value"><span class="hs-identifier hs-type">Value</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span>
+</span><span id="line-180"></span><span>
+</span><span id="line-181"></span><span class="hs-comment">-- | An internal class for kinds of Tensors.</span><span>
+</span><span id="line-182"></span><span class="hs-keyword">class</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Monad</span></span><span> </span><span class="annot"><a href="#local-6989586621679166174"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span id="TensorKind"><span class="annot"><a href="TensorFlow.Tensor.html#TensorKind"><span class="hs-identifier hs-var">TensorKind</span></a></span></span><span> </span><span id="local-6989586621679166174"><span class="annot"><a href="#local-6989586621679166174"><span class="hs-identifier hs-type">v</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-183"></span><span>    </span><span id="local-6989586621679166173"><span id="toBuild"><span class="annot"><a href="TensorFlow.Tensor.html#toBuild"><span class="hs-identifier hs-type">toBuild</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621679166174"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679166173"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Build.html#Build"><span class="hs-identifier hs-type">Build</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679166173"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-184"></span><span>
+</span><span id="line-185"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html#TensorKind"><span class="hs-identifier hs-type">TensorKind</span></a></span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html#Value"><span class="hs-identifier hs-type">Value</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-186"></span><span>    </span><span id="local-6989586621679165943"><span class="annot"><span class="annottext">toBuild :: Value a -&gt; Build a
+</span><a href="#local-6989586621679165943"><span class="hs-identifier hs-var hs-var hs-var hs-var">toBuild</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; Build a
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">(a -&gt; Build a) -&gt; (Value a -&gt; a) -&gt; Value a -&gt; Build a
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Value a -&gt; a
+forall a. Value a -&gt; a
+</span><a href="TensorFlow.Tensor.html#runValue"><span class="hs-identifier hs-var hs-var">runValue</span></a></span><span>
+</span><span id="line-187"></span><span>
+</span><span id="line-188"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html#TensorKind"><span class="hs-identifier hs-type">TensorKind</span></a></span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html#Ref"><span class="hs-identifier hs-type">Ref</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-189"></span><span>    </span><span id="local-6989586621679165940"><span class="annot"><span class="annottext">toBuild :: Ref a -&gt; Build a
+</span><a href="#local-6989586621679165940"><span class="hs-identifier hs-var hs-var hs-var hs-var">toBuild</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; Build a
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">(a -&gt; Build a) -&gt; (Ref a -&gt; a) -&gt; Ref a -&gt; Build a
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Ref a -&gt; a
+forall a. Ref a -&gt; a
+</span><a href="TensorFlow.Tensor.html#runRef"><span class="hs-identifier hs-var hs-var">runRef</span></a></span><span>
+</span><span id="line-190"></span><span>
+</span><span id="line-191"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html#TensorKind"><span class="hs-identifier hs-type">TensorKind</span></a></span><span> </span><span class="annot"><a href="TensorFlow.Build.html#Build"><span class="hs-identifier hs-type">Build</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-192"></span><span>    </span><span id="local-6989586621679165937"><span class="annot"><span class="annottext">toBuild :: Build a -&gt; Build a
+</span><a href="#local-6989586621679165937"><span class="hs-identifier hs-var hs-var hs-var hs-var">toBuild</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Build a -&gt; Build a
+forall a. a -&gt; a
+</span><span class="hs-identifier hs-var">id</span></span><span>
+</span><span id="line-193"></span><span>
+</span><span id="line-194"></span><span>
+</span><span id="line-195"></span><span class="hs-comment">-- | Types which can be converted to `Tensor`.</span><span>
+</span><span id="line-196"></span><span class="hs-keyword">class</span><span> </span><span id="ToTensor"><span class="annot"><a href="TensorFlow.Tensor.html#ToTensor"><span class="hs-identifier hs-var">ToTensor</span></a></span></span><span> </span><span id="local-6989586621679166081"><span class="annot"><a href="#local-6989586621679166081"><span class="hs-identifier hs-type">t</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-197"></span><span>    </span><span id="local-6989586621679166085"><span id="toTensor"><span class="annot"><a href="TensorFlow.Tensor.html#toTensor"><span class="hs-identifier hs-type">toTensor</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="TensorFlow.Types.html#TensorType"><span class="hs-identifier hs-type">TensorType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679166085"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679166081"><span class="hs-identifier hs-type">t</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679166085"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html#Tensor"><span class="hs-identifier hs-type">Tensor</span></a></span><span> </span><span class="annot"><a href="TensorFlow.Build.html#Build"><span class="hs-identifier hs-type">Build</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679166085"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-198"></span><span>
+</span><span id="line-199"></span><span id="local-6989586621679165934"><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html#TensorKind"><span class="hs-identifier hs-type">TensorKind</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679165934"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html#ToTensor"><span class="hs-identifier hs-type">ToTensor</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="TensorFlow.Tensor.html#Tensor"><span class="hs-identifier hs-type">Tensor</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679165934"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-200"></span><span>    </span><span id="local-6989586621679165931"><span class="annot"><span class="annottext">toTensor :: Tensor v a -&gt; Tensor Build a
+</span><a href="#local-6989586621679165931"><span class="hs-identifier hs-var hs-var hs-var hs-var">toTensor</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Tensor v a -&gt; Tensor Build a
+forall (v :: * -&gt; *) a.
+TensorKind v =&gt;
+Tensor v a -&gt; Tensor Build a
+</span><a href="TensorFlow.Tensor.html#expr"><span class="hs-identifier hs-var">expr</span></a></span></span><span>
+</span><span id="line-201"></span></pre></body></html>

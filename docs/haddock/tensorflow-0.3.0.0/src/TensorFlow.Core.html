@@ -1,0 +1,93 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">-- Copyright 2016 TensorFlow authors.</span><span>
+</span><span id="line-2"></span><span class="hs-comment">--</span><span>
+</span><span id="line-3"></span><span class="hs-comment">-- Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span><span>
+</span><span id="line-4"></span><span class="hs-comment">-- you may not use this file except in compliance with the License.</span><span>
+</span><span id="line-5"></span><span class="hs-comment">-- You may obtain a copy of the License at</span><span>
+</span><span id="line-6"></span><span class="hs-comment">--</span><span>
+</span><span id="line-7"></span><span class="hs-comment">--     http://www.apache.org/licenses/LICENSE-2.0</span><span>
+</span><span id="line-8"></span><span class="hs-comment">--</span><span>
+</span><span id="line-9"></span><span class="hs-comment">-- Unless required by applicable law or agreed to in writing, software</span><span>
+</span><span id="line-10"></span><span class="hs-comment">-- distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span><span>
+</span><span id="line-11"></span><span class="hs-comment">-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span><span>
+</span><span id="line-12"></span><span class="hs-comment">-- See the License for the specific language governing permissions and</span><span>
+</span><span id="line-13"></span><span class="hs-comment">-- limitations under the License.</span><span>
+</span><span id="line-14"></span><span>
+</span><span id="line-15"></span><span class="hs-pragma">{-# LANGUAGE ExplicitNamespaces #-}</span><span>
+</span><span id="line-16"></span><span>
+</span><span id="line-17"></span><span class="hs-comment">-- | The core functionality of TensorFlow.</span><span>
+</span><span id="line-18"></span><span class="hs-comment">--</span><span>
+</span><span id="line-19"></span><span class="hs-comment">-- Unless you are defining ops, you do not need to import other modules from</span><span>
+</span><span id="line-20"></span><span class="hs-comment">-- this package.</span><span>
+</span><span id="line-21"></span><span class="hs-comment">--</span><span>
+</span><span id="line-22"></span><span class="hs-comment">-- Basic ops are provided in the tensorflow-ops and tensorflow-core-ops</span><span>
+</span><span id="line-23"></span><span class="hs-comment">-- packages.</span><span>
+</span><span id="line-24"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">TensorFlow.Core</span><span>
+</span><span id="line-25"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-comment">-- * Session</span></span><span>
+</span><span id="line-26"></span><span>      </span><span class="annot"><a href="TensorFlow.Session.html#Session"><span class="hs-identifier">Session</span></a></span><span>
+</span><span id="line-27"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Session.html#Options"><span class="hs-identifier">Options</span></a></span><span>
+</span><span id="line-28"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Session.html#sessionConfig"><span class="hs-identifier">sessionConfig</span></a></span><span>
+</span><span id="line-29"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Session.html#sessionTarget"><span class="hs-identifier">sessionTarget</span></a></span><span>
+</span><span id="line-30"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Session.html#sessionTracer"><span class="hs-identifier">sessionTracer</span></a></span><span>
+</span><span id="line-31"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Session.html#runSession"><span class="hs-identifier">runSession</span></a></span><span>
+</span><span id="line-32"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Session.html#runSessionWithOptions"><span class="hs-identifier">runSessionWithOptions</span></a></span><span>
+</span><span id="line-33"></span><span>      </span><span class="annot"><span class="hs-comment">-- ** Building graphs</span></span><span>
+</span><span id="line-34"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Build.html#MonadBuild"><span class="hs-identifier">MonadBuild</span></a></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-35"></span><span>      </span><span class="annot"><span class="hs-comment">-- ** Running graphs</span></span><span>
+</span><span id="line-36"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Nodes.html#Fetchable"><span class="hs-identifier">Fetchable</span></a></span><span>
+</span><span id="line-37"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Nodes.html#Nodes"><span class="hs-identifier">Nodes</span></a></span><span>
+</span><span id="line-38"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Session.html#run"><span class="hs-identifier">run</span></a></span><span>
+</span><span id="line-39"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Session.html#run_"><span class="hs-identifier">run_</span></a></span><span>
+</span><span id="line-40"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html#Feed"><span class="hs-identifier">Feed</span></a></span><span>
+</span><span id="line-41"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html#feed"><span class="hs-identifier">feed</span></a></span><span>
+</span><span id="line-42"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Session.html#runWithFeeds"><span class="hs-identifier">runWithFeeds</span></a></span><span>
+</span><span id="line-43"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Session.html#runWithFeeds_"><span class="hs-identifier">runWithFeeds_</span></a></span><span>
+</span><span id="line-44"></span><span>      </span><span class="annot"><span class="hs-comment">-- ** Async</span></span><span>
+</span><span id="line-45"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Session.html#asyncProdNodes"><span class="hs-identifier">asyncProdNodes</span></a></span><span>
+</span><span id="line-46"></span><span>
+</span><span id="line-47"></span><span>      </span><span class="annot"><span class="hs-comment">-- * Build</span></span><span>
+</span><span id="line-48"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Build.html#Build"><span class="hs-identifier">Build</span></a></span><span>
+</span><span id="line-49"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Build.html#BuildT"><span class="hs-identifier">BuildT</span></a></span><span>
+</span><span id="line-50"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html#render"><span class="hs-identifier">render</span></a></span><span>
+</span><span id="line-51"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Build.html#asGraphDef"><span class="hs-identifier">asGraphDef</span></a></span><span>
+</span><span id="line-52"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Build.html#addGraphDef"><span class="hs-identifier">addGraphDef</span></a></span><span>
+</span><span id="line-53"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Output.html#opName"><span class="hs-identifier">opName</span></a></span><span>
+</span><span id="line-54"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Output.html#opAttr"><span class="hs-identifier">opAttr</span></a></span><span>
+</span><span id="line-55"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Build.html#addInitializer"><span class="hs-identifier">addInitializer</span></a></span><span>
+</span><span id="line-56"></span><span>      </span><span class="annot"><span class="hs-comment">-- * Tensor</span></span><span>
+</span><span id="line-57"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Output.html#ControlNode"><span class="hs-identifier">ControlNode</span></a></span><span>
+</span><span id="line-58"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html#Tensor"><span class="hs-identifier">Tensor</span></a></span><span>
+</span><span id="line-59"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html#Value"><span class="hs-identifier">Value</span></a></span><span>
+</span><span id="line-60"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html#Ref"><span class="hs-identifier">Ref</span></a></span><span>
+</span><span id="line-61"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html#value"><span class="hs-identifier">value</span></a></span><span>
+</span><span id="line-62"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html#tensorFromName"><span class="hs-identifier">tensorFromName</span></a></span><span>
+</span><span id="line-63"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html#expr"><span class="hs-identifier">expr</span></a></span><span>
+</span><span id="line-64"></span><span>      </span><span class="annot"><span class="hs-comment">-- ** Element types</span></span><span>
+</span><span id="line-65"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Types.html#TensorType"><span class="hs-identifier">TensorType</span></a></span><span>
+</span><span id="line-66"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Types.html#TensorData"><span class="hs-identifier">TensorData</span></a></span><span>
+</span><span id="line-67"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Types.html#TensorDataType"><span class="hs-identifier">TensorDataType</span></a></span><span class="hs-special">(</span><span class="annot"><a href="TensorFlow.Types.html#decodeTensorData"><span class="hs-identifier">decodeTensorData</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Types.html#encodeTensorData"><span class="hs-identifier">encodeTensorData</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-68"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Types.html#ResourceHandle"><span class="hs-identifier">ResourceHandle</span></a></span><span>
+</span><span id="line-69"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Types.html#Scalar"><span class="hs-identifier">Scalar</span></a></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-70"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Types.html#Shape"><span class="hs-identifier">Shape</span></a></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-71"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Types.html#OneOf"><span class="hs-identifier">OneOf</span></a></span><span>
+</span><span id="line-72"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="hs-keyword">type</span><span> </span><span class="annot"><a href="TensorFlow.Types.html#%2F%3D"><span class="hs-operator">(/=)</span></a></span><span>
+</span><span id="line-73"></span><span>
+</span><span id="line-74"></span><span>      </span><span class="annot"><span class="hs-comment">-- * Op combinators</span></span><span>
+</span><span id="line-75"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html#colocateWith"><span class="hs-identifier">colocateWith</span></a></span><span>
+</span><span id="line-76"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Output.html#Device"><span class="hs-identifier">Device</span></a></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-77"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Build.html#withDevice"><span class="hs-identifier">withDevice</span></a></span><span>
+</span><span id="line-78"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Build.html#withNameScope"><span class="hs-identifier">withNameScope</span></a></span><span>
+</span><span id="line-79"></span><span>      </span><span class="annot"><span class="hs-comment">-- ** Dependencies</span></span><span>
+</span><span id="line-80"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.ControlFlow.html#withControlDependencies"><span class="hs-identifier">withControlDependencies</span></a></span><span>
+</span><span id="line-81"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.ControlFlow.html#group"><span class="hs-identifier">group</span></a></span><span>
+</span><span id="line-82"></span><span>      </span><span class="annot"><span class="hs-comment">-- ** Misc</span></span><span>
+</span><span id="line-83"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.ControlFlow.html#noOp"><span class="hs-identifier">noOp</span></a></span><span>
+</span><span id="line-84"></span><span>    </span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-85"></span><span>
+</span><span id="line-86"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="TensorFlow.Build.html"><span class="hs-identifier">TensorFlow.Build</span></a></span><span>
+</span><span id="line-87"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="TensorFlow.ControlFlow.html"><span class="hs-identifier">TensorFlow.ControlFlow</span></a></span><span>
+</span><span id="line-88"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="TensorFlow.Nodes.html"><span class="hs-identifier">TensorFlow.Nodes</span></a></span><span>
+</span><span id="line-89"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="TensorFlow.Output.html"><span class="hs-identifier">TensorFlow.Output</span></a></span><span>
+</span><span id="line-90"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="TensorFlow.Session.html"><span class="hs-identifier">TensorFlow.Session</span></a></span><span>
+</span><span id="line-91"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="TensorFlow.Tensor.html"><span class="hs-identifier">TensorFlow.Tensor</span></a></span><span>
+</span><span id="line-92"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="TensorFlow.Types.html"><span class="hs-identifier">TensorFlow.Types</span></a></span><span>
+</span><span id="line-93"></span></pre></body></html>

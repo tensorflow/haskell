@@ -1,0 +1,1553 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">{- This file was auto-generated from tensorflow/core/util/memmapped_file_system.proto by the proto-lens-protoc program. -}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE ScopedTypeVariables, DataKinds, TypeFamilies, UndecidableInstances, GeneralizedNewtypeDeriving, MultiParamTypeClasses, FlexibleContexts, FlexibleInstances, PatternSynonyms, MagicHash, NoImplicitPrelude, DataKinds, BangPatterns, TypeApplications, OverloadedStrings, DerivingStrategies#-}</span><span>
+</span><span id="line-3"></span><span class="hs-pragma">{-# OPTIONS_GHC -Wno-unused-imports#-}</span><span>
+</span><span id="line-4"></span><span class="hs-pragma">{-# OPTIONS_GHC -Wno-duplicate-exports#-}</span><span>
+</span><span id="line-5"></span><span class="hs-pragma">{-# OPTIONS_GHC -Wno-dodgy-exports#-}</span><span>
+</span><span id="line-6"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Proto.Tensorflow.Core.Util.MemmappedFileSystem</span><span> </span><span class="hs-special">(</span><span>
+</span><span id="line-7"></span><span>        </span><span class="annot"><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#MemmappedFileSystemDirectory"><span class="hs-identifier">MemmappedFileSystemDirectory</span></a></span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>        </span><span class="annot"><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#MemmappedFileSystemDirectoryElement"><span class="hs-identifier">MemmappedFileSystemDirectoryElement</span></a></span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-9"></span><span>    </span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Control.DeepSeq</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Control.DeepSeq</span></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.ProtoLens.Prism</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Prism</span></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Prelude</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Prelude</span></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.Int</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.Int</span></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.Monoid</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.Monoid</span></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.Word</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.Word</span></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.ProtoLens</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens</span></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.ProtoLens.Encoding.Bytes</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Encoding.Bytes</span></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.ProtoLens.Encoding.Growing</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Encoding.Growing</span></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.ProtoLens.Encoding.Parser.Unsafe</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Encoding.Parser.Unsafe</span></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.ProtoLens.Encoding.Wire</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Encoding.Wire</span></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.ProtoLens.Field</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Field</span></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.ProtoLens.Message.Enum</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Message.Enum</span></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.ProtoLens.Service.Types</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Service.Types</span></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Lens.Family2</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Lens.Family2</span></span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Lens.Family2.Unchecked</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Lens.Family2.Unchecked</span></span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.Text</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text</span></span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.Map</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.Map</span></span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.ByteString</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.ByteString</span></span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.ByteString.Char8</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.ByteString.Char8</span></span><span>
+</span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.Text.Encoding</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text.Encoding</span></span><span>
+</span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.Vector</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.Vector</span></span><span>
+</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.Vector.Generic</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.Vector.Generic</span></span><span>
+</span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.Vector.Unboxed</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.Vector.Unboxed</span></span><span>
+</span><span id="line-34"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Text.Read</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Text.Read</span></span><span>
+</span><span id="line-35"></span><span class="hs-comment">{- | Fields :
+     
+         * 'Proto.Tensorflow.Core.Util.MemmappedFileSystem_Fields.element' @:: Lens' MemmappedFileSystemDirectory [MemmappedFileSystemDirectoryElement]@
+         * 'Proto.Tensorflow.Core.Util.MemmappedFileSystem_Fields.vec'element' @:: Lens' MemmappedFileSystemDirectory (Data.Vector.Vector MemmappedFileSystemDirectoryElement)@ -}</span><span>
+</span><span id="line-39"></span><span class="hs-keyword">data</span><span> </span><span id="MemmappedFileSystemDirectory"><span class="annot"><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#MemmappedFileSystemDirectory"><span class="hs-identifier hs-var">MemmappedFileSystemDirectory</span></a></span></span><span>
+</span><span id="line-40"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="MemmappedFileSystemDirectory%27_constructor"><span class="annot"><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#MemmappedFileSystemDirectory%27_constructor"><span class="hs-identifier hs-var">MemmappedFileSystemDirectory'_constructor</span></a></span></span><span> </span><span class="hs-special">{</span><span id="_MemmappedFileSystemDirectory%27element"><span class="annot"><span class="annottext">MemmappedFileSystemDirectory
+-&gt; Vector MemmappedFileSystemDirectoryElement
+</span><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#_MemmappedFileSystemDirectory%27element"><span class="hs-identifier hs-var hs-var">_MemmappedFileSystemDirectory'element</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Data.Vector.Vector</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#MemmappedFileSystemDirectoryElement"><span class="hs-identifier hs-type">MemmappedFileSystemDirectoryElement</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-41"></span><span>                                               </span><span id="_MemmappedFileSystemDirectory%27_unknownFields"><span class="annot"><span class="annottext">MemmappedFileSystemDirectory -&gt; FieldSet
+</span><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#_MemmappedFileSystemDirectory%27_unknownFields"><span class="hs-identifier hs-var hs-var">_MemmappedFileSystemDirectory'_unknownFields</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.FieldSet</span></span><span class="hs-special">}</span><span>
+</span><span id="line-42"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679513625"><span id="local-6989586621679513627"><span class="annot"><span class="annottext">MemmappedFileSystemDirectory
+-&gt; MemmappedFileSystemDirectory -&gt; Bool
+(MemmappedFileSystemDirectory
+ -&gt; MemmappedFileSystemDirectory -&gt; Bool)
+-&gt; (MemmappedFileSystemDirectory
+    -&gt; MemmappedFileSystemDirectory -&gt; Bool)
+-&gt; Eq MemmappedFileSystemDirectory
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: MemmappedFileSystemDirectory
+-&gt; MemmappedFileSystemDirectory -&gt; Bool
+$c/= :: MemmappedFileSystemDirectory
+-&gt; MemmappedFileSystemDirectory -&gt; Bool
+== :: MemmappedFileSystemDirectory
+-&gt; MemmappedFileSystemDirectory -&gt; Bool
+$c== :: MemmappedFileSystemDirectory
+-&gt; MemmappedFileSystemDirectory -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Prelude.Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679513609"><span id="local-6989586621679513611"><span id="local-6989586621679513613"><span id="local-6989586621679513615"><span id="local-6989586621679513617"><span id="local-6989586621679513619"><span id="local-6989586621679513621"><span class="annot"><span class="annottext">Eq MemmappedFileSystemDirectory
+Eq MemmappedFileSystemDirectory =&gt;
+(MemmappedFileSystemDirectory
+ -&gt; MemmappedFileSystemDirectory -&gt; Ordering)
+-&gt; (MemmappedFileSystemDirectory
+    -&gt; MemmappedFileSystemDirectory -&gt; Bool)
+-&gt; (MemmappedFileSystemDirectory
+    -&gt; MemmappedFileSystemDirectory -&gt; Bool)
+-&gt; (MemmappedFileSystemDirectory
+    -&gt; MemmappedFileSystemDirectory -&gt; Bool)
+-&gt; (MemmappedFileSystemDirectory
+    -&gt; MemmappedFileSystemDirectory -&gt; Bool)
+-&gt; (MemmappedFileSystemDirectory
+    -&gt; MemmappedFileSystemDirectory -&gt; MemmappedFileSystemDirectory)
+-&gt; (MemmappedFileSystemDirectory
+    -&gt; MemmappedFileSystemDirectory -&gt; MemmappedFileSystemDirectory)
+-&gt; Ord MemmappedFileSystemDirectory
+MemmappedFileSystemDirectory
+-&gt; MemmappedFileSystemDirectory -&gt; Bool
+MemmappedFileSystemDirectory
+-&gt; MemmappedFileSystemDirectory -&gt; Ordering
+MemmappedFileSystemDirectory
+-&gt; MemmappedFileSystemDirectory -&gt; MemmappedFileSystemDirectory
+forall a.
+Eq a =&gt;
+(a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+min :: MemmappedFileSystemDirectory
+-&gt; MemmappedFileSystemDirectory -&gt; MemmappedFileSystemDirectory
+$cmin :: MemmappedFileSystemDirectory
+-&gt; MemmappedFileSystemDirectory -&gt; MemmappedFileSystemDirectory
+max :: MemmappedFileSystemDirectory
+-&gt; MemmappedFileSystemDirectory -&gt; MemmappedFileSystemDirectory
+$cmax :: MemmappedFileSystemDirectory
+-&gt; MemmappedFileSystemDirectory -&gt; MemmappedFileSystemDirectory
+&gt;= :: MemmappedFileSystemDirectory
+-&gt; MemmappedFileSystemDirectory -&gt; Bool
+$c&gt;= :: MemmappedFileSystemDirectory
+-&gt; MemmappedFileSystemDirectory -&gt; Bool
+&gt; :: MemmappedFileSystemDirectory
+-&gt; MemmappedFileSystemDirectory -&gt; Bool
+$c&gt; :: MemmappedFileSystemDirectory
+-&gt; MemmappedFileSystemDirectory -&gt; Bool
+&lt;= :: MemmappedFileSystemDirectory
+-&gt; MemmappedFileSystemDirectory -&gt; Bool
+$c&lt;= :: MemmappedFileSystemDirectory
+-&gt; MemmappedFileSystemDirectory -&gt; Bool
+&lt; :: MemmappedFileSystemDirectory
+-&gt; MemmappedFileSystemDirectory -&gt; Bool
+$c&lt; :: MemmappedFileSystemDirectory
+-&gt; MemmappedFileSystemDirectory -&gt; Bool
+compare :: MemmappedFileSystemDirectory
+-&gt; MemmappedFileSystemDirectory -&gt; Ordering
+$ccompare :: MemmappedFileSystemDirectory
+-&gt; MemmappedFileSystemDirectory -&gt; Ordering
+$cp1Ord :: Eq MemmappedFileSystemDirectory
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Prelude.Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-43"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679513603"><span id="local-6989586621679513605"><span class="annot"><span class="hs-identifier hs-type">Prelude.Show</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#MemmappedFileSystemDirectory"><span class="hs-identifier hs-type">MemmappedFileSystemDirectory</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-44"></span><span>  </span><span id="local-6989586621679513601"><span class="annot"><span class="annottext">showsPrec :: Int -&gt; MemmappedFileSystemDirectory -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">showsPrec</span></span></span><span> </span><span class="hs-identifier">_</span><span> </span><span id="local-6989586621679513599"><span class="annot"><span class="annottext">__x :: MemmappedFileSystemDirectory
+</span><a href="#local-6989586621679513599"><span class="hs-identifier hs-var">__x</span></a></span></span><span> </span><span id="local-6989586621679513598"><span class="annot"><span class="annottext">__s :: String
+</span><a href="#local-6989586621679513598"><span class="hs-identifier hs-var">__s</span></a></span></span><span>
+</span><span id="line-45"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Char -&gt; ShowS
+</span><span class="hs-identifier hs-var">Prelude.showChar</span></span><span>
+</span><span id="line-46"></span><span>        </span><span class="annot"><span class="hs-char">'{'</span></span><span>
+</span><span id="line-47"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; ShowS
+</span><span class="hs-identifier hs-var">Prelude.showString</span></span><span>
+</span><span id="line-48"></span><span>           </span><span class="hs-special">(</span><span class="annot"><span class="annottext">MemmappedFileSystemDirectory -&gt; String
+forall msg. Message msg =&gt; msg -&gt; String
+</span><span class="hs-identifier hs-var">Data.ProtoLens.showMessageShort</span></span><span> </span><span class="annot"><span class="annottext">MemmappedFileSystemDirectory
+</span><a href="#local-6989586621679513599"><span class="hs-identifier hs-var">__x</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Char -&gt; ShowS
+</span><span class="hs-identifier hs-var">Prelude.showChar</span></span><span> </span><span class="annot"><span class="hs-char">'}'</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679513598"><span class="hs-identifier hs-var">__s</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-49"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.Field.HasField</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#MemmappedFileSystemDirectory"><span class="hs-identifier hs-type">MemmappedFileSystemDirectory</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;element&quot;</span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#MemmappedFileSystemDirectoryElement"><span class="hs-identifier hs-type">MemmappedFileSystemDirectoryElement</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-50"></span><span>  </span><span id="local-6989586621679513592"><span class="annot"><span class="annottext">fieldOf :: Proxy# &quot;element&quot;
+-&gt; ([MemmappedFileSystemDirectoryElement]
+    -&gt; f [MemmappedFileSystemDirectoryElement])
+-&gt; MemmappedFileSystemDirectory
+-&gt; f MemmappedFileSystemDirectory
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">fieldOf</span></span></span><span> </span><span class="hs-identifier">_</span><span>
+</span><span id="line-51"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((Vector MemmappedFileSystemDirectoryElement
+  -&gt; f (Vector MemmappedFileSystemDirectoryElement))
+ -&gt; MemmappedFileSystemDirectory -&gt; f MemmappedFileSystemDirectory)
+-&gt; (([MemmappedFileSystemDirectoryElement]
+     -&gt; f [MemmappedFileSystemDirectoryElement])
+    -&gt; Vector MemmappedFileSystemDirectoryElement
+    -&gt; f (Vector MemmappedFileSystemDirectoryElement))
+-&gt; ([MemmappedFileSystemDirectoryElement]
+    -&gt; f [MemmappedFileSystemDirectoryElement])
+-&gt; MemmappedFileSystemDirectory
+-&gt; f MemmappedFileSystemDirectory
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">(Prelude..)</span></span><span>
+</span><span id="line-52"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(MemmappedFileSystemDirectory
+ -&gt; Vector MemmappedFileSystemDirectoryElement)
+-&gt; (MemmappedFileSystemDirectory
+    -&gt; Vector MemmappedFileSystemDirectoryElement
+    -&gt; MemmappedFileSystemDirectory)
+-&gt; Lens
+     MemmappedFileSystemDirectory
+     MemmappedFileSystemDirectory
+     (Vector MemmappedFileSystemDirectoryElement)
+     (Vector MemmappedFileSystemDirectoryElement)
+forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span class="hs-identifier hs-var">Lens.Family2.Unchecked.lens</span></span><span>
+</span><span id="line-53"></span><span>           </span><span class="annot"><span class="annottext">MemmappedFileSystemDirectory
+-&gt; Vector MemmappedFileSystemDirectoryElement
+</span><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#_MemmappedFileSystemDirectory%27element"><span class="hs-identifier hs-var hs-var">_MemmappedFileSystemDirectory'element</span></a></span><span>
+</span><span id="line-54"></span><span>           </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span> </span><span id="local-6989586621679513588"><span class="annot"><span class="annottext">x__ :: MemmappedFileSystemDirectory
+</span><a href="#local-6989586621679513588"><span class="hs-identifier hs-var">x__</span></a></span></span><span> </span><span id="local-6989586621679513587"><span class="annot"><span class="annottext">y__ :: Vector MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513587"><span class="hs-identifier hs-var">y__</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">MemmappedFileSystemDirectory
+</span><a href="#local-6989586621679513588"><span class="hs-identifier hs-var">x__</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_MemmappedFileSystemDirectory'element :: Vector MemmappedFileSystemDirectoryElement
+</span><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#_MemmappedFileSystemDirectory%27element"><span class="hs-identifier hs-var">_MemmappedFileSystemDirectory'element</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Vector MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513587"><span class="hs-identifier hs-var">y__</span></a></span><span class="hs-special">}</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-55"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Vector MemmappedFileSystemDirectoryElement
+ -&gt; [MemmappedFileSystemDirectoryElement])
+-&gt; (Vector MemmappedFileSystemDirectoryElement
+    -&gt; [MemmappedFileSystemDirectoryElement]
+    -&gt; Vector MemmappedFileSystemDirectoryElement)
+-&gt; Lens
+     (Vector MemmappedFileSystemDirectoryElement)
+     (Vector MemmappedFileSystemDirectoryElement)
+     [MemmappedFileSystemDirectoryElement]
+     [MemmappedFileSystemDirectoryElement]
+forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span class="hs-identifier hs-var">Lens.Family2.Unchecked.lens</span></span><span>
+</span><span id="line-56"></span><span>           </span><span class="annot"><span class="annottext">Vector MemmappedFileSystemDirectoryElement
+-&gt; [MemmappedFileSystemDirectoryElement]
+forall (v :: * -&gt; *) a. Vector v a =&gt; v a -&gt; [a]
+</span><span class="hs-identifier hs-var">Data.Vector.Generic.toList</span></span><span>
+</span><span id="line-57"></span><span>           </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span> </span><span class="hs-identifier">_</span><span> </span><span id="local-6989586621679513585"><span class="annot"><span class="annottext">y__ :: [MemmappedFileSystemDirectoryElement]
+</span><a href="#local-6989586621679513585"><span class="hs-identifier hs-var">y__</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[MemmappedFileSystemDirectoryElement]
+-&gt; Vector MemmappedFileSystemDirectoryElement
+forall (v :: * -&gt; *) a. Vector v a =&gt; [a] -&gt; v a
+</span><span class="hs-identifier hs-var">Data.Vector.Generic.fromList</span></span><span> </span><span class="annot"><span class="annottext">[MemmappedFileSystemDirectoryElement]
+</span><a href="#local-6989586621679513585"><span class="hs-identifier hs-var">y__</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-58"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.Field.HasField</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#MemmappedFileSystemDirectory"><span class="hs-identifier hs-type">MemmappedFileSystemDirectory</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;vec'element&quot;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Data.Vector.Vector</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#MemmappedFileSystemDirectoryElement"><span class="hs-identifier hs-type">MemmappedFileSystemDirectoryElement</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-59"></span><span>  </span><span id="local-6989586621679513582"><span class="annot"><span class="annottext">fieldOf :: Proxy# &quot;vec'element&quot;
+-&gt; (Vector MemmappedFileSystemDirectoryElement
+    -&gt; f (Vector MemmappedFileSystemDirectoryElement))
+-&gt; MemmappedFileSystemDirectory
+-&gt; f MemmappedFileSystemDirectory
+</span><a href="#local-6989586621679513582"><span class="hs-identifier hs-var hs-var hs-var hs-var">fieldOf</span></a></span></span><span> </span><span class="hs-identifier">_</span><span>
+</span><span id="line-60"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((Vector MemmappedFileSystemDirectoryElement
+  -&gt; f (Vector MemmappedFileSystemDirectoryElement))
+ -&gt; MemmappedFileSystemDirectory -&gt; f MemmappedFileSystemDirectory)
+-&gt; ((Vector MemmappedFileSystemDirectoryElement
+     -&gt; f (Vector MemmappedFileSystemDirectoryElement))
+    -&gt; Vector MemmappedFileSystemDirectoryElement
+    -&gt; f (Vector MemmappedFileSystemDirectoryElement))
+-&gt; (Vector MemmappedFileSystemDirectoryElement
+    -&gt; f (Vector MemmappedFileSystemDirectoryElement))
+-&gt; MemmappedFileSystemDirectory
+-&gt; f MemmappedFileSystemDirectory
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">(Prelude..)</span></span><span>
+</span><span id="line-61"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(MemmappedFileSystemDirectory
+ -&gt; Vector MemmappedFileSystemDirectoryElement)
+-&gt; (MemmappedFileSystemDirectory
+    -&gt; Vector MemmappedFileSystemDirectoryElement
+    -&gt; MemmappedFileSystemDirectory)
+-&gt; Lens
+     MemmappedFileSystemDirectory
+     MemmappedFileSystemDirectory
+     (Vector MemmappedFileSystemDirectoryElement)
+     (Vector MemmappedFileSystemDirectoryElement)
+forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span class="hs-identifier hs-var">Lens.Family2.Unchecked.lens</span></span><span>
+</span><span id="line-62"></span><span>           </span><span class="annot"><span class="annottext">MemmappedFileSystemDirectory
+-&gt; Vector MemmappedFileSystemDirectoryElement
+</span><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#_MemmappedFileSystemDirectory%27element"><span class="hs-identifier hs-var hs-var">_MemmappedFileSystemDirectory'element</span></a></span><span>
+</span><span id="line-63"></span><span>           </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span> </span><span id="local-6989586621679513581"><span class="annot"><span class="annottext">x__ :: MemmappedFileSystemDirectory
+</span><a href="#local-6989586621679513581"><span class="hs-identifier hs-var">x__</span></a></span></span><span> </span><span id="local-6989586621679513580"><span class="annot"><span class="annottext">y__ :: Vector MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513580"><span class="hs-identifier hs-var">y__</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">MemmappedFileSystemDirectory
+</span><a href="#local-6989586621679513581"><span class="hs-identifier hs-var">x__</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_MemmappedFileSystemDirectory'element :: Vector MemmappedFileSystemDirectoryElement
+</span><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#_MemmappedFileSystemDirectory%27element"><span class="hs-identifier hs-var">_MemmappedFileSystemDirectory'element</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Vector MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513580"><span class="hs-identifier hs-var">y__</span></a></span><span class="hs-special">}</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-64"></span><span>        </span><span class="annot"><span class="annottext">(Vector MemmappedFileSystemDirectoryElement
+ -&gt; f (Vector MemmappedFileSystemDirectoryElement))
+-&gt; Vector MemmappedFileSystemDirectoryElement
+-&gt; f (Vector MemmappedFileSystemDirectoryElement)
+forall a. a -&gt; a
+</span><span class="hs-identifier hs-var">Prelude.id</span></span><span>
+</span><span id="line-65"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679513572"><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.Message</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#MemmappedFileSystemDirectory"><span class="hs-identifier hs-type">MemmappedFileSystemDirectory</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-66"></span><span>  </span><span id="local-6989586621679513567"><span class="annot"><span class="annottext">messageName :: Proxy MemmappedFileSystemDirectory -&gt; Text
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">messageName</span></span></span><span> </span><span class="hs-identifier">_</span><span>
+</span><span id="line-67"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Text
+</span><span class="hs-identifier hs-var">Data.Text.pack</span></span><span> </span><span class="annot"><span class="hs-string">&quot;tensorflow.MemmappedFileSystemDirectory&quot;</span></span><span>
+</span><span id="line-68"></span><span>  </span><span id="local-6989586621679513564"><span class="annot"><span class="annottext">packedMessageDescriptor :: Proxy MemmappedFileSystemDirectory -&gt; ByteString
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">packedMessageDescriptor</span></span></span><span> </span><span class="hs-identifier">_</span><span>
+</span><span id="line-69"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-string">&quot;\n\
+      \\FSMemmappedFileSystemDirectory\DC2I\n\
+      \\aelement\CAN\SOH \ETX(\v2/.tensorflow.MemmappedFileSystemDirectoryElementR\aelement&quot;</span></span><span>
+</span><span id="line-72"></span><span>  </span><span id="local-6989586621679513562"><span class="annot"><span class="annottext">packedFileDescriptor :: Proxy MemmappedFileSystemDirectory -&gt; ByteString
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">packedFileDescriptor</span></span></span><span> </span><span class="hs-identifier">_</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#packedFileDescriptor"><span class="hs-identifier hs-var">packedFileDescriptor</span></a></span><span>
+</span><span id="line-73"></span><span>  </span><span id="local-6989586621679513559"><span class="annot"><span class="annottext">fieldsByTag :: Map Tag (FieldDescriptor MemmappedFileSystemDirectory)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">fieldsByTag</span></span></span><span>
+</span><span id="line-74"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">let</span><span>
+</span><span id="line-75"></span><span>        </span><span id="local-6989586621679513557"><span class="annot"><span class="annottext">element__field_descriptor :: FieldDescriptor MemmappedFileSystemDirectory
+</span><a href="#local-6989586621679513557"><span class="hs-identifier hs-var hs-var">element__field_descriptor</span></a></span></span><span>
+</span><span id="line-76"></span><span>          </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+-&gt; FieldTypeDescriptor MemmappedFileSystemDirectoryElement
+-&gt; FieldAccessor
+     MemmappedFileSystemDirectory MemmappedFileSystemDirectoryElement
+-&gt; FieldDescriptor MemmappedFileSystemDirectory
+forall value msg.
+String
+-&gt; FieldTypeDescriptor value
+-&gt; FieldAccessor msg value
+-&gt; FieldDescriptor msg
+</span><span class="hs-identifier hs-var">Data.ProtoLens.FieldDescriptor</span></span><span>
+</span><span id="line-77"></span><span>              </span><span class="annot"><span class="hs-string">&quot;element&quot;</span></span><span>
+</span><span id="line-78"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">MessageOrGroup
+-&gt; FieldTypeDescriptor MemmappedFileSystemDirectoryElement
+forall value.
+Message value =&gt;
+MessageOrGroup -&gt; FieldTypeDescriptor value
+</span><span class="hs-identifier hs-var">Data.ProtoLens.MessageField</span></span><span> </span><span class="annot"><span class="annottext">MessageOrGroup
+</span><span class="hs-identifier hs-var">Data.ProtoLens.MessageType</span></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-79"></span><span>                 </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.FieldTypeDescriptor</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#MemmappedFileSystemDirectoryElement"><span class="hs-identifier hs-type">MemmappedFileSystemDirectoryElement</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-80"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Packing
+-&gt; Lens'
+     MemmappedFileSystemDirectory [MemmappedFileSystemDirectoryElement]
+-&gt; FieldAccessor
+     MemmappedFileSystemDirectory MemmappedFileSystemDirectoryElement
+forall msg value.
+Packing -&gt; Lens' msg [value] -&gt; FieldAccessor msg value
+</span><span class="hs-identifier hs-var">Data.ProtoLens.RepeatedField</span></span><span>
+</span><span id="line-81"></span><span>                 </span><span class="annot"><span class="annottext">Packing
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Unpacked</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall s a (f :: * -&gt; *).
+(HasField s &quot;element&quot; a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+forall (x :: Symbol) s a (f :: * -&gt; *).
+(HasField s x a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Field.field</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-string">&quot;element&quot;</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-82"></span><span>              </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.FieldDescriptor</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#MemmappedFileSystemDirectory"><span class="hs-identifier hs-type">MemmappedFileSystemDirectory</span></a></span><span>
+</span><span id="line-83"></span><span>      </span><span class="hs-keyword">in</span><span>
+</span><span id="line-84"></span><span>        </span><span class="annot"><span class="annottext">[(Tag, FieldDescriptor MemmappedFileSystemDirectory)]
+-&gt; Map Tag (FieldDescriptor MemmappedFileSystemDirectory)
+forall k a. Ord k =&gt; [(k, a)] -&gt; Map k a
+</span><span class="hs-identifier hs-var">Data.Map.fromList</span></span><span>
+</span><span id="line-85"></span><span>          </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; Tag
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Tag</span></span><span> </span><span class="annot"><span class="hs-number">1</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">FieldDescriptor MemmappedFileSystemDirectory
+</span><a href="#local-6989586621679513557"><span class="hs-identifier hs-var">element__field_descriptor</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
+</span><span id="line-86"></span><span>  </span><span id="local-6989586621679513548"><span class="annot"><span class="annottext">unknownFields :: LensLike' f MemmappedFileSystemDirectory FieldSet
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">unknownFields</span></span></span><span>
+</span><span id="line-87"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(MemmappedFileSystemDirectory -&gt; FieldSet)
+-&gt; (MemmappedFileSystemDirectory
+    -&gt; FieldSet -&gt; MemmappedFileSystemDirectory)
+-&gt; Lens' MemmappedFileSystemDirectory FieldSet
+forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span class="hs-identifier hs-var">Lens.Family2.Unchecked.lens</span></span><span>
+</span><span id="line-88"></span><span>        </span><span class="annot"><span class="annottext">MemmappedFileSystemDirectory -&gt; FieldSet
+</span><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#_MemmappedFileSystemDirectory%27_unknownFields"><span class="hs-identifier hs-var hs-var">_MemmappedFileSystemDirectory'_unknownFields</span></a></span><span>
+</span><span id="line-89"></span><span>        </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span> </span><span id="local-6989586621679513546"><span class="annot"><span class="annottext">x__ :: MemmappedFileSystemDirectory
+</span><a href="#local-6989586621679513546"><span class="hs-identifier hs-var">x__</span></a></span></span><span> </span><span id="local-6989586621679513545"><span class="annot"><span class="annottext">y__ :: FieldSet
+</span><a href="#local-6989586621679513545"><span class="hs-identifier hs-var">y__</span></a></span></span><span>
+</span><span id="line-90"></span><span>           </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">MemmappedFileSystemDirectory
+</span><a href="#local-6989586621679513546"><span class="hs-identifier hs-var">x__</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_MemmappedFileSystemDirectory'_unknownFields :: FieldSet
+</span><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#_MemmappedFileSystemDirectory%27_unknownFields"><span class="hs-identifier hs-var">_MemmappedFileSystemDirectory'_unknownFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">FieldSet
+</span><a href="#local-6989586621679513545"><span class="hs-identifier hs-var">y__</span></a></span><span class="hs-special">}</span><span class="hs-special">)</span><span>
+</span><span id="line-91"></span><span>  </span><span id="local-6989586621679513544"><span class="annot"><span class="annottext">defMessage :: MemmappedFileSystemDirectory
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">defMessage</span></span></span><span>
+</span><span id="line-92"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">$WMemmappedFileSystemDirectory'_constructor :: Vector MemmappedFileSystemDirectoryElement
+-&gt; FieldSet -&gt; MemmappedFileSystemDirectory
+</span><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#%24WMemmappedFileSystemDirectory%27_constructor"><span class="hs-identifier hs-type hs-type">MemmappedFileSystemDirectory'_constructor</span></a></span><span>
+</span><span id="line-93"></span><span>        </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_MemmappedFileSystemDirectory'element :: Vector MemmappedFileSystemDirectoryElement
+</span><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#_MemmappedFileSystemDirectory%27element"><span class="hs-identifier hs-var">_MemmappedFileSystemDirectory'element</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Vector MemmappedFileSystemDirectoryElement
+forall (v :: * -&gt; *) a. Vector v a =&gt; v a
+</span><span class="hs-identifier hs-var">Data.Vector.Generic.empty</span></span><span class="hs-special">,</span><span>
+</span><span id="line-94"></span><span>         </span><span class="annot"><span class="annottext">_MemmappedFileSystemDirectory'_unknownFields :: FieldSet
+</span><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#_MemmappedFileSystemDirectory%27_unknownFields"><span class="hs-identifier hs-var">_MemmappedFileSystemDirectory'_unknownFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span class="hs-special">}</span><span>
+</span><span id="line-95"></span><span>  </span><span id="local-6989586621679513540"><span class="annot"><span class="annottext">parseMessage :: Parser MemmappedFileSystemDirectory
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseMessage</span></span></span><span>
+</span><span id="line-96"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">let</span><span>
+</span><span id="line-97"></span><span>        </span><span class="annot"><a href="#local-6989586621679513538"><span class="hs-identifier hs-type">loop</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-98"></span><span>          </span><span class="annot"><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#MemmappedFileSystemDirectory"><span class="hs-identifier hs-type">MemmappedFileSystemDirectory</span></a></span><span>
+</span><span id="line-99"></span><span>          </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.Encoding.Growing.Growing</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data.Vector.Vector</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.Encoding.Growing.RealWorld</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#MemmappedFileSystemDirectoryElement"><span class="hs-identifier hs-type">MemmappedFileSystemDirectoryElement</span></a></span><span>
+</span><span id="line-100"></span><span>             </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.Encoding.Bytes.Parser</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#MemmappedFileSystemDirectory"><span class="hs-identifier hs-type">MemmappedFileSystemDirectory</span></a></span><span>
+</span><span id="line-101"></span><span>        </span><span id="local-6989586621679513538"><span class="annot"><span class="annottext">loop :: MemmappedFileSystemDirectory
+-&gt; Growing Vector RealWorld MemmappedFileSystemDirectoryElement
+-&gt; Parser MemmappedFileSystemDirectory
+</span><a href="#local-6989586621679513538"><span class="hs-identifier hs-var hs-var">loop</span></a></span></span><span> </span><span id="local-6989586621679513537"><span class="annot"><span class="annottext">x :: MemmappedFileSystemDirectory
+</span><a href="#local-6989586621679513537"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span id="local-6989586621679513536"><span class="annot"><span class="annottext">mutable'element :: Growing Vector RealWorld MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513536"><span class="hs-identifier hs-var">mutable'element</span></a></span></span><span>
+</span><span id="line-102"></span><span>          </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span> </span><span id="local-6989586621679513535"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679513535"><span class="hs-identifier hs-var">end</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Bool
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.atEnd</span></span><span>
+</span><span id="line-103"></span><span>               </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679513535"><span class="hs-identifier hs-var">end</span></a></span><span> </span><span class="hs-keyword">then</span><span>
+</span><span id="line-104"></span><span>                   </span><span class="hs-keyword">do</span><span> </span><span id="local-6989586621679513533"><span class="annot"><span class="annottext">Vector MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513533"><span class="hs-identifier hs-var">frozen'element</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (Vector MemmappedFileSystemDirectoryElement)
+-&gt; Parser (Vector MemmappedFileSystemDirectoryElement)
+forall a. IO a -&gt; Parser a
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Parser.Unsafe.unsafeLiftIO</span></span><span>
+</span><span id="line-105"></span><span>                                          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Growing Vector (PrimState IO) MemmappedFileSystemDirectoryElement
+-&gt; IO (Vector MemmappedFileSystemDirectoryElement)
+forall (m :: * -&gt; *) (v :: * -&gt; *) a.
+(PrimMonad m, Vector v a) =&gt;
+Growing v (PrimState m) a -&gt; m (v a)
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Growing.unsafeFreeze</span></span><span>
+</span><span id="line-106"></span><span>                                             </span><span class="annot"><span class="annottext">Growing Vector RealWorld MemmappedFileSystemDirectoryElement
+Growing Vector (PrimState IO) MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513536"><span class="hs-identifier hs-var">mutable'element</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-107"></span><span>                      </span><span class="hs-special">(</span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679513530"><span class="annot"><span class="annottext">missing :: [a]
+</span><a href="#local-6989586621679513530"><span class="hs-identifier hs-var hs-var">missing</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
+</span><span id="line-108"></span><span>                       </span><span class="hs-keyword">in</span><span>
+</span><span id="line-109"></span><span>                         </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">[Any] -&gt; Bool
+forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
+</span><span class="hs-identifier hs-var">Prelude.null</span></span><span> </span><span class="annot"><span class="annottext">[Any]
+forall a. [a]
+</span><a href="#local-6989586621679513530"><span class="hs-identifier hs-var">missing</span></a></span><span> </span><span class="hs-keyword">then</span><span>
+</span><span id="line-110"></span><span>                             </span><span class="annot"><span class="annottext">() -&gt; Parser ()
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span class="hs-identifier hs-var">Prelude.return</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-111"></span><span>                         </span><span class="hs-keyword">else</span><span>
+</span><span id="line-112"></span><span>                             </span><span class="annot"><span class="annottext">String -&gt; Parser ()
+forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
+</span><span class="hs-identifier hs-var">Prelude.fail</span></span><span>
+</span><span id="line-113"></span><span>                               </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; ShowS
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">(Prelude.++)</span></span><span>
+</span><span id="line-114"></span><span>                                  </span><span class="annot"><span class="hs-string">&quot;Missing required fields: &quot;</span></span><span>
+</span><span id="line-115"></span><span>                                  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[String] -&gt; String
+forall a. Show a =&gt; a -&gt; String
+</span><span class="hs-identifier hs-var">Prelude.show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[String]
+forall a. [a]
+</span><a href="#local-6989586621679513530"><span class="hs-identifier hs-var">missing</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Prelude.String</span></span><span class="hs-special">]</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-116"></span><span>                      </span><span class="annot"><span class="annottext">MemmappedFileSystemDirectory -&gt; Parser MemmappedFileSystemDirectory
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span class="hs-identifier hs-var">Prelude.return</span></span><span>
+</span><span id="line-117"></span><span>                        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Setter
+  MemmappedFileSystemDirectory
+  MemmappedFileSystemDirectory
+  FieldSet
+  FieldSet
+-&gt; (FieldSet -&gt; FieldSet)
+-&gt; MemmappedFileSystemDirectory
+-&gt; MemmappedFileSystemDirectory
+forall s t a b. Setter s t a b -&gt; (a -&gt; b) -&gt; s -&gt; t
+</span><span class="hs-identifier hs-var">Lens.Family2.over</span></span><span>
+</span><span id="line-118"></span><span>                           </span><span class="annot"><span class="annottext">forall msg. Message msg =&gt; Lens' msg FieldSet
+Setter
+  MemmappedFileSystemDirectory
+  MemmappedFileSystemDirectory
+  FieldSet
+  FieldSet
+</span><span class="hs-identifier hs-var">Data.ProtoLens.unknownFields</span></span><span>
+</span><span id="line-119"></span><span>                           </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621679513526"><span class="annot"><span class="annottext">FieldSet
+</span><a href="#local-6989586621679513526"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">FieldSet -&gt; FieldSet
+forall a. [a] -&gt; [a]
+</span><span class="hs-identifier hs-var">Prelude.reverse</span></span><span> </span><span class="annot"><span class="annottext">FieldSet
+</span><a href="#local-6989586621679513526"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-120"></span><span>                           </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Setter
+  MemmappedFileSystemDirectory
+  MemmappedFileSystemDirectory
+  (Vector MemmappedFileSystemDirectoryElement)
+  (Vector MemmappedFileSystemDirectoryElement)
+-&gt; Vector MemmappedFileSystemDirectoryElement
+-&gt; MemmappedFileSystemDirectory
+-&gt; MemmappedFileSystemDirectory
+forall s t a b. Setter s t a b -&gt; b -&gt; s -&gt; t
+</span><span class="hs-identifier hs-var">Lens.Family2.set</span></span><span>
+</span><span id="line-121"></span><span>                              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall s a (f :: * -&gt; *).
+(HasField s &quot;vec'element&quot; a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+forall (x :: Symbol) s a (f :: * -&gt; *).
+(HasField s x a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Field.field</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-string">&quot;vec'element&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Vector MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513533"><span class="hs-identifier hs-var">frozen'element</span></a></span><span> </span><span class="annot"><span class="annottext">MemmappedFileSystemDirectory
+</span><a href="#local-6989586621679513537"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-122"></span><span>               </span><span class="hs-keyword">else</span><span>
+</span><span id="line-123"></span><span>                   </span><span class="hs-keyword">do</span><span> </span><span id="local-6989586621679513523"><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679513523"><span class="hs-identifier hs-var">tag</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Word64
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.getVarInt</span></span><span>
+</span><span id="line-124"></span><span>                      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679513523"><span class="hs-identifier hs-var">tag</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-125"></span><span>                        </span><span class="hs-number">10</span><span>
+</span><span id="line-126"></span><span>                          </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621679513521"><span class="annot"><span class="annottext">MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513521"><span class="hs-identifier hs-var">y</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser MemmappedFileSystemDirectoryElement
+-&gt; String -&gt; Parser MemmappedFileSystemDirectoryElement
+forall a. Parser a -&gt; String -&gt; Parser a
+</span><span class="hs-operator hs-var">(Data.ProtoLens.Encoding.Bytes.&lt;?&gt;)</span></span><span>
+</span><span id="line-127"></span><span>                                        </span><span class="hs-special">(</span><span class="hs-keyword">do</span><span> </span><span id="local-6989586621679513519"><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679513519"><span class="hs-identifier hs-var">len</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Word64
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.getVarInt</span></span><span>
+</span><span id="line-128"></span><span>                                            </span><span class="annot"><span class="annottext">Int
+-&gt; Parser MemmappedFileSystemDirectoryElement
+-&gt; Parser MemmappedFileSystemDirectoryElement
+forall a. Int -&gt; Parser a -&gt; Parser a
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.isolate</span></span><span>
+</span><span id="line-129"></span><span>                                              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word64 -&gt; Int
+forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">Prelude.fromIntegral</span></span><span> </span><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679513519"><span class="hs-identifier hs-var">len</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-130"></span><span>                                              </span><span class="annot"><span class="annottext">Parser MemmappedFileSystemDirectoryElement
+forall msg. Message msg =&gt; Parser msg
+</span><span class="hs-identifier hs-var">Data.ProtoLens.parseMessage</span></span><span class="hs-special">)</span><span>
+</span><span id="line-131"></span><span>                                        </span><span class="annot"><span class="hs-string">&quot;element&quot;</span></span><span>
+</span><span id="line-132"></span><span>                                </span><span id="local-6989586621679513517"><span class="annot"><span class="annottext">Growing Vector RealWorld MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513517"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (Growing Vector RealWorld MemmappedFileSystemDirectoryElement)
+-&gt; Parser
+     (Growing Vector RealWorld MemmappedFileSystemDirectoryElement)
+forall a. IO a -&gt; Parser a
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Parser.Unsafe.unsafeLiftIO</span></span><span>
+</span><span id="line-133"></span><span>                                       </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Growing Vector (PrimState IO) MemmappedFileSystemDirectoryElement
+-&gt; MemmappedFileSystemDirectoryElement
+-&gt; IO
+     (Growing Vector (PrimState IO) MemmappedFileSystemDirectoryElement)
+forall (m :: * -&gt; *) (v :: * -&gt; *) a.
+(PrimMonad m, Vector v a) =&gt;
+Growing v (PrimState m) a -&gt; a -&gt; m (Growing v (PrimState m) a)
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Growing.append</span></span><span> </span><span class="annot"><span class="annottext">Growing Vector RealWorld MemmappedFileSystemDirectoryElement
+Growing Vector (PrimState IO) MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513536"><span class="hs-identifier hs-var">mutable'element</span></a></span><span> </span><span class="annot"><span class="annottext">MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513521"><span class="hs-identifier hs-var">y</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-134"></span><span>                                </span><span class="annot"><span class="annottext">MemmappedFileSystemDirectory
+-&gt; Growing Vector RealWorld MemmappedFileSystemDirectoryElement
+-&gt; Parser MemmappedFileSystemDirectory
+</span><a href="#local-6989586621679513538"><span class="hs-identifier hs-var">loop</span></a></span><span> </span><span class="annot"><span class="annottext">MemmappedFileSystemDirectory
+</span><a href="#local-6989586621679513537"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">Growing Vector RealWorld MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513517"><span class="hs-identifier hs-var">v</span></a></span><span>
+</span><span id="line-135"></span><span>                        </span><span id="local-6989586621679513515"><span class="annot"><span class="annottext">wire :: Word64
+</span><a href="#local-6989586621679513515"><span class="hs-identifier hs-var">wire</span></a></span></span><span>
+</span><span id="line-136"></span><span>                          </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621679513514"><span class="annot"><span class="annottext">TaggedValue
+</span><a href="#local-6989586621679513514"><span class="hs-identifier hs-var">y</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Word64 -&gt; Parser TaggedValue
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Wire.parseTaggedValueFromWire</span></span><span>
+</span><span id="line-137"></span><span>                                        </span><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679513515"><span class="hs-identifier hs-var">wire</span></a></span><span>
+</span><span id="line-138"></span><span>                                </span><span class="annot"><span class="annottext">MemmappedFileSystemDirectory
+-&gt; Growing Vector RealWorld MemmappedFileSystemDirectoryElement
+-&gt; Parser MemmappedFileSystemDirectory
+</span><a href="#local-6989586621679513538"><span class="hs-identifier hs-var">loop</span></a></span><span>
+</span><span id="line-139"></span><span>                                  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Setter
+  MemmappedFileSystemDirectory
+  MemmappedFileSystemDirectory
+  FieldSet
+  FieldSet
+-&gt; (FieldSet -&gt; FieldSet)
+-&gt; MemmappedFileSystemDirectory
+-&gt; MemmappedFileSystemDirectory
+forall s t a b. Setter s t a b -&gt; (a -&gt; b) -&gt; s -&gt; t
+</span><span class="hs-identifier hs-var">Lens.Family2.over</span></span><span>
+</span><span id="line-140"></span><span>                                     </span><span class="annot"><span class="annottext">forall msg. Message msg =&gt; Lens' msg FieldSet
+Setter
+  MemmappedFileSystemDirectory
+  MemmappedFileSystemDirectory
+  FieldSet
+  FieldSet
+</span><span class="hs-identifier hs-var">Data.ProtoLens.unknownFields</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621679513512"><span class="annot"><span class="annottext">FieldSet
+</span><a href="#local-6989586621679513512"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="hs-glyph">:</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">TaggedValue
+</span><a href="#local-6989586621679513514"><span class="hs-identifier hs-var">y</span></a></span><span> </span><span class="annot"><span class="annottext">FieldSet
+</span><a href="#local-6989586621679513512"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">MemmappedFileSystemDirectory
+</span><a href="#local-6989586621679513537"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-141"></span><span>                                  </span><span class="annot"><span class="annottext">Growing Vector RealWorld MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513536"><span class="hs-identifier hs-var">mutable'element</span></a></span><span>
+</span><span id="line-142"></span><span>      </span><span class="hs-keyword">in</span><span>
+</span><span id="line-143"></span><span>        </span><span class="annot"><span class="annottext">Parser MemmappedFileSystemDirectory
+-&gt; String -&gt; Parser MemmappedFileSystemDirectory
+forall a. Parser a -&gt; String -&gt; Parser a
+</span><span class="hs-operator hs-var">(Data.ProtoLens.Encoding.Bytes.&lt;?&gt;)</span></span><span>
+</span><span id="line-144"></span><span>          </span><span class="hs-special">(</span><span class="hs-keyword">do</span><span> </span><span id="local-6989586621679513511"><span class="annot"><span class="annottext">Growing Vector RealWorld MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513511"><span class="hs-identifier hs-var">mutable'element</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (Growing Vector RealWorld MemmappedFileSystemDirectoryElement)
+-&gt; Parser
+     (Growing Vector RealWorld MemmappedFileSystemDirectoryElement)
+forall a. IO a -&gt; Parser a
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Parser.Unsafe.unsafeLiftIO</span></span><span>
+</span><span id="line-145"></span><span>                                   </span><span class="annot"><span class="annottext">IO (Growing Vector RealWorld MemmappedFileSystemDirectoryElement)
+forall (m :: * -&gt; *) (v :: * -&gt; *) a.
+(PrimMonad m, Vector v a) =&gt;
+m (Growing v (PrimState m) a)
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Growing.new</span></span><span>
+</span><span id="line-146"></span><span>              </span><span class="annot"><span class="annottext">MemmappedFileSystemDirectory
+-&gt; Growing Vector RealWorld MemmappedFileSystemDirectoryElement
+-&gt; Parser MemmappedFileSystemDirectory
+</span><a href="#local-6989586621679513538"><span class="hs-identifier hs-var">loop</span></a></span><span> </span><span class="annot"><span class="annottext">MemmappedFileSystemDirectory
+forall msg. Message msg =&gt; msg
+</span><span class="hs-identifier hs-var">Data.ProtoLens.defMessage</span></span><span> </span><span class="annot"><span class="annottext">Growing Vector RealWorld MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513511"><span class="hs-identifier hs-var">mutable'element</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-147"></span><span>          </span><span class="annot"><span class="hs-string">&quot;MemmappedFileSystemDirectory&quot;</span></span><span>
+</span><span id="line-148"></span><span>  </span><span id="local-6989586621679513509"><span class="annot"><span class="annottext">buildMessage :: MemmappedFileSystemDirectory -&gt; Builder
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">buildMessage</span></span></span><span>
+</span><span id="line-149"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span> </span><span id="local-6989586621679513507"><span class="annot"><span class="annottext">_x :: MemmappedFileSystemDirectory
+</span><a href="#local-6989586621679513507"><span class="hs-identifier hs-var">_x</span></a></span></span><span>
+</span><span id="line-150"></span><span>        </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Builder -&gt; Builder -&gt; Builder
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">(Data.Monoid.&lt;&gt;)</span></span><span>
+</span><span id="line-151"></span><span>             </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(MemmappedFileSystemDirectoryElement -&gt; Builder)
+-&gt; Vector MemmappedFileSystemDirectoryElement -&gt; Builder
+forall (v :: * -&gt; *) a.
+Vector v a =&gt;
+(a -&gt; Builder) -&gt; v a -&gt; Builder
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.foldMapBuilder</span></span><span>
+</span><span id="line-152"></span><span>                </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span> </span><span id="local-6989586621679513505"><span class="annot"><span class="annottext">_v :: MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513505"><span class="hs-identifier hs-var">_v</span></a></span></span><span>
+</span><span id="line-153"></span><span>                   </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Builder -&gt; Builder -&gt; Builder
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">(Data.Monoid.&lt;&gt;)</span></span><span>
+</span><span id="line-154"></span><span>                        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word64 -&gt; Builder
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.putVarInt</span></span><span> </span><span class="annot"><span class="hs-number">10</span></span><span class="hs-special">)</span><span>
+</span><span id="line-155"></span><span>                        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(ByteString -&gt; Builder)
+-&gt; (MemmappedFileSystemDirectoryElement -&gt; ByteString)
+-&gt; MemmappedFileSystemDirectoryElement
+-&gt; Builder
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">(Prelude..)</span></span><span>
+</span><span id="line-156"></span><span>                           </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span> </span><span id="local-6989586621679513503"><span class="annot"><span class="annottext">bs :: ByteString
+</span><a href="#local-6989586621679513503"><span class="hs-identifier hs-var">bs</span></a></span></span><span>
+</span><span id="line-157"></span><span>                              </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Builder -&gt; Builder -&gt; Builder
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">(Data.Monoid.&lt;&gt;)</span></span><span>
+</span><span id="line-158"></span><span>                                   </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word64 -&gt; Builder
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.putVarInt</span></span><span>
+</span><span id="line-159"></span><span>                                      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; Word64
+forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">Prelude.fromIntegral</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; Int
+</span><span class="hs-identifier hs-var">Data.ByteString.length</span></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679513503"><span class="hs-identifier hs-var">bs</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-160"></span><span>                                   </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; Builder
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.putBytes</span></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679513503"><span class="hs-identifier hs-var">bs</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-161"></span><span>                           </span><span class="annot"><span class="annottext">MemmappedFileSystemDirectoryElement -&gt; ByteString
+forall msg. Message msg =&gt; msg -&gt; ByteString
+</span><span class="hs-identifier hs-var">Data.ProtoLens.encodeMessage</span></span><span>
+</span><span id="line-162"></span><span>                           </span><span class="annot"><span class="annottext">MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513505"><span class="hs-identifier hs-var">_v</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-163"></span><span>                </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FoldLike
+  (Vector MemmappedFileSystemDirectoryElement)
+  MemmappedFileSystemDirectory
+  MemmappedFileSystemDirectory
+  (Vector MemmappedFileSystemDirectoryElement)
+  (Vector MemmappedFileSystemDirectoryElement)
+-&gt; MemmappedFileSystemDirectory
+-&gt; Vector MemmappedFileSystemDirectoryElement
+forall a s t b. FoldLike a s t a b -&gt; s -&gt; a
+</span><span class="hs-identifier hs-var">Lens.Family2.view</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall s a (f :: * -&gt; *).
+(HasField s &quot;vec'element&quot; a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+forall (x :: Symbol) s a (f :: * -&gt; *).
+(HasField s x a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Field.field</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-string">&quot;vec'element&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">MemmappedFileSystemDirectory
+</span><a href="#local-6989586621679513507"><span class="hs-identifier hs-var">_x</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-164"></span><span>             </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FieldSet -&gt; Builder
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Wire.buildFieldSet</span></span><span>
+</span><span id="line-165"></span><span>                </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FoldLike
+  FieldSet
+  MemmappedFileSystemDirectory
+  MemmappedFileSystemDirectory
+  FieldSet
+  FieldSet
+-&gt; MemmappedFileSystemDirectory -&gt; FieldSet
+forall a s t b. FoldLike a s t a b -&gt; s -&gt; a
+</span><span class="hs-identifier hs-var">Lens.Family2.view</span></span><span> </span><span class="annot"><span class="annottext">FoldLike
+  FieldSet
+  MemmappedFileSystemDirectory
+  MemmappedFileSystemDirectory
+  FieldSet
+  FieldSet
+forall msg. Message msg =&gt; Lens' msg FieldSet
+</span><span class="hs-identifier hs-var">Data.ProtoLens.unknownFields</span></span><span> </span><span class="annot"><span class="annottext">MemmappedFileSystemDirectory
+</span><a href="#local-6989586621679513507"><span class="hs-identifier hs-var">_x</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-166"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Control.DeepSeq.NFData</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#MemmappedFileSystemDirectory"><span class="hs-identifier hs-type">MemmappedFileSystemDirectory</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-167"></span><span>  </span><span id="local-6989586621679513495"><span class="annot"><span class="annottext">rnf :: MemmappedFileSystemDirectory -&gt; ()
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">rnf</span></span></span><span>
+</span><span id="line-168"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span> </span><span id="local-6989586621679513493"><span class="annot"><span class="annottext">x__ :: MemmappedFileSystemDirectory
+</span><a href="#local-6989586621679513493"><span class="hs-identifier hs-var">x__</span></a></span></span><span>
+</span><span id="line-169"></span><span>        </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">FieldSet -&gt; () -&gt; ()
+forall a b. NFData a =&gt; a -&gt; b -&gt; b
+</span><span class="hs-identifier hs-var">Control.DeepSeq.deepseq</span></span><span>
+</span><span id="line-170"></span><span>             </span><span class="hs-special">(</span><span class="annot"><span class="annottext">MemmappedFileSystemDirectory -&gt; FieldSet
+</span><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#_MemmappedFileSystemDirectory%27_unknownFields"><span class="hs-identifier hs-var hs-var">_MemmappedFileSystemDirectory'_unknownFields</span></a></span><span> </span><span class="annot"><span class="annottext">MemmappedFileSystemDirectory
+</span><a href="#local-6989586621679513493"><span class="hs-identifier hs-var">x__</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-171"></span><span>             </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Vector MemmappedFileSystemDirectoryElement -&gt; () -&gt; ()
+forall a b. NFData a =&gt; a -&gt; b -&gt; b
+</span><span class="hs-identifier hs-var">Control.DeepSeq.deepseq</span></span><span>
+</span><span id="line-172"></span><span>                </span><span class="hs-special">(</span><span class="annot"><span class="annottext">MemmappedFileSystemDirectory
+-&gt; Vector MemmappedFileSystemDirectoryElement
+</span><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#_MemmappedFileSystemDirectory%27element"><span class="hs-identifier hs-var hs-var">_MemmappedFileSystemDirectory'element</span></a></span><span> </span><span class="annot"><span class="annottext">MemmappedFileSystemDirectory
+</span><a href="#local-6989586621679513493"><span class="hs-identifier hs-var">x__</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-173"></span><span class="hs-comment">{- | Fields :
+     
+         * 'Proto.Tensorflow.Core.Util.MemmappedFileSystem_Fields.offset' @:: Lens' MemmappedFileSystemDirectoryElement Data.Word.Word64@
+         * 'Proto.Tensorflow.Core.Util.MemmappedFileSystem_Fields.name' @:: Lens' MemmappedFileSystemDirectoryElement Data.Text.Text@
+         * 'Proto.Tensorflow.Core.Util.MemmappedFileSystem_Fields.length' @:: Lens' MemmappedFileSystemDirectoryElement Data.Word.Word64@ -}</span><span>
+</span><span id="line-178"></span><span class="hs-keyword">data</span><span> </span><span id="MemmappedFileSystemDirectoryElement"><span class="annot"><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#MemmappedFileSystemDirectoryElement"><span class="hs-identifier hs-var">MemmappedFileSystemDirectoryElement</span></a></span></span><span>
+</span><span id="line-179"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="MemmappedFileSystemDirectoryElement%27_constructor"><span class="annot"><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#MemmappedFileSystemDirectoryElement%27_constructor"><span class="hs-identifier hs-var">MemmappedFileSystemDirectoryElement'_constructor</span></a></span></span><span> </span><span class="hs-special">{</span><span id="_MemmappedFileSystemDirectoryElement%27offset"><span class="annot"><span class="annottext">MemmappedFileSystemDirectoryElement -&gt; Word64
+</span><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#_MemmappedFileSystemDirectoryElement%27offset"><span class="hs-identifier hs-var hs-var">_MemmappedFileSystemDirectoryElement'offset</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Data.Word.Word64</span></span><span class="hs-special">,</span><span>
+</span><span id="line-180"></span><span>                                                      </span><span id="_MemmappedFileSystemDirectoryElement%27name"><span class="annot"><span class="annottext">MemmappedFileSystemDirectoryElement -&gt; Text
+</span><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#_MemmappedFileSystemDirectoryElement%27name"><span class="hs-identifier hs-var hs-var">_MemmappedFileSystemDirectoryElement'name</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Data.Text.Text</span></span><span class="hs-special">,</span><span>
+</span><span id="line-181"></span><span>                                                      </span><span id="_MemmappedFileSystemDirectoryElement%27length"><span class="annot"><span class="annottext">MemmappedFileSystemDirectoryElement -&gt; Word64
+</span><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#_MemmappedFileSystemDirectoryElement%27length"><span class="hs-identifier hs-var hs-var">_MemmappedFileSystemDirectoryElement'length</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Data.Word.Word64</span></span><span class="hs-special">,</span><span>
+</span><span id="line-182"></span><span>                                                      </span><span id="_MemmappedFileSystemDirectoryElement%27_unknownFields"><span class="annot"><span class="annottext">MemmappedFileSystemDirectoryElement -&gt; FieldSet
+</span><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#_MemmappedFileSystemDirectoryElement%27_unknownFields"><span class="hs-identifier hs-var hs-var">_MemmappedFileSystemDirectoryElement'_unknownFields</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.FieldSet</span></span><span class="hs-special">}</span><span>
+</span><span id="line-183"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679513483"><span id="local-6989586621679513485"><span class="annot"><span class="annottext">MemmappedFileSystemDirectoryElement
+-&gt; MemmappedFileSystemDirectoryElement -&gt; Bool
+(MemmappedFileSystemDirectoryElement
+ -&gt; MemmappedFileSystemDirectoryElement -&gt; Bool)
+-&gt; (MemmappedFileSystemDirectoryElement
+    -&gt; MemmappedFileSystemDirectoryElement -&gt; Bool)
+-&gt; Eq MemmappedFileSystemDirectoryElement
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: MemmappedFileSystemDirectoryElement
+-&gt; MemmappedFileSystemDirectoryElement -&gt; Bool
+$c/= :: MemmappedFileSystemDirectoryElement
+-&gt; MemmappedFileSystemDirectoryElement -&gt; Bool
+== :: MemmappedFileSystemDirectoryElement
+-&gt; MemmappedFileSystemDirectoryElement -&gt; Bool
+$c== :: MemmappedFileSystemDirectoryElement
+-&gt; MemmappedFileSystemDirectoryElement -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Prelude.Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679513468"><span id="local-6989586621679513470"><span id="local-6989586621679513472"><span id="local-6989586621679513474"><span id="local-6989586621679513476"><span id="local-6989586621679513478"><span id="local-6989586621679513480"><span class="annot"><span class="annottext">Eq MemmappedFileSystemDirectoryElement
+Eq MemmappedFileSystemDirectoryElement =&gt;
+(MemmappedFileSystemDirectoryElement
+ -&gt; MemmappedFileSystemDirectoryElement -&gt; Ordering)
+-&gt; (MemmappedFileSystemDirectoryElement
+    -&gt; MemmappedFileSystemDirectoryElement -&gt; Bool)
+-&gt; (MemmappedFileSystemDirectoryElement
+    -&gt; MemmappedFileSystemDirectoryElement -&gt; Bool)
+-&gt; (MemmappedFileSystemDirectoryElement
+    -&gt; MemmappedFileSystemDirectoryElement -&gt; Bool)
+-&gt; (MemmappedFileSystemDirectoryElement
+    -&gt; MemmappedFileSystemDirectoryElement -&gt; Bool)
+-&gt; (MemmappedFileSystemDirectoryElement
+    -&gt; MemmappedFileSystemDirectoryElement
+    -&gt; MemmappedFileSystemDirectoryElement)
+-&gt; (MemmappedFileSystemDirectoryElement
+    -&gt; MemmappedFileSystemDirectoryElement
+    -&gt; MemmappedFileSystemDirectoryElement)
+-&gt; Ord MemmappedFileSystemDirectoryElement
+MemmappedFileSystemDirectoryElement
+-&gt; MemmappedFileSystemDirectoryElement -&gt; Bool
+MemmappedFileSystemDirectoryElement
+-&gt; MemmappedFileSystemDirectoryElement -&gt; Ordering
+MemmappedFileSystemDirectoryElement
+-&gt; MemmappedFileSystemDirectoryElement
+-&gt; MemmappedFileSystemDirectoryElement
+forall a.
+Eq a =&gt;
+(a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+min :: MemmappedFileSystemDirectoryElement
+-&gt; MemmappedFileSystemDirectoryElement
+-&gt; MemmappedFileSystemDirectoryElement
+$cmin :: MemmappedFileSystemDirectoryElement
+-&gt; MemmappedFileSystemDirectoryElement
+-&gt; MemmappedFileSystemDirectoryElement
+max :: MemmappedFileSystemDirectoryElement
+-&gt; MemmappedFileSystemDirectoryElement
+-&gt; MemmappedFileSystemDirectoryElement
+$cmax :: MemmappedFileSystemDirectoryElement
+-&gt; MemmappedFileSystemDirectoryElement
+-&gt; MemmappedFileSystemDirectoryElement
+&gt;= :: MemmappedFileSystemDirectoryElement
+-&gt; MemmappedFileSystemDirectoryElement -&gt; Bool
+$c&gt;= :: MemmappedFileSystemDirectoryElement
+-&gt; MemmappedFileSystemDirectoryElement -&gt; Bool
+&gt; :: MemmappedFileSystemDirectoryElement
+-&gt; MemmappedFileSystemDirectoryElement -&gt; Bool
+$c&gt; :: MemmappedFileSystemDirectoryElement
+-&gt; MemmappedFileSystemDirectoryElement -&gt; Bool
+&lt;= :: MemmappedFileSystemDirectoryElement
+-&gt; MemmappedFileSystemDirectoryElement -&gt; Bool
+$c&lt;= :: MemmappedFileSystemDirectoryElement
+-&gt; MemmappedFileSystemDirectoryElement -&gt; Bool
+&lt; :: MemmappedFileSystemDirectoryElement
+-&gt; MemmappedFileSystemDirectoryElement -&gt; Bool
+$c&lt; :: MemmappedFileSystemDirectoryElement
+-&gt; MemmappedFileSystemDirectoryElement -&gt; Bool
+compare :: MemmappedFileSystemDirectoryElement
+-&gt; MemmappedFileSystemDirectoryElement -&gt; Ordering
+$ccompare :: MemmappedFileSystemDirectoryElement
+-&gt; MemmappedFileSystemDirectoryElement -&gt; Ordering
+$cp1Ord :: Eq MemmappedFileSystemDirectoryElement
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Prelude.Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-184"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679513463"><span id="local-6989586621679513465"><span class="annot"><span class="hs-identifier hs-type">Prelude.Show</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#MemmappedFileSystemDirectoryElement"><span class="hs-identifier hs-type">MemmappedFileSystemDirectoryElement</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-185"></span><span>  </span><span id="local-6989586621679513462"><span class="annot"><span class="annottext">showsPrec :: Int -&gt; MemmappedFileSystemDirectoryElement -&gt; ShowS
+</span><a href="#local-6989586621679513462"><span class="hs-identifier hs-var hs-var hs-var hs-var">showsPrec</span></a></span></span><span> </span><span class="hs-identifier">_</span><span> </span><span id="local-6989586621679513461"><span class="annot"><span class="annottext">__x :: MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513461"><span class="hs-identifier hs-var">__x</span></a></span></span><span> </span><span id="local-6989586621679513460"><span class="annot"><span class="annottext">__s :: String
+</span><a href="#local-6989586621679513460"><span class="hs-identifier hs-var">__s</span></a></span></span><span>
+</span><span id="line-186"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Char -&gt; ShowS
+</span><span class="hs-identifier hs-var">Prelude.showChar</span></span><span>
+</span><span id="line-187"></span><span>        </span><span class="annot"><span class="hs-char">'{'</span></span><span>
+</span><span id="line-188"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; ShowS
+</span><span class="hs-identifier hs-var">Prelude.showString</span></span><span>
+</span><span id="line-189"></span><span>           </span><span class="hs-special">(</span><span class="annot"><span class="annottext">MemmappedFileSystemDirectoryElement -&gt; String
+forall msg. Message msg =&gt; msg -&gt; String
+</span><span class="hs-identifier hs-var">Data.ProtoLens.showMessageShort</span></span><span> </span><span class="annot"><span class="annottext">MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513461"><span class="hs-identifier hs-var">__x</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Char -&gt; ShowS
+</span><span class="hs-identifier hs-var">Prelude.showChar</span></span><span> </span><span class="annot"><span class="hs-char">'}'</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679513460"><span class="hs-identifier hs-var">__s</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-190"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.Field.HasField</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#MemmappedFileSystemDirectoryElement"><span class="hs-identifier hs-type">MemmappedFileSystemDirectoryElement</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;offset&quot;</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data.Word.Word64</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-191"></span><span>  </span><span id="local-6989586621679513458"><span class="annot"><span class="annottext">fieldOf :: Proxy# &quot;offset&quot;
+-&gt; (Word64 -&gt; f Word64)
+-&gt; MemmappedFileSystemDirectoryElement
+-&gt; f MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513458"><span class="hs-identifier hs-var hs-var hs-var hs-var">fieldOf</span></a></span></span><span> </span><span class="hs-identifier">_</span><span>
+</span><span id="line-192"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((Word64 -&gt; f Word64)
+ -&gt; MemmappedFileSystemDirectoryElement
+ -&gt; f MemmappedFileSystemDirectoryElement)
+-&gt; ((Word64 -&gt; f Word64) -&gt; Word64 -&gt; f Word64)
+-&gt; (Word64 -&gt; f Word64)
+-&gt; MemmappedFileSystemDirectoryElement
+-&gt; f MemmappedFileSystemDirectoryElement
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">(Prelude..)</span></span><span>
+</span><span id="line-193"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(MemmappedFileSystemDirectoryElement -&gt; Word64)
+-&gt; (MemmappedFileSystemDirectoryElement
+    -&gt; Word64 -&gt; MemmappedFileSystemDirectoryElement)
+-&gt; Lens
+     MemmappedFileSystemDirectoryElement
+     MemmappedFileSystemDirectoryElement
+     Word64
+     Word64
+forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span class="hs-identifier hs-var">Lens.Family2.Unchecked.lens</span></span><span>
+</span><span id="line-194"></span><span>           </span><span class="annot"><span class="annottext">MemmappedFileSystemDirectoryElement -&gt; Word64
+</span><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#_MemmappedFileSystemDirectoryElement%27offset"><span class="hs-identifier hs-var hs-var">_MemmappedFileSystemDirectoryElement'offset</span></a></span><span>
+</span><span id="line-195"></span><span>           </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span> </span><span id="local-6989586621679513457"><span class="annot"><span class="annottext">x__ :: MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513457"><span class="hs-identifier hs-var">x__</span></a></span></span><span> </span><span id="local-6989586621679513456"><span class="annot"><span class="annottext">y__ :: Word64
+</span><a href="#local-6989586621679513456"><span class="hs-identifier hs-var">y__</span></a></span></span><span>
+</span><span id="line-196"></span><span>              </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513457"><span class="hs-identifier hs-var">x__</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_MemmappedFileSystemDirectoryElement'offset :: Word64
+</span><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#_MemmappedFileSystemDirectoryElement%27offset"><span class="hs-identifier hs-var">_MemmappedFileSystemDirectoryElement'offset</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679513456"><span class="hs-identifier hs-var">y__</span></a></span><span class="hs-special">}</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-197"></span><span>        </span><span class="annot"><span class="annottext">(Word64 -&gt; f Word64) -&gt; Word64 -&gt; f Word64
+forall a. a -&gt; a
+</span><span class="hs-identifier hs-var">Prelude.id</span></span><span>
+</span><span id="line-198"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.Field.HasField</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#MemmappedFileSystemDirectoryElement"><span class="hs-identifier hs-type">MemmappedFileSystemDirectoryElement</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;name&quot;</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data.Text.Text</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-199"></span><span>  </span><span id="local-6989586621679513454"><span class="annot"><span class="annottext">fieldOf :: Proxy# &quot;name&quot;
+-&gt; (Text -&gt; f Text)
+-&gt; MemmappedFileSystemDirectoryElement
+-&gt; f MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513454"><span class="hs-identifier hs-var hs-var hs-var hs-var">fieldOf</span></a></span></span><span> </span><span class="hs-identifier">_</span><span>
+</span><span id="line-200"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((Text -&gt; f Text)
+ -&gt; MemmappedFileSystemDirectoryElement
+ -&gt; f MemmappedFileSystemDirectoryElement)
+-&gt; ((Text -&gt; f Text) -&gt; Text -&gt; f Text)
+-&gt; (Text -&gt; f Text)
+-&gt; MemmappedFileSystemDirectoryElement
+-&gt; f MemmappedFileSystemDirectoryElement
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">(Prelude..)</span></span><span>
+</span><span id="line-201"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(MemmappedFileSystemDirectoryElement -&gt; Text)
+-&gt; (MemmappedFileSystemDirectoryElement
+    -&gt; Text -&gt; MemmappedFileSystemDirectoryElement)
+-&gt; Lens
+     MemmappedFileSystemDirectoryElement
+     MemmappedFileSystemDirectoryElement
+     Text
+     Text
+forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span class="hs-identifier hs-var">Lens.Family2.Unchecked.lens</span></span><span>
+</span><span id="line-202"></span><span>           </span><span class="annot"><span class="annottext">MemmappedFileSystemDirectoryElement -&gt; Text
+</span><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#_MemmappedFileSystemDirectoryElement%27name"><span class="hs-identifier hs-var hs-var">_MemmappedFileSystemDirectoryElement'name</span></a></span><span>
+</span><span id="line-203"></span><span>           </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span> </span><span id="local-6989586621679513453"><span class="annot"><span class="annottext">x__ :: MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513453"><span class="hs-identifier hs-var">x__</span></a></span></span><span> </span><span id="local-6989586621679513452"><span class="annot"><span class="annottext">y__ :: Text
+</span><a href="#local-6989586621679513452"><span class="hs-identifier hs-var">y__</span></a></span></span><span>
+</span><span id="line-204"></span><span>              </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513453"><span class="hs-identifier hs-var">x__</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_MemmappedFileSystemDirectoryElement'name :: Text
+</span><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#_MemmappedFileSystemDirectoryElement%27name"><span class="hs-identifier hs-var">_MemmappedFileSystemDirectoryElement'name</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679513452"><span class="hs-identifier hs-var">y__</span></a></span><span class="hs-special">}</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-205"></span><span>        </span><span class="annot"><span class="annottext">(Text -&gt; f Text) -&gt; Text -&gt; f Text
+forall a. a -&gt; a
+</span><span class="hs-identifier hs-var">Prelude.id</span></span><span>
+</span><span id="line-206"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.Field.HasField</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#MemmappedFileSystemDirectoryElement"><span class="hs-identifier hs-type">MemmappedFileSystemDirectoryElement</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;length&quot;</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data.Word.Word64</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-207"></span><span>  </span><span id="local-6989586621679513450"><span class="annot"><span class="annottext">fieldOf :: Proxy# &quot;length&quot;
+-&gt; (Word64 -&gt; f Word64)
+-&gt; MemmappedFileSystemDirectoryElement
+-&gt; f MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513450"><span class="hs-identifier hs-var hs-var hs-var hs-var">fieldOf</span></a></span></span><span> </span><span class="hs-identifier">_</span><span>
+</span><span id="line-208"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((Word64 -&gt; f Word64)
+ -&gt; MemmappedFileSystemDirectoryElement
+ -&gt; f MemmappedFileSystemDirectoryElement)
+-&gt; ((Word64 -&gt; f Word64) -&gt; Word64 -&gt; f Word64)
+-&gt; (Word64 -&gt; f Word64)
+-&gt; MemmappedFileSystemDirectoryElement
+-&gt; f MemmappedFileSystemDirectoryElement
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">(Prelude..)</span></span><span>
+</span><span id="line-209"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(MemmappedFileSystemDirectoryElement -&gt; Word64)
+-&gt; (MemmappedFileSystemDirectoryElement
+    -&gt; Word64 -&gt; MemmappedFileSystemDirectoryElement)
+-&gt; Lens
+     MemmappedFileSystemDirectoryElement
+     MemmappedFileSystemDirectoryElement
+     Word64
+     Word64
+forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span class="hs-identifier hs-var">Lens.Family2.Unchecked.lens</span></span><span>
+</span><span id="line-210"></span><span>           </span><span class="annot"><span class="annottext">MemmappedFileSystemDirectoryElement -&gt; Word64
+</span><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#_MemmappedFileSystemDirectoryElement%27length"><span class="hs-identifier hs-var hs-var">_MemmappedFileSystemDirectoryElement'length</span></a></span><span>
+</span><span id="line-211"></span><span>           </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span> </span><span id="local-6989586621679513449"><span class="annot"><span class="annottext">x__ :: MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513449"><span class="hs-identifier hs-var">x__</span></a></span></span><span> </span><span id="local-6989586621679513448"><span class="annot"><span class="annottext">y__ :: Word64
+</span><a href="#local-6989586621679513448"><span class="hs-identifier hs-var">y__</span></a></span></span><span>
+</span><span id="line-212"></span><span>              </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513449"><span class="hs-identifier hs-var">x__</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_MemmappedFileSystemDirectoryElement'length :: Word64
+</span><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#_MemmappedFileSystemDirectoryElement%27length"><span class="hs-identifier hs-var">_MemmappedFileSystemDirectoryElement'length</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679513448"><span class="hs-identifier hs-var">y__</span></a></span><span class="hs-special">}</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-213"></span><span>        </span><span class="annot"><span class="annottext">(Word64 -&gt; f Word64) -&gt; Word64 -&gt; f Word64
+forall a. a -&gt; a
+</span><span class="hs-identifier hs-var">Prelude.id</span></span><span>
+</span><span id="line-214"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679513441"><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.Message</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#MemmappedFileSystemDirectoryElement"><span class="hs-identifier hs-type">MemmappedFileSystemDirectoryElement</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-215"></span><span>  </span><span id="local-6989586621679513437"><span class="annot"><span class="annottext">messageName :: Proxy MemmappedFileSystemDirectoryElement -&gt; Text
+</span><a href="#local-6989586621679513437"><span class="hs-identifier hs-var hs-var hs-var hs-var">messageName</span></a></span></span><span> </span><span class="hs-identifier">_</span><span>
+</span><span id="line-216"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Text
+</span><span class="hs-identifier hs-var">Data.Text.pack</span></span><span> </span><span class="annot"><span class="hs-string">&quot;tensorflow.MemmappedFileSystemDirectoryElement&quot;</span></span><span>
+</span><span id="line-217"></span><span>  </span><span id="local-6989586621679513436"><span class="annot"><span class="annottext">packedMessageDescriptor :: Proxy MemmappedFileSystemDirectoryElement -&gt; ByteString
+</span><a href="#local-6989586621679513436"><span class="hs-identifier hs-var hs-var hs-var hs-var">packedMessageDescriptor</span></a></span></span><span> </span><span class="hs-identifier">_</span><span>
+</span><span id="line-218"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-string">&quot;\n\
+      \#MemmappedFileSystemDirectoryElement\DC2\SYN\n\
+      \\ACKoffset\CAN\SOH \SOH(\EOTR\ACKoffset\DC2\DC2\n\
+      \\EOTname\CAN\STX \SOH(\tR\EOTname\DC2\SYN\n\
+      \\ACKlength\CAN\ETX \SOH(\EOTR\ACKlength&quot;</span></span><span>
+</span><span id="line-223"></span><span>  </span><span id="local-6989586621679513435"><span class="annot"><span class="annottext">packedFileDescriptor :: Proxy MemmappedFileSystemDirectoryElement -&gt; ByteString
+</span><a href="#local-6989586621679513435"><span class="hs-identifier hs-var hs-var hs-var hs-var">packedFileDescriptor</span></a></span></span><span> </span><span class="hs-identifier">_</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#packedFileDescriptor"><span class="hs-identifier hs-var">packedFileDescriptor</span></a></span><span>
+</span><span id="line-224"></span><span>  </span><span id="local-6989586621679513434"><span class="annot"><span class="annottext">fieldsByTag :: Map Tag (FieldDescriptor MemmappedFileSystemDirectoryElement)
+</span><a href="#local-6989586621679513434"><span class="hs-identifier hs-var hs-var hs-var hs-var">fieldsByTag</span></a></span></span><span>
+</span><span id="line-225"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">let</span><span>
+</span><span id="line-226"></span><span>        </span><span id="local-6989586621679513433"><span class="annot"><span class="annottext">offset__field_descriptor :: FieldDescriptor MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513433"><span class="hs-identifier hs-var hs-var">offset__field_descriptor</span></a></span></span><span>
+</span><span id="line-227"></span><span>          </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+-&gt; FieldTypeDescriptor Word64
+-&gt; FieldAccessor MemmappedFileSystemDirectoryElement Word64
+-&gt; FieldDescriptor MemmappedFileSystemDirectoryElement
+forall value msg.
+String
+-&gt; FieldTypeDescriptor value
+-&gt; FieldAccessor msg value
+-&gt; FieldDescriptor msg
+</span><span class="hs-identifier hs-var">Data.ProtoLens.FieldDescriptor</span></span><span>
+</span><span id="line-228"></span><span>              </span><span class="annot"><span class="hs-string">&quot;offset&quot;</span></span><span>
+</span><span id="line-229"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ScalarField Word64 -&gt; FieldTypeDescriptor Word64
+forall value. ScalarField value -&gt; FieldTypeDescriptor value
+</span><span class="hs-identifier hs-var">Data.ProtoLens.ScalarField</span></span><span> </span><span class="annot"><span class="annottext">ScalarField Word64
+</span><span class="hs-identifier hs-var">Data.ProtoLens.UInt64Field</span></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-230"></span><span>                 </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.FieldTypeDescriptor</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data.Word.Word64</span></span><span class="hs-special">)</span><span>
+</span><span id="line-231"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">WireDefault Word64
+-&gt; Lens
+     MemmappedFileSystemDirectoryElement
+     MemmappedFileSystemDirectoryElement
+     Word64
+     Word64
+-&gt; FieldAccessor MemmappedFileSystemDirectoryElement Word64
+forall value msg.
+WireDefault value -&gt; Lens' msg value -&gt; FieldAccessor msg value
+</span><span class="hs-identifier hs-var">Data.ProtoLens.PlainField</span></span><span>
+</span><span id="line-232"></span><span>                 </span><span class="annot"><span class="annottext">WireDefault Word64
+forall value. (FieldDefault value, Eq value) =&gt; WireDefault value
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Optional</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall s a (f :: * -&gt; *).
+(HasField s &quot;offset&quot; a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+forall (x :: Symbol) s a (f :: * -&gt; *).
+(HasField s x a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Field.field</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-string">&quot;offset&quot;</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-233"></span><span>              </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.FieldDescriptor</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#MemmappedFileSystemDirectoryElement"><span class="hs-identifier hs-type">MemmappedFileSystemDirectoryElement</span></a></span><span>
+</span><span id="line-234"></span><span>        </span><span id="local-6989586621679513428"><span class="annot"><span class="annottext">name__field_descriptor :: FieldDescriptor MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513428"><span class="hs-identifier hs-var hs-var">name__field_descriptor</span></a></span></span><span>
+</span><span id="line-235"></span><span>          </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+-&gt; FieldTypeDescriptor Text
+-&gt; FieldAccessor MemmappedFileSystemDirectoryElement Text
+-&gt; FieldDescriptor MemmappedFileSystemDirectoryElement
+forall value msg.
+String
+-&gt; FieldTypeDescriptor value
+-&gt; FieldAccessor msg value
+-&gt; FieldDescriptor msg
+</span><span class="hs-identifier hs-var">Data.ProtoLens.FieldDescriptor</span></span><span>
+</span><span id="line-236"></span><span>              </span><span class="annot"><span class="hs-string">&quot;name&quot;</span></span><span>
+</span><span id="line-237"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ScalarField Text -&gt; FieldTypeDescriptor Text
+forall value. ScalarField value -&gt; FieldTypeDescriptor value
+</span><span class="hs-identifier hs-var">Data.ProtoLens.ScalarField</span></span><span> </span><span class="annot"><span class="annottext">ScalarField Text
+</span><span class="hs-identifier hs-var">Data.ProtoLens.StringField</span></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-238"></span><span>                 </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.FieldTypeDescriptor</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data.Text.Text</span></span><span class="hs-special">)</span><span>
+</span><span id="line-239"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">WireDefault Text
+-&gt; Lens
+     MemmappedFileSystemDirectoryElement
+     MemmappedFileSystemDirectoryElement
+     Text
+     Text
+-&gt; FieldAccessor MemmappedFileSystemDirectoryElement Text
+forall value msg.
+WireDefault value -&gt; Lens' msg value -&gt; FieldAccessor msg value
+</span><span class="hs-identifier hs-var">Data.ProtoLens.PlainField</span></span><span>
+</span><span id="line-240"></span><span>                 </span><span class="annot"><span class="annottext">WireDefault Text
+forall value. (FieldDefault value, Eq value) =&gt; WireDefault value
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Optional</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall s a (f :: * -&gt; *).
+(HasField s &quot;name&quot; a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+forall (x :: Symbol) s a (f :: * -&gt; *).
+(HasField s x a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Field.field</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-string">&quot;name&quot;</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-241"></span><span>              </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.FieldDescriptor</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#MemmappedFileSystemDirectoryElement"><span class="hs-identifier hs-type">MemmappedFileSystemDirectoryElement</span></a></span><span>
+</span><span id="line-242"></span><span>        </span><span id="local-6989586621679513426"><span class="annot"><span class="annottext">length__field_descriptor :: FieldDescriptor MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513426"><span class="hs-identifier hs-var hs-var">length__field_descriptor</span></a></span></span><span>
+</span><span id="line-243"></span><span>          </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+-&gt; FieldTypeDescriptor Word64
+-&gt; FieldAccessor MemmappedFileSystemDirectoryElement Word64
+-&gt; FieldDescriptor MemmappedFileSystemDirectoryElement
+forall value msg.
+String
+-&gt; FieldTypeDescriptor value
+-&gt; FieldAccessor msg value
+-&gt; FieldDescriptor msg
+</span><span class="hs-identifier hs-var">Data.ProtoLens.FieldDescriptor</span></span><span>
+</span><span id="line-244"></span><span>              </span><span class="annot"><span class="hs-string">&quot;length&quot;</span></span><span>
+</span><span id="line-245"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ScalarField Word64 -&gt; FieldTypeDescriptor Word64
+forall value. ScalarField value -&gt; FieldTypeDescriptor value
+</span><span class="hs-identifier hs-var">Data.ProtoLens.ScalarField</span></span><span> </span><span class="annot"><span class="annottext">ScalarField Word64
+</span><span class="hs-identifier hs-var">Data.ProtoLens.UInt64Field</span></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-246"></span><span>                 </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.FieldTypeDescriptor</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data.Word.Word64</span></span><span class="hs-special">)</span><span>
+</span><span id="line-247"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">WireDefault Word64
+-&gt; Lens
+     MemmappedFileSystemDirectoryElement
+     MemmappedFileSystemDirectoryElement
+     Word64
+     Word64
+-&gt; FieldAccessor MemmappedFileSystemDirectoryElement Word64
+forall value msg.
+WireDefault value -&gt; Lens' msg value -&gt; FieldAccessor msg value
+</span><span class="hs-identifier hs-var">Data.ProtoLens.PlainField</span></span><span>
+</span><span id="line-248"></span><span>                 </span><span class="annot"><span class="annottext">WireDefault Word64
+forall value. (FieldDefault value, Eq value) =&gt; WireDefault value
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Optional</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall s a (f :: * -&gt; *).
+(HasField s &quot;length&quot; a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+forall (x :: Symbol) s a (f :: * -&gt; *).
+(HasField s x a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Field.field</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-string">&quot;length&quot;</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-249"></span><span>              </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.FieldDescriptor</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#MemmappedFileSystemDirectoryElement"><span class="hs-identifier hs-type">MemmappedFileSystemDirectoryElement</span></a></span><span>
+</span><span id="line-250"></span><span>      </span><span class="hs-keyword">in</span><span>
+</span><span id="line-251"></span><span>        </span><span class="annot"><span class="annottext">[(Tag, FieldDescriptor MemmappedFileSystemDirectoryElement)]
+-&gt; Map Tag (FieldDescriptor MemmappedFileSystemDirectoryElement)
+forall k a. Ord k =&gt; [(k, a)] -&gt; Map k a
+</span><span class="hs-identifier hs-var">Data.Map.fromList</span></span><span>
+</span><span id="line-252"></span><span>          </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; Tag
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Tag</span></span><span> </span><span class="annot"><span class="hs-number">1</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">FieldDescriptor MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513433"><span class="hs-identifier hs-var">offset__field_descriptor</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-253"></span><span>           </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; Tag
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Tag</span></span><span> </span><span class="annot"><span class="hs-number">2</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">FieldDescriptor MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513428"><span class="hs-identifier hs-var">name__field_descriptor</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-254"></span><span>           </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; Tag
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Tag</span></span><span> </span><span class="annot"><span class="hs-number">3</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">FieldDescriptor MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513426"><span class="hs-identifier hs-var">length__field_descriptor</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
+</span><span id="line-255"></span><span>  </span><span id="local-6989586621679513425"><span class="annot"><span class="annottext">unknownFields :: LensLike' f MemmappedFileSystemDirectoryElement FieldSet
+</span><a href="#local-6989586621679513425"><span class="hs-identifier hs-var hs-var hs-var hs-var">unknownFields</span></a></span></span><span>
+</span><span id="line-256"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(MemmappedFileSystemDirectoryElement -&gt; FieldSet)
+-&gt; (MemmappedFileSystemDirectoryElement
+    -&gt; FieldSet -&gt; MemmappedFileSystemDirectoryElement)
+-&gt; Lens' MemmappedFileSystemDirectoryElement FieldSet
+forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span class="hs-identifier hs-var">Lens.Family2.Unchecked.lens</span></span><span>
+</span><span id="line-257"></span><span>        </span><span class="annot"><span class="annottext">MemmappedFileSystemDirectoryElement -&gt; FieldSet
+</span><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#_MemmappedFileSystemDirectoryElement%27_unknownFields"><span class="hs-identifier hs-var hs-var">_MemmappedFileSystemDirectoryElement'_unknownFields</span></a></span><span>
+</span><span id="line-258"></span><span>        </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span> </span><span id="local-6989586621679513424"><span class="annot"><span class="annottext">x__ :: MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513424"><span class="hs-identifier hs-var">x__</span></a></span></span><span> </span><span id="local-6989586621679513423"><span class="annot"><span class="annottext">y__ :: FieldSet
+</span><a href="#local-6989586621679513423"><span class="hs-identifier hs-var">y__</span></a></span></span><span>
+</span><span id="line-259"></span><span>           </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513424"><span class="hs-identifier hs-var">x__</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_MemmappedFileSystemDirectoryElement'_unknownFields :: FieldSet
+</span><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#_MemmappedFileSystemDirectoryElement%27_unknownFields"><span class="hs-identifier hs-var">_MemmappedFileSystemDirectoryElement'_unknownFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">FieldSet
+</span><a href="#local-6989586621679513423"><span class="hs-identifier hs-var">y__</span></a></span><span class="hs-special">}</span><span class="hs-special">)</span><span>
+</span><span id="line-260"></span><span>  </span><span id="local-6989586621679513422"><span class="annot"><span class="annottext">defMessage :: MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513422"><span class="hs-identifier hs-var hs-var hs-var hs-var">defMessage</span></a></span></span><span>
+</span><span id="line-261"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">$WMemmappedFileSystemDirectoryElement'_constructor :: Word64
+-&gt; Text
+-&gt; Word64
+-&gt; FieldSet
+-&gt; MemmappedFileSystemDirectoryElement
+</span><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#%24WMemmappedFileSystemDirectoryElement%27_constructor"><span class="hs-identifier hs-type hs-type">MemmappedFileSystemDirectoryElement'_constructor</span></a></span><span>
+</span><span id="line-262"></span><span>        </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_MemmappedFileSystemDirectoryElement'offset :: Word64
+</span><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#_MemmappedFileSystemDirectoryElement%27offset"><span class="hs-identifier hs-var">_MemmappedFileSystemDirectoryElement'offset</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word64
+forall value. FieldDefault value =&gt; value
+</span><span class="hs-identifier hs-var">Data.ProtoLens.fieldDefault</span></span><span class="hs-special">,</span><span>
+</span><span id="line-263"></span><span>         </span><span class="annot"><span class="annottext">_MemmappedFileSystemDirectoryElement'name :: Text
+</span><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#_MemmappedFileSystemDirectoryElement%27name"><span class="hs-identifier hs-var">_MemmappedFileSystemDirectoryElement'name</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+forall value. FieldDefault value =&gt; value
+</span><span class="hs-identifier hs-var">Data.ProtoLens.fieldDefault</span></span><span class="hs-special">,</span><span>
+</span><span id="line-264"></span><span>         </span><span class="annot"><span class="annottext">_MemmappedFileSystemDirectoryElement'length :: Word64
+</span><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#_MemmappedFileSystemDirectoryElement%27length"><span class="hs-identifier hs-var">_MemmappedFileSystemDirectoryElement'length</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word64
+forall value. FieldDefault value =&gt; value
+</span><span class="hs-identifier hs-var">Data.ProtoLens.fieldDefault</span></span><span class="hs-special">,</span><span>
+</span><span id="line-265"></span><span>         </span><span class="annot"><span class="annottext">_MemmappedFileSystemDirectoryElement'_unknownFields :: FieldSet
+</span><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#_MemmappedFileSystemDirectoryElement%27_unknownFields"><span class="hs-identifier hs-var">_MemmappedFileSystemDirectoryElement'_unknownFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span class="hs-special">}</span><span>
+</span><span id="line-266"></span><span>  </span><span id="local-6989586621679513419"><span class="annot"><span class="annottext">parseMessage :: Parser MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513419"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseMessage</span></a></span></span><span>
+</span><span id="line-267"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">let</span><span>
+</span><span id="line-268"></span><span>        </span><span class="annot"><a href="#local-6989586621679513418"><span class="hs-identifier hs-type">loop</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-269"></span><span>          </span><span class="annot"><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#MemmappedFileSystemDirectoryElement"><span class="hs-identifier hs-type">MemmappedFileSystemDirectoryElement</span></a></span><span>
+</span><span id="line-270"></span><span>          </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.Encoding.Bytes.Parser</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#MemmappedFileSystemDirectoryElement"><span class="hs-identifier hs-type">MemmappedFileSystemDirectoryElement</span></a></span><span>
+</span><span id="line-271"></span><span>        </span><span id="local-6989586621679513418"><span class="annot"><span class="annottext">loop :: MemmappedFileSystemDirectoryElement
+-&gt; Parser MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513418"><span class="hs-identifier hs-var hs-var">loop</span></a></span></span><span> </span><span id="local-6989586621679513417"><span class="annot"><span class="annottext">x :: MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513417"><span class="hs-identifier hs-var">x</span></a></span></span><span>
+</span><span id="line-272"></span><span>          </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span> </span><span id="local-6989586621679513416"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679513416"><span class="hs-identifier hs-var">end</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Bool
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.atEnd</span></span><span>
+</span><span id="line-273"></span><span>               </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679513416"><span class="hs-identifier hs-var">end</span></a></span><span> </span><span class="hs-keyword">then</span><span>
+</span><span id="line-274"></span><span>                   </span><span class="hs-keyword">do</span><span> </span><span class="hs-special">(</span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679513415"><span class="annot"><span class="annottext">missing :: [a]
+</span><a href="#local-6989586621679513415"><span class="hs-identifier hs-var hs-var">missing</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
+</span><span id="line-275"></span><span>                       </span><span class="hs-keyword">in</span><span>
+</span><span id="line-276"></span><span>                         </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">[Any] -&gt; Bool
+forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
+</span><span class="hs-identifier hs-var">Prelude.null</span></span><span> </span><span class="annot"><span class="annottext">[Any]
+forall a. [a]
+</span><a href="#local-6989586621679513415"><span class="hs-identifier hs-var">missing</span></a></span><span> </span><span class="hs-keyword">then</span><span>
+</span><span id="line-277"></span><span>                             </span><span class="annot"><span class="annottext">() -&gt; Parser ()
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span class="hs-identifier hs-var">Prelude.return</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-278"></span><span>                         </span><span class="hs-keyword">else</span><span>
+</span><span id="line-279"></span><span>                             </span><span class="annot"><span class="annottext">String -&gt; Parser ()
+forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
+</span><span class="hs-identifier hs-var">Prelude.fail</span></span><span>
+</span><span id="line-280"></span><span>                               </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; ShowS
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">(Prelude.++)</span></span><span>
+</span><span id="line-281"></span><span>                                  </span><span class="annot"><span class="hs-string">&quot;Missing required fields: &quot;</span></span><span>
+</span><span id="line-282"></span><span>                                  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[String] -&gt; String
+forall a. Show a =&gt; a -&gt; String
+</span><span class="hs-identifier hs-var">Prelude.show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[String]
+forall a. [a]
+</span><a href="#local-6989586621679513415"><span class="hs-identifier hs-var">missing</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Prelude.String</span></span><span class="hs-special">]</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-283"></span><span>                      </span><span class="annot"><span class="annottext">MemmappedFileSystemDirectoryElement
+-&gt; Parser MemmappedFileSystemDirectoryElement
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span class="hs-identifier hs-var">Prelude.return</span></span><span>
+</span><span id="line-284"></span><span>                        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Setter
+  MemmappedFileSystemDirectoryElement
+  MemmappedFileSystemDirectoryElement
+  FieldSet
+  FieldSet
+-&gt; (FieldSet -&gt; FieldSet)
+-&gt; MemmappedFileSystemDirectoryElement
+-&gt; MemmappedFileSystemDirectoryElement
+forall s t a b. Setter s t a b -&gt; (a -&gt; b) -&gt; s -&gt; t
+</span><span class="hs-identifier hs-var">Lens.Family2.over</span></span><span>
+</span><span id="line-285"></span><span>                           </span><span class="annot"><span class="annottext">forall msg. Message msg =&gt; Lens' msg FieldSet
+Setter
+  MemmappedFileSystemDirectoryElement
+  MemmappedFileSystemDirectoryElement
+  FieldSet
+  FieldSet
+</span><span class="hs-identifier hs-var">Data.ProtoLens.unknownFields</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621679513414"><span class="annot"><span class="annottext">FieldSet
+</span><a href="#local-6989586621679513414"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">FieldSet -&gt; FieldSet
+forall a. [a] -&gt; [a]
+</span><span class="hs-identifier hs-var">Prelude.reverse</span></span><span> </span><span class="annot"><span class="annottext">FieldSet
+</span><a href="#local-6989586621679513414"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513417"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-286"></span><span>               </span><span class="hs-keyword">else</span><span>
+</span><span id="line-287"></span><span>                   </span><span class="hs-keyword">do</span><span> </span><span id="local-6989586621679513413"><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679513413"><span class="hs-identifier hs-var">tag</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Word64
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.getVarInt</span></span><span>
+</span><span id="line-288"></span><span>                      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679513413"><span class="hs-identifier hs-var">tag</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-289"></span><span>                        </span><span class="hs-number">8</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span> </span><span id="local-6989586621679513412"><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679513412"><span class="hs-identifier hs-var">y</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Word64 -&gt; String -&gt; Parser Word64
+forall a. Parser a -&gt; String -&gt; Parser a
+</span><span class="hs-operator hs-var">(Data.ProtoLens.Encoding.Bytes.&lt;?&gt;)</span></span><span>
+</span><span id="line-290"></span><span>                                       </span><span class="annot"><span class="annottext">Parser Word64
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.getVarInt</span></span><span> </span><span class="annot"><span class="hs-string">&quot;offset&quot;</span></span><span>
+</span><span id="line-291"></span><span>                                </span><span class="annot"><span class="annottext">MemmappedFileSystemDirectoryElement
+-&gt; Parser MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513418"><span class="hs-identifier hs-var">loop</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Setter
+  MemmappedFileSystemDirectoryElement
+  MemmappedFileSystemDirectoryElement
+  Word64
+  Word64
+-&gt; Word64
+-&gt; MemmappedFileSystemDirectoryElement
+-&gt; MemmappedFileSystemDirectoryElement
+forall s t a b. Setter s t a b -&gt; b -&gt; s -&gt; t
+</span><span class="hs-identifier hs-var">Lens.Family2.set</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall s a (f :: * -&gt; *).
+(HasField s &quot;offset&quot; a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+forall (x :: Symbol) s a (f :: * -&gt; *).
+(HasField s x a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Field.field</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-string">&quot;offset&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679513412"><span class="hs-identifier hs-var">y</span></a></span><span> </span><span class="annot"><span class="annottext">MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513417"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-292"></span><span>                        </span><span class="hs-number">18</span><span>
+</span><span id="line-293"></span><span>                          </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span> </span><span id="local-6989586621679513411"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679513411"><span class="hs-identifier hs-var">y</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Text -&gt; String -&gt; Parser Text
+forall a. Parser a -&gt; String -&gt; Parser a
+</span><span class="hs-operator hs-var">(Data.ProtoLens.Encoding.Bytes.&lt;?&gt;)</span></span><span>
+</span><span id="line-294"></span><span>                                       </span><span class="hs-special">(</span><span class="hs-keyword">do</span><span> </span><span id="local-6989586621679513410"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679513410"><span class="hs-identifier hs-var">value</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">do</span><span> </span><span id="local-6989586621679513409"><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679513409"><span class="hs-identifier hs-var">len</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Word64
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.getVarInt</span></span><span>
+</span><span id="line-295"></span><span>                                                       </span><span class="annot"><span class="annottext">Int -&gt; Parser ByteString
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.getBytes</span></span><span>
+</span><span id="line-296"></span><span>                                                         </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word64 -&gt; Int
+forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">Prelude.fromIntegral</span></span><span> </span><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679513409"><span class="hs-identifier hs-var">len</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-297"></span><span>                                           </span><span class="annot"><span class="annottext">Either String Text -&gt; Parser Text
+forall a. Either String a -&gt; Parser a
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.runEither</span></span><span>
+</span><span id="line-298"></span><span>                                             </span><span class="hs-special">(</span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Either UnicodeException Text
+</span><span class="hs-identifier hs-var">Data.Text.Encoding.decodeUtf8'</span></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679513410"><span class="hs-identifier hs-var">value</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-299"></span><span>                                                </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Prelude.Left</span></span><span> </span><span id="local-6989586621679513405"><span class="annot"><span class="annottext">err :: UnicodeException
+</span><a href="#local-6989586621679513405"><span class="hs-identifier hs-var">err</span></a></span></span><span class="hs-special">)</span><span>
+</span><span id="line-300"></span><span>                                                  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Either String Text
+forall a b. a -&gt; Either a b
+</span><span class="hs-identifier hs-var">Prelude.Left</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">UnicodeException -&gt; String
+forall a. Show a =&gt; a -&gt; String
+</span><span class="hs-identifier hs-var">Prelude.show</span></span><span> </span><span class="annot"><span class="annottext">UnicodeException
+</span><a href="#local-6989586621679513405"><span class="hs-identifier hs-var">err</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-301"></span><span>                                                </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Prelude.Right</span></span><span> </span><span id="local-6989586621679513404"><span class="annot"><span class="annottext">r :: Text
+</span><a href="#local-6989586621679513404"><span class="hs-identifier hs-var">r</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either String Text
+forall a b. b -&gt; Either a b
+</span><span class="hs-identifier hs-var">Prelude.Right</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679513404"><span class="hs-identifier hs-var">r</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-302"></span><span>                                       </span><span class="annot"><span class="hs-string">&quot;name&quot;</span></span><span>
+</span><span id="line-303"></span><span>                                </span><span class="annot"><span class="annottext">MemmappedFileSystemDirectoryElement
+-&gt; Parser MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513418"><span class="hs-identifier hs-var">loop</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Setter
+  MemmappedFileSystemDirectoryElement
+  MemmappedFileSystemDirectoryElement
+  Text
+  Text
+-&gt; Text
+-&gt; MemmappedFileSystemDirectoryElement
+-&gt; MemmappedFileSystemDirectoryElement
+forall s t a b. Setter s t a b -&gt; b -&gt; s -&gt; t
+</span><span class="hs-identifier hs-var">Lens.Family2.set</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall s a (f :: * -&gt; *).
+(HasField s &quot;name&quot; a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+forall (x :: Symbol) s a (f :: * -&gt; *).
+(HasField s x a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Field.field</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-string">&quot;name&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679513411"><span class="hs-identifier hs-var">y</span></a></span><span> </span><span class="annot"><span class="annottext">MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513417"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-304"></span><span>                        </span><span class="hs-number">24</span><span>
+</span><span id="line-305"></span><span>                          </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span> </span><span id="local-6989586621679513403"><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679513403"><span class="hs-identifier hs-var">y</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Word64 -&gt; String -&gt; Parser Word64
+forall a. Parser a -&gt; String -&gt; Parser a
+</span><span class="hs-operator hs-var">(Data.ProtoLens.Encoding.Bytes.&lt;?&gt;)</span></span><span>
+</span><span id="line-306"></span><span>                                       </span><span class="annot"><span class="annottext">Parser Word64
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.getVarInt</span></span><span> </span><span class="annot"><span class="hs-string">&quot;length&quot;</span></span><span>
+</span><span id="line-307"></span><span>                                </span><span class="annot"><span class="annottext">MemmappedFileSystemDirectoryElement
+-&gt; Parser MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513418"><span class="hs-identifier hs-var">loop</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Setter
+  MemmappedFileSystemDirectoryElement
+  MemmappedFileSystemDirectoryElement
+  Word64
+  Word64
+-&gt; Word64
+-&gt; MemmappedFileSystemDirectoryElement
+-&gt; MemmappedFileSystemDirectoryElement
+forall s t a b. Setter s t a b -&gt; b -&gt; s -&gt; t
+</span><span class="hs-identifier hs-var">Lens.Family2.set</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall s a (f :: * -&gt; *).
+(HasField s &quot;length&quot; a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+forall (x :: Symbol) s a (f :: * -&gt; *).
+(HasField s x a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Field.field</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-string">&quot;length&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679513403"><span class="hs-identifier hs-var">y</span></a></span><span> </span><span class="annot"><span class="annottext">MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513417"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-308"></span><span>                        </span><span id="local-6989586621679513402"><span class="annot"><span class="annottext">wire :: Word64
+</span><a href="#local-6989586621679513402"><span class="hs-identifier hs-var">wire</span></a></span></span><span>
+</span><span id="line-309"></span><span>                          </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621679513401"><span class="annot"><span class="annottext">TaggedValue
+</span><a href="#local-6989586621679513401"><span class="hs-identifier hs-var">y</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Word64 -&gt; Parser TaggedValue
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Wire.parseTaggedValueFromWire</span></span><span>
+</span><span id="line-310"></span><span>                                        </span><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679513402"><span class="hs-identifier hs-var">wire</span></a></span><span>
+</span><span id="line-311"></span><span>                                </span><span class="annot"><span class="annottext">MemmappedFileSystemDirectoryElement
+-&gt; Parser MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513418"><span class="hs-identifier hs-var">loop</span></a></span><span>
+</span><span id="line-312"></span><span>                                  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Setter
+  MemmappedFileSystemDirectoryElement
+  MemmappedFileSystemDirectoryElement
+  FieldSet
+  FieldSet
+-&gt; (FieldSet -&gt; FieldSet)
+-&gt; MemmappedFileSystemDirectoryElement
+-&gt; MemmappedFileSystemDirectoryElement
+forall s t a b. Setter s t a b -&gt; (a -&gt; b) -&gt; s -&gt; t
+</span><span class="hs-identifier hs-var">Lens.Family2.over</span></span><span>
+</span><span id="line-313"></span><span>                                     </span><span class="annot"><span class="annottext">forall msg. Message msg =&gt; Lens' msg FieldSet
+Setter
+  MemmappedFileSystemDirectoryElement
+  MemmappedFileSystemDirectoryElement
+  FieldSet
+  FieldSet
+</span><span class="hs-identifier hs-var">Data.ProtoLens.unknownFields</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621679513400"><span class="annot"><span class="annottext">FieldSet
+</span><a href="#local-6989586621679513400"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="hs-glyph">:</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">TaggedValue
+</span><a href="#local-6989586621679513401"><span class="hs-identifier hs-var">y</span></a></span><span> </span><span class="annot"><span class="annottext">FieldSet
+</span><a href="#local-6989586621679513400"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513417"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-314"></span><span>      </span><span class="hs-keyword">in</span><span>
+</span><span id="line-315"></span><span>        </span><span class="annot"><span class="annottext">Parser MemmappedFileSystemDirectoryElement
+-&gt; String -&gt; Parser MemmappedFileSystemDirectoryElement
+forall a. Parser a -&gt; String -&gt; Parser a
+</span><span class="hs-operator hs-var">(Data.ProtoLens.Encoding.Bytes.&lt;?&gt;)</span></span><span>
+</span><span id="line-316"></span><span>          </span><span class="hs-special">(</span><span class="hs-keyword">do</span><span> </span><span class="annot"><span class="annottext">MemmappedFileSystemDirectoryElement
+-&gt; Parser MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513418"><span class="hs-identifier hs-var">loop</span></a></span><span> </span><span class="annot"><span class="annottext">MemmappedFileSystemDirectoryElement
+forall msg. Message msg =&gt; msg
+</span><span class="hs-identifier hs-var">Data.ProtoLens.defMessage</span></span><span class="hs-special">)</span><span>
+</span><span id="line-317"></span><span>          </span><span class="annot"><span class="hs-string">&quot;MemmappedFileSystemDirectoryElement&quot;</span></span><span>
+</span><span id="line-318"></span><span>  </span><span id="local-6989586621679513399"><span class="annot"><span class="annottext">buildMessage :: MemmappedFileSystemDirectoryElement -&gt; Builder
+</span><a href="#local-6989586621679513399"><span class="hs-identifier hs-var hs-var hs-var hs-var">buildMessage</span></a></span></span><span>
+</span><span id="line-319"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span> </span><span id="local-6989586621679513398"><span class="annot"><span class="annottext">_x :: MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513398"><span class="hs-identifier hs-var">_x</span></a></span></span><span>
+</span><span id="line-320"></span><span>        </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Builder -&gt; Builder -&gt; Builder
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">(Data.Monoid.&lt;&gt;)</span></span><span>
+</span><span id="line-321"></span><span>             </span><span class="hs-special">(</span><span class="hs-keyword">let</span><span>
+</span><span id="line-322"></span><span>                </span><span id="local-6989586621679513397"><span class="annot"><span class="annottext">_v :: Word64
+</span><a href="#local-6989586621679513397"><span class="hs-identifier hs-var hs-var">_v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">FoldLike
+  Word64
+  MemmappedFileSystemDirectoryElement
+  MemmappedFileSystemDirectoryElement
+  Word64
+  Word64
+-&gt; MemmappedFileSystemDirectoryElement -&gt; Word64
+forall a s t b. FoldLike a s t a b -&gt; s -&gt; a
+</span><span class="hs-identifier hs-var">Lens.Family2.view</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall s a (f :: * -&gt; *).
+(HasField s &quot;offset&quot; a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+forall (x :: Symbol) s a (f :: * -&gt; *).
+(HasField s x a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Field.field</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-string">&quot;offset&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513398"><span class="hs-identifier hs-var">_x</span></a></span><span>
+</span><span id="line-323"></span><span>              </span><span class="hs-keyword">in</span><span>
+</span><span id="line-324"></span><span>                </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Word64 -&gt; Word64 -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">(Prelude.==)</span></span><span> </span><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679513397"><span class="hs-identifier hs-var">_v</span></a></span><span> </span><span class="annot"><span class="annottext">Word64
+forall value. FieldDefault value =&gt; value
+</span><span class="hs-identifier hs-var">Data.ProtoLens.fieldDefault</span></span><span> </span><span class="hs-keyword">then</span><span>
+</span><span id="line-325"></span><span>                    </span><span class="annot"><span class="annottext">Builder
+forall a. Monoid a =&gt; a
+</span><span class="hs-identifier hs-var">Data.Monoid.mempty</span></span><span>
+</span><span id="line-326"></span><span>                </span><span class="hs-keyword">else</span><span>
+</span><span id="line-327"></span><span>                    </span><span class="annot"><span class="annottext">Builder -&gt; Builder -&gt; Builder
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">(Data.Monoid.&lt;&gt;)</span></span><span>
+</span><span id="line-328"></span><span>                      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word64 -&gt; Builder
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.putVarInt</span></span><span> </span><span class="annot"><span class="hs-number">8</span></span><span class="hs-special">)</span><span>
+</span><span id="line-329"></span><span>                      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word64 -&gt; Builder
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.putVarInt</span></span><span> </span><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679513397"><span class="hs-identifier hs-var">_v</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-330"></span><span>             </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Builder -&gt; Builder -&gt; Builder
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">(Data.Monoid.&lt;&gt;)</span></span><span>
+</span><span id="line-331"></span><span>                </span><span class="hs-special">(</span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679513396"><span class="annot"><span class="annottext">_v :: Text
+</span><a href="#local-6989586621679513396"><span class="hs-identifier hs-var hs-var">_v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">FoldLike
+  Text
+  MemmappedFileSystemDirectoryElement
+  MemmappedFileSystemDirectoryElement
+  Text
+  Text
+-&gt; MemmappedFileSystemDirectoryElement -&gt; Text
+forall a s t b. FoldLike a s t a b -&gt; s -&gt; a
+</span><span class="hs-identifier hs-var">Lens.Family2.view</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall s a (f :: * -&gt; *).
+(HasField s &quot;name&quot; a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+forall (x :: Symbol) s a (f :: * -&gt; *).
+(HasField s x a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Field.field</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-string">&quot;name&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513398"><span class="hs-identifier hs-var">_x</span></a></span><span>
+</span><span id="line-332"></span><span>                 </span><span class="hs-keyword">in</span><span>
+</span><span id="line-333"></span><span>                   </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">(Prelude.==)</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679513396"><span class="hs-identifier hs-var">_v</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+forall value. FieldDefault value =&gt; value
+</span><span class="hs-identifier hs-var">Data.ProtoLens.fieldDefault</span></span><span> </span><span class="hs-keyword">then</span><span>
+</span><span id="line-334"></span><span>                       </span><span class="annot"><span class="annottext">Builder
+forall a. Monoid a =&gt; a
+</span><span class="hs-identifier hs-var">Data.Monoid.mempty</span></span><span>
+</span><span id="line-335"></span><span>                   </span><span class="hs-keyword">else</span><span>
+</span><span id="line-336"></span><span>                       </span><span class="annot"><span class="annottext">Builder -&gt; Builder -&gt; Builder
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">(Data.Monoid.&lt;&gt;)</span></span><span>
+</span><span id="line-337"></span><span>                         </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word64 -&gt; Builder
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.putVarInt</span></span><span> </span><span class="annot"><span class="hs-number">18</span></span><span class="hs-special">)</span><span>
+</span><span id="line-338"></span><span>                         </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(ByteString -&gt; Builder) -&gt; (Text -&gt; ByteString) -&gt; Text -&gt; Builder
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">(Prelude..)</span></span><span>
+</span><span id="line-339"></span><span>                            </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span> </span><span id="local-6989586621679513395"><span class="annot"><span class="annottext">bs :: ByteString
+</span><a href="#local-6989586621679513395"><span class="hs-identifier hs-var">bs</span></a></span></span><span>
+</span><span id="line-340"></span><span>                               </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Builder -&gt; Builder -&gt; Builder
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">(Data.Monoid.&lt;&gt;)</span></span><span>
+</span><span id="line-341"></span><span>                                    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word64 -&gt; Builder
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.putVarInt</span></span><span>
+</span><span id="line-342"></span><span>                                       </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; Word64
+forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">Prelude.fromIntegral</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; Int
+</span><span class="hs-identifier hs-var">Data.ByteString.length</span></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679513395"><span class="hs-identifier hs-var">bs</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-343"></span><span>                                    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; Builder
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.putBytes</span></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679513395"><span class="hs-identifier hs-var">bs</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-344"></span><span>                            </span><span class="annot"><span class="annottext">Text -&gt; ByteString
+</span><span class="hs-identifier hs-var">Data.Text.Encoding.encodeUtf8</span></span><span>
+</span><span id="line-345"></span><span>                            </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679513396"><span class="hs-identifier hs-var">_v</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-346"></span><span>                </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Builder -&gt; Builder -&gt; Builder
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">(Data.Monoid.&lt;&gt;)</span></span><span>
+</span><span id="line-347"></span><span>                   </span><span class="hs-special">(</span><span class="hs-keyword">let</span><span>
+</span><span id="line-348"></span><span>                      </span><span id="local-6989586621679513393"><span class="annot"><span class="annottext">_v :: Word64
+</span><a href="#local-6989586621679513393"><span class="hs-identifier hs-var hs-var">_v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">FoldLike
+  Word64
+  MemmappedFileSystemDirectoryElement
+  MemmappedFileSystemDirectoryElement
+  Word64
+  Word64
+-&gt; MemmappedFileSystemDirectoryElement -&gt; Word64
+forall a s t b. FoldLike a s t a b -&gt; s -&gt; a
+</span><span class="hs-identifier hs-var">Lens.Family2.view</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall s a (f :: * -&gt; *).
+(HasField s &quot;length&quot; a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+forall (x :: Symbol) s a (f :: * -&gt; *).
+(HasField s x a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Field.field</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-string">&quot;length&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513398"><span class="hs-identifier hs-var">_x</span></a></span><span>
+</span><span id="line-349"></span><span>                    </span><span class="hs-keyword">in</span><span>
+</span><span id="line-350"></span><span>                      </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Word64 -&gt; Word64 -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">(Prelude.==)</span></span><span> </span><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679513393"><span class="hs-identifier hs-var">_v</span></a></span><span> </span><span class="annot"><span class="annottext">Word64
+forall value. FieldDefault value =&gt; value
+</span><span class="hs-identifier hs-var">Data.ProtoLens.fieldDefault</span></span><span> </span><span class="hs-keyword">then</span><span>
+</span><span id="line-351"></span><span>                          </span><span class="annot"><span class="annottext">Builder
+forall a. Monoid a =&gt; a
+</span><span class="hs-identifier hs-var">Data.Monoid.mempty</span></span><span>
+</span><span id="line-352"></span><span>                      </span><span class="hs-keyword">else</span><span>
+</span><span id="line-353"></span><span>                          </span><span class="annot"><span class="annottext">Builder -&gt; Builder -&gt; Builder
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">(Data.Monoid.&lt;&gt;)</span></span><span>
+</span><span id="line-354"></span><span>                            </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word64 -&gt; Builder
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.putVarInt</span></span><span> </span><span class="annot"><span class="hs-number">24</span></span><span class="hs-special">)</span><span>
+</span><span id="line-355"></span><span>                            </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word64 -&gt; Builder
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.putVarInt</span></span><span> </span><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679513393"><span class="hs-identifier hs-var">_v</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-356"></span><span>                   </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FieldSet -&gt; Builder
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Wire.buildFieldSet</span></span><span>
+</span><span id="line-357"></span><span>                      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FoldLike
+  FieldSet
+  MemmappedFileSystemDirectoryElement
+  MemmappedFileSystemDirectoryElement
+  FieldSet
+  FieldSet
+-&gt; MemmappedFileSystemDirectoryElement -&gt; FieldSet
+forall a s t b. FoldLike a s t a b -&gt; s -&gt; a
+</span><span class="hs-identifier hs-var">Lens.Family2.view</span></span><span> </span><span class="annot"><span class="annottext">FoldLike
+  FieldSet
+  MemmappedFileSystemDirectoryElement
+  MemmappedFileSystemDirectoryElement
+  FieldSet
+  FieldSet
+forall msg. Message msg =&gt; Lens' msg FieldSet
+</span><span class="hs-identifier hs-var">Data.ProtoLens.unknownFields</span></span><span> </span><span class="annot"><span class="annottext">MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513398"><span class="hs-identifier hs-var">_x</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-358"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Control.DeepSeq.NFData</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#MemmappedFileSystemDirectoryElement"><span class="hs-identifier hs-type">MemmappedFileSystemDirectoryElement</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-359"></span><span>  </span><span id="local-6989586621679513391"><span class="annot"><span class="annottext">rnf :: MemmappedFileSystemDirectoryElement -&gt; ()
+</span><a href="#local-6989586621679513391"><span class="hs-identifier hs-var hs-var hs-var hs-var">rnf</span></a></span></span><span>
+</span><span id="line-360"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span> </span><span id="local-6989586621679513390"><span class="annot"><span class="annottext">x__ :: MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513390"><span class="hs-identifier hs-var">x__</span></a></span></span><span>
+</span><span id="line-361"></span><span>        </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">FieldSet -&gt; () -&gt; ()
+forall a b. NFData a =&gt; a -&gt; b -&gt; b
+</span><span class="hs-identifier hs-var">Control.DeepSeq.deepseq</span></span><span>
+</span><span id="line-362"></span><span>             </span><span class="hs-special">(</span><span class="annot"><span class="annottext">MemmappedFileSystemDirectoryElement -&gt; FieldSet
+</span><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#_MemmappedFileSystemDirectoryElement%27_unknownFields"><span class="hs-identifier hs-var hs-var">_MemmappedFileSystemDirectoryElement'_unknownFields</span></a></span><span> </span><span class="annot"><span class="annottext">MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513390"><span class="hs-identifier hs-var">x__</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-363"></span><span>             </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word64 -&gt; () -&gt; ()
+forall a b. NFData a =&gt; a -&gt; b -&gt; b
+</span><span class="hs-identifier hs-var">Control.DeepSeq.deepseq</span></span><span>
+</span><span id="line-364"></span><span>                </span><span class="hs-special">(</span><span class="annot"><span class="annottext">MemmappedFileSystemDirectoryElement -&gt; Word64
+</span><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#_MemmappedFileSystemDirectoryElement%27offset"><span class="hs-identifier hs-var hs-var">_MemmappedFileSystemDirectoryElement'offset</span></a></span><span> </span><span class="annot"><span class="annottext">MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513390"><span class="hs-identifier hs-var">x__</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-365"></span><span>                </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; () -&gt; ()
+forall a b. NFData a =&gt; a -&gt; b -&gt; b
+</span><span class="hs-identifier hs-var">Control.DeepSeq.deepseq</span></span><span>
+</span><span id="line-366"></span><span>                   </span><span class="hs-special">(</span><span class="annot"><span class="annottext">MemmappedFileSystemDirectoryElement -&gt; Text
+</span><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#_MemmappedFileSystemDirectoryElement%27name"><span class="hs-identifier hs-var hs-var">_MemmappedFileSystemDirectoryElement'name</span></a></span><span> </span><span class="annot"><span class="annottext">MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513390"><span class="hs-identifier hs-var">x__</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-367"></span><span>                   </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word64 -&gt; () -&gt; ()
+forall a b. NFData a =&gt; a -&gt; b -&gt; b
+</span><span class="hs-identifier hs-var">Control.DeepSeq.deepseq</span></span><span>
+</span><span id="line-368"></span><span>                      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">MemmappedFileSystemDirectoryElement -&gt; Word64
+</span><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#_MemmappedFileSystemDirectoryElement%27length"><span class="hs-identifier hs-var hs-var">_MemmappedFileSystemDirectoryElement'length</span></a></span><span> </span><span class="annot"><span class="annottext">MemmappedFileSystemDirectoryElement
+</span><a href="#local-6989586621679513390"><span class="hs-identifier hs-var">x__</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-369"></span><span class="annot"><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#packedFileDescriptor"><span class="hs-identifier hs-type">packedFileDescriptor</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data.ByteString.ByteString</span></span><span>
+</span><span id="line-370"></span><span id="packedFileDescriptor"><span class="annot"><span class="annottext">packedFileDescriptor :: ByteString
+</span><a href="Proto.Tensorflow.Core.Util.MemmappedFileSystem.html#packedFileDescriptor"><span class="hs-identifier hs-var hs-var">packedFileDescriptor</span></a></span></span><span>
+</span><span id="line-371"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-string">&quot;\n\
+    \0tensorflow/core/util/memmapped_file_system.proto\DC2\n\
+    \tensorflow\&quot;i\n\
+    \#MemmappedFileSystemDirectoryElement\DC2\SYN\n\
+    \\ACKoffset\CAN\SOH \SOH(\EOTR\ACKoffset\DC2\DC2\n\
+    \\EOTname\CAN\STX \SOH(\tR\EOTname\DC2\SYN\n\
+    \\ACKlength\CAN\ETX \SOH(\EOTR\ACKlength\&quot;i\n\
+    \\FSMemmappedFileSystemDirectory\DC2I\n\
+    \\aelement\CAN\SOH \ETX(\v2/.tensorflow.MemmappedFileSystemDirectoryElementR\aelementB\ETX\248\SOH\SOHJ\204\b\n\
+    \\ACK\DC2\EOT\SO\NUL\RS\SOH\n\
+    \\159\ENQ\n\
+    \\SOH\f\DC2\ETX\SO\NUL\DC2\SUB\148\ENQ Copyright 2016 The TensorFlow Authors. All Rights Reserved.\n\
+    \\n\
+    \Licensed under the Apache License, Version 2.0 (the \&quot;License\&quot;);\n\
+    \you may not use this file except in compliance with the License.\n\
+    \You may obtain a copy of the License at\n\
+    \\n\
+    \http://www.apache.org/licenses/LICENSE-2.0\n\
+    \\n\
+    \Unless required by applicable law or agreed to in writing, software\n\
+    \distributed under the License is distributed on an \&quot;AS IS\&quot; BASIS,\n\
+    \WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n\
+    \See the License for the specific language governing permissions and\n\
+    \limitations under the License.\n\
+    \==============================================================================\n\
+    \\b\n\
+    \\SOH\STX\DC2\ETX\DLE\NUL\DC3\n\
+    \\b\n\
+    \\SOH\b\DC2\ETX\DC2\NUL\US\n\
+    \\t\n\
+    \\STX\b\US\DC2\ETX\DC2\NUL\US\n\
+    \D\n\
+    \\STX\EOT\NUL\DC2\EOT\NAK\NUL\EM\SOH\SUB8 A message that describes one region of memmapped file.\n\
+    \\n\
+    \\n\
+    \\n\
+    \\ETX\EOT\NUL\SOH\DC2\ETX\NAK\b+\n\
+    \\v\n\
+    \\EOT\EOT\NUL\STX\NUL\DC2\ETX\SYN\STX\DC4\n\
+    \\f\n\
+    \\ENQ\EOT\NUL\STX\NUL\ENQ\DC2\ETX\SYN\STX\b\n\
+    \\f\n\
+    \\ENQ\EOT\NUL\STX\NUL\SOH\DC2\ETX\SYN\t\SI\n\
+    \\f\n\
+    \\ENQ\EOT\NUL\STX\NUL\ETX\DC2\ETX\SYN\DC2\DC3\n\
+    \\v\n\
+    \\EOT\EOT\NUL\STX\SOH\DC2\ETX\ETB\STX\DC2\n\
+    \\f\n\
+    \\ENQ\EOT\NUL\STX\SOH\ENQ\DC2\ETX\ETB\STX\b\n\
+    \\f\n\
+    \\ENQ\EOT\NUL\STX\SOH\SOH\DC2\ETX\ETB\t\r\n\
+    \\f\n\
+    \\ENQ\EOT\NUL\STX\SOH\ETX\DC2\ETX\ETB\DLE\DC1\n\
+    \\v\n\
+    \\EOT\EOT\NUL\STX\STX\DC2\ETX\CAN\STX\DC4\n\
+    \\f\n\
+    \\ENQ\EOT\NUL\STX\STX\ENQ\DC2\ETX\CAN\STX\b\n\
+    \\f\n\
+    \\ENQ\EOT\NUL\STX\STX\SOH\DC2\ETX\CAN\t\SI\n\
+    \\f\n\
+    \\ENQ\EOT\NUL\STX\STX\ETX\DC2\ETX\CAN\DC2\DC3\n\
+    \9\n\
+    \\STX\EOT\SOH\DC2\EOT\FS\NUL\RS\SOH\SUB- A directory of regions in a memmapped file.\n\
+    \\n\
+    \\n\
+    \\n\
+    \\ETX\EOT\SOH\SOH\DC2\ETX\FS\b$\n\
+    \\v\n\
+    \\EOT\EOT\SOH\STX\NUL\DC2\ETX\GS\STX;\n\
+    \\f\n\
+    \\ENQ\EOT\SOH\STX\NUL\EOT\DC2\ETX\GS\STX\n\
+    \\n\
+    \\f\n\
+    \\ENQ\EOT\SOH\STX\NUL\ACK\DC2\ETX\GS\v.\n\
+    \\f\n\
+    \\ENQ\EOT\SOH\STX\NUL\SOH\DC2\ETX\GS/6\n\
+    \\f\n\
+    \\ENQ\EOT\SOH\STX\NUL\ETX\DC2\ETX\GS9:b\ACKproto3&quot;</span></span></pre></body></html>

@@ -1,135 +1,302 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">-- Copyright 2016 TensorFlow authors.</span><span>
-</span><a name="line-2"></a><span class="hs-comment">--</span><span>
-</span><a name="line-3"></a><span class="hs-comment">-- Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span><span>
-</span><a name="line-4"></a><span class="hs-comment">-- you may not use this file except in compliance with the License.</span><span>
-</span><a name="line-5"></a><span class="hs-comment">-- You may obtain a copy of the License at</span><span>
-</span><a name="line-6"></a><span class="hs-comment">--</span><span>
-</span><a name="line-7"></a><span class="hs-comment">--     http://www.apache.org/licenses/LICENSE-2.0</span><span>
-</span><a name="line-8"></a><span class="hs-comment">--</span><span>
-</span><a name="line-9"></a><span class="hs-comment">-- Unless required by applicable law or agreed to in writing, software</span><span>
-</span><a name="line-10"></a><span class="hs-comment">-- distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span><span>
-</span><a name="line-11"></a><span class="hs-comment">-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span><span>
-</span><a name="line-12"></a><span class="hs-comment">-- See the License for the specific language governing permissions and</span><span>
-</span><a name="line-13"></a><span class="hs-comment">-- limitations under the License.</span><span>
-</span><a name="line-14"></a><span>
-</span><a name="line-15"></a><span class="hs-comment">-- | Encoder and decoder for the TensorFlow \&quot;TFRecords\&quot; format.</span><span>
-</span><a name="line-16"></a><span>
-</span><a name="line-17"></a><span class="hs-pragma">{-# LANGUAGE Rank2Types #-}</span><span>
-</span><a name="line-18"></a><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">TensorFlow</span><span class="hs-operator">.</span><span class="hs-identifier">Records</span><span>
-</span><a name="line-19"></a><span>  </span><span class="hs-special">(</span><span>
-</span><a name="line-20"></a><span>  </span><span class="hs-comment">-- * Records</span><span>
-</span><a name="line-21"></a><span>    </span><a href="TensorFlow.Records.html#putTFRecord"><span class="hs-identifier hs-var">putTFRecord</span></a><span>
-</span><a name="line-22"></a><span>  </span><span class="hs-special">,</span><span> </span><a href="TensorFlow.Records.html#getTFRecord"><span class="hs-identifier hs-var">getTFRecord</span></a><span>
-</span><a name="line-23"></a><span>  </span><span class="hs-special">,</span><span> </span><a href="TensorFlow.Records.html#getTFRecords"><span class="hs-identifier hs-var">getTFRecords</span></a><span>
-</span><a name="line-24"></a><span>
-</span><a name="line-25"></a><span>  </span><span class="hs-comment">-- * Implementation</span><span>
-</span><a name="line-26"></a><span>
-</span><a name="line-27"></a><span>  </span><span class="hs-comment">-- | These may be useful for encoding or decoding to types other than</span><span>
-</span><a name="line-28"></a><span>  </span><span class="hs-comment">-- 'ByteString' that have their own Cereal codecs.</span><span>
-</span><a name="line-29"></a><span>  </span><span class="hs-special">,</span><span> </span><a href="TensorFlow.Records.html#getTFRecordLength"><span class="hs-identifier hs-var">getTFRecordLength</span></a><span>
-</span><a name="line-30"></a><span>  </span><span class="hs-special">,</span><span> </span><a href="TensorFlow.Records.html#getTFRecordData"><span class="hs-identifier hs-var">getTFRecordData</span></a><span>
-</span><a name="line-31"></a><span>  </span><span class="hs-special">,</span><span> </span><a href="TensorFlow.Records.html#putTFRecordLength"><span class="hs-identifier hs-var">putTFRecordLength</span></a><span>
-</span><a name="line-32"></a><span>  </span><span class="hs-special">,</span><span> </span><a href="TensorFlow.Records.html#putTFRecordData"><span class="hs-identifier hs-var">putTFRecordData</span></a><span>
-</span><a name="line-33"></a><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
-</span><a name="line-34"></a><span>
-</span><a name="line-35"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Control</span><span class="hs-operator">.</span><span class="hs-identifier">Exception</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-var">evaluate</span><span class="hs-special">)</span><span>
-</span><a name="line-36"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Control</span><span class="hs-operator">.</span><span class="hs-identifier">Monad</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-var">when</span><span class="hs-special">)</span><span>
-</span><a name="line-37"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Data</span><span class="hs-operator">.</span><span class="hs-identifier">ByteString</span><span class="hs-operator">.</span><span class="hs-identifier">Unsafe</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-var">unsafePackCStringLen</span><span class="hs-special">)</span><span>
-</span><a name="line-38"></a><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-identifier">Data</span><span class="hs-operator">.</span><span class="hs-identifier">ByteString</span><span class="hs-operator">.</span><span class="hs-identifier">Builder</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="hs-identifier">B</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-type">Builder</span><span class="hs-special">)</span><span>
-</span><a name="line-39"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Data</span><span class="hs-operator">.</span><span class="hs-identifier">ByteString</span><span class="hs-operator">.</span><span class="hs-identifier">Builder</span><span class="hs-operator">.</span><span class="hs-identifier">Extra</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-var">runBuilder</span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-type">Next</span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><a name="line-40"></a><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-identifier">Data</span><span class="hs-operator">.</span><span class="hs-identifier">ByteString</span><span class="hs-operator">.</span><span class="hs-identifier">Lazy</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="hs-identifier">BL</span><span>
-</span><a name="line-41"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Data</span><span class="hs-operator">.</span><span class="hs-identifier">Serialize</span><span class="hs-operator">.</span><span class="hs-identifier">Get</span><span>
-</span><a name="line-42"></a><span>  </span><span class="hs-special">(</span><span> </span><span class="hs-identifier hs-type">Get</span><span>
-</span><a name="line-43"></a><span>  </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">getBytes</span><span>
-</span><a name="line-44"></a><span>  </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">getWord32le</span><span>
-</span><a name="line-45"></a><span>  </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">getWord64le</span><span>
-</span><a name="line-46"></a><span>  </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">getLazyByteString</span><span>
-</span><a name="line-47"></a><span>  </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">isEmpty</span><span>
-</span><a name="line-48"></a><span>  </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">lookAhead</span><span>
-</span><a name="line-49"></a><span>  </span><span class="hs-special">)</span><span>
-</span><a name="line-50"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Data</span><span class="hs-operator">.</span><span class="hs-identifier">Serialize</span><span>
-</span><a name="line-51"></a><span>  </span><span class="hs-special">(</span><span> </span><span class="hs-identifier hs-type">Put</span><span>
-</span><a name="line-52"></a><span>  </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">execPut</span><span>
-</span><a name="line-53"></a><span>  </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">putLazyByteString</span><span>
-</span><a name="line-54"></a><span>  </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">putWord32le</span><span>
-</span><a name="line-55"></a><span>  </span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">putWord64le</span><span>
-</span><a name="line-56"></a><span>  </span><span class="hs-special">)</span><span>
-</span><a name="line-57"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Data</span><span class="hs-operator">.</span><span class="hs-identifier">Word</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-type">Word8</span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-type">Word64</span><span class="hs-special">)</span><span>
-</span><a name="line-58"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Foreign</span><span class="hs-operator">.</span><span class="hs-identifier">Marshal</span><span class="hs-operator">.</span><span class="hs-identifier">Alloc</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-var">allocaBytes</span><span class="hs-special">)</span><span>
-</span><a name="line-59"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">Foreign</span><span class="hs-operator">.</span><span class="hs-identifier">Ptr</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-type">Ptr</span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">castPtr</span><span class="hs-special">)</span><span>
-</span><a name="line-60"></a><span class="hs-keyword">import</span><span> </span><span class="hs-identifier">System</span><span class="hs-operator">.</span><span class="hs-identifier">IO</span><span class="hs-operator">.</span><span class="hs-identifier">Unsafe</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-var">unsafePerformIO</span><span class="hs-special">)</span><span>
-</span><a name="line-61"></a><span>
-</span><a name="line-62"></a><span class="hs-keyword">import</span><span> </span><a href="TensorFlow.CRC32C.html"><span class="hs-identifier">TensorFlow</span><span class="hs-operator">.</span><span class="hs-identifier">CRC32C</span></a><span> </span><span class="hs-special">(</span><a href="TensorFlow.CRC32C.html#crc32cLBSMasked"><span class="hs-identifier hs-var">crc32cLBSMasked</span></a><span class="hs-special">,</span><span> </span><a href="TensorFlow.CRC32C.html#crc32cUpdate"><span class="hs-identifier hs-var">crc32cUpdate</span></a><span class="hs-special">,</span><span> </span><a href="TensorFlow.CRC32C.html#crc32cMask"><span class="hs-identifier hs-var">crc32cMask</span></a><span class="hs-special">)</span><span>
-</span><a name="line-63"></a><span>
-</span><a name="line-64"></a><span class="hs-comment">-- | Parse one TFRecord.</span><span>
-</span><a name="line-65"></a><span class="hs-identifier">getTFRecord</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">Get</span><span> </span><span class="hs-identifier hs-type">BL</span><span class="hs-operator hs-type">.</span><span class="hs-identifier hs-type">ByteString</span><span>
-</span><a name="line-66"></a><a name="getTFRecord"><a href="TensorFlow.Records.html#getTFRecord"><span class="hs-identifier">getTFRecord</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><a href="TensorFlow.Records.html#getTFRecordLength"><span class="hs-identifier hs-var">getTFRecordLength</span></a><span> </span><span class="hs-operator hs-var">&gt;&gt;=</span><span> </span><a href="TensorFlow.Records.html#getTFRecordData"><span class="hs-identifier hs-var">getTFRecordData</span></a><span>
-</span><a name="line-67"></a><span>
-</span><a name="line-68"></a><span class="hs-comment">-- | Parse many TFRecords as a list.  Note you probably want streaming instead</span><span>
-</span><a name="line-69"></a><span class="hs-comment">-- as provided by the tensorflow-records-conduit package.</span><span>
-</span><a name="line-70"></a><span class="hs-identifier">getTFRecords</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">Get</span><span> </span><span class="hs-special">[</span><span class="hs-identifier hs-type">BL</span><span class="hs-operator hs-type">.</span><span class="hs-identifier hs-type">ByteString</span><span class="hs-special">]</span><span>
-</span><a name="line-71"></a><a name="getTFRecords"><a href="TensorFlow.Records.html#getTFRecords"><span class="hs-identifier">getTFRecords</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><a name="line-72"></a><span>  </span><a name="local-6989586621679028168"><a href="#local-6989586621679028168"><span class="hs-identifier">e</span></a></a><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-identifier hs-var">isEmpty</span><span>
-</span><a name="line-73"></a><span>  </span><span class="hs-keyword">if</span><span> </span><a href="#local-6989586621679028168"><span class="hs-identifier hs-var">e</span></a><span> </span><span class="hs-keyword">then</span><span> </span><span class="hs-identifier hs-var">return</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-keyword">else</span><span> </span><span class="hs-special">(</span><span class="hs-glyph">:</span><span class="hs-special">)</span><span> </span><span class="hs-operator hs-var">&lt;$&gt;</span><span> </span><a href="TensorFlow.Records.html#getTFRecord"><span class="hs-identifier hs-var">getTFRecord</span></a><span> </span><span class="hs-operator hs-var">&lt;*&gt;</span><span> </span><a href="TensorFlow.Records.html#getTFRecords"><span class="hs-identifier hs-var">getTFRecords</span></a><span>
-</span><a name="line-74"></a><span>
-</span><a name="line-75"></a><span class="hs-identifier">getCheckMaskedCRC32C</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">BL</span><span class="hs-operator hs-type">.</span><span class="hs-identifier hs-type">ByteString</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-identifier hs-type">Get</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
-</span><a name="line-76"></a><a name="getCheckMaskedCRC32C"><a href="TensorFlow.Records.html#getCheckMaskedCRC32C"><span class="hs-identifier">getCheckMaskedCRC32C</span></a></a><span> </span><a name="local-6989586621679028182"><a href="#local-6989586621679028182"><span class="hs-identifier">bs</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><a name="line-77"></a><span>  </span><a name="local-6989586621679028183"><a href="#local-6989586621679028183"><span class="hs-identifier">wireCRC</span></a></a><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-identifier hs-var">getWord32le</span><span>
-</span><a name="line-78"></a><span>  </span><span class="hs-keyword">let</span><span> </span><a name="local-6989586621679028184"><a href="#local-6989586621679028184"><span class="hs-identifier">maskedCRC</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><a href="TensorFlow.CRC32C.html#crc32cLBSMasked"><span class="hs-identifier hs-var">crc32cLBSMasked</span></a><span> </span><a href="#local-6989586621679028182"><span class="hs-identifier hs-var">bs</span></a><span>
-</span><a name="line-79"></a><span>  </span><span class="hs-identifier hs-var">when</span><span> </span><span class="hs-special">(</span><a href="#local-6989586621679028184"><span class="hs-identifier hs-var">maskedCRC</span></a><span> </span><span class="hs-operator hs-var">/=</span><span> </span><a href="#local-6989586621679028183"><span class="hs-identifier hs-var">wireCRC</span></a><span class="hs-special">)</span><span> </span><span class="hs-operator hs-var">$</span><span> </span><span class="hs-identifier hs-var">fail</span><span> </span><span class="hs-operator hs-var">$</span><span>
-</span><a name="line-80"></a><span>      </span><span class="hs-string">&quot;getCheckMaskedCRC32C: CRC mismatch, computed: &quot;</span><span> </span><span class="hs-operator hs-var">++</span><span> </span><span class="hs-identifier hs-var">show</span><span> </span><a href="#local-6989586621679028184"><span class="hs-identifier hs-var">maskedCRC</span></a><span> </span><span class="hs-operator hs-var">++</span><span>
-</span><a name="line-81"></a><span>      </span><span class="hs-string">&quot;, expected: &quot;</span><span> </span><span class="hs-operator hs-var">++</span><span> </span><span class="hs-identifier hs-var">show</span><span> </span><a href="#local-6989586621679028183"><span class="hs-identifier hs-var">wireCRC</span></a><span>
-</span><a name="line-82"></a><span>
-</span><a name="line-83"></a><span class="hs-comment">-- | Get a length and verify its checksum.</span><span>
-</span><a name="line-84"></a><span class="hs-identifier">getTFRecordLength</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">Get</span><span> </span><span class="hs-identifier hs-type">Word64</span><span>
-</span><a name="line-85"></a><a name="getTFRecordLength"><a href="TensorFlow.Records.html#getTFRecordLength"><span class="hs-identifier">getTFRecordLength</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><a name="line-86"></a><span>  </span><a name="local-6989586621679032739"><a href="#local-6989586621679032739"><span class="hs-identifier">buf</span></a></a><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-identifier hs-var">lookAhead</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-var">getBytes</span><span> </span><span class="hs-number">8</span><span class="hs-special">)</span><span>
-</span><a name="line-87"></a><span>  </span><span class="hs-identifier hs-var">getWord64le</span><span> </span><span class="hs-operator hs-var">&lt;*</span><span> </span><a href="TensorFlow.Records.html#getCheckMaskedCRC32C"><span class="hs-identifier hs-var">getCheckMaskedCRC32C</span></a><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-var">BL</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">fromStrict</span><span> </span><a href="#local-6989586621679032739"><span class="hs-identifier hs-var">buf</span></a><span class="hs-special">)</span><span>
-</span><a name="line-88"></a><span>
-</span><a name="line-89"></a><span class="hs-comment">-- | Get a record payload and verify its checksum.</span><span>
-</span><a name="line-90"></a><span class="hs-identifier">getTFRecordData</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">Word64</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-identifier hs-type">Get</span><span> </span><span class="hs-identifier hs-type">BL</span><span class="hs-operator hs-type">.</span><span class="hs-identifier hs-type">ByteString</span><span>
-</span><a name="line-91"></a><a name="getTFRecordData"><a href="TensorFlow.Records.html#getTFRecordData"><span class="hs-identifier">getTFRecordData</span></a></a><span> </span><a name="local-6989586621679032740"><a href="#local-6989586621679032740"><span class="hs-identifier">len</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">if</span><span> </span><a href="#local-6989586621679032740"><span class="hs-identifier hs-var">len</span></a><span> </span><span class="hs-operator hs-var">&gt;</span><span> </span><span class="hs-number">0x7fffffffffffffff</span><span>
-</span><a name="line-92"></a><span>  </span><span class="hs-keyword">then</span><span> </span><span class="hs-identifier hs-var">fail</span><span> </span><span class="hs-string">&quot;getTFRecordData: Record size overflows Int64&quot;</span><span>
-</span><a name="line-93"></a><span>  </span><span class="hs-keyword">else</span><span> </span><span class="hs-keyword">do</span><span>
-</span><a name="line-94"></a><span>    </span><a name="local-6989586621679033228"><a href="#local-6989586621679033228"><span class="hs-identifier">bs</span></a></a><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-identifier hs-var">getLazyByteString</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-var">fromIntegral</span><span> </span><a href="#local-6989586621679032740"><span class="hs-identifier hs-var">len</span></a><span class="hs-special">)</span><span>
-</span><a name="line-95"></a><span>    </span><a href="TensorFlow.Records.html#getCheckMaskedCRC32C"><span class="hs-identifier hs-var">getCheckMaskedCRC32C</span></a><span> </span><a href="#local-6989586621679033228"><span class="hs-identifier hs-var">bs</span></a><span>
-</span><a name="line-96"></a><span>    </span><span class="hs-identifier hs-var">return</span><span> </span><a href="#local-6989586621679033228"><span class="hs-identifier hs-var">bs</span></a><span>
-</span><a name="line-97"></a><span>
-</span><a name="line-98"></a><span class="hs-identifier">putMaskedCRC32C</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">BL</span><span class="hs-operator hs-type">.</span><span class="hs-identifier hs-type">ByteString</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-identifier hs-type">Put</span><span>
-</span><a name="line-99"></a><a name="putMaskedCRC32C"><a href="TensorFlow.Records.html#putMaskedCRC32C"><span class="hs-identifier">putMaskedCRC32C</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier hs-var">putWord32le</span><span> </span><span class="hs-operator hs-var">.</span><span> </span><a href="TensorFlow.CRC32C.html#crc32cLBSMasked"><span class="hs-identifier hs-var">crc32cLBSMasked</span></a><span>
-</span><a name="line-100"></a><span>
-</span><a name="line-101"></a><span class="hs-comment">-- Runs a Builder that's known to write a fixed number of bytes on an 'alloca'</span><span>
-</span><a name="line-102"></a><span class="hs-comment">-- buffer, and runs the given IO action on the result.  Raises exceptions if</span><span>
-</span><a name="line-103"></a><span class="hs-comment">-- the Builder yields ByteString chunks or attempts to write more bytes than</span><span>
-</span><a name="line-104"></a><span class="hs-comment">-- expected.</span><span>
-</span><a name="line-105"></a><span class="hs-identifier">unsafeWithFixedWidthBuilder</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">Int</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-identifier hs-type">B</span><span class="hs-operator hs-type">.</span><span class="hs-identifier hs-type">Builder</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-type">Ptr</span><span> </span><span class="hs-identifier hs-type">Word8</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-identifier hs-type">IO</span><span> </span><a href="#local-6989586621679027816"><span class="hs-identifier hs-type">r</span></a><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-identifier hs-type">IO</span><span> </span><a href="#local-6989586621679027816"><span class="hs-identifier hs-type">r</span></a><span>
-</span><a name="line-106"></a><a name="unsafeWithFixedWidthBuilder"><a href="TensorFlow.Records.html#unsafeWithFixedWidthBuilder"><span class="hs-identifier">unsafeWithFixedWidthBuilder</span></a></a><span> </span><a name="local-6989586621679033229"><a href="#local-6989586621679033229"><span class="hs-identifier">n</span></a></a><span> </span><a name="local-6989586621679033230"><a href="#local-6989586621679033230"><span class="hs-identifier">b</span></a></a><span> </span><a name="local-6989586621679033231"><a href="#local-6989586621679033231"><span class="hs-identifier">act</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier hs-var">allocaBytes</span><span> </span><a href="#local-6989586621679033229"><span class="hs-identifier hs-var">n</span></a><span> </span><span class="hs-operator hs-var">$</span><span> </span><span class="hs-glyph">\</span><a name="local-6989586621679033232"><a href="#local-6989586621679033232"><span class="hs-identifier">ptr</span></a></a><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><a name="line-107"></a><span>  </span><span class="hs-special">(</span><span class="hs-identifier">_</span><span class="hs-special">,</span><span> </span><a name="local-6989586621679033233"><a href="#local-6989586621679033233"><span class="hs-identifier">signal</span></a></a><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-identifier hs-var">runBuilder</span><span> </span><a href="#local-6989586621679033230"><span class="hs-identifier hs-var">b</span></a><span> </span><a href="#local-6989586621679033232"><span class="hs-identifier hs-var">ptr</span></a><span> </span><a href="#local-6989586621679033229"><span class="hs-identifier hs-var">n</span></a><span>
-</span><a name="line-108"></a><span>  </span><span class="hs-keyword">case</span><span> </span><a href="#local-6989586621679033233"><span class="hs-identifier hs-var">signal</span></a><span> </span><span class="hs-keyword">of</span><span>
-</span><a name="line-109"></a><span>    </span><span class="hs-identifier hs-var">Done</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><a href="#local-6989586621679033231"><span class="hs-identifier hs-var">act</span></a><span> </span><a href="#local-6989586621679033232"><span class="hs-identifier hs-var">ptr</span></a><span>
-</span><a name="line-110"></a><span>    </span><span class="hs-identifier hs-var">More</span><span> </span><span class="hs-identifier">_</span><span> </span><span class="hs-identifier">_</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-identifier hs-var">error</span><span> </span><span class="hs-string">&quot;unsafeWithFixedWidthBuilder: Builder returned More.&quot;</span><span>
-</span><a name="line-111"></a><span>    </span><span class="hs-identifier hs-var">Chunk</span><span> </span><span class="hs-identifier">_</span><span> </span><span class="hs-identifier">_</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-identifier hs-var">error</span><span> </span><span class="hs-string">&quot;unsafeWithFixedWidthBuilder: Builder returned Chunk.&quot;</span><span>
-</span><a name="line-112"></a><span>
-</span><a name="line-113"></a><span class="hs-comment">-- | Put a record length and its checksum.</span><span>
-</span><a name="line-114"></a><span class="hs-identifier">putTFRecordLength</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">Word64</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-identifier hs-type">Put</span><span>
-</span><a name="line-115"></a><a name="putTFRecordLength"><a href="TensorFlow.Records.html#putTFRecordLength"><span class="hs-identifier">putTFRecordLength</span></a></a><span> </span><a name="local-6989586621679033248"><a href="#local-6989586621679033248"><span class="hs-identifier">x</span></a></a><span> </span><span class="hs-glyph">=</span><span>
-</span><a name="line-116"></a><span>  </span><span class="hs-keyword">let</span><span> </span><a name="local-6989586621679033249"><a href="#local-6989586621679033249"><span class="hs-identifier">put</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier hs-var">putWord64le</span><span> </span><a href="#local-6989586621679033248"><span class="hs-identifier hs-var">x</span></a><span>
-</span><a name="line-117"></a><span>      </span><a name="local-6989586621679033250"><a href="#local-6989586621679033250"><span class="hs-identifier">len</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-number">8</span><span>
-</span><a name="line-118"></a><span>      </span><a name="local-6989586621679033251"><a href="#local-6989586621679033251"><span class="hs-identifier">crc</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><a href="TensorFlow.CRC32C.html#crc32cMask"><span class="hs-identifier hs-var">crc32cMask</span></a><span> </span><span class="hs-operator hs-var">$</span><span> </span><span class="hs-identifier hs-var">unsafePerformIO</span><span> </span><span class="hs-operator hs-var">$</span><span>
-</span><a name="line-119"></a><span>          </span><span class="hs-comment">-- Serialized Word64 is always 8 bytes, so we can go fast by using</span><span>
-</span><a name="line-120"></a><span>          </span><span class="hs-comment">-- alloca.</span><span>
-</span><a name="line-121"></a><span>          </span><a href="TensorFlow.Records.html#unsafeWithFixedWidthBuilder"><span class="hs-identifier hs-var">unsafeWithFixedWidthBuilder</span></a><span> </span><a href="#local-6989586621679033250"><span class="hs-identifier hs-var">len</span></a><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-var">execPut</span><span> </span><a href="#local-6989586621679033249"><span class="hs-identifier hs-var">put</span></a><span class="hs-special">)</span><span> </span><span class="hs-operator hs-var">$</span><span> </span><span class="hs-glyph">\</span><a name="local-6989586621679033271"><a href="#local-6989586621679033271"><span class="hs-identifier">ptr</span></a></a><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><a name="line-122"></a><span>              </span><a name="local-6989586621679033272"><a href="#local-6989586621679033272"><span class="hs-identifier">str</span></a></a><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-identifier hs-var">unsafePackCStringLen</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-var">castPtr</span><span> </span><a href="#local-6989586621679033271"><span class="hs-identifier hs-var">ptr</span></a><span class="hs-special">,</span><span> </span><a href="#local-6989586621679033250"><span class="hs-identifier hs-var">len</span></a><span class="hs-special">)</span><span>
-</span><a name="line-123"></a><span>              </span><span class="hs-comment">-- Force the result to ensure it's evaluated before freeing ptr.</span><span>
-</span><a name="line-124"></a><span>              </span><span class="hs-identifier hs-var">evaluate</span><span> </span><span class="hs-operator hs-var">$</span><span> </span><a href="TensorFlow.CRC32C.html#crc32cUpdate"><span class="hs-identifier hs-var">crc32cUpdate</span></a><span> </span><span class="hs-number">0</span><span> </span><a href="#local-6989586621679033272"><span class="hs-identifier hs-var">str</span></a><span>
-</span><a name="line-125"></a><span>  </span><span class="hs-keyword">in</span><span>  </span><a href="#local-6989586621679033249"><span class="hs-identifier hs-var">put</span></a><span> </span><span class="hs-operator hs-var">*&gt;</span><span> </span><span class="hs-identifier hs-var">putWord32le</span><span> </span><a href="#local-6989586621679033251"><span class="hs-identifier hs-var">crc</span></a><span>
-</span><a name="line-126"></a><span>
-</span><a name="line-127"></a><span class="hs-comment">-- | Put a record payload and its checksum.</span><span>
-</span><a name="line-128"></a><span class="hs-identifier">putTFRecordData</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">BL</span><span class="hs-operator hs-type">.</span><span class="hs-identifier hs-type">ByteString</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-identifier hs-type">Put</span><span>
-</span><a name="line-129"></a><a name="putTFRecordData"><a href="TensorFlow.Records.html#putTFRecordData"><span class="hs-identifier">putTFRecordData</span></a></a><span> </span><a name="local-6989586621679033409"><a href="#local-6989586621679033409"><span class="hs-identifier">bs</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier hs-var">putLazyByteString</span><span> </span><a href="#local-6989586621679033409"><span class="hs-identifier hs-var">bs</span></a><span> </span><span class="hs-operator hs-var">*&gt;</span><span> </span><a href="TensorFlow.Records.html#putMaskedCRC32C"><span class="hs-identifier hs-var">putMaskedCRC32C</span></a><span> </span><a href="#local-6989586621679033409"><span class="hs-identifier hs-var">bs</span></a><span>
-</span><a name="line-130"></a><span>
-</span><a name="line-131"></a><span class="hs-comment">-- | Put one TFRecord with the given contents.</span><span>
-</span><a name="line-132"></a><span class="hs-identifier">putTFRecord</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">BL</span><span class="hs-operator hs-type">.</span><span class="hs-identifier hs-type">ByteString</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-identifier hs-type">Put</span><span>
-</span><a name="line-133"></a><a name="putTFRecord"><a href="TensorFlow.Records.html#putTFRecord"><span class="hs-identifier">putTFRecord</span></a></a><span> </span><a name="local-6989586621679033410"><a href="#local-6989586621679033410"><span class="hs-identifier">bs</span></a></a><span> </span><span class="hs-glyph">=</span><span>
-</span><a name="line-134"></a><span>  </span><a href="TensorFlow.Records.html#putTFRecordLength"><span class="hs-identifier hs-var">putTFRecordLength</span></a><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-var">fromIntegral</span><span> </span><span class="hs-operator hs-var">$</span><span> </span><span class="hs-identifier hs-var">BL</span><span class="hs-operator hs-var">.</span><span class="hs-identifier hs-var">length</span><span> </span><a href="#local-6989586621679033410"><span class="hs-identifier hs-var">bs</span></a><span class="hs-special">)</span><span> </span><span class="hs-operator hs-var">*&gt;</span><span> </span><a href="TensorFlow.Records.html#putTFRecordData"><span class="hs-identifier hs-var">putTFRecordData</span></a><span> </span><a href="#local-6989586621679033410"><span class="hs-identifier hs-var">bs</span></a><span>
-</span><a name="line-135"></a></pre></body></html>
+</span><span id="line-2"></span><span class="hs-comment">--</span><span>
+</span><span id="line-3"></span><span class="hs-comment">-- Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span><span>
+</span><span id="line-4"></span><span class="hs-comment">-- you may not use this file except in compliance with the License.</span><span>
+</span><span id="line-5"></span><span class="hs-comment">-- You may obtain a copy of the License at</span><span>
+</span><span id="line-6"></span><span class="hs-comment">--</span><span>
+</span><span id="line-7"></span><span class="hs-comment">--     http://www.apache.org/licenses/LICENSE-2.0</span><span>
+</span><span id="line-8"></span><span class="hs-comment">--</span><span>
+</span><span id="line-9"></span><span class="hs-comment">-- Unless required by applicable law or agreed to in writing, software</span><span>
+</span><span id="line-10"></span><span class="hs-comment">-- distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span><span>
+</span><span id="line-11"></span><span class="hs-comment">-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span><span>
+</span><span id="line-12"></span><span class="hs-comment">-- See the License for the specific language governing permissions and</span><span>
+</span><span id="line-13"></span><span class="hs-comment">-- limitations under the License.</span><span>
+</span><span id="line-14"></span><span>
+</span><span id="line-15"></span><span class="hs-comment">-- | Encoder and decoder for the TensorFlow \&quot;TFRecords\&quot; format.</span><span>
+</span><span id="line-16"></span><span>
+</span><span id="line-17"></span><span class="hs-pragma">{-# LANGUAGE Rank2Types #-}</span><span>
+</span><span id="line-18"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">TensorFlow.Records</span><span>
+</span><span id="line-19"></span><span>  </span><span class="hs-special">(</span><span>
+</span><span id="line-20"></span><span>  </span><span class="annot"><span class="hs-comment">-- * Records</span></span><span>
+</span><span id="line-21"></span><span>    </span><span class="annot"><a href="TensorFlow.Records.html#putTFRecord"><span class="hs-identifier">putTFRecord</span></a></span><span>
+</span><span id="line-22"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Records.html#getTFRecord"><span class="hs-identifier">getTFRecord</span></a></span><span>
+</span><span id="line-23"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Records.html#getTFRecords"><span class="hs-identifier">getTFRecords</span></a></span><span>
+</span><span id="line-24"></span><span>
+</span><span id="line-25"></span><span>  </span><span class="annot"><span class="hs-comment">-- * Implementation</span></span><span>
+</span><span id="line-26"></span><span>
+</span><span id="line-27"></span><span>  </span><span class="hs-comment">-- | These may be useful for encoding or decoding to types other than</span><span>
+</span><span id="line-28"></span><span>  </span><span class="hs-comment">-- 'ByteString' that have their own Cereal codecs.</span><span>
+</span><span id="line-29"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Records.html#getTFRecordLength"><span class="hs-identifier">getTFRecordLength</span></a></span><span>
+</span><span id="line-30"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Records.html#getTFRecordData"><span class="hs-identifier">getTFRecordData</span></a></span><span>
+</span><span id="line-31"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Records.html#putTFRecordLength"><span class="hs-identifier">putTFRecordLength</span></a></span><span>
+</span><span id="line-32"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.Records.html#putTFRecordData"><span class="hs-identifier">putTFRecordData</span></a></span><span>
+</span><span id="line-33"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-34"></span><span>
+</span><span id="line-35"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Exception</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">evaluate</span></span><span class="hs-special">)</span><span>
+</span><span id="line-36"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Monad</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">when</span></span><span class="hs-special">)</span><span>
+</span><span id="line-37"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.ByteString.Unsafe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">unsafePackCStringLen</span></span><span class="hs-special">)</span><span>
+</span><span id="line-38"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ByteString.Builder</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">B</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Builder</span></span><span class="hs-special">)</span><span>
+</span><span id="line-39"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.ByteString.Builder.Extra</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">runBuilder</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">Next</span></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-40"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ByteString.Lazy</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">BL</span></span><span>
+</span><span id="line-41"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Serialize.Get</span></span><span>
+</span><span id="line-42"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier">Get</span></span><span>
+</span><span id="line-43"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">getBytes</span></span><span>
+</span><span id="line-44"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">getWord32le</span></span><span>
+</span><span id="line-45"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">getWord64le</span></span><span>
+</span><span id="line-46"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">getLazyByteString</span></span><span>
+</span><span id="line-47"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">isEmpty</span></span><span>
+</span><span id="line-48"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">lookAhead</span></span><span>
+</span><span id="line-49"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-50"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Serialize</span></span><span>
+</span><span id="line-51"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier">Put</span></span><span>
+</span><span id="line-52"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">execPut</span></span><span>
+</span><span id="line-53"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">putLazyByteString</span></span><span>
+</span><span id="line-54"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">putWord32le</span></span><span>
+</span><span id="line-55"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">putWord64le</span></span><span>
+</span><span id="line-56"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-57"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Word</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Word8</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">Word64</span></span><span class="hs-special">)</span><span>
+</span><span id="line-58"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Foreign.Marshal.Alloc</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">allocaBytes</span></span><span class="hs-special">)</span><span>
+</span><span id="line-59"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Foreign.Ptr</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Ptr</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">castPtr</span></span><span class="hs-special">)</span><span>
+</span><span id="line-60"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">System.IO.Unsafe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">unsafePerformIO</span></span><span class="hs-special">)</span><span>
+</span><span id="line-61"></span><span>
+</span><span id="line-62"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="TensorFlow.CRC32C.html"><span class="hs-identifier">TensorFlow.CRC32C</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="TensorFlow.CRC32C.html#crc32cLBSMasked"><span class="hs-identifier">crc32cLBSMasked</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.CRC32C.html#crc32cUpdate"><span class="hs-identifier">crc32cUpdate</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="TensorFlow.CRC32C.html#crc32cMask"><span class="hs-identifier">crc32cMask</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-63"></span><span>
+</span><span id="line-64"></span><span class="hs-comment">-- | Parse one TFRecord.</span><span>
+</span><span id="line-65"></span><span class="annot"><a href="TensorFlow.Records.html#getTFRecord"><span class="hs-identifier hs-type">getTFRecord</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Get</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">BL.ByteString</span></span><span>
+</span><span id="line-66"></span><span id="getTFRecord"><span class="annot"><span class="annottext">getTFRecord :: Get ByteString
+</span><a href="TensorFlow.Records.html#getTFRecord"><span class="hs-identifier hs-var hs-var">getTFRecord</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Get Word64
+</span><a href="TensorFlow.Records.html#getTFRecordLength"><span class="hs-identifier hs-var">getTFRecordLength</span></a></span><span> </span><span class="annot"><span class="annottext">Get Word64 -&gt; (Word64 -&gt; Get ByteString) -&gt; Get ByteString
+forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
+</span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="annot"><span class="annottext">Word64 -&gt; Get ByteString
+</span><a href="TensorFlow.Records.html#getTFRecordData"><span class="hs-identifier hs-var">getTFRecordData</span></a></span><span>
+</span><span id="line-67"></span><span>
+</span><span id="line-68"></span><span class="hs-comment">-- | Parse many TFRecords as a list.  Note you probably want streaming instead</span><span>
+</span><span id="line-69"></span><span class="hs-comment">-- as provided by the tensorflow-records-conduit package.</span><span>
+</span><span id="line-70"></span><span class="annot"><a href="TensorFlow.Records.html#getTFRecords"><span class="hs-identifier hs-type">getTFRecords</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Get</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">BL.ByteString</span></span><span class="hs-special">]</span><span>
+</span><span id="line-71"></span><span id="getTFRecords"><span class="annot"><span class="annottext">getTFRecords :: Get [ByteString]
+</span><a href="TensorFlow.Records.html#getTFRecords"><span class="hs-identifier hs-var hs-var">getTFRecords</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-72"></span><span>  </span><span id="local-6989586621679040859"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679040859"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Get Bool
+</span><span class="hs-identifier hs-var">isEmpty</span></span><span>
+</span><span id="line-73"></span><span>  </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679040859"><span class="hs-identifier hs-var">e</span></a></span><span> </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">[ByteString] -&gt; Get [ByteString]
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-keyword">else</span><span> </span><span class="hs-special">(</span><span class="hs-glyph">:</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; [ByteString] -&gt; [ByteString])
+-&gt; Get ByteString -&gt; Get ([ByteString] -&gt; [ByteString])
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Get ByteString
+</span><a href="TensorFlow.Records.html#getTFRecord"><span class="hs-identifier hs-var">getTFRecord</span></a></span><span> </span><span class="annot"><span class="annottext">Get ([ByteString] -&gt; [ByteString])
+-&gt; Get [ByteString] -&gt; Get [ByteString]
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Get [ByteString]
+</span><a href="TensorFlow.Records.html#getTFRecords"><span class="hs-identifier hs-var">getTFRecords</span></a></span><span>
+</span><span id="line-74"></span><span>
+</span><span id="line-75"></span><span class="annot"><a href="TensorFlow.Records.html#getCheckMaskedCRC32C"><span class="hs-identifier hs-type">getCheckMaskedCRC32C</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">BL.ByteString</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Get</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-76"></span><span id="getCheckMaskedCRC32C"><span class="annot"><span class="annottext">getCheckMaskedCRC32C :: ByteString -&gt; Get ()
+</span><a href="TensorFlow.Records.html#getCheckMaskedCRC32C"><span class="hs-identifier hs-var hs-var">getCheckMaskedCRC32C</span></a></span></span><span> </span><span id="local-6989586621679040856"><span class="annot"><span class="annottext">bs :: ByteString
+</span><a href="#local-6989586621679040856"><span class="hs-identifier hs-var">bs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-77"></span><span>  </span><span id="local-6989586621679040855"><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621679040855"><span class="hs-identifier hs-var">wireCRC</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Get Word32
+</span><span class="hs-identifier hs-var">getWord32le</span></span><span>
+</span><span id="line-78"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679040854"><span class="annot"><span class="annottext">maskedCRC :: Word32
+</span><a href="#local-6989586621679040854"><span class="hs-identifier hs-var hs-var">maskedCRC</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Word32
+</span><a href="TensorFlow.CRC32C.html#crc32cLBSMasked"><span class="hs-identifier hs-var">crc32cLBSMasked</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679040856"><span class="hs-identifier hs-var">bs</span></a></span><span>
+</span><span id="line-79"></span><span>  </span><span class="annot"><span class="annottext">Bool -&gt; Get () -&gt; Get ()
+forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
+</span><span class="hs-identifier hs-var">when</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621679040854"><span class="hs-identifier hs-var">maskedCRC</span></a></span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; Word32 -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">/=</span></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621679040855"><span class="hs-identifier hs-var">wireCRC</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Get () -&gt; Get ()) -&gt; Get () -&gt; Get ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Get ()
+forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
+</span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Get ()) -&gt; String -&gt; Get ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-80"></span><span>      </span><span class="annot"><span class="hs-string">&quot;getCheckMaskedCRC32C: CRC mismatch, computed: &quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; String
+forall a. Show a =&gt; a -&gt; String
+</span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621679040854"><span class="hs-identifier hs-var">maskedCRC</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span>
+</span><span id="line-81"></span><span>      </span><span class="annot"><span class="hs-string">&quot;, expected: &quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; String
+forall a. Show a =&gt; a -&gt; String
+</span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621679040855"><span class="hs-identifier hs-var">wireCRC</span></a></span><span>
+</span><span id="line-82"></span><span>
+</span><span id="line-83"></span><span class="hs-comment">-- | Get a length and verify its checksum.</span><span>
+</span><span id="line-84"></span><span class="annot"><a href="TensorFlow.Records.html#getTFRecordLength"><span class="hs-identifier hs-type">getTFRecordLength</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Get</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word64</span></span><span>
+</span><span id="line-85"></span><span id="getTFRecordLength"><span class="annot"><span class="annottext">getTFRecordLength :: Get Word64
+</span><a href="TensorFlow.Records.html#getTFRecordLength"><span class="hs-identifier hs-var hs-var">getTFRecordLength</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-86"></span><span>  </span><span id="local-6989586621679040851"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679040851"><span class="hs-identifier hs-var">buf</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Get ByteString -&gt; Get ByteString
+forall a. Get a -&gt; Get a
+</span><span class="hs-identifier hs-var">lookAhead</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; Get ByteString
+</span><span class="hs-identifier hs-var">getBytes</span></span><span> </span><span class="annot"><span class="hs-number">8</span></span><span class="hs-special">)</span><span>
+</span><span id="line-87"></span><span>  </span><span class="annot"><span class="annottext">Get Word64
+</span><span class="hs-identifier hs-var">getWord64le</span></span><span> </span><span class="annot"><span class="annottext">Get Word64 -&gt; Get () -&gt; Get Word64
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b -&gt; f a
+</span><span class="hs-operator hs-var">&lt;*</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Get ()
+</span><a href="TensorFlow.Records.html#getCheckMaskedCRC32C"><span class="hs-identifier hs-var">getCheckMaskedCRC32C</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; ByteString
+</span><span class="hs-identifier hs-var">BL.fromStrict</span></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679040851"><span class="hs-identifier hs-var">buf</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-88"></span><span>
+</span><span id="line-89"></span><span class="hs-comment">-- | Get a record payload and verify its checksum.</span><span>
+</span><span id="line-90"></span><span class="annot"><a href="TensorFlow.Records.html#getTFRecordData"><span class="hs-identifier hs-type">getTFRecordData</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word64</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Get</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">BL.ByteString</span></span><span>
+</span><span id="line-91"></span><span id="getTFRecordData"><span class="annot"><span class="annottext">getTFRecordData :: Word64 -&gt; Get ByteString
+</span><a href="TensorFlow.Records.html#getTFRecordData"><span class="hs-identifier hs-var hs-var">getTFRecordData</span></a></span></span><span> </span><span id="local-6989586621679040848"><span class="annot"><span class="annottext">len :: Word64
+</span><a href="#local-6989586621679040848"><span class="hs-identifier hs-var">len</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679040848"><span class="hs-identifier hs-var">len</span></a></span><span> </span><span class="annot"><span class="annottext">Word64 -&gt; Word64 -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&gt;</span></span><span> </span><span class="annot"><span class="hs-number">0x7fffffffffffffff</span></span><span>
+</span><span id="line-92"></span><span>  </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">String -&gt; Get ByteString
+forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
+</span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="hs-string">&quot;getTFRecordData: Record size overflows Int64&quot;</span></span><span>
+</span><span id="line-93"></span><span>  </span><span class="hs-keyword">else</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-94"></span><span>    </span><span id="local-6989586621679040846"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679040846"><span class="hs-identifier hs-var">bs</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Int64 -&gt; Get ByteString
+</span><span class="hs-identifier hs-var">getLazyByteString</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word64 -&gt; Int64
+forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">fromIntegral</span></span><span> </span><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679040848"><span class="hs-identifier hs-var">len</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-95"></span><span>    </span><span class="annot"><span class="annottext">ByteString -&gt; Get ()
+</span><a href="TensorFlow.Records.html#getCheckMaskedCRC32C"><span class="hs-identifier hs-var">getCheckMaskedCRC32C</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679040846"><span class="hs-identifier hs-var">bs</span></a></span><span>
+</span><span id="line-96"></span><span>    </span><span class="annot"><span class="annottext">ByteString -&gt; Get ByteString
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679040846"><span class="hs-identifier hs-var">bs</span></a></span><span>
+</span><span id="line-97"></span><span>
+</span><span id="line-98"></span><span class="annot"><a href="TensorFlow.Records.html#putMaskedCRC32C"><span class="hs-identifier hs-type">putMaskedCRC32C</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">BL.ByteString</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Put</span></span><span>
+</span><span id="line-99"></span><span id="putMaskedCRC32C"><span class="annot"><span class="annottext">putMaskedCRC32C :: ByteString -&gt; Put
+</span><a href="TensorFlow.Records.html#putMaskedCRC32C"><span class="hs-identifier hs-var hs-var">putMaskedCRC32C</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Putter Word32
+</span><span class="hs-identifier hs-var">putWord32le</span></span><span> </span><span class="annot"><span class="annottext">Putter Word32 -&gt; (ByteString -&gt; Word32) -&gt; ByteString -&gt; Put
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Word32
+</span><a href="TensorFlow.CRC32C.html#crc32cLBSMasked"><span class="hs-identifier hs-var">crc32cLBSMasked</span></a></span><span>
+</span><span id="line-100"></span><span>
+</span><span id="line-101"></span><span class="hs-comment">-- Runs a Builder that's known to write a fixed number of bytes on an 'alloca'</span><span>
+</span><span id="line-102"></span><span class="hs-comment">-- buffer, and runs the given IO action on the result.  Raises exceptions if</span><span>
+</span><span id="line-103"></span><span class="hs-comment">-- the Builder yields ByteString chunks or attempts to write more bytes than</span><span>
+</span><span id="line-104"></span><span class="hs-comment">-- expected.</span><span>
+</span><span id="line-105"></span><span id="local-6989586621679040896"><span class="annot"><a href="TensorFlow.Records.html#unsafeWithFixedWidthBuilder"><span class="hs-identifier hs-type">unsafeWithFixedWidthBuilder</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">B.Builder</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Ptr</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621679040896"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621679040896"><span class="hs-identifier hs-type">r</span></a></span></span><span>
+</span><span id="line-106"></span><span id="unsafeWithFixedWidthBuilder"><span class="annot"><span class="annottext">unsafeWithFixedWidthBuilder :: Int -&gt; Builder -&gt; (Ptr Word8 -&gt; IO r) -&gt; IO r
+</span><a href="TensorFlow.Records.html#unsafeWithFixedWidthBuilder"><span class="hs-identifier hs-var hs-var">unsafeWithFixedWidthBuilder</span></a></span></span><span> </span><span id="local-6989586621679040842"><span class="annot"><span class="annottext">n :: Int
+</span><a href="#local-6989586621679040842"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span id="local-6989586621679040841"><span class="annot"><span class="annottext">b :: Builder
+</span><a href="#local-6989586621679040841"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span id="local-6989586621679040840"><span class="annot"><span class="annottext">act :: Ptr Word8 -&gt; IO r
+</span><a href="#local-6989586621679040840"><span class="hs-identifier hs-var">act</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; (Ptr Word8 -&gt; IO r) -&gt; IO r
+forall a b. Int -&gt; (Ptr a -&gt; IO b) -&gt; IO b
+</span><span class="hs-identifier hs-var">allocaBytes</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679040842"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="annot"><span class="annottext">((Ptr Word8 -&gt; IO r) -&gt; IO r) -&gt; (Ptr Word8 -&gt; IO r) -&gt; IO r
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679040839"><span class="annot"><span class="annottext">ptr :: Ptr Word8
+</span><a href="#local-6989586621679040839"><span class="hs-identifier hs-var">ptr</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-107"></span><span>  </span><span class="hs-special">(</span><span class="hs-identifier">_</span><span class="hs-special">,</span><span> </span><span id="local-6989586621679040838"><span class="annot"><span class="annottext">signal :: Next
+</span><a href="#local-6989586621679040838"><span class="hs-identifier hs-var">signal</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Builder -&gt; BufferWriter
+</span><span class="hs-identifier hs-var">runBuilder</span></span><span> </span><span class="annot"><span class="annottext">Builder
+</span><a href="#local-6989586621679040841"><span class="hs-identifier hs-var">b</span></a></span><span> </span><span class="annot"><span class="annottext">Ptr Word8
+</span><a href="#local-6989586621679040839"><span class="hs-identifier hs-var">ptr</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679040842"><span class="hs-identifier hs-var">n</span></a></span><span>
+</span><span id="line-108"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Next
+</span><a href="#local-6989586621679040838"><span class="hs-identifier hs-var">signal</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-109"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Done</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Ptr Word8 -&gt; IO r
+</span><a href="#local-6989586621679040840"><span class="hs-identifier hs-var">act</span></a></span><span> </span><span class="annot"><span class="annottext">Ptr Word8
+</span><a href="#local-6989586621679040839"><span class="hs-identifier hs-var">ptr</span></a></span><span>
+</span><span id="line-110"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">More</span></span><span> </span><span class="hs-identifier">_</span><span> </span><span class="hs-identifier">_</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; IO r
+forall a. HasCallStack =&gt; String -&gt; a
+</span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="hs-string">&quot;unsafeWithFixedWidthBuilder: Builder returned More.&quot;</span></span><span>
+</span><span id="line-111"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Chunk</span></span><span> </span><span class="hs-identifier">_</span><span> </span><span class="hs-identifier">_</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; IO r
+forall a. HasCallStack =&gt; String -&gt; a
+</span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="hs-string">&quot;unsafeWithFixedWidthBuilder: Builder returned Chunk.&quot;</span></span><span>
+</span><span id="line-112"></span><span>
+</span><span id="line-113"></span><span class="hs-comment">-- | Put a record length and its checksum.</span><span>
+</span><span id="line-114"></span><span class="annot"><a href="TensorFlow.Records.html#putTFRecordLength"><span class="hs-identifier hs-type">putTFRecordLength</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word64</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Put</span></span><span>
+</span><span id="line-115"></span><span id="putTFRecordLength"><span class="annot"><span class="annottext">putTFRecordLength :: Word64 -&gt; Put
+</span><a href="TensorFlow.Records.html#putTFRecordLength"><span class="hs-identifier hs-var hs-var">putTFRecordLength</span></a></span></span><span> </span><span id="local-6989586621679040833"><span class="annot"><span class="annottext">x :: Word64
+</span><a href="#local-6989586621679040833"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-116"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679040832"><span class="annot"><span class="annottext">put :: Put
+</span><a href="#local-6989586621679040832"><span class="hs-identifier hs-var hs-var">put</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word64 -&gt; Put
+</span><span class="hs-identifier hs-var">putWord64le</span></span><span> </span><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679040833"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-117"></span><span>      </span><span id="local-6989586621679040831"><span class="annot"><span class="annottext">len :: Int
+</span><a href="#local-6989586621679040831"><span class="hs-identifier hs-var hs-var">len</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-number">8</span></span><span>
+</span><span id="line-118"></span><span>      </span><span id="local-6989586621679040830"><span class="annot"><span class="annottext">crc :: Word32
+</span><a href="#local-6989586621679040830"><span class="hs-identifier hs-var hs-var">crc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; Word32
+</span><a href="TensorFlow.CRC32C.html#crc32cMask"><span class="hs-identifier hs-var">crc32cMask</span></a></span><span> </span><span class="annot"><span class="annottext">(Word32 -&gt; Word32) -&gt; Word32 -&gt; Word32
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">IO Word32 -&gt; Word32
+forall a. IO a -&gt; a
+</span><span class="hs-identifier hs-var">unsafePerformIO</span></span><span> </span><span class="annot"><span class="annottext">(IO Word32 -&gt; Word32) -&gt; IO Word32 -&gt; Word32
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-119"></span><span>          </span><span class="hs-comment">-- Serialized Word64 is always 8 bytes, so we can go fast by using</span><span>
+</span><span id="line-120"></span><span>          </span><span class="hs-comment">-- alloca.</span><span>
+</span><span id="line-121"></span><span>          </span><span class="annot"><span class="annottext">Int -&gt; Builder -&gt; (Ptr Word8 -&gt; IO Word32) -&gt; IO Word32
+forall r. Int -&gt; Builder -&gt; (Ptr Word8 -&gt; IO r) -&gt; IO r
+</span><a href="TensorFlow.Records.html#unsafeWithFixedWidthBuilder"><span class="hs-identifier hs-var">unsafeWithFixedWidthBuilder</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679040831"><span class="hs-identifier hs-var">len</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Put -&gt; Builder
+forall a. PutM a -&gt; Builder
+</span><span class="hs-identifier hs-var">execPut</span></span><span> </span><span class="annot"><span class="annottext">Put
+</span><a href="#local-6989586621679040832"><span class="hs-identifier hs-var">put</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">((Ptr Word8 -&gt; IO Word32) -&gt; IO Word32)
+-&gt; (Ptr Word8 -&gt; IO Word32) -&gt; IO Word32
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621679040829"><span class="annot"><span class="annottext">ptr :: Ptr Word8
+</span><a href="#local-6989586621679040829"><span class="hs-identifier hs-var">ptr</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-122"></span><span>              </span><span id="local-6989586621679040828"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679040828"><span class="hs-identifier hs-var">str</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">CStringLen -&gt; IO ByteString
+</span><span class="hs-identifier hs-var">unsafePackCStringLen</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Ptr Word8 -&gt; Ptr CChar
+forall a b. Ptr a -&gt; Ptr b
+</span><span class="hs-identifier hs-var">castPtr</span></span><span> </span><span class="annot"><span class="annottext">Ptr Word8
+</span><a href="#local-6989586621679040829"><span class="hs-identifier hs-var">ptr</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679040831"><span class="hs-identifier hs-var">len</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-123"></span><span>              </span><span class="hs-comment">-- Force the result to ensure it's evaluated before freeing ptr.</span><span>
+</span><span id="line-124"></span><span>              </span><span class="annot"><span class="annottext">Word32 -&gt; IO Word32
+forall a. a -&gt; IO a
+</span><span class="hs-identifier hs-var">evaluate</span></span><span> </span><span class="annot"><span class="annottext">(Word32 -&gt; IO Word32) -&gt; Word32 -&gt; IO Word32
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; ByteString -&gt; Word32
+</span><a href="TensorFlow.CRC32C.html#crc32cUpdate"><span class="hs-identifier hs-var">crc32cUpdate</span></a></span><span> </span><span class="annot"><span class="hs-number">0</span></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679040828"><span class="hs-identifier hs-var">str</span></a></span><span>
+</span><span id="line-125"></span><span>  </span><span class="hs-keyword">in</span><span>  </span><span class="annot"><span class="annottext">Put
+</span><a href="#local-6989586621679040832"><span class="hs-identifier hs-var">put</span></a></span><span> </span><span class="annot"><span class="annottext">Put -&gt; Put -&gt; Put
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b -&gt; f b
+</span><span class="hs-operator hs-var">*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Putter Word32
+</span><span class="hs-identifier hs-var">putWord32le</span></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621679040830"><span class="hs-identifier hs-var">crc</span></a></span><span>
+</span><span id="line-126"></span><span>
+</span><span id="line-127"></span><span class="hs-comment">-- | Put a record payload and its checksum.</span><span>
+</span><span id="line-128"></span><span class="annot"><a href="TensorFlow.Records.html#putTFRecordData"><span class="hs-identifier hs-type">putTFRecordData</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">BL.ByteString</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Put</span></span><span>
+</span><span id="line-129"></span><span id="putTFRecordData"><span class="annot"><span class="annottext">putTFRecordData :: ByteString -&gt; Put
+</span><a href="TensorFlow.Records.html#putTFRecordData"><span class="hs-identifier hs-var hs-var">putTFRecordData</span></a></span></span><span> </span><span id="local-6989586621679040827"><span class="annot"><span class="annottext">bs :: ByteString
+</span><a href="#local-6989586621679040827"><span class="hs-identifier hs-var">bs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Put
+</span><span class="hs-identifier hs-var">putLazyByteString</span></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679040827"><span class="hs-identifier hs-var">bs</span></a></span><span> </span><span class="annot"><span class="annottext">Put -&gt; Put -&gt; Put
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b -&gt; f b
+</span><span class="hs-operator hs-var">*&gt;</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Put
+</span><a href="TensorFlow.Records.html#putMaskedCRC32C"><span class="hs-identifier hs-var">putMaskedCRC32C</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679040827"><span class="hs-identifier hs-var">bs</span></a></span><span>
+</span><span id="line-130"></span><span>
+</span><span id="line-131"></span><span class="hs-comment">-- | Put one TFRecord with the given contents.</span><span>
+</span><span id="line-132"></span><span class="annot"><a href="TensorFlow.Records.html#putTFRecord"><span class="hs-identifier hs-type">putTFRecord</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">BL.ByteString</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Put</span></span><span>
+</span><span id="line-133"></span><span id="putTFRecord"><span class="annot"><span class="annottext">putTFRecord :: ByteString -&gt; Put
+</span><a href="TensorFlow.Records.html#putTFRecord"><span class="hs-identifier hs-var hs-var">putTFRecord</span></a></span></span><span> </span><span id="local-6989586621679040826"><span class="annot"><span class="annottext">bs :: ByteString
+</span><a href="#local-6989586621679040826"><span class="hs-identifier hs-var">bs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-134"></span><span>  </span><span class="annot"><span class="annottext">Word64 -&gt; Put
+</span><a href="TensorFlow.Records.html#putTFRecordLength"><span class="hs-identifier hs-var">putTFRecordLength</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int64 -&gt; Word64
+forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">fromIntegral</span></span><span> </span><span class="annot"><span class="annottext">(Int64 -&gt; Word64) -&gt; Int64 -&gt; Word64
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Int64
+</span><span class="hs-identifier hs-var">BL.length</span></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679040826"><span class="hs-identifier hs-var">bs</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Put -&gt; Put -&gt; Put
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b -&gt; f b
+</span><span class="hs-operator hs-var">*&gt;</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Put
+</span><a href="TensorFlow.Records.html#putTFRecordData"><span class="hs-identifier hs-var">putTFRecordData</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679040826"><span class="hs-identifier hs-var">bs</span></a></span><span>
+</span><span id="line-135"></span></pre></body></html>

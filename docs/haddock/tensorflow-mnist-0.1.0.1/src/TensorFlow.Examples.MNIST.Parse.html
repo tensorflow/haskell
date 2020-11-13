@@ -1,0 +1,263 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">-- Copyright 2016 TensorFlow authors.</span><span>
+</span><span id="line-2"></span><span class="hs-comment">--</span><span>
+</span><span id="line-3"></span><span class="hs-comment">-- Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span><span>
+</span><span id="line-4"></span><span class="hs-comment">-- you may not use this file except in compliance with the License.</span><span>
+</span><span id="line-5"></span><span class="hs-comment">-- You may obtain a copy of the License at</span><span>
+</span><span id="line-6"></span><span class="hs-comment">--</span><span>
+</span><span id="line-7"></span><span class="hs-comment">--     http://www.apache.org/licenses/LICENSE-2.0</span><span>
+</span><span id="line-8"></span><span class="hs-comment">--</span><span>
+</span><span id="line-9"></span><span class="hs-comment">-- Unless required by applicable law or agreed to in writing, software</span><span>
+</span><span id="line-10"></span><span class="hs-comment">-- distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span><span>
+</span><span id="line-11"></span><span class="hs-comment">-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span><span>
+</span><span id="line-12"></span><span class="hs-comment">-- See the License for the specific language governing permissions and</span><span>
+</span><span id="line-13"></span><span class="hs-comment">-- limitations under the License.</span><span>
+</span><span id="line-14"></span><span>
+</span><span id="line-15"></span><span class="hs-pragma">{-# LANGUAGE OverloadedStrings #-}</span><span>
+</span><span id="line-16"></span><span class="hs-pragma">{-# LANGUAGE OverloadedLists #-}</span><span>
+</span><span id="line-17"></span><span class="hs-pragma">{-# LANGUAGE TypeSynonymInstances #-}</span><span>
+</span><span id="line-18"></span><span class="hs-pragma">{-# LANGUAGE FlexibleInstances #-}</span><span>
+</span><span id="line-19"></span><span class="hs-pragma">{-# LANGUAGE ViewPatterns #-}</span><span>
+</span><span id="line-20"></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">TensorFlow.Examples.MNIST.Parse</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-22"></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Monad</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">when</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">liftM</span></span><span class="hs-special">)</span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Binary.Get</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Get</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">runGet</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">getWord32be</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">getLazyByteString</span></span><span class="hs-special">)</span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.ByteString.Lazy</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">toStrict</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">readFile</span></span><span class="hs-special">)</span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.List.Split</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">chunksOf</span></span><span class="hs-special">)</span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Message</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">decodeMessageOrDie</span></span><span class="hs-special">)</span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Text</span></span><span class="hs-special">)</span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Word</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Word8</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">Word32</span></span><span class="hs-special">)</span><span>
+</span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Prelude</span></span><span> </span><span class="hs-keyword">hiding</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">readFile</span></span><span class="hs-special">)</span><span>
+</span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Codec.Compression.GZip</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">GZip</span></span><span>
+</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ByteString.Lazy</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">L</span></span><span>
+</span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Text</span></span><span>
+</span><span id="line-34"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.Vector</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">V</span></span><span>
+</span><span id="line-35"></span><span>
+</span><span id="line-36"></span><span class="hs-comment">-- | Utilities specific to MNIST.</span><span>
+</span><span id="line-37"></span><span class="hs-keyword">type</span><span> </span><span id="MNIST"><span class="annot"><a href="TensorFlow.Examples.MNIST.Parse.html#MNIST"><span class="hs-identifier hs-var">MNIST</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">V.Vector</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span>
+</span><span id="line-38"></span><span>
+</span><span id="line-39"></span><span class="hs-comment">-- | Produces a unicode rendering of the MNIST digit sample.</span><span>
+</span><span id="line-40"></span><span class="annot"><a href="TensorFlow.Examples.MNIST.Parse.html#drawMNIST"><span class="hs-identifier hs-type">drawMNIST</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="TensorFlow.Examples.MNIST.Parse.html#MNIST"><span class="hs-identifier hs-type">MNIST</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-41"></span><span id="drawMNIST"><span class="annot"><span class="annottext">drawMNIST :: MNIST -&gt; Text
+</span><a href="TensorFlow.Examples.MNIST.Parse.html#drawMNIST"><span class="hs-identifier hs-var hs-var">drawMNIST</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
+</span><a href="#local-6989586621679092207"><span class="hs-identifier hs-var">chunk</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Text) -&gt; (MNIST -&gt; Text) -&gt; MNIST -&gt; Text
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">MNIST -&gt; Text
+</span><a href="#local-6989586621679092205"><span class="hs-identifier hs-var">block</span></a></span><span>
+</span><span id="line-42"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-43"></span><span>    </span><span class="annot"><a href="#local-6989586621679092205"><span class="hs-identifier hs-type">block</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">V.Vector</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-44"></span><span>    </span><span id="local-6989586621679092205"><span class="annot"><span class="annottext">block :: MNIST -&gt; Text
+</span><a href="#local-6989586621679092205"><span class="hs-identifier hs-var hs-var">block</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; MNIST -&gt; (MNIST, MNIST)
+forall a. Int -&gt; Vector a -&gt; (Vector a, Vector a)
+</span><span class="hs-identifier hs-var">V.splitAt</span></span><span> </span><span class="annot"><span class="hs-number">1</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="hs-special">[</span><span class="hs-number">0</span><span class="hs-special">]</span><span class="hs-special">,</span><span> </span><span id="local-6989586621679092203"><span class="annot"><span class="annottext">xs :: MNIST
+</span><a href="#local-6989586621679092203"><span class="hs-identifier hs-var">xs</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-string">&quot; &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">MNIST -&gt; Text
+</span><a href="#local-6989586621679092205"><span class="hs-identifier hs-var">block</span></a></span><span> </span><span class="annot"><span class="annottext">MNIST
+</span><a href="#local-6989586621679092203"><span class="hs-identifier hs-var">xs</span></a></span><span>
+</span><span id="line-45"></span><span>    </span><span class="annot"><a href="#local-6989586621679092205"><span class="hs-identifier hs-var">block</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; MNIST -&gt; (MNIST, MNIST)
+forall a. Int -&gt; Vector a -&gt; (Vector a, Vector a)
+</span><span class="hs-identifier hs-var">V.splitAt</span></span><span> </span><span class="annot"><span class="hs-number">1</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="hs-special">[</span><span id="local-6989586621679092202"><span class="annot"><span class="annottext">n :: Item MNIST
+</span><a href="#local-6989586621679092202"><span class="hs-identifier hs-var">n</span></a></span></span><span class="hs-special">]</span><span class="hs-special">,</span><span> </span><span id="local-6989586621679092201"><span class="annot"><span class="annottext">xs :: MNIST
+</span><a href="#local-6989586621679092201"><span class="hs-identifier hs-var">xs</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Char
+</span><a href="#local-6989586621679092200"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">Char -&gt; Text -&gt; Text
+</span><span class="hs-operator hs-var">`Text.cons`</span></span><span> </span><span class="annot"><span class="annottext">MNIST -&gt; Text
+</span><a href="#local-6989586621679092205"><span class="hs-identifier hs-var">block</span></a></span><span> </span><span class="annot"><span class="annottext">MNIST
+</span><a href="#local-6989586621679092201"><span class="hs-identifier hs-var">xs</span></a></span><span>
+</span><span id="line-46"></span><span>      </span><span class="hs-keyword">where</span><span> </span><span id="local-6989586621679092200"><span class="annot"><span class="annottext">c :: Char
+</span><a href="#local-6989586621679092200"><span class="hs-identifier hs-var hs-var">c</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-string">&quot;\9617\9618\9619\9608&quot;</span></span><span> </span><span class="annot"><span class="annottext">[Char] -&gt; Int -&gt; Char
+forall a. [a] -&gt; Int -&gt; a
+</span><span class="hs-operator hs-var">!!</span></span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Int
+forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">fromIntegral</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word8
+Item MNIST
+</span><a href="#local-6989586621679092202"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Word8 -&gt; Word8
+forall a. Integral a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">`div`</span></span><span> </span><span class="annot"><span class="hs-number">64</span></span><span class="hs-special">)</span><span>
+</span><span id="line-47"></span><span>    </span><span class="annot"><a href="#local-6989586621679092205"><span class="hs-identifier hs-var">block</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; MNIST -&gt; (MNIST, MNIST)
+forall a. Int -&gt; Vector a -&gt; (Vector a, Vector a)
+</span><span class="hs-identifier hs-var">V.splitAt</span></span><span> </span><span class="annot"><span class="hs-number">1</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(MNIST, MNIST)
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span>   </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-string">&quot;&quot;</span></span><span>
+</span><span id="line-48"></span><span>    </span><span class="annot"><a href="#local-6989586621679092207"><span class="hs-identifier hs-type">chunk</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-49"></span><span>    </span><span id="local-6989586621679092207"><span class="annot"><span class="annottext">chunk :: Text -&gt; Text
+</span><a href="#local-6989586621679092207"><span class="hs-identifier hs-var hs-var">chunk</span></a></span></span><span> </span><span class="hs-string">&quot;&quot;</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-string">&quot;\n&quot;</span></span><span>
+</span><span id="line-50"></span><span>    </span><span class="annot"><a href="#local-6989586621679092207"><span class="hs-identifier hs-var">chunk</span></a></span><span> </span><span id="local-6989586621679092196"><span class="annot"><span class="annottext">xs :: Text
+</span><a href="#local-6989586621679092196"><span class="hs-identifier hs-var">xs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Text -&gt; Text
+</span><span class="hs-identifier hs-var">Text.take</span></span><span> </span><span class="annot"><span class="hs-number">28</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679092196"><span class="hs-identifier hs-var">xs</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="hs-string">&quot;\n&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
+</span><a href="#local-6989586621679092207"><span class="hs-identifier hs-var">chunk</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; Text -&gt; Text
+</span><span class="hs-identifier hs-var">Text.drop</span></span><span> </span><span class="annot"><span class="hs-number">28</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679092196"><span class="hs-identifier hs-var">xs</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-51"></span><span>
+</span><span id="line-52"></span><span class="hs-comment">-- | Check's the file's endianess, throwing an error if it's not as expected.</span><span>
+</span><span id="line-53"></span><span class="annot"><a href="TensorFlow.Examples.MNIST.Parse.html#checkEndian"><span class="hs-identifier hs-type">checkEndian</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Get</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-54"></span><span id="checkEndian"><span class="annot"><span class="annottext">checkEndian :: Get ()
+</span><a href="TensorFlow.Examples.MNIST.Parse.html#checkEndian"><span class="hs-identifier hs-var hs-var">checkEndian</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-55"></span><span>    </span><span id="local-6989586621679092192"><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621679092192"><span class="hs-identifier hs-var">magic</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Get Word32
+</span><span class="hs-identifier hs-var">getWord32be</span></span><span>
+</span><span id="line-56"></span><span>    </span><span class="annot"><span class="annottext">Bool -&gt; Get () -&gt; Get ()
+forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
+</span><span class="hs-identifier hs-var">when</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621679092192"><span class="hs-identifier hs-var">magic</span></a></span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; [Word32] -&gt; Bool
+forall (t :: * -&gt; *) a. (Foldable t, Eq a) =&gt; a -&gt; t a -&gt; Bool
+</span><span class="hs-operator hs-var">`notElem`</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">[</span><span class="annot"><span class="hs-number">2049</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-number">2051</span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Word32</span></span><span class="hs-special">]</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Get () -&gt; Get ()) -&gt; Get () -&gt; Get ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-57"></span><span>        </span><span class="annot"><span class="annottext">[Char] -&gt; Get ()
+forall (m :: * -&gt; *) a. MonadFail m =&gt; [Char] -&gt; m a
+</span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="hs-string">&quot;Expected big endian, but image file is little endian.&quot;</span></span><span>
+</span><span id="line-58"></span><span>
+</span><span id="line-59"></span><span class="hs-comment">-- | Reads an MNIST file and returns a list of samples.</span><span>
+</span><span id="line-60"></span><span class="annot"><a href="TensorFlow.Examples.MNIST.Parse.html#readMNISTSamples"><span class="hs-identifier hs-type">readMNISTSamples</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">FilePath</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="TensorFlow.Examples.MNIST.Parse.html#MNIST"><span class="hs-identifier hs-type">MNIST</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-61"></span><span id="readMNISTSamples"><span class="annot"><span class="annottext">readMNISTSamples :: [Char] -&gt; IO [MNIST]
+</span><a href="TensorFlow.Examples.MNIST.Parse.html#readMNISTSamples"><span class="hs-identifier hs-var hs-var">readMNISTSamples</span></a></span></span><span> </span><span id="local-6989586621679092188"><span class="annot"><span class="annottext">path :: [Char]
+</span><a href="#local-6989586621679092188"><span class="hs-identifier hs-var">path</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-62"></span><span>    </span><span id="local-6989586621679092187"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679092187"><span class="hs-identifier hs-var">raw</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString
+</span><span class="hs-identifier hs-var">GZip.decompress</span></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; ByteString) -&gt; IO ByteString -&gt; IO ByteString
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">[Char] -&gt; IO ByteString
+</span><span class="hs-identifier hs-var">readFile</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><a href="#local-6989586621679092188"><span class="hs-identifier hs-var">path</span></a></span><span>
+</span><span id="line-63"></span><span>    </span><span class="annot"><span class="annottext">[MNIST] -&gt; IO [MNIST]
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">([MNIST] -&gt; IO [MNIST]) -&gt; [MNIST] -&gt; IO [MNIST]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Get [MNIST] -&gt; ByteString -&gt; [MNIST]
+forall a. Get a -&gt; ByteString -&gt; a
+</span><span class="hs-identifier hs-var">runGet</span></span><span> </span><span class="annot"><span class="annottext">Get [MNIST]
+</span><a href="#local-6989586621679092184"><span class="hs-identifier hs-var">getMNIST</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679092187"><span class="hs-identifier hs-var">raw</span></a></span><span>
+</span><span id="line-64"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-65"></span><span>    </span><span class="annot"><a href="#local-6989586621679092184"><span class="hs-identifier hs-type">getMNIST</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Get</span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="TensorFlow.Examples.MNIST.Parse.html#MNIST"><span class="hs-identifier hs-type">MNIST</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-66"></span><span>    </span><span id="local-6989586621679092184"><span class="annot"><span class="annottext">getMNIST :: Get [MNIST]
+</span><a href="#local-6989586621679092184"><span class="hs-identifier hs-var hs-var">getMNIST</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-67"></span><span>        </span><span class="annot"><span class="annottext">Get ()
+</span><a href="TensorFlow.Examples.MNIST.Parse.html#checkEndian"><span class="hs-identifier hs-var">checkEndian</span></a></span><span>
+</span><span id="line-68"></span><span>        </span><span class="hs-comment">-- Parse header data.</span><span>
+</span><span id="line-69"></span><span>        </span><span id="local-6989586621679092183"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679092183"><span class="hs-identifier hs-var">cnt</span></a></span></span><span>  </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(Word32 -&gt; Int) -&gt; Get Word32 -&gt; Get Int
+forall (m :: * -&gt; *) a1 r. Monad m =&gt; (a1 -&gt; r) -&gt; m a1 -&gt; m r
+</span><span class="hs-identifier hs-var">liftM</span></span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; Int
+forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">fromIntegral</span></span><span> </span><span class="annot"><span class="annottext">Get Word32
+</span><span class="hs-identifier hs-var">getWord32be</span></span><span>
+</span><span id="line-70"></span><span>        </span><span id="local-6989586621679092182"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679092182"><span class="hs-identifier hs-var">rows</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(Word32 -&gt; Int) -&gt; Get Word32 -&gt; Get Int
+forall (m :: * -&gt; *) a1 r. Monad m =&gt; (a1 -&gt; r) -&gt; m a1 -&gt; m r
+</span><span class="hs-identifier hs-var">liftM</span></span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; Int
+forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">fromIntegral</span></span><span> </span><span class="annot"><span class="annottext">Get Word32
+</span><span class="hs-identifier hs-var">getWord32be</span></span><span>
+</span><span id="line-71"></span><span>        </span><span id="local-6989586621679092181"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679092181"><span class="hs-identifier hs-var">cols</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(Word32 -&gt; Int) -&gt; Get Word32 -&gt; Get Int
+forall (m :: * -&gt; *) a1 r. Monad m =&gt; (a1 -&gt; r) -&gt; m a1 -&gt; m r
+</span><span class="hs-identifier hs-var">liftM</span></span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; Int
+forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">fromIntegral</span></span><span> </span><span class="annot"><span class="annottext">Get Word32
+</span><span class="hs-identifier hs-var">getWord32be</span></span><span>
+</span><span id="line-72"></span><span>        </span><span class="hs-comment">-- Read all of the data, then split into samples.</span><span>
+</span><span id="line-73"></span><span>        </span><span id="local-6989586621679092180"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679092180"><span class="hs-identifier hs-var">pixels</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Int64 -&gt; Get ByteString
+</span><span class="hs-identifier hs-var">getLazyByteString</span></span><span> </span><span class="annot"><span class="annottext">(Int64 -&gt; Get ByteString) -&gt; Int64 -&gt; Get ByteString
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int64
+forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">fromIntegral</span></span><span> </span><span class="annot"><span class="annottext">(Int -&gt; Int64) -&gt; Int -&gt; Int64
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679092183"><span class="hs-identifier hs-var">cnt</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">*</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679092182"><span class="hs-identifier hs-var">rows</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">*</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679092181"><span class="hs-identifier hs-var">cols</span></a></span><span>
+</span><span id="line-74"></span><span>        </span><span class="annot"><span class="annottext">[MNIST] -&gt; Get [MNIST]
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">([MNIST] -&gt; Get [MNIST]) -&gt; [MNIST] -&gt; Get [MNIST]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[Word8] -&gt; MNIST
+forall a. [a] -&gt; Vector a
+</span><span class="hs-identifier hs-var">V.fromList</span></span><span> </span><span class="annot"><span class="annottext">([Word8] -&gt; MNIST) -&gt; [[Word8]] -&gt; [MNIST]
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; [Word8] -&gt; [[Word8]]
+forall e. Int -&gt; [e] -&gt; [[e]]
+</span><span class="hs-identifier hs-var">chunksOf</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679092182"><span class="hs-identifier hs-var">rows</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">*</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679092181"><span class="hs-identifier hs-var">cols</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; [Word8]
+</span><span class="hs-identifier hs-var">L.unpack</span></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679092180"><span class="hs-identifier hs-var">pixels</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-75"></span><span>
+</span><span id="line-76"></span><span class="hs-comment">-- | Reads a list of MNIST labels from a file and returns them.</span><span>
+</span><span id="line-77"></span><span class="annot"><a href="TensorFlow.Examples.MNIST.Parse.html#readMNISTLabels"><span class="hs-identifier hs-type">readMNISTLabels</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">FilePath</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span class="hs-special">]</span><span>
+</span><span id="line-78"></span><span id="readMNISTLabels"><span class="annot"><span class="annottext">readMNISTLabels :: [Char] -&gt; IO [Word8]
+</span><a href="TensorFlow.Examples.MNIST.Parse.html#readMNISTLabels"><span class="hs-identifier hs-var hs-var">readMNISTLabels</span></a></span></span><span> </span><span id="local-6989586621679092175"><span class="annot"><span class="annottext">path :: [Char]
+</span><a href="#local-6989586621679092175"><span class="hs-identifier hs-var">path</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-79"></span><span>    </span><span id="local-6989586621679092174"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679092174"><span class="hs-identifier hs-var">raw</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString
+</span><span class="hs-identifier hs-var">GZip.decompress</span></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; ByteString) -&gt; IO ByteString -&gt; IO ByteString
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">[Char] -&gt; IO ByteString
+</span><span class="hs-identifier hs-var">readFile</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><a href="#local-6989586621679092175"><span class="hs-identifier hs-var">path</span></a></span><span>
+</span><span id="line-80"></span><span>    </span><span class="annot"><span class="annottext">[Word8] -&gt; IO [Word8]
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">([Word8] -&gt; IO [Word8]) -&gt; [Word8] -&gt; IO [Word8]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Get [Word8] -&gt; ByteString -&gt; [Word8]
+forall a. Get a -&gt; ByteString -&gt; a
+</span><span class="hs-identifier hs-var">runGet</span></span><span> </span><span class="annot"><span class="annottext">Get [Word8]
+</span><a href="#local-6989586621679092173"><span class="hs-identifier hs-var">getLabels</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679092174"><span class="hs-identifier hs-var">raw</span></a></span><span>
+</span><span id="line-81"></span><span>  </span><span class="hs-keyword">where</span><span> </span><span class="annot"><a href="#local-6989586621679092173"><span class="hs-identifier hs-type">getLabels</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Get</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span class="hs-special">]</span><span>
+</span><span id="line-82"></span><span>        </span><span id="local-6989586621679092173"><span class="annot"><span class="annottext">getLabels :: Get [Word8]
+</span><a href="#local-6989586621679092173"><span class="hs-identifier hs-var hs-var">getLabels</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-83"></span><span>            </span><span class="annot"><span class="annottext">Get ()
+</span><a href="TensorFlow.Examples.MNIST.Parse.html#checkEndian"><span class="hs-identifier hs-var">checkEndian</span></a></span><span>
+</span><span id="line-84"></span><span>            </span><span class="hs-comment">-- Parse header data.</span><span>
+</span><span id="line-85"></span><span>            </span><span id="local-6989586621679092172"><span class="annot"><span class="annottext">Int64
+</span><a href="#local-6989586621679092172"><span class="hs-identifier hs-var">cnt</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(Word32 -&gt; Int64) -&gt; Get Word32 -&gt; Get Int64
+forall (m :: * -&gt; *) a1 r. Monad m =&gt; (a1 -&gt; r) -&gt; m a1 -&gt; m r
+</span><span class="hs-identifier hs-var">liftM</span></span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; Int64
+forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">fromIntegral</span></span><span> </span><span class="annot"><span class="annottext">Get Word32
+</span><span class="hs-identifier hs-var">getWord32be</span></span><span>
+</span><span id="line-86"></span><span>            </span><span class="hs-comment">-- Read all of the labels.</span><span>
+</span><span id="line-87"></span><span>            </span><span class="annot"><span class="annottext">ByteString -&gt; [Word8]
+</span><span class="hs-identifier hs-var">L.unpack</span></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; [Word8]) -&gt; Get ByteString -&gt; Get [Word8]
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Int64 -&gt; Get ByteString
+</span><span class="hs-identifier hs-var">getLazyByteString</span></span><span> </span><span class="annot"><span class="annottext">Int64
+</span><a href="#local-6989586621679092172"><span class="hs-identifier hs-var">cnt</span></a></span><span>
+</span><span id="line-88"></span><span>
+</span><span id="line-89"></span><span id="local-6989586621679092171"><span class="annot"><a href="TensorFlow.Examples.MNIST.Parse.html#readMessageFromFileOrDie"><span class="hs-identifier hs-type">readMessageFromFileOrDie</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Message</span></span><span> </span><span class="annot"><a href="#local-6989586621679092171"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">FilePath</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621679092171"><span class="hs-identifier hs-type">m</span></a></span></span><span>
+</span><span id="line-90"></span><span id="readMessageFromFileOrDie"><span class="annot"><span class="annottext">readMessageFromFileOrDie :: [Char] -&gt; IO m
+</span><a href="TensorFlow.Examples.MNIST.Parse.html#readMessageFromFileOrDie"><span class="hs-identifier hs-var hs-var">readMessageFromFileOrDie</span></a></span></span><span> </span><span id="local-6989586621679092169"><span class="annot"><span class="annottext">path :: [Char]
+</span><a href="#local-6989586621679092169"><span class="hs-identifier hs-var">path</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-91"></span><span>    </span><span id="local-6989586621679092168"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679092168"><span class="hs-identifier hs-var">pb</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[Char] -&gt; IO ByteString
+</span><span class="hs-identifier hs-var">readFile</span></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><a href="#local-6989586621679092169"><span class="hs-identifier hs-var">path</span></a></span><span>
+</span><span id="line-92"></span><span>    </span><span class="annot"><span class="annottext">m -&gt; IO m
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">(m -&gt; IO m) -&gt; m -&gt; IO m
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; m
+forall msg. Message msg =&gt; ByteString -&gt; msg
+</span><span class="hs-identifier hs-var">decodeMessageOrDie</span></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; m) -&gt; ByteString -&gt; m
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString
+</span><span class="hs-identifier hs-var">toStrict</span></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679092168"><span class="hs-identifier hs-var">pb</span></a></span><span>
+</span><span id="line-93"></span><span>
+</span><span id="line-94"></span><span class="hs-comment">-- TODO: Write a writeMessageFromFileOrDie and read/write non-lethal</span><span>
+</span><span id="line-95"></span><span class="hs-comment">--             versions.</span><span>
+</span><span id="line-96"></span></pre></body></html>

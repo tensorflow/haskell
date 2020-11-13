@@ -1,0 +1,1386 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">{- This file was auto-generated from tensorflow/core/framework/tensor_shape.proto by the proto-lens-protoc program. -}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE ScopedTypeVariables, DataKinds, TypeFamilies, UndecidableInstances, GeneralizedNewtypeDeriving, MultiParamTypeClasses, FlexibleContexts, FlexibleInstances, PatternSynonyms, MagicHash, NoImplicitPrelude, DataKinds, BangPatterns, TypeApplications, OverloadedStrings, DerivingStrategies#-}</span><span>
+</span><span id="line-3"></span><span class="hs-pragma">{-# OPTIONS_GHC -Wno-unused-imports#-}</span><span>
+</span><span id="line-4"></span><span class="hs-pragma">{-# OPTIONS_GHC -Wno-duplicate-exports#-}</span><span>
+</span><span id="line-5"></span><span class="hs-pragma">{-# OPTIONS_GHC -Wno-dodgy-exports#-}</span><span>
+</span><span id="line-6"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Proto.Tensorflow.Core.Framework.TensorShape</span><span> </span><span class="hs-special">(</span><span>
+</span><span id="line-7"></span><span>        </span><span class="annot"><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#TensorShapeProto"><span class="hs-identifier">TensorShapeProto</span></a></span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#TensorShapeProto%27Dim"><span class="hs-identifier">TensorShapeProto'Dim</span></a></span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-8"></span><span>    </span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Control.DeepSeq</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Control.DeepSeq</span></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.ProtoLens.Prism</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Prism</span></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Prelude</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Prelude</span></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.Int</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.Int</span></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.Monoid</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.Monoid</span></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.Word</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.Word</span></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.ProtoLens</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens</span></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.ProtoLens.Encoding.Bytes</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Encoding.Bytes</span></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.ProtoLens.Encoding.Growing</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Encoding.Growing</span></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.ProtoLens.Encoding.Parser.Unsafe</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Encoding.Parser.Unsafe</span></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.ProtoLens.Encoding.Wire</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Encoding.Wire</span></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.ProtoLens.Field</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Field</span></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.ProtoLens.Message.Enum</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Message.Enum</span></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.ProtoLens.Service.Types</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Service.Types</span></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Lens.Family2</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Lens.Family2</span></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Lens.Family2.Unchecked</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Lens.Family2.Unchecked</span></span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.Text</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text</span></span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.Map</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.Map</span></span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.ByteString</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.ByteString</span></span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.ByteString.Char8</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.ByteString.Char8</span></span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.Text.Encoding</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text.Encoding</span></span><span>
+</span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.Vector</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.Vector</span></span><span>
+</span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.Vector.Generic</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.Vector.Generic</span></span><span>
+</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Data.Vector.Unboxed</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Data.Vector.Unboxed</span></span><span>
+</span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ProtoLens.Runtime.Text.Read</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Text.Read</span></span><span>
+</span><span id="line-34"></span><span class="hs-comment">{- | Fields :
+     
+         * 'Proto.Tensorflow.Core.Framework.TensorShape_Fields.dim' @:: Lens' TensorShapeProto [TensorShapeProto'Dim]@
+         * 'Proto.Tensorflow.Core.Framework.TensorShape_Fields.vec'dim' @:: Lens' TensorShapeProto (Data.Vector.Vector TensorShapeProto'Dim)@
+         * 'Proto.Tensorflow.Core.Framework.TensorShape_Fields.unknownRank' @:: Lens' TensorShapeProto Prelude.Bool@ -}</span><span>
+</span><span id="line-39"></span><span class="hs-keyword">data</span><span> </span><span id="TensorShapeProto"><span class="annot"><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#TensorShapeProto"><span class="hs-identifier hs-var">TensorShapeProto</span></a></span></span><span>
+</span><span id="line-40"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="TensorShapeProto%27_constructor"><span class="annot"><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#TensorShapeProto%27_constructor"><span class="hs-identifier hs-var">TensorShapeProto'_constructor</span></a></span></span><span> </span><span class="hs-special">{</span><span id="_TensorShapeProto%27dim"><span class="annot"><span class="annottext">TensorShapeProto -&gt; Vector TensorShapeProto'Dim
+</span><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#_TensorShapeProto%27dim"><span class="hs-identifier hs-var hs-var">_TensorShapeProto'dim</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Data.Vector.Vector</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#TensorShapeProto%27Dim"><span class="hs-identifier hs-type">TensorShapeProto'Dim</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-41"></span><span>                                   </span><span id="_TensorShapeProto%27unknownRank"><span class="annot"><span class="annottext">TensorShapeProto -&gt; Bool
+</span><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#_TensorShapeProto%27unknownRank"><span class="hs-identifier hs-var hs-var">_TensorShapeProto'unknownRank</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Prelude.Bool</span></span><span class="hs-special">,</span><span>
+</span><span id="line-42"></span><span>                                   </span><span id="_TensorShapeProto%27_unknownFields"><span class="annot"><span class="annottext">TensorShapeProto -&gt; FieldSet
+</span><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#_TensorShapeProto%27_unknownFields"><span class="hs-identifier hs-var hs-var">_TensorShapeProto'_unknownFields</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.FieldSet</span></span><span class="hs-special">}</span><span>
+</span><span id="line-43"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679475079"><span id="local-6989586621679475081"><span class="annot"><span class="annottext">TensorShapeProto -&gt; TensorShapeProto -&gt; Bool
+(TensorShapeProto -&gt; TensorShapeProto -&gt; Bool)
+-&gt; (TensorShapeProto -&gt; TensorShapeProto -&gt; Bool)
+-&gt; Eq TensorShapeProto
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: TensorShapeProto -&gt; TensorShapeProto -&gt; Bool
+$c/= :: TensorShapeProto -&gt; TensorShapeProto -&gt; Bool
+== :: TensorShapeProto -&gt; TensorShapeProto -&gt; Bool
+$c== :: TensorShapeProto -&gt; TensorShapeProto -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Prelude.Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679475063"><span id="local-6989586621679475065"><span id="local-6989586621679475067"><span id="local-6989586621679475069"><span id="local-6989586621679475071"><span id="local-6989586621679475073"><span id="local-6989586621679475075"><span class="annot"><span class="annottext">Eq TensorShapeProto
+Eq TensorShapeProto =&gt;
+(TensorShapeProto -&gt; TensorShapeProto -&gt; Ordering)
+-&gt; (TensorShapeProto -&gt; TensorShapeProto -&gt; Bool)
+-&gt; (TensorShapeProto -&gt; TensorShapeProto -&gt; Bool)
+-&gt; (TensorShapeProto -&gt; TensorShapeProto -&gt; Bool)
+-&gt; (TensorShapeProto -&gt; TensorShapeProto -&gt; Bool)
+-&gt; (TensorShapeProto -&gt; TensorShapeProto -&gt; TensorShapeProto)
+-&gt; (TensorShapeProto -&gt; TensorShapeProto -&gt; TensorShapeProto)
+-&gt; Ord TensorShapeProto
+TensorShapeProto -&gt; TensorShapeProto -&gt; Bool
+TensorShapeProto -&gt; TensorShapeProto -&gt; Ordering
+TensorShapeProto -&gt; TensorShapeProto -&gt; TensorShapeProto
+forall a.
+Eq a =&gt;
+(a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+min :: TensorShapeProto -&gt; TensorShapeProto -&gt; TensorShapeProto
+$cmin :: TensorShapeProto -&gt; TensorShapeProto -&gt; TensorShapeProto
+max :: TensorShapeProto -&gt; TensorShapeProto -&gt; TensorShapeProto
+$cmax :: TensorShapeProto -&gt; TensorShapeProto -&gt; TensorShapeProto
+&gt;= :: TensorShapeProto -&gt; TensorShapeProto -&gt; Bool
+$c&gt;= :: TensorShapeProto -&gt; TensorShapeProto -&gt; Bool
+&gt; :: TensorShapeProto -&gt; TensorShapeProto -&gt; Bool
+$c&gt; :: TensorShapeProto -&gt; TensorShapeProto -&gt; Bool
+&lt;= :: TensorShapeProto -&gt; TensorShapeProto -&gt; Bool
+$c&lt;= :: TensorShapeProto -&gt; TensorShapeProto -&gt; Bool
+&lt; :: TensorShapeProto -&gt; TensorShapeProto -&gt; Bool
+$c&lt; :: TensorShapeProto -&gt; TensorShapeProto -&gt; Bool
+compare :: TensorShapeProto -&gt; TensorShapeProto -&gt; Ordering
+$ccompare :: TensorShapeProto -&gt; TensorShapeProto -&gt; Ordering
+$cp1Ord :: Eq TensorShapeProto
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Prelude.Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-44"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679475057"><span id="local-6989586621679475059"><span class="annot"><span class="hs-identifier hs-type">Prelude.Show</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#TensorShapeProto"><span class="hs-identifier hs-type">TensorShapeProto</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-45"></span><span>  </span><span id="local-6989586621679475055"><span class="annot"><span class="annottext">showsPrec :: Int -&gt; TensorShapeProto -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">showsPrec</span></span></span><span> </span><span class="hs-identifier">_</span><span> </span><span id="local-6989586621679475053"><span class="annot"><span class="annottext">__x :: TensorShapeProto
+</span><a href="#local-6989586621679475053"><span class="hs-identifier hs-var">__x</span></a></span></span><span> </span><span id="local-6989586621679475052"><span class="annot"><span class="annottext">__s :: String
+</span><a href="#local-6989586621679475052"><span class="hs-identifier hs-var">__s</span></a></span></span><span>
+</span><span id="line-46"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Char -&gt; ShowS
+</span><span class="hs-identifier hs-var">Prelude.showChar</span></span><span>
+</span><span id="line-47"></span><span>        </span><span class="annot"><span class="hs-char">'{'</span></span><span>
+</span><span id="line-48"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; ShowS
+</span><span class="hs-identifier hs-var">Prelude.showString</span></span><span>
+</span><span id="line-49"></span><span>           </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TensorShapeProto -&gt; String
+forall msg. Message msg =&gt; msg -&gt; String
+</span><span class="hs-identifier hs-var">Data.ProtoLens.showMessageShort</span></span><span> </span><span class="annot"><span class="annottext">TensorShapeProto
+</span><a href="#local-6989586621679475053"><span class="hs-identifier hs-var">__x</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Char -&gt; ShowS
+</span><span class="hs-identifier hs-var">Prelude.showChar</span></span><span> </span><span class="annot"><span class="hs-char">'}'</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679475052"><span class="hs-identifier hs-var">__s</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-50"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.Field.HasField</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#TensorShapeProto"><span class="hs-identifier hs-type">TensorShapeProto</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;dim&quot;</span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#TensorShapeProto%27Dim"><span class="hs-identifier hs-type">TensorShapeProto'Dim</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-51"></span><span>  </span><span id="local-6989586621679475046"><span class="annot"><span class="annottext">fieldOf :: Proxy# &quot;dim&quot;
+-&gt; ([TensorShapeProto'Dim] -&gt; f [TensorShapeProto'Dim])
+-&gt; TensorShapeProto
+-&gt; f TensorShapeProto
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">fieldOf</span></span></span><span> </span><span class="hs-identifier">_</span><span>
+</span><span id="line-52"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((Vector TensorShapeProto'Dim -&gt; f (Vector TensorShapeProto'Dim))
+ -&gt; TensorShapeProto -&gt; f TensorShapeProto)
+-&gt; (([TensorShapeProto'Dim] -&gt; f [TensorShapeProto'Dim])
+    -&gt; Vector TensorShapeProto'Dim -&gt; f (Vector TensorShapeProto'Dim))
+-&gt; ([TensorShapeProto'Dim] -&gt; f [TensorShapeProto'Dim])
+-&gt; TensorShapeProto
+-&gt; f TensorShapeProto
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">(Prelude..)</span></span><span>
+</span><span id="line-53"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(TensorShapeProto -&gt; Vector TensorShapeProto'Dim)
+-&gt; (TensorShapeProto
+    -&gt; Vector TensorShapeProto'Dim -&gt; TensorShapeProto)
+-&gt; Lens
+     TensorShapeProto
+     TensorShapeProto
+     (Vector TensorShapeProto'Dim)
+     (Vector TensorShapeProto'Dim)
+forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span class="hs-identifier hs-var">Lens.Family2.Unchecked.lens</span></span><span>
+</span><span id="line-54"></span><span>           </span><span class="annot"><span class="annottext">TensorShapeProto -&gt; Vector TensorShapeProto'Dim
+</span><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#_TensorShapeProto%27dim"><span class="hs-identifier hs-var hs-var">_TensorShapeProto'dim</span></a></span><span>
+</span><span id="line-55"></span><span>           </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span> </span><span id="local-6989586621679475042"><span class="annot"><span class="annottext">x__ :: TensorShapeProto
+</span><a href="#local-6989586621679475042"><span class="hs-identifier hs-var">x__</span></a></span></span><span> </span><span id="local-6989586621679475041"><span class="annot"><span class="annottext">y__ :: Vector TensorShapeProto'Dim
+</span><a href="#local-6989586621679475041"><span class="hs-identifier hs-var">y__</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">TensorShapeProto
+</span><a href="#local-6989586621679475042"><span class="hs-identifier hs-var">x__</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_TensorShapeProto'dim :: Vector TensorShapeProto'Dim
+</span><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#_TensorShapeProto%27dim"><span class="hs-identifier hs-var">_TensorShapeProto'dim</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Vector TensorShapeProto'Dim
+</span><a href="#local-6989586621679475041"><span class="hs-identifier hs-var">y__</span></a></span><span class="hs-special">}</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-56"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Vector TensorShapeProto'Dim -&gt; [TensorShapeProto'Dim])
+-&gt; (Vector TensorShapeProto'Dim
+    -&gt; [TensorShapeProto'Dim] -&gt; Vector TensorShapeProto'Dim)
+-&gt; Lens
+     (Vector TensorShapeProto'Dim)
+     (Vector TensorShapeProto'Dim)
+     [TensorShapeProto'Dim]
+     [TensorShapeProto'Dim]
+forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span class="hs-identifier hs-var">Lens.Family2.Unchecked.lens</span></span><span>
+</span><span id="line-57"></span><span>           </span><span class="annot"><span class="annottext">Vector TensorShapeProto'Dim -&gt; [TensorShapeProto'Dim]
+forall (v :: * -&gt; *) a. Vector v a =&gt; v a -&gt; [a]
+</span><span class="hs-identifier hs-var">Data.Vector.Generic.toList</span></span><span>
+</span><span id="line-58"></span><span>           </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span> </span><span class="hs-identifier">_</span><span> </span><span id="local-6989586621679475039"><span class="annot"><span class="annottext">y__ :: [TensorShapeProto'Dim]
+</span><a href="#local-6989586621679475039"><span class="hs-identifier hs-var">y__</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[TensorShapeProto'Dim] -&gt; Vector TensorShapeProto'Dim
+forall (v :: * -&gt; *) a. Vector v a =&gt; [a] -&gt; v a
+</span><span class="hs-identifier hs-var">Data.Vector.Generic.fromList</span></span><span> </span><span class="annot"><span class="annottext">[TensorShapeProto'Dim]
+</span><a href="#local-6989586621679475039"><span class="hs-identifier hs-var">y__</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-59"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.Field.HasField</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#TensorShapeProto"><span class="hs-identifier hs-type">TensorShapeProto</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;vec'dim&quot;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Data.Vector.Vector</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#TensorShapeProto%27Dim"><span class="hs-identifier hs-type">TensorShapeProto'Dim</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-60"></span><span>  </span><span id="local-6989586621679475036"><span class="annot"><span class="annottext">fieldOf :: Proxy# &quot;vec'dim&quot;
+-&gt; (Vector TensorShapeProto'Dim -&gt; f (Vector TensorShapeProto'Dim))
+-&gt; TensorShapeProto
+-&gt; f TensorShapeProto
+</span><a href="#local-6989586621679475036"><span class="hs-identifier hs-var hs-var hs-var hs-var">fieldOf</span></a></span></span><span> </span><span class="hs-identifier">_</span><span>
+</span><span id="line-61"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((Vector TensorShapeProto'Dim -&gt; f (Vector TensorShapeProto'Dim))
+ -&gt; TensorShapeProto -&gt; f TensorShapeProto)
+-&gt; ((Vector TensorShapeProto'Dim
+     -&gt; f (Vector TensorShapeProto'Dim))
+    -&gt; Vector TensorShapeProto'Dim -&gt; f (Vector TensorShapeProto'Dim))
+-&gt; (Vector TensorShapeProto'Dim -&gt; f (Vector TensorShapeProto'Dim))
+-&gt; TensorShapeProto
+-&gt; f TensorShapeProto
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">(Prelude..)</span></span><span>
+</span><span id="line-62"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(TensorShapeProto -&gt; Vector TensorShapeProto'Dim)
+-&gt; (TensorShapeProto
+    -&gt; Vector TensorShapeProto'Dim -&gt; TensorShapeProto)
+-&gt; Lens
+     TensorShapeProto
+     TensorShapeProto
+     (Vector TensorShapeProto'Dim)
+     (Vector TensorShapeProto'Dim)
+forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span class="hs-identifier hs-var">Lens.Family2.Unchecked.lens</span></span><span>
+</span><span id="line-63"></span><span>           </span><span class="annot"><span class="annottext">TensorShapeProto -&gt; Vector TensorShapeProto'Dim
+</span><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#_TensorShapeProto%27dim"><span class="hs-identifier hs-var hs-var">_TensorShapeProto'dim</span></a></span><span>
+</span><span id="line-64"></span><span>           </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span> </span><span id="local-6989586621679475035"><span class="annot"><span class="annottext">x__ :: TensorShapeProto
+</span><a href="#local-6989586621679475035"><span class="hs-identifier hs-var">x__</span></a></span></span><span> </span><span id="local-6989586621679475034"><span class="annot"><span class="annottext">y__ :: Vector TensorShapeProto'Dim
+</span><a href="#local-6989586621679475034"><span class="hs-identifier hs-var">y__</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">TensorShapeProto
+</span><a href="#local-6989586621679475035"><span class="hs-identifier hs-var">x__</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_TensorShapeProto'dim :: Vector TensorShapeProto'Dim
+</span><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#_TensorShapeProto%27dim"><span class="hs-identifier hs-var">_TensorShapeProto'dim</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Vector TensorShapeProto'Dim
+</span><a href="#local-6989586621679475034"><span class="hs-identifier hs-var">y__</span></a></span><span class="hs-special">}</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-65"></span><span>        </span><span class="annot"><span class="annottext">(Vector TensorShapeProto'Dim -&gt; f (Vector TensorShapeProto'Dim))
+-&gt; Vector TensorShapeProto'Dim -&gt; f (Vector TensorShapeProto'Dim)
+forall a. a -&gt; a
+</span><span class="hs-identifier hs-var">Prelude.id</span></span><span>
+</span><span id="line-66"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.Field.HasField</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#TensorShapeProto"><span class="hs-identifier hs-type">TensorShapeProto</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;unknownRank&quot;</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Prelude.Bool</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-67"></span><span>  </span><span id="local-6989586621679475031"><span class="annot"><span class="annottext">fieldOf :: Proxy# &quot;unknownRank&quot;
+-&gt; (Bool -&gt; f Bool) -&gt; TensorShapeProto -&gt; f TensorShapeProto
+</span><a href="#local-6989586621679475031"><span class="hs-identifier hs-var hs-var hs-var hs-var">fieldOf</span></a></span></span><span> </span><span class="hs-identifier">_</span><span>
+</span><span id="line-68"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((Bool -&gt; f Bool) -&gt; TensorShapeProto -&gt; f TensorShapeProto)
+-&gt; ((Bool -&gt; f Bool) -&gt; Bool -&gt; f Bool)
+-&gt; (Bool -&gt; f Bool)
+-&gt; TensorShapeProto
+-&gt; f TensorShapeProto
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">(Prelude..)</span></span><span>
+</span><span id="line-69"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(TensorShapeProto -&gt; Bool)
+-&gt; (TensorShapeProto -&gt; Bool -&gt; TensorShapeProto)
+-&gt; Lens TensorShapeProto TensorShapeProto Bool Bool
+forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span class="hs-identifier hs-var">Lens.Family2.Unchecked.lens</span></span><span>
+</span><span id="line-70"></span><span>           </span><span class="annot"><span class="annottext">TensorShapeProto -&gt; Bool
+</span><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#_TensorShapeProto%27unknownRank"><span class="hs-identifier hs-var hs-var">_TensorShapeProto'unknownRank</span></a></span><span>
+</span><span id="line-71"></span><span>           </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span> </span><span id="local-6989586621679475030"><span class="annot"><span class="annottext">x__ :: TensorShapeProto
+</span><a href="#local-6989586621679475030"><span class="hs-identifier hs-var">x__</span></a></span></span><span> </span><span id="local-6989586621679475029"><span class="annot"><span class="annottext">y__ :: Bool
+</span><a href="#local-6989586621679475029"><span class="hs-identifier hs-var">y__</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">TensorShapeProto
+</span><a href="#local-6989586621679475030"><span class="hs-identifier hs-var">x__</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_TensorShapeProto'unknownRank :: Bool
+</span><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#_TensorShapeProto%27unknownRank"><span class="hs-identifier hs-var">_TensorShapeProto'unknownRank</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679475029"><span class="hs-identifier hs-var">y__</span></a></span><span class="hs-special">}</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-72"></span><span>        </span><span class="annot"><span class="annottext">(Bool -&gt; f Bool) -&gt; Bool -&gt; f Bool
+forall a. a -&gt; a
+</span><span class="hs-identifier hs-var">Prelude.id</span></span><span>
+</span><span id="line-73"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679475022"><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.Message</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#TensorShapeProto"><span class="hs-identifier hs-type">TensorShapeProto</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-74"></span><span>  </span><span id="local-6989586621679475017"><span class="annot"><span class="annottext">messageName :: Proxy TensorShapeProto -&gt; Text
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">messageName</span></span></span><span> </span><span class="hs-identifier">_</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Text
+</span><span class="hs-identifier hs-var">Data.Text.pack</span></span><span> </span><span class="annot"><span class="hs-string">&quot;tensorflow.TensorShapeProto&quot;</span></span><span>
+</span><span id="line-75"></span><span>  </span><span id="local-6989586621679475014"><span class="annot"><span class="annottext">packedMessageDescriptor :: Proxy TensorShapeProto -&gt; ByteString
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">packedMessageDescriptor</span></span></span><span> </span><span class="hs-identifier">_</span><span>
+</span><span id="line-76"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-string">&quot;\n\
+      \\DLETensorShapeProto\DC22\n\
+      \\ETXdim\CAN\STX \ETX(\v2 .tensorflow.TensorShapeProto.DimR\ETXdim\DC2!\n\
+      \\funknown_rank\CAN\ETX \SOH(\bR\vunknownRank\SUB-\n\
+      \\ETXDim\DC2\DC2\n\
+      \\EOTsize\CAN\SOH \SOH(\ETXR\EOTsize\DC2\DC2\n\
+      \\EOTname\CAN\STX \SOH(\tR\EOTname&quot;</span></span><span>
+</span><span id="line-83"></span><span>  </span><span id="local-6989586621679475012"><span class="annot"><span class="annottext">packedFileDescriptor :: Proxy TensorShapeProto -&gt; ByteString
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">packedFileDescriptor</span></span></span><span> </span><span class="hs-identifier">_</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#packedFileDescriptor"><span class="hs-identifier hs-var">packedFileDescriptor</span></a></span><span>
+</span><span id="line-84"></span><span>  </span><span id="local-6989586621679475009"><span class="annot"><span class="annottext">fieldsByTag :: Map Tag (FieldDescriptor TensorShapeProto)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">fieldsByTag</span></span></span><span>
+</span><span id="line-85"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">let</span><span>
+</span><span id="line-86"></span><span>        </span><span id="local-6989586621679475007"><span class="annot"><span class="annottext">dim__field_descriptor :: FieldDescriptor TensorShapeProto
+</span><a href="#local-6989586621679475007"><span class="hs-identifier hs-var hs-var">dim__field_descriptor</span></a></span></span><span>
+</span><span id="line-87"></span><span>          </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+-&gt; FieldTypeDescriptor TensorShapeProto'Dim
+-&gt; FieldAccessor TensorShapeProto TensorShapeProto'Dim
+-&gt; FieldDescriptor TensorShapeProto
+forall value msg.
+String
+-&gt; FieldTypeDescriptor value
+-&gt; FieldAccessor msg value
+-&gt; FieldDescriptor msg
+</span><span class="hs-identifier hs-var">Data.ProtoLens.FieldDescriptor</span></span><span>
+</span><span id="line-88"></span><span>              </span><span class="annot"><span class="hs-string">&quot;dim&quot;</span></span><span>
+</span><span id="line-89"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">MessageOrGroup -&gt; FieldTypeDescriptor TensorShapeProto'Dim
+forall value.
+Message value =&gt;
+MessageOrGroup -&gt; FieldTypeDescriptor value
+</span><span class="hs-identifier hs-var">Data.ProtoLens.MessageField</span></span><span> </span><span class="annot"><span class="annottext">MessageOrGroup
+</span><span class="hs-identifier hs-var">Data.ProtoLens.MessageType</span></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-90"></span><span>                 </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.FieldTypeDescriptor</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#TensorShapeProto%27Dim"><span class="hs-identifier hs-type">TensorShapeProto'Dim</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-91"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Packing
+-&gt; Lens' TensorShapeProto [TensorShapeProto'Dim]
+-&gt; FieldAccessor TensorShapeProto TensorShapeProto'Dim
+forall msg value.
+Packing -&gt; Lens' msg [value] -&gt; FieldAccessor msg value
+</span><span class="hs-identifier hs-var">Data.ProtoLens.RepeatedField</span></span><span>
+</span><span id="line-92"></span><span>                 </span><span class="annot"><span class="annottext">Packing
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Unpacked</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall s a (f :: * -&gt; *).
+(HasField s &quot;dim&quot; a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+forall (x :: Symbol) s a (f :: * -&gt; *).
+(HasField s x a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Field.field</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-string">&quot;dim&quot;</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-93"></span><span>              </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.FieldDescriptor</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#TensorShapeProto"><span class="hs-identifier hs-type">TensorShapeProto</span></a></span><span>
+</span><span id="line-94"></span><span>        </span><span id="local-6989586621679475000"><span class="annot"><span class="annottext">unknownRank__field_descriptor :: FieldDescriptor TensorShapeProto
+</span><a href="#local-6989586621679475000"><span class="hs-identifier hs-var hs-var">unknownRank__field_descriptor</span></a></span></span><span>
+</span><span id="line-95"></span><span>          </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+-&gt; FieldTypeDescriptor Bool
+-&gt; FieldAccessor TensorShapeProto Bool
+-&gt; FieldDescriptor TensorShapeProto
+forall value msg.
+String
+-&gt; FieldTypeDescriptor value
+-&gt; FieldAccessor msg value
+-&gt; FieldDescriptor msg
+</span><span class="hs-identifier hs-var">Data.ProtoLens.FieldDescriptor</span></span><span>
+</span><span id="line-96"></span><span>              </span><span class="annot"><span class="hs-string">&quot;unknown_rank&quot;</span></span><span>
+</span><span id="line-97"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ScalarField Bool -&gt; FieldTypeDescriptor Bool
+forall value. ScalarField value -&gt; FieldTypeDescriptor value
+</span><span class="hs-identifier hs-var">Data.ProtoLens.ScalarField</span></span><span> </span><span class="annot"><span class="annottext">ScalarField Bool
+</span><span class="hs-identifier hs-var">Data.ProtoLens.BoolField</span></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-98"></span><span>                 </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.FieldTypeDescriptor</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Prelude.Bool</span></span><span class="hs-special">)</span><span>
+</span><span id="line-99"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">WireDefault Bool
+-&gt; Lens TensorShapeProto TensorShapeProto Bool Bool
+-&gt; FieldAccessor TensorShapeProto Bool
+forall value msg.
+WireDefault value -&gt; Lens' msg value -&gt; FieldAccessor msg value
+</span><span class="hs-identifier hs-var">Data.ProtoLens.PlainField</span></span><span>
+</span><span id="line-100"></span><span>                 </span><span class="annot"><span class="annottext">WireDefault Bool
+forall value. (FieldDefault value, Eq value) =&gt; WireDefault value
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Optional</span></span><span>
+</span><span id="line-101"></span><span>                 </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall s a (f :: * -&gt; *).
+(HasField s &quot;unknownRank&quot; a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+forall (x :: Symbol) s a (f :: * -&gt; *).
+(HasField s x a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Field.field</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-string">&quot;unknownRank&quot;</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-102"></span><span>              </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.FieldDescriptor</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#TensorShapeProto"><span class="hs-identifier hs-type">TensorShapeProto</span></a></span><span>
+</span><span id="line-103"></span><span>      </span><span class="hs-keyword">in</span><span>
+</span><span id="line-104"></span><span>        </span><span class="annot"><span class="annottext">[(Tag, FieldDescriptor TensorShapeProto)]
+-&gt; Map Tag (FieldDescriptor TensorShapeProto)
+forall k a. Ord k =&gt; [(k, a)] -&gt; Map k a
+</span><span class="hs-identifier hs-var">Data.Map.fromList</span></span><span>
+</span><span id="line-105"></span><span>          </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; Tag
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Tag</span></span><span> </span><span class="annot"><span class="hs-number">2</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">FieldDescriptor TensorShapeProto
+</span><a href="#local-6989586621679475007"><span class="hs-identifier hs-var">dim__field_descriptor</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-106"></span><span>           </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; Tag
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Tag</span></span><span> </span><span class="annot"><span class="hs-number">3</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">FieldDescriptor TensorShapeProto
+</span><a href="#local-6989586621679475000"><span class="hs-identifier hs-var">unknownRank__field_descriptor</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
+</span><span id="line-107"></span><span>  </span><span id="local-6989586621679474993"><span class="annot"><span class="annottext">unknownFields :: LensLike' f TensorShapeProto FieldSet
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">unknownFields</span></span></span><span>
+</span><span id="line-108"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(TensorShapeProto -&gt; FieldSet)
+-&gt; (TensorShapeProto -&gt; FieldSet -&gt; TensorShapeProto)
+-&gt; Lens' TensorShapeProto FieldSet
+forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span class="hs-identifier hs-var">Lens.Family2.Unchecked.lens</span></span><span>
+</span><span id="line-109"></span><span>        </span><span class="annot"><span class="annottext">TensorShapeProto -&gt; FieldSet
+</span><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#_TensorShapeProto%27_unknownFields"><span class="hs-identifier hs-var hs-var">_TensorShapeProto'_unknownFields</span></a></span><span>
+</span><span id="line-110"></span><span>        </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span> </span><span id="local-6989586621679474991"><span class="annot"><span class="annottext">x__ :: TensorShapeProto
+</span><a href="#local-6989586621679474991"><span class="hs-identifier hs-var">x__</span></a></span></span><span> </span><span id="local-6989586621679474990"><span class="annot"><span class="annottext">y__ :: FieldSet
+</span><a href="#local-6989586621679474990"><span class="hs-identifier hs-var">y__</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">TensorShapeProto
+</span><a href="#local-6989586621679474991"><span class="hs-identifier hs-var">x__</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_TensorShapeProto'_unknownFields :: FieldSet
+</span><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#_TensorShapeProto%27_unknownFields"><span class="hs-identifier hs-var">_TensorShapeProto'_unknownFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">FieldSet
+</span><a href="#local-6989586621679474990"><span class="hs-identifier hs-var">y__</span></a></span><span class="hs-special">}</span><span class="hs-special">)</span><span>
+</span><span id="line-111"></span><span>  </span><span id="local-6989586621679474989"><span class="annot"><span class="annottext">defMessage :: TensorShapeProto
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">defMessage</span></span></span><span>
+</span><span id="line-112"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">$WTensorShapeProto'_constructor :: Vector TensorShapeProto'Dim -&gt; Bool -&gt; FieldSet -&gt; TensorShapeProto
+</span><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#%24WTensorShapeProto%27_constructor"><span class="hs-identifier hs-type hs-type">TensorShapeProto'_constructor</span></a></span><span>
+</span><span id="line-113"></span><span>        </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_TensorShapeProto'dim :: Vector TensorShapeProto'Dim
+</span><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#_TensorShapeProto%27dim"><span class="hs-identifier hs-var">_TensorShapeProto'dim</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Vector TensorShapeProto'Dim
+forall (v :: * -&gt; *) a. Vector v a =&gt; v a
+</span><span class="hs-identifier hs-var">Data.Vector.Generic.empty</span></span><span class="hs-special">,</span><span>
+</span><span id="line-114"></span><span>         </span><span class="annot"><span class="annottext">_TensorShapeProto'unknownRank :: Bool
+</span><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#_TensorShapeProto%27unknownRank"><span class="hs-identifier hs-var">_TensorShapeProto'unknownRank</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
+forall value. FieldDefault value =&gt; value
+</span><span class="hs-identifier hs-var">Data.ProtoLens.fieldDefault</span></span><span class="hs-special">,</span><span>
+</span><span id="line-115"></span><span>         </span><span class="annot"><span class="annottext">_TensorShapeProto'_unknownFields :: FieldSet
+</span><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#_TensorShapeProto%27_unknownFields"><span class="hs-identifier hs-var">_TensorShapeProto'_unknownFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span class="hs-special">}</span><span>
+</span><span id="line-116"></span><span>  </span><span id="local-6989586621679474984"><span class="annot"><span class="annottext">parseMessage :: Parser TensorShapeProto
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseMessage</span></span></span><span>
+</span><span id="line-117"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">let</span><span>
+</span><span id="line-118"></span><span>        </span><span class="annot"><a href="#local-6989586621679474982"><span class="hs-identifier hs-type">loop</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-119"></span><span>          </span><span class="annot"><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#TensorShapeProto"><span class="hs-identifier hs-type">TensorShapeProto</span></a></span><span>
+</span><span id="line-120"></span><span>          </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.Encoding.Growing.Growing</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data.Vector.Vector</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.Encoding.Growing.RealWorld</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#TensorShapeProto%27Dim"><span class="hs-identifier hs-type">TensorShapeProto'Dim</span></a></span><span>
+</span><span id="line-121"></span><span>             </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.Encoding.Bytes.Parser</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#TensorShapeProto"><span class="hs-identifier hs-type">TensorShapeProto</span></a></span><span>
+</span><span id="line-122"></span><span>        </span><span id="local-6989586621679474982"><span class="annot"><span class="annottext">loop :: TensorShapeProto
+-&gt; Growing Vector RealWorld TensorShapeProto'Dim
+-&gt; Parser TensorShapeProto
+</span><a href="#local-6989586621679474982"><span class="hs-identifier hs-var hs-var">loop</span></a></span></span><span> </span><span id="local-6989586621679474981"><span class="annot"><span class="annottext">x :: TensorShapeProto
+</span><a href="#local-6989586621679474981"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span id="local-6989586621679474980"><span class="annot"><span class="annottext">mutable'dim :: Growing Vector RealWorld TensorShapeProto'Dim
+</span><a href="#local-6989586621679474980"><span class="hs-identifier hs-var">mutable'dim</span></a></span></span><span>
+</span><span id="line-123"></span><span>          </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span> </span><span id="local-6989586621679474979"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679474979"><span class="hs-identifier hs-var">end</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Bool
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.atEnd</span></span><span>
+</span><span id="line-124"></span><span>               </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679474979"><span class="hs-identifier hs-var">end</span></a></span><span> </span><span class="hs-keyword">then</span><span>
+</span><span id="line-125"></span><span>                   </span><span class="hs-keyword">do</span><span> </span><span id="local-6989586621679474977"><span class="annot"><span class="annottext">Vector TensorShapeProto'Dim
+</span><a href="#local-6989586621679474977"><span class="hs-identifier hs-var">frozen'dim</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (Vector TensorShapeProto'Dim)
+-&gt; Parser (Vector TensorShapeProto'Dim)
+forall a. IO a -&gt; Parser a
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Parser.Unsafe.unsafeLiftIO</span></span><span>
+</span><span id="line-126"></span><span>                                      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Growing Vector (PrimState IO) TensorShapeProto'Dim
+-&gt; IO (Vector TensorShapeProto'Dim)
+forall (m :: * -&gt; *) (v :: * -&gt; *) a.
+(PrimMonad m, Vector v a) =&gt;
+Growing v (PrimState m) a -&gt; m (v a)
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Growing.unsafeFreeze</span></span><span> </span><span class="annot"><span class="annottext">Growing Vector RealWorld TensorShapeProto'Dim
+Growing Vector (PrimState IO) TensorShapeProto'Dim
+</span><a href="#local-6989586621679474980"><span class="hs-identifier hs-var">mutable'dim</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-127"></span><span>                      </span><span class="hs-special">(</span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679474974"><span class="annot"><span class="annottext">missing :: [a]
+</span><a href="#local-6989586621679474974"><span class="hs-identifier hs-var hs-var">missing</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
+</span><span id="line-128"></span><span>                       </span><span class="hs-keyword">in</span><span>
+</span><span id="line-129"></span><span>                         </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">[Any] -&gt; Bool
+forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
+</span><span class="hs-identifier hs-var">Prelude.null</span></span><span> </span><span class="annot"><span class="annottext">[Any]
+forall a. [a]
+</span><a href="#local-6989586621679474974"><span class="hs-identifier hs-var">missing</span></a></span><span> </span><span class="hs-keyword">then</span><span>
+</span><span id="line-130"></span><span>                             </span><span class="annot"><span class="annottext">() -&gt; Parser ()
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span class="hs-identifier hs-var">Prelude.return</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-131"></span><span>                         </span><span class="hs-keyword">else</span><span>
+</span><span id="line-132"></span><span>                             </span><span class="annot"><span class="annottext">String -&gt; Parser ()
+forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
+</span><span class="hs-identifier hs-var">Prelude.fail</span></span><span>
+</span><span id="line-133"></span><span>                               </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; ShowS
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">(Prelude.++)</span></span><span>
+</span><span id="line-134"></span><span>                                  </span><span class="annot"><span class="hs-string">&quot;Missing required fields: &quot;</span></span><span>
+</span><span id="line-135"></span><span>                                  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[String] -&gt; String
+forall a. Show a =&gt; a -&gt; String
+</span><span class="hs-identifier hs-var">Prelude.show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[String]
+forall a. [a]
+</span><a href="#local-6989586621679474974"><span class="hs-identifier hs-var">missing</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Prelude.String</span></span><span class="hs-special">]</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-136"></span><span>                      </span><span class="annot"><span class="annottext">TensorShapeProto -&gt; Parser TensorShapeProto
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span class="hs-identifier hs-var">Prelude.return</span></span><span>
+</span><span id="line-137"></span><span>                        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Setter TensorShapeProto TensorShapeProto FieldSet FieldSet
+-&gt; (FieldSet -&gt; FieldSet) -&gt; TensorShapeProto -&gt; TensorShapeProto
+forall s t a b. Setter s t a b -&gt; (a -&gt; b) -&gt; s -&gt; t
+</span><span class="hs-identifier hs-var">Lens.Family2.over</span></span><span>
+</span><span id="line-138"></span><span>                           </span><span class="annot"><span class="annottext">forall msg. Message msg =&gt; Lens' msg FieldSet
+Setter TensorShapeProto TensorShapeProto FieldSet FieldSet
+</span><span class="hs-identifier hs-var">Data.ProtoLens.unknownFields</span></span><span>
+</span><span id="line-139"></span><span>                           </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621679474970"><span class="annot"><span class="annottext">FieldSet
+</span><a href="#local-6989586621679474970"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">FieldSet -&gt; FieldSet
+forall a. [a] -&gt; [a]
+</span><span class="hs-identifier hs-var">Prelude.reverse</span></span><span> </span><span class="annot"><span class="annottext">FieldSet
+</span><a href="#local-6989586621679474970"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-140"></span><span>                           </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Setter
+  TensorShapeProto
+  TensorShapeProto
+  (Vector TensorShapeProto'Dim)
+  (Vector TensorShapeProto'Dim)
+-&gt; Vector TensorShapeProto'Dim
+-&gt; TensorShapeProto
+-&gt; TensorShapeProto
+forall s t a b. Setter s t a b -&gt; b -&gt; s -&gt; t
+</span><span class="hs-identifier hs-var">Lens.Family2.set</span></span><span>
+</span><span id="line-141"></span><span>                              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall s a (f :: * -&gt; *).
+(HasField s &quot;vec'dim&quot; a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+forall (x :: Symbol) s a (f :: * -&gt; *).
+(HasField s x a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Field.field</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-string">&quot;vec'dim&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Vector TensorShapeProto'Dim
+</span><a href="#local-6989586621679474977"><span class="hs-identifier hs-var">frozen'dim</span></a></span><span> </span><span class="annot"><span class="annottext">TensorShapeProto
+</span><a href="#local-6989586621679474981"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-142"></span><span>               </span><span class="hs-keyword">else</span><span>
+</span><span id="line-143"></span><span>                   </span><span class="hs-keyword">do</span><span> </span><span id="local-6989586621679474967"><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679474967"><span class="hs-identifier hs-var">tag</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Word64
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.getVarInt</span></span><span>
+</span><span id="line-144"></span><span>                      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679474967"><span class="hs-identifier hs-var">tag</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-145"></span><span>                        </span><span class="hs-number">18</span><span>
+</span><span id="line-146"></span><span>                          </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621679474965"><span class="annot"><span class="annottext">TensorShapeProto'Dim
+</span><a href="#local-6989586621679474965"><span class="hs-identifier hs-var">y</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser TensorShapeProto'Dim
+-&gt; String -&gt; Parser TensorShapeProto'Dim
+forall a. Parser a -&gt; String -&gt; Parser a
+</span><span class="hs-operator hs-var">(Data.ProtoLens.Encoding.Bytes.&lt;?&gt;)</span></span><span>
+</span><span id="line-147"></span><span>                                        </span><span class="hs-special">(</span><span class="hs-keyword">do</span><span> </span><span id="local-6989586621679474963"><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679474963"><span class="hs-identifier hs-var">len</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Word64
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.getVarInt</span></span><span>
+</span><span id="line-148"></span><span>                                            </span><span class="annot"><span class="annottext">Int -&gt; Parser TensorShapeProto'Dim -&gt; Parser TensorShapeProto'Dim
+forall a. Int -&gt; Parser a -&gt; Parser a
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.isolate</span></span><span>
+</span><span id="line-149"></span><span>                                              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word64 -&gt; Int
+forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">Prelude.fromIntegral</span></span><span> </span><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679474963"><span class="hs-identifier hs-var">len</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-150"></span><span>                                              </span><span class="annot"><span class="annottext">Parser TensorShapeProto'Dim
+forall msg. Message msg =&gt; Parser msg
+</span><span class="hs-identifier hs-var">Data.ProtoLens.parseMessage</span></span><span class="hs-special">)</span><span>
+</span><span id="line-151"></span><span>                                        </span><span class="annot"><span class="hs-string">&quot;dim&quot;</span></span><span>
+</span><span id="line-152"></span><span>                                </span><span id="local-6989586621679474961"><span class="annot"><span class="annottext">Growing Vector RealWorld TensorShapeProto'Dim
+</span><a href="#local-6989586621679474961"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (Growing Vector RealWorld TensorShapeProto'Dim)
+-&gt; Parser (Growing Vector RealWorld TensorShapeProto'Dim)
+forall a. IO a -&gt; Parser a
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Parser.Unsafe.unsafeLiftIO</span></span><span>
+</span><span id="line-153"></span><span>                                       </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Growing Vector (PrimState IO) TensorShapeProto'Dim
+-&gt; TensorShapeProto'Dim
+-&gt; IO (Growing Vector (PrimState IO) TensorShapeProto'Dim)
+forall (m :: * -&gt; *) (v :: * -&gt; *) a.
+(PrimMonad m, Vector v a) =&gt;
+Growing v (PrimState m) a -&gt; a -&gt; m (Growing v (PrimState m) a)
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Growing.append</span></span><span> </span><span class="annot"><span class="annottext">Growing Vector RealWorld TensorShapeProto'Dim
+Growing Vector (PrimState IO) TensorShapeProto'Dim
+</span><a href="#local-6989586621679474980"><span class="hs-identifier hs-var">mutable'dim</span></a></span><span> </span><span class="annot"><span class="annottext">TensorShapeProto'Dim
+</span><a href="#local-6989586621679474965"><span class="hs-identifier hs-var">y</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-154"></span><span>                                </span><span class="annot"><span class="annottext">TensorShapeProto
+-&gt; Growing Vector RealWorld TensorShapeProto'Dim
+-&gt; Parser TensorShapeProto
+</span><a href="#local-6989586621679474982"><span class="hs-identifier hs-var">loop</span></a></span><span> </span><span class="annot"><span class="annottext">TensorShapeProto
+</span><a href="#local-6989586621679474981"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">Growing Vector RealWorld TensorShapeProto'Dim
+</span><a href="#local-6989586621679474961"><span class="hs-identifier hs-var">v</span></a></span><span>
+</span><span id="line-155"></span><span>                        </span><span class="hs-number">24</span><span>
+</span><span id="line-156"></span><span>                          </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span> </span><span id="local-6989586621679474959"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679474959"><span class="hs-identifier hs-var">y</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Bool -&gt; String -&gt; Parser Bool
+forall a. Parser a -&gt; String -&gt; Parser a
+</span><span class="hs-operator hs-var">(Data.ProtoLens.Encoding.Bytes.&lt;?&gt;)</span></span><span>
+</span><span id="line-157"></span><span>                                       </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Word64 -&gt; Bool) -&gt; Parser Word64 -&gt; Parser Bool
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">Prelude.fmap</span></span><span>
+</span><span id="line-158"></span><span>                                          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word64 -&gt; Word64 -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">(Prelude./=)</span></span><span> </span><span class="annot"><span class="hs-number">0</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Parser Word64
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.getVarInt</span></span><span class="hs-special">)</span><span>
+</span><span id="line-159"></span><span>                                       </span><span class="annot"><span class="hs-string">&quot;unknown_rank&quot;</span></span><span>
+</span><span id="line-160"></span><span>                                </span><span class="annot"><span class="annottext">TensorShapeProto
+-&gt; Growing Vector RealWorld TensorShapeProto'Dim
+-&gt; Parser TensorShapeProto
+</span><a href="#local-6989586621679474982"><span class="hs-identifier hs-var">loop</span></a></span><span>
+</span><span id="line-161"></span><span>                                  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Setter TensorShapeProto TensorShapeProto Bool Bool
+-&gt; Bool -&gt; TensorShapeProto -&gt; TensorShapeProto
+forall s t a b. Setter s t a b -&gt; b -&gt; s -&gt; t
+</span><span class="hs-identifier hs-var">Lens.Family2.set</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall s a (f :: * -&gt; *).
+(HasField s &quot;unknownRank&quot; a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+forall (x :: Symbol) s a (f :: * -&gt; *).
+(HasField s x a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Field.field</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-string">&quot;unknownRank&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679474959"><span class="hs-identifier hs-var">y</span></a></span><span> </span><span class="annot"><span class="annottext">TensorShapeProto
+</span><a href="#local-6989586621679474981"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-162"></span><span>                                  </span><span class="annot"><span class="annottext">Growing Vector RealWorld TensorShapeProto'Dim
+</span><a href="#local-6989586621679474980"><span class="hs-identifier hs-var">mutable'dim</span></a></span><span>
+</span><span id="line-163"></span><span>                        </span><span id="local-6989586621679474957"><span class="annot"><span class="annottext">wire :: Word64
+</span><a href="#local-6989586621679474957"><span class="hs-identifier hs-var">wire</span></a></span></span><span>
+</span><span id="line-164"></span><span>                          </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621679474956"><span class="annot"><span class="annottext">TaggedValue
+</span><a href="#local-6989586621679474956"><span class="hs-identifier hs-var">y</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Word64 -&gt; Parser TaggedValue
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Wire.parseTaggedValueFromWire</span></span><span>
+</span><span id="line-165"></span><span>                                        </span><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679474957"><span class="hs-identifier hs-var">wire</span></a></span><span>
+</span><span id="line-166"></span><span>                                </span><span class="annot"><span class="annottext">TensorShapeProto
+-&gt; Growing Vector RealWorld TensorShapeProto'Dim
+-&gt; Parser TensorShapeProto
+</span><a href="#local-6989586621679474982"><span class="hs-identifier hs-var">loop</span></a></span><span>
+</span><span id="line-167"></span><span>                                  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Setter TensorShapeProto TensorShapeProto FieldSet FieldSet
+-&gt; (FieldSet -&gt; FieldSet) -&gt; TensorShapeProto -&gt; TensorShapeProto
+forall s t a b. Setter s t a b -&gt; (a -&gt; b) -&gt; s -&gt; t
+</span><span class="hs-identifier hs-var">Lens.Family2.over</span></span><span>
+</span><span id="line-168"></span><span>                                     </span><span class="annot"><span class="annottext">forall msg. Message msg =&gt; Lens' msg FieldSet
+Setter TensorShapeProto TensorShapeProto FieldSet FieldSet
+</span><span class="hs-identifier hs-var">Data.ProtoLens.unknownFields</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621679474954"><span class="annot"><span class="annottext">FieldSet
+</span><a href="#local-6989586621679474954"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="hs-glyph">:</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">TaggedValue
+</span><a href="#local-6989586621679474956"><span class="hs-identifier hs-var">y</span></a></span><span> </span><span class="annot"><span class="annottext">FieldSet
+</span><a href="#local-6989586621679474954"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">TensorShapeProto
+</span><a href="#local-6989586621679474981"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-169"></span><span>                                  </span><span class="annot"><span class="annottext">Growing Vector RealWorld TensorShapeProto'Dim
+</span><a href="#local-6989586621679474980"><span class="hs-identifier hs-var">mutable'dim</span></a></span><span>
+</span><span id="line-170"></span><span>      </span><span class="hs-keyword">in</span><span>
+</span><span id="line-171"></span><span>        </span><span class="annot"><span class="annottext">Parser TensorShapeProto -&gt; String -&gt; Parser TensorShapeProto
+forall a. Parser a -&gt; String -&gt; Parser a
+</span><span class="hs-operator hs-var">(Data.ProtoLens.Encoding.Bytes.&lt;?&gt;)</span></span><span>
+</span><span id="line-172"></span><span>          </span><span class="hs-special">(</span><span class="hs-keyword">do</span><span> </span><span id="local-6989586621679474953"><span class="annot"><span class="annottext">Growing Vector RealWorld TensorShapeProto'Dim
+</span><a href="#local-6989586621679474953"><span class="hs-identifier hs-var">mutable'dim</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (Growing Vector RealWorld TensorShapeProto'Dim)
+-&gt; Parser (Growing Vector RealWorld TensorShapeProto'Dim)
+forall a. IO a -&gt; Parser a
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Parser.Unsafe.unsafeLiftIO</span></span><span>
+</span><span id="line-173"></span><span>                               </span><span class="annot"><span class="annottext">IO (Growing Vector RealWorld TensorShapeProto'Dim)
+forall (m :: * -&gt; *) (v :: * -&gt; *) a.
+(PrimMonad m, Vector v a) =&gt;
+m (Growing v (PrimState m) a)
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Growing.new</span></span><span>
+</span><span id="line-174"></span><span>              </span><span class="annot"><span class="annottext">TensorShapeProto
+-&gt; Growing Vector RealWorld TensorShapeProto'Dim
+-&gt; Parser TensorShapeProto
+</span><a href="#local-6989586621679474982"><span class="hs-identifier hs-var">loop</span></a></span><span> </span><span class="annot"><span class="annottext">TensorShapeProto
+forall msg. Message msg =&gt; msg
+</span><span class="hs-identifier hs-var">Data.ProtoLens.defMessage</span></span><span> </span><span class="annot"><span class="annottext">Growing Vector RealWorld TensorShapeProto'Dim
+</span><a href="#local-6989586621679474953"><span class="hs-identifier hs-var">mutable'dim</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-175"></span><span>          </span><span class="annot"><span class="hs-string">&quot;TensorShapeProto&quot;</span></span><span>
+</span><span id="line-176"></span><span>  </span><span id="local-6989586621679474951"><span class="annot"><span class="annottext">buildMessage :: TensorShapeProto -&gt; Builder
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">buildMessage</span></span></span><span>
+</span><span id="line-177"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span> </span><span id="local-6989586621679474949"><span class="annot"><span class="annottext">_x :: TensorShapeProto
+</span><a href="#local-6989586621679474949"><span class="hs-identifier hs-var">_x</span></a></span></span><span>
+</span><span id="line-178"></span><span>        </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Builder -&gt; Builder -&gt; Builder
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">(Data.Monoid.&lt;&gt;)</span></span><span>
+</span><span id="line-179"></span><span>             </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(TensorShapeProto'Dim -&gt; Builder)
+-&gt; Vector TensorShapeProto'Dim -&gt; Builder
+forall (v :: * -&gt; *) a.
+Vector v a =&gt;
+(a -&gt; Builder) -&gt; v a -&gt; Builder
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.foldMapBuilder</span></span><span>
+</span><span id="line-180"></span><span>                </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span> </span><span id="local-6989586621679474947"><span class="annot"><span class="annottext">_v :: TensorShapeProto'Dim
+</span><a href="#local-6989586621679474947"><span class="hs-identifier hs-var">_v</span></a></span></span><span>
+</span><span id="line-181"></span><span>                   </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Builder -&gt; Builder -&gt; Builder
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">(Data.Monoid.&lt;&gt;)</span></span><span>
+</span><span id="line-182"></span><span>                        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word64 -&gt; Builder
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.putVarInt</span></span><span> </span><span class="annot"><span class="hs-number">18</span></span><span class="hs-special">)</span><span>
+</span><span id="line-183"></span><span>                        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(ByteString -&gt; Builder)
+-&gt; (TensorShapeProto'Dim -&gt; ByteString)
+-&gt; TensorShapeProto'Dim
+-&gt; Builder
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">(Prelude..)</span></span><span>
+</span><span id="line-184"></span><span>                           </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span> </span><span id="local-6989586621679474945"><span class="annot"><span class="annottext">bs :: ByteString
+</span><a href="#local-6989586621679474945"><span class="hs-identifier hs-var">bs</span></a></span></span><span>
+</span><span id="line-185"></span><span>                              </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Builder -&gt; Builder -&gt; Builder
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">(Data.Monoid.&lt;&gt;)</span></span><span>
+</span><span id="line-186"></span><span>                                   </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word64 -&gt; Builder
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.putVarInt</span></span><span>
+</span><span id="line-187"></span><span>                                      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; Word64
+forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">Prelude.fromIntegral</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; Int
+</span><span class="hs-identifier hs-var">Data.ByteString.length</span></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679474945"><span class="hs-identifier hs-var">bs</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-188"></span><span>                                   </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; Builder
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.putBytes</span></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679474945"><span class="hs-identifier hs-var">bs</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-189"></span><span>                           </span><span class="annot"><span class="annottext">TensorShapeProto'Dim -&gt; ByteString
+forall msg. Message msg =&gt; msg -&gt; ByteString
+</span><span class="hs-identifier hs-var">Data.ProtoLens.encodeMessage</span></span><span>
+</span><span id="line-190"></span><span>                           </span><span class="annot"><span class="annottext">TensorShapeProto'Dim
+</span><a href="#local-6989586621679474947"><span class="hs-identifier hs-var">_v</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-191"></span><span>                </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FoldLike
+  (Vector TensorShapeProto'Dim)
+  TensorShapeProto
+  TensorShapeProto
+  (Vector TensorShapeProto'Dim)
+  (Vector TensorShapeProto'Dim)
+-&gt; TensorShapeProto -&gt; Vector TensorShapeProto'Dim
+forall a s t b. FoldLike a s t a b -&gt; s -&gt; a
+</span><span class="hs-identifier hs-var">Lens.Family2.view</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall s a (f :: * -&gt; *).
+(HasField s &quot;vec'dim&quot; a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+forall (x :: Symbol) s a (f :: * -&gt; *).
+(HasField s x a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Field.field</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-string">&quot;vec'dim&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">TensorShapeProto
+</span><a href="#local-6989586621679474949"><span class="hs-identifier hs-var">_x</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-192"></span><span>             </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Builder -&gt; Builder -&gt; Builder
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">(Data.Monoid.&lt;&gt;)</span></span><span>
+</span><span id="line-193"></span><span>                </span><span class="hs-special">(</span><span class="hs-keyword">let</span><span>
+</span><span id="line-194"></span><span>                   </span><span id="local-6989586621679474940"><span class="annot"><span class="annottext">_v :: Bool
+</span><a href="#local-6989586621679474940"><span class="hs-identifier hs-var hs-var">_v</span></a></span></span><span>
+</span><span id="line-195"></span><span>                     </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">FoldLike Bool TensorShapeProto TensorShapeProto Bool Bool
+-&gt; TensorShapeProto -&gt; Bool
+forall a s t b. FoldLike a s t a b -&gt; s -&gt; a
+</span><span class="hs-identifier hs-var">Lens.Family2.view</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall s a (f :: * -&gt; *).
+(HasField s &quot;unknownRank&quot; a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+forall (x :: Symbol) s a (f :: * -&gt; *).
+(HasField s x a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Field.field</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-string">&quot;unknownRank&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">TensorShapeProto
+</span><a href="#local-6989586621679474949"><span class="hs-identifier hs-var">_x</span></a></span><span>
+</span><span id="line-196"></span><span>                 </span><span class="hs-keyword">in</span><span>
+</span><span id="line-197"></span><span>                   </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">(Prelude.==)</span></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679474940"><span class="hs-identifier hs-var">_v</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
+forall value. FieldDefault value =&gt; value
+</span><span class="hs-identifier hs-var">Data.ProtoLens.fieldDefault</span></span><span> </span><span class="hs-keyword">then</span><span>
+</span><span id="line-198"></span><span>                       </span><span class="annot"><span class="annottext">Builder
+forall a. Monoid a =&gt; a
+</span><span class="hs-identifier hs-var">Data.Monoid.mempty</span></span><span>
+</span><span id="line-199"></span><span>                   </span><span class="hs-keyword">else</span><span>
+</span><span id="line-200"></span><span>                       </span><span class="annot"><span class="annottext">Builder -&gt; Builder -&gt; Builder
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">(Data.Monoid.&lt;&gt;)</span></span><span>
+</span><span id="line-201"></span><span>                         </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word64 -&gt; Builder
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.putVarInt</span></span><span> </span><span class="annot"><span class="hs-number">24</span></span><span class="hs-special">)</span><span>
+</span><span id="line-202"></span><span>                         </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Word64 -&gt; Builder) -&gt; (Bool -&gt; Word64) -&gt; Bool -&gt; Builder
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">(Prelude..)</span></span><span>
+</span><span id="line-203"></span><span>                            </span><span class="annot"><span class="annottext">Word64 -&gt; Builder
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.putVarInt</span></span><span>
+</span><span id="line-204"></span><span>                            </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span> </span><span id="local-6989586621679474939"><span class="annot"><span class="annottext">b :: Bool
+</span><a href="#local-6989586621679474939"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679474939"><span class="hs-identifier hs-var">b</span></a></span><span> </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="hs-number">1</span></span><span> </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="hs-number">0</span></span><span class="hs-special">)</span><span>
+</span><span id="line-205"></span><span>                            </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679474940"><span class="hs-identifier hs-var">_v</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-206"></span><span>                </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FieldSet -&gt; Builder
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Wire.buildFieldSet</span></span><span>
+</span><span id="line-207"></span><span>                   </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FoldLike
+  FieldSet TensorShapeProto TensorShapeProto FieldSet FieldSet
+-&gt; TensorShapeProto -&gt; FieldSet
+forall a s t b. FoldLike a s t a b -&gt; s -&gt; a
+</span><span class="hs-identifier hs-var">Lens.Family2.view</span></span><span> </span><span class="annot"><span class="annottext">FoldLike
+  FieldSet TensorShapeProto TensorShapeProto FieldSet FieldSet
+forall msg. Message msg =&gt; Lens' msg FieldSet
+</span><span class="hs-identifier hs-var">Data.ProtoLens.unknownFields</span></span><span> </span><span class="annot"><span class="annottext">TensorShapeProto
+</span><a href="#local-6989586621679474949"><span class="hs-identifier hs-var">_x</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-208"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Control.DeepSeq.NFData</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#TensorShapeProto"><span class="hs-identifier hs-type">TensorShapeProto</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-209"></span><span>  </span><span id="local-6989586621679474935"><span class="annot"><span class="annottext">rnf :: TensorShapeProto -&gt; ()
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">rnf</span></span></span><span>
+</span><span id="line-210"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span> </span><span id="local-6989586621679474933"><span class="annot"><span class="annottext">x__ :: TensorShapeProto
+</span><a href="#local-6989586621679474933"><span class="hs-identifier hs-var">x__</span></a></span></span><span>
+</span><span id="line-211"></span><span>        </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">FieldSet -&gt; () -&gt; ()
+forall a b. NFData a =&gt; a -&gt; b -&gt; b
+</span><span class="hs-identifier hs-var">Control.DeepSeq.deepseq</span></span><span>
+</span><span id="line-212"></span><span>             </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TensorShapeProto -&gt; FieldSet
+</span><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#_TensorShapeProto%27_unknownFields"><span class="hs-identifier hs-var hs-var">_TensorShapeProto'_unknownFields</span></a></span><span> </span><span class="annot"><span class="annottext">TensorShapeProto
+</span><a href="#local-6989586621679474933"><span class="hs-identifier hs-var">x__</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-213"></span><span>             </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Vector TensorShapeProto'Dim -&gt; () -&gt; ()
+forall a b. NFData a =&gt; a -&gt; b -&gt; b
+</span><span class="hs-identifier hs-var">Control.DeepSeq.deepseq</span></span><span>
+</span><span id="line-214"></span><span>                </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TensorShapeProto -&gt; Vector TensorShapeProto'Dim
+</span><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#_TensorShapeProto%27dim"><span class="hs-identifier hs-var hs-var">_TensorShapeProto'dim</span></a></span><span> </span><span class="annot"><span class="annottext">TensorShapeProto
+</span><a href="#local-6989586621679474933"><span class="hs-identifier hs-var">x__</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-215"></span><span>                </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool -&gt; () -&gt; ()
+forall a b. NFData a =&gt; a -&gt; b -&gt; b
+</span><span class="hs-identifier hs-var">Control.DeepSeq.deepseq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TensorShapeProto -&gt; Bool
+</span><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#_TensorShapeProto%27unknownRank"><span class="hs-identifier hs-var hs-var">_TensorShapeProto'unknownRank</span></a></span><span> </span><span class="annot"><span class="annottext">TensorShapeProto
+</span><a href="#local-6989586621679474933"><span class="hs-identifier hs-var">x__</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-216"></span><span class="hs-comment">{- | Fields :
+     
+         * 'Proto.Tensorflow.Core.Framework.TensorShape_Fields.size' @:: Lens' TensorShapeProto'Dim Data.Int.Int64@
+         * 'Proto.Tensorflow.Core.Framework.TensorShape_Fields.name' @:: Lens' TensorShapeProto'Dim Data.Text.Text@ -}</span><span>
+</span><span id="line-220"></span><span class="hs-keyword">data</span><span> </span><span id="TensorShapeProto%27Dim"><span class="annot"><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#TensorShapeProto%27Dim"><span class="hs-identifier hs-var">TensorShapeProto'Dim</span></a></span></span><span>
+</span><span id="line-221"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="TensorShapeProto%27Dim%27_constructor"><span class="annot"><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#TensorShapeProto%27Dim%27_constructor"><span class="hs-identifier hs-var">TensorShapeProto'Dim'_constructor</span></a></span></span><span> </span><span class="hs-special">{</span><span id="_TensorShapeProto%27Dim%27size"><span class="annot"><span class="annottext">TensorShapeProto'Dim -&gt; Int64
+</span><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#_TensorShapeProto%27Dim%27size"><span class="hs-identifier hs-var hs-var">_TensorShapeProto'Dim'size</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Data.Int.Int64</span></span><span class="hs-special">,</span><span>
+</span><span id="line-222"></span><span>                                       </span><span id="_TensorShapeProto%27Dim%27name"><span class="annot"><span class="annottext">TensorShapeProto'Dim -&gt; Text
+</span><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#_TensorShapeProto%27Dim%27name"><span class="hs-identifier hs-var hs-var">_TensorShapeProto'Dim'name</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Data.Text.Text</span></span><span class="hs-special">,</span><span>
+</span><span id="line-223"></span><span>                                       </span><span id="_TensorShapeProto%27Dim%27_unknownFields"><span class="annot"><span class="annottext">TensorShapeProto'Dim -&gt; FieldSet
+</span><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#_TensorShapeProto%27Dim%27_unknownFields"><span class="hs-identifier hs-var hs-var">_TensorShapeProto'Dim'_unknownFields</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.FieldSet</span></span><span class="hs-special">}</span><span>
+</span><span id="line-224"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679474924"><span id="local-6989586621679474926"><span class="annot"><span class="annottext">TensorShapeProto'Dim -&gt; TensorShapeProto'Dim -&gt; Bool
+(TensorShapeProto'Dim -&gt; TensorShapeProto'Dim -&gt; Bool)
+-&gt; (TensorShapeProto'Dim -&gt; TensorShapeProto'Dim -&gt; Bool)
+-&gt; Eq TensorShapeProto'Dim
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: TensorShapeProto'Dim -&gt; TensorShapeProto'Dim -&gt; Bool
+$c/= :: TensorShapeProto'Dim -&gt; TensorShapeProto'Dim -&gt; Bool
+== :: TensorShapeProto'Dim -&gt; TensorShapeProto'Dim -&gt; Bool
+$c== :: TensorShapeProto'Dim -&gt; TensorShapeProto'Dim -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Prelude.Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679474909"><span id="local-6989586621679474911"><span id="local-6989586621679474913"><span id="local-6989586621679474915"><span id="local-6989586621679474917"><span id="local-6989586621679474919"><span id="local-6989586621679474921"><span class="annot"><span class="annottext">Eq TensorShapeProto'Dim
+Eq TensorShapeProto'Dim =&gt;
+(TensorShapeProto'Dim -&gt; TensorShapeProto'Dim -&gt; Ordering)
+-&gt; (TensorShapeProto'Dim -&gt; TensorShapeProto'Dim -&gt; Bool)
+-&gt; (TensorShapeProto'Dim -&gt; TensorShapeProto'Dim -&gt; Bool)
+-&gt; (TensorShapeProto'Dim -&gt; TensorShapeProto'Dim -&gt; Bool)
+-&gt; (TensorShapeProto'Dim -&gt; TensorShapeProto'Dim -&gt; Bool)
+-&gt; (TensorShapeProto'Dim
+    -&gt; TensorShapeProto'Dim -&gt; TensorShapeProto'Dim)
+-&gt; (TensorShapeProto'Dim
+    -&gt; TensorShapeProto'Dim -&gt; TensorShapeProto'Dim)
+-&gt; Ord TensorShapeProto'Dim
+TensorShapeProto'Dim -&gt; TensorShapeProto'Dim -&gt; Bool
+TensorShapeProto'Dim -&gt; TensorShapeProto'Dim -&gt; Ordering
+TensorShapeProto'Dim
+-&gt; TensorShapeProto'Dim -&gt; TensorShapeProto'Dim
+forall a.
+Eq a =&gt;
+(a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+min :: TensorShapeProto'Dim
+-&gt; TensorShapeProto'Dim -&gt; TensorShapeProto'Dim
+$cmin :: TensorShapeProto'Dim
+-&gt; TensorShapeProto'Dim -&gt; TensorShapeProto'Dim
+max :: TensorShapeProto'Dim
+-&gt; TensorShapeProto'Dim -&gt; TensorShapeProto'Dim
+$cmax :: TensorShapeProto'Dim
+-&gt; TensorShapeProto'Dim -&gt; TensorShapeProto'Dim
+&gt;= :: TensorShapeProto'Dim -&gt; TensorShapeProto'Dim -&gt; Bool
+$c&gt;= :: TensorShapeProto'Dim -&gt; TensorShapeProto'Dim -&gt; Bool
+&gt; :: TensorShapeProto'Dim -&gt; TensorShapeProto'Dim -&gt; Bool
+$c&gt; :: TensorShapeProto'Dim -&gt; TensorShapeProto'Dim -&gt; Bool
+&lt;= :: TensorShapeProto'Dim -&gt; TensorShapeProto'Dim -&gt; Bool
+$c&lt;= :: TensorShapeProto'Dim -&gt; TensorShapeProto'Dim -&gt; Bool
+&lt; :: TensorShapeProto'Dim -&gt; TensorShapeProto'Dim -&gt; Bool
+$c&lt; :: TensorShapeProto'Dim -&gt; TensorShapeProto'Dim -&gt; Bool
+compare :: TensorShapeProto'Dim -&gt; TensorShapeProto'Dim -&gt; Ordering
+$ccompare :: TensorShapeProto'Dim -&gt; TensorShapeProto'Dim -&gt; Ordering
+$cp1Ord :: Eq TensorShapeProto'Dim
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Prelude.Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-225"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679474904"><span id="local-6989586621679474906"><span class="annot"><span class="hs-identifier hs-type">Prelude.Show</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#TensorShapeProto%27Dim"><span class="hs-identifier hs-type">TensorShapeProto'Dim</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-226"></span><span>  </span><span id="local-6989586621679474903"><span class="annot"><span class="annottext">showsPrec :: Int -&gt; TensorShapeProto'Dim -&gt; ShowS
+</span><a href="#local-6989586621679474903"><span class="hs-identifier hs-var hs-var hs-var hs-var">showsPrec</span></a></span></span><span> </span><span class="hs-identifier">_</span><span> </span><span id="local-6989586621679474902"><span class="annot"><span class="annottext">__x :: TensorShapeProto'Dim
+</span><a href="#local-6989586621679474902"><span class="hs-identifier hs-var">__x</span></a></span></span><span> </span><span id="local-6989586621679474901"><span class="annot"><span class="annottext">__s :: String
+</span><a href="#local-6989586621679474901"><span class="hs-identifier hs-var">__s</span></a></span></span><span>
+</span><span id="line-227"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Char -&gt; ShowS
+</span><span class="hs-identifier hs-var">Prelude.showChar</span></span><span>
+</span><span id="line-228"></span><span>        </span><span class="annot"><span class="hs-char">'{'</span></span><span>
+</span><span id="line-229"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; ShowS
+</span><span class="hs-identifier hs-var">Prelude.showString</span></span><span>
+</span><span id="line-230"></span><span>           </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TensorShapeProto'Dim -&gt; String
+forall msg. Message msg =&gt; msg -&gt; String
+</span><span class="hs-identifier hs-var">Data.ProtoLens.showMessageShort</span></span><span> </span><span class="annot"><span class="annottext">TensorShapeProto'Dim
+</span><a href="#local-6989586621679474902"><span class="hs-identifier hs-var">__x</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Char -&gt; ShowS
+</span><span class="hs-identifier hs-var">Prelude.showChar</span></span><span> </span><span class="annot"><span class="hs-char">'}'</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679474901"><span class="hs-identifier hs-var">__s</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-231"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.Field.HasField</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#TensorShapeProto%27Dim"><span class="hs-identifier hs-type">TensorShapeProto'Dim</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;size&quot;</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data.Int.Int64</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-232"></span><span>  </span><span id="local-6989586621679474899"><span class="annot"><span class="annottext">fieldOf :: Proxy# &quot;size&quot;
+-&gt; (Int64 -&gt; f Int64)
+-&gt; TensorShapeProto'Dim
+-&gt; f TensorShapeProto'Dim
+</span><a href="#local-6989586621679474899"><span class="hs-identifier hs-var hs-var hs-var hs-var">fieldOf</span></a></span></span><span> </span><span class="hs-identifier">_</span><span>
+</span><span id="line-233"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((Int64 -&gt; f Int64)
+ -&gt; TensorShapeProto'Dim -&gt; f TensorShapeProto'Dim)
+-&gt; ((Int64 -&gt; f Int64) -&gt; Int64 -&gt; f Int64)
+-&gt; (Int64 -&gt; f Int64)
+-&gt; TensorShapeProto'Dim
+-&gt; f TensorShapeProto'Dim
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">(Prelude..)</span></span><span>
+</span><span id="line-234"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(TensorShapeProto'Dim -&gt; Int64)
+-&gt; (TensorShapeProto'Dim -&gt; Int64 -&gt; TensorShapeProto'Dim)
+-&gt; Lens TensorShapeProto'Dim TensorShapeProto'Dim Int64 Int64
+forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span class="hs-identifier hs-var">Lens.Family2.Unchecked.lens</span></span><span>
+</span><span id="line-235"></span><span>           </span><span class="annot"><span class="annottext">TensorShapeProto'Dim -&gt; Int64
+</span><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#_TensorShapeProto%27Dim%27size"><span class="hs-identifier hs-var hs-var">_TensorShapeProto'Dim'size</span></a></span><span>
+</span><span id="line-236"></span><span>           </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span> </span><span id="local-6989586621679474898"><span class="annot"><span class="annottext">x__ :: TensorShapeProto'Dim
+</span><a href="#local-6989586621679474898"><span class="hs-identifier hs-var">x__</span></a></span></span><span> </span><span id="local-6989586621679474897"><span class="annot"><span class="annottext">y__ :: Int64
+</span><a href="#local-6989586621679474897"><span class="hs-identifier hs-var">y__</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">TensorShapeProto'Dim
+</span><a href="#local-6989586621679474898"><span class="hs-identifier hs-var">x__</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_TensorShapeProto'Dim'size :: Int64
+</span><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#_TensorShapeProto%27Dim%27size"><span class="hs-identifier hs-var">_TensorShapeProto'Dim'size</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int64
+</span><a href="#local-6989586621679474897"><span class="hs-identifier hs-var">y__</span></a></span><span class="hs-special">}</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-237"></span><span>        </span><span class="annot"><span class="annottext">(Int64 -&gt; f Int64) -&gt; Int64 -&gt; f Int64
+forall a. a -&gt; a
+</span><span class="hs-identifier hs-var">Prelude.id</span></span><span>
+</span><span id="line-238"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.Field.HasField</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#TensorShapeProto%27Dim"><span class="hs-identifier hs-type">TensorShapeProto'Dim</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;name&quot;</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data.Text.Text</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-239"></span><span>  </span><span id="local-6989586621679474895"><span class="annot"><span class="annottext">fieldOf :: Proxy# &quot;name&quot;
+-&gt; (Text -&gt; f Text)
+-&gt; TensorShapeProto'Dim
+-&gt; f TensorShapeProto'Dim
+</span><a href="#local-6989586621679474895"><span class="hs-identifier hs-var hs-var hs-var hs-var">fieldOf</span></a></span></span><span> </span><span class="hs-identifier">_</span><span>
+</span><span id="line-240"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((Text -&gt; f Text)
+ -&gt; TensorShapeProto'Dim -&gt; f TensorShapeProto'Dim)
+-&gt; ((Text -&gt; f Text) -&gt; Text -&gt; f Text)
+-&gt; (Text -&gt; f Text)
+-&gt; TensorShapeProto'Dim
+-&gt; f TensorShapeProto'Dim
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">(Prelude..)</span></span><span>
+</span><span id="line-241"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(TensorShapeProto'Dim -&gt; Text)
+-&gt; (TensorShapeProto'Dim -&gt; Text -&gt; TensorShapeProto'Dim)
+-&gt; Lens TensorShapeProto'Dim TensorShapeProto'Dim Text Text
+forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span class="hs-identifier hs-var">Lens.Family2.Unchecked.lens</span></span><span>
+</span><span id="line-242"></span><span>           </span><span class="annot"><span class="annottext">TensorShapeProto'Dim -&gt; Text
+</span><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#_TensorShapeProto%27Dim%27name"><span class="hs-identifier hs-var hs-var">_TensorShapeProto'Dim'name</span></a></span><span>
+</span><span id="line-243"></span><span>           </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span> </span><span id="local-6989586621679474894"><span class="annot"><span class="annottext">x__ :: TensorShapeProto'Dim
+</span><a href="#local-6989586621679474894"><span class="hs-identifier hs-var">x__</span></a></span></span><span> </span><span id="local-6989586621679474893"><span class="annot"><span class="annottext">y__ :: Text
+</span><a href="#local-6989586621679474893"><span class="hs-identifier hs-var">y__</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">TensorShapeProto'Dim
+</span><a href="#local-6989586621679474894"><span class="hs-identifier hs-var">x__</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_TensorShapeProto'Dim'name :: Text
+</span><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#_TensorShapeProto%27Dim%27name"><span class="hs-identifier hs-var">_TensorShapeProto'Dim'name</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679474893"><span class="hs-identifier hs-var">y__</span></a></span><span class="hs-special">}</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-244"></span><span>        </span><span class="annot"><span class="annottext">(Text -&gt; f Text) -&gt; Text -&gt; f Text
+forall a. a -&gt; a
+</span><span class="hs-identifier hs-var">Prelude.id</span></span><span>
+</span><span id="line-245"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679474886"><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.Message</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#TensorShapeProto%27Dim"><span class="hs-identifier hs-type">TensorShapeProto'Dim</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-246"></span><span>  </span><span id="local-6989586621679474882"><span class="annot"><span class="annottext">messageName :: Proxy TensorShapeProto'Dim -&gt; Text
+</span><a href="#local-6989586621679474882"><span class="hs-identifier hs-var hs-var hs-var hs-var">messageName</span></a></span></span><span> </span><span class="hs-identifier">_</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Text
+</span><span class="hs-identifier hs-var">Data.Text.pack</span></span><span> </span><span class="annot"><span class="hs-string">&quot;tensorflow.TensorShapeProto.Dim&quot;</span></span><span>
+</span><span id="line-247"></span><span>  </span><span id="local-6989586621679474881"><span class="annot"><span class="annottext">packedMessageDescriptor :: Proxy TensorShapeProto'Dim -&gt; ByteString
+</span><a href="#local-6989586621679474881"><span class="hs-identifier hs-var hs-var hs-var hs-var">packedMessageDescriptor</span></a></span></span><span> </span><span class="hs-identifier">_</span><span>
+</span><span id="line-248"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-string">&quot;\n\
+      \\ETXDim\DC2\DC2\n\
+      \\EOTsize\CAN\SOH \SOH(\ETXR\EOTsize\DC2\DC2\n\
+      \\EOTname\CAN\STX \SOH(\tR\EOTname&quot;</span></span><span>
+</span><span id="line-252"></span><span>  </span><span id="local-6989586621679474880"><span class="annot"><span class="annottext">packedFileDescriptor :: Proxy TensorShapeProto'Dim -&gt; ByteString
+</span><a href="#local-6989586621679474880"><span class="hs-identifier hs-var hs-var hs-var hs-var">packedFileDescriptor</span></a></span></span><span> </span><span class="hs-identifier">_</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#packedFileDescriptor"><span class="hs-identifier hs-var">packedFileDescriptor</span></a></span><span>
+</span><span id="line-253"></span><span>  </span><span id="local-6989586621679474879"><span class="annot"><span class="annottext">fieldsByTag :: Map Tag (FieldDescriptor TensorShapeProto'Dim)
+</span><a href="#local-6989586621679474879"><span class="hs-identifier hs-var hs-var hs-var hs-var">fieldsByTag</span></a></span></span><span>
+</span><span id="line-254"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">let</span><span>
+</span><span id="line-255"></span><span>        </span><span id="local-6989586621679474878"><span class="annot"><span class="annottext">size__field_descriptor :: FieldDescriptor TensorShapeProto'Dim
+</span><a href="#local-6989586621679474878"><span class="hs-identifier hs-var hs-var">size__field_descriptor</span></a></span></span><span>
+</span><span id="line-256"></span><span>          </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+-&gt; FieldTypeDescriptor Int64
+-&gt; FieldAccessor TensorShapeProto'Dim Int64
+-&gt; FieldDescriptor TensorShapeProto'Dim
+forall value msg.
+String
+-&gt; FieldTypeDescriptor value
+-&gt; FieldAccessor msg value
+-&gt; FieldDescriptor msg
+</span><span class="hs-identifier hs-var">Data.ProtoLens.FieldDescriptor</span></span><span>
+</span><span id="line-257"></span><span>              </span><span class="annot"><span class="hs-string">&quot;size&quot;</span></span><span>
+</span><span id="line-258"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ScalarField Int64 -&gt; FieldTypeDescriptor Int64
+forall value. ScalarField value -&gt; FieldTypeDescriptor value
+</span><span class="hs-identifier hs-var">Data.ProtoLens.ScalarField</span></span><span> </span><span class="annot"><span class="annottext">ScalarField Int64
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Int64Field</span></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-259"></span><span>                 </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.FieldTypeDescriptor</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data.Int.Int64</span></span><span class="hs-special">)</span><span>
+</span><span id="line-260"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">WireDefault Int64
+-&gt; Lens TensorShapeProto'Dim TensorShapeProto'Dim Int64 Int64
+-&gt; FieldAccessor TensorShapeProto'Dim Int64
+forall value msg.
+WireDefault value -&gt; Lens' msg value -&gt; FieldAccessor msg value
+</span><span class="hs-identifier hs-var">Data.ProtoLens.PlainField</span></span><span>
+</span><span id="line-261"></span><span>                 </span><span class="annot"><span class="annottext">WireDefault Int64
+forall value. (FieldDefault value, Eq value) =&gt; WireDefault value
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Optional</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall s a (f :: * -&gt; *).
+(HasField s &quot;size&quot; a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+forall (x :: Symbol) s a (f :: * -&gt; *).
+(HasField s x a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Field.field</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-string">&quot;size&quot;</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-262"></span><span>              </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.FieldDescriptor</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#TensorShapeProto%27Dim"><span class="hs-identifier hs-type">TensorShapeProto'Dim</span></a></span><span>
+</span><span id="line-263"></span><span>        </span><span id="local-6989586621679474876"><span class="annot"><span class="annottext">name__field_descriptor :: FieldDescriptor TensorShapeProto'Dim
+</span><a href="#local-6989586621679474876"><span class="hs-identifier hs-var hs-var">name__field_descriptor</span></a></span></span><span>
+</span><span id="line-264"></span><span>          </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+-&gt; FieldTypeDescriptor Text
+-&gt; FieldAccessor TensorShapeProto'Dim Text
+-&gt; FieldDescriptor TensorShapeProto'Dim
+forall value msg.
+String
+-&gt; FieldTypeDescriptor value
+-&gt; FieldAccessor msg value
+-&gt; FieldDescriptor msg
+</span><span class="hs-identifier hs-var">Data.ProtoLens.FieldDescriptor</span></span><span>
+</span><span id="line-265"></span><span>              </span><span class="annot"><span class="hs-string">&quot;name&quot;</span></span><span>
+</span><span id="line-266"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ScalarField Text -&gt; FieldTypeDescriptor Text
+forall value. ScalarField value -&gt; FieldTypeDescriptor value
+</span><span class="hs-identifier hs-var">Data.ProtoLens.ScalarField</span></span><span> </span><span class="annot"><span class="annottext">ScalarField Text
+</span><span class="hs-identifier hs-var">Data.ProtoLens.StringField</span></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-267"></span><span>                 </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.FieldTypeDescriptor</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data.Text.Text</span></span><span class="hs-special">)</span><span>
+</span><span id="line-268"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">WireDefault Text
+-&gt; Lens TensorShapeProto'Dim TensorShapeProto'Dim Text Text
+-&gt; FieldAccessor TensorShapeProto'Dim Text
+forall value msg.
+WireDefault value -&gt; Lens' msg value -&gt; FieldAccessor msg value
+</span><span class="hs-identifier hs-var">Data.ProtoLens.PlainField</span></span><span>
+</span><span id="line-269"></span><span>                 </span><span class="annot"><span class="annottext">WireDefault Text
+forall value. (FieldDefault value, Eq value) =&gt; WireDefault value
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Optional</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall s a (f :: * -&gt; *).
+(HasField s &quot;name&quot; a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+forall (x :: Symbol) s a (f :: * -&gt; *).
+(HasField s x a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Field.field</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-string">&quot;name&quot;</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-270"></span><span>              </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.FieldDescriptor</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#TensorShapeProto%27Dim"><span class="hs-identifier hs-type">TensorShapeProto'Dim</span></a></span><span>
+</span><span id="line-271"></span><span>      </span><span class="hs-keyword">in</span><span>
+</span><span id="line-272"></span><span>        </span><span class="annot"><span class="annottext">[(Tag, FieldDescriptor TensorShapeProto'Dim)]
+-&gt; Map Tag (FieldDescriptor TensorShapeProto'Dim)
+forall k a. Ord k =&gt; [(k, a)] -&gt; Map k a
+</span><span class="hs-identifier hs-var">Data.Map.fromList</span></span><span>
+</span><span id="line-273"></span><span>          </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; Tag
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Tag</span></span><span> </span><span class="annot"><span class="hs-number">1</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">FieldDescriptor TensorShapeProto'Dim
+</span><a href="#local-6989586621679474878"><span class="hs-identifier hs-var">size__field_descriptor</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-274"></span><span>           </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; Tag
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Tag</span></span><span> </span><span class="annot"><span class="hs-number">2</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">FieldDescriptor TensorShapeProto'Dim
+</span><a href="#local-6989586621679474876"><span class="hs-identifier hs-var">name__field_descriptor</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
+</span><span id="line-275"></span><span>  </span><span id="local-6989586621679474874"><span class="annot"><span class="annottext">unknownFields :: LensLike' f TensorShapeProto'Dim FieldSet
+</span><a href="#local-6989586621679474874"><span class="hs-identifier hs-var hs-var hs-var hs-var">unknownFields</span></a></span></span><span>
+</span><span id="line-276"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(TensorShapeProto'Dim -&gt; FieldSet)
+-&gt; (TensorShapeProto'Dim -&gt; FieldSet -&gt; TensorShapeProto'Dim)
+-&gt; Lens' TensorShapeProto'Dim FieldSet
+forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span class="hs-identifier hs-var">Lens.Family2.Unchecked.lens</span></span><span>
+</span><span id="line-277"></span><span>        </span><span class="annot"><span class="annottext">TensorShapeProto'Dim -&gt; FieldSet
+</span><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#_TensorShapeProto%27Dim%27_unknownFields"><span class="hs-identifier hs-var hs-var">_TensorShapeProto'Dim'_unknownFields</span></a></span><span>
+</span><span id="line-278"></span><span>        </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span> </span><span id="local-6989586621679474873"><span class="annot"><span class="annottext">x__ :: TensorShapeProto'Dim
+</span><a href="#local-6989586621679474873"><span class="hs-identifier hs-var">x__</span></a></span></span><span> </span><span id="local-6989586621679474872"><span class="annot"><span class="annottext">y__ :: FieldSet
+</span><a href="#local-6989586621679474872"><span class="hs-identifier hs-var">y__</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">TensorShapeProto'Dim
+</span><a href="#local-6989586621679474873"><span class="hs-identifier hs-var">x__</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_TensorShapeProto'Dim'_unknownFields :: FieldSet
+</span><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#_TensorShapeProto%27Dim%27_unknownFields"><span class="hs-identifier hs-var">_TensorShapeProto'Dim'_unknownFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">FieldSet
+</span><a href="#local-6989586621679474872"><span class="hs-identifier hs-var">y__</span></a></span><span class="hs-special">}</span><span class="hs-special">)</span><span>
+</span><span id="line-279"></span><span>  </span><span id="local-6989586621679474871"><span class="annot"><span class="annottext">defMessage :: TensorShapeProto'Dim
+</span><a href="#local-6989586621679474871"><span class="hs-identifier hs-var hs-var hs-var hs-var">defMessage</span></a></span></span><span>
+</span><span id="line-280"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">$WTensorShapeProto'Dim'_constructor :: Int64 -&gt; Text -&gt; FieldSet -&gt; TensorShapeProto'Dim
+</span><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#%24WTensorShapeProto%27Dim%27_constructor"><span class="hs-identifier hs-type hs-type">TensorShapeProto'Dim'_constructor</span></a></span><span>
+</span><span id="line-281"></span><span>        </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_TensorShapeProto'Dim'size :: Int64
+</span><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#_TensorShapeProto%27Dim%27size"><span class="hs-identifier hs-var">_TensorShapeProto'Dim'size</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int64
+forall value. FieldDefault value =&gt; value
+</span><span class="hs-identifier hs-var">Data.ProtoLens.fieldDefault</span></span><span class="hs-special">,</span><span>
+</span><span id="line-282"></span><span>         </span><span class="annot"><span class="annottext">_TensorShapeProto'Dim'name :: Text
+</span><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#_TensorShapeProto%27Dim%27name"><span class="hs-identifier hs-var">_TensorShapeProto'Dim'name</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+forall value. FieldDefault value =&gt; value
+</span><span class="hs-identifier hs-var">Data.ProtoLens.fieldDefault</span></span><span class="hs-special">,</span><span>
+</span><span id="line-283"></span><span>         </span><span class="annot"><span class="annottext">_TensorShapeProto'Dim'_unknownFields :: FieldSet
+</span><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#_TensorShapeProto%27Dim%27_unknownFields"><span class="hs-identifier hs-var">_TensorShapeProto'Dim'_unknownFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span class="hs-special">}</span><span>
+</span><span id="line-284"></span><span>  </span><span id="local-6989586621679474869"><span class="annot"><span class="annottext">parseMessage :: Parser TensorShapeProto'Dim
+</span><a href="#local-6989586621679474869"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseMessage</span></a></span></span><span>
+</span><span id="line-285"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">let</span><span>
+</span><span id="line-286"></span><span>        </span><span class="annot"><a href="#local-6989586621679474868"><span class="hs-identifier hs-type">loop</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-287"></span><span>          </span><span class="annot"><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#TensorShapeProto%27Dim"><span class="hs-identifier hs-type">TensorShapeProto'Dim</span></a></span><span>
+</span><span id="line-288"></span><span>          </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data.ProtoLens.Encoding.Bytes.Parser</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#TensorShapeProto%27Dim"><span class="hs-identifier hs-type">TensorShapeProto'Dim</span></a></span><span>
+</span><span id="line-289"></span><span>        </span><span id="local-6989586621679474868"><span class="annot"><span class="annottext">loop :: TensorShapeProto'Dim -&gt; Parser TensorShapeProto'Dim
+</span><a href="#local-6989586621679474868"><span class="hs-identifier hs-var hs-var">loop</span></a></span></span><span> </span><span id="local-6989586621679474867"><span class="annot"><span class="annottext">x :: TensorShapeProto'Dim
+</span><a href="#local-6989586621679474867"><span class="hs-identifier hs-var">x</span></a></span></span><span>
+</span><span id="line-290"></span><span>          </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span> </span><span id="local-6989586621679474866"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679474866"><span class="hs-identifier hs-var">end</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Bool
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.atEnd</span></span><span>
+</span><span id="line-291"></span><span>               </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679474866"><span class="hs-identifier hs-var">end</span></a></span><span> </span><span class="hs-keyword">then</span><span>
+</span><span id="line-292"></span><span>                   </span><span class="hs-keyword">do</span><span> </span><span class="hs-special">(</span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679474865"><span class="annot"><span class="annottext">missing :: [a]
+</span><a href="#local-6989586621679474865"><span class="hs-identifier hs-var hs-var">missing</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
+</span><span id="line-293"></span><span>                       </span><span class="hs-keyword">in</span><span>
+</span><span id="line-294"></span><span>                         </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">[Any] -&gt; Bool
+forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
+</span><span class="hs-identifier hs-var">Prelude.null</span></span><span> </span><span class="annot"><span class="annottext">[Any]
+forall a. [a]
+</span><a href="#local-6989586621679474865"><span class="hs-identifier hs-var">missing</span></a></span><span> </span><span class="hs-keyword">then</span><span>
+</span><span id="line-295"></span><span>                             </span><span class="annot"><span class="annottext">() -&gt; Parser ()
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span class="hs-identifier hs-var">Prelude.return</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-296"></span><span>                         </span><span class="hs-keyword">else</span><span>
+</span><span id="line-297"></span><span>                             </span><span class="annot"><span class="annottext">String -&gt; Parser ()
+forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
+</span><span class="hs-identifier hs-var">Prelude.fail</span></span><span>
+</span><span id="line-298"></span><span>                               </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; ShowS
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">(Prelude.++)</span></span><span>
+</span><span id="line-299"></span><span>                                  </span><span class="annot"><span class="hs-string">&quot;Missing required fields: &quot;</span></span><span>
+</span><span id="line-300"></span><span>                                  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[String] -&gt; String
+forall a. Show a =&gt; a -&gt; String
+</span><span class="hs-identifier hs-var">Prelude.show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[String]
+forall a. [a]
+</span><a href="#local-6989586621679474865"><span class="hs-identifier hs-var">missing</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Prelude.String</span></span><span class="hs-special">]</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-301"></span><span>                      </span><span class="annot"><span class="annottext">TensorShapeProto'Dim -&gt; Parser TensorShapeProto'Dim
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span class="hs-identifier hs-var">Prelude.return</span></span><span>
+</span><span id="line-302"></span><span>                        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Setter TensorShapeProto'Dim TensorShapeProto'Dim FieldSet FieldSet
+-&gt; (FieldSet -&gt; FieldSet)
+-&gt; TensorShapeProto'Dim
+-&gt; TensorShapeProto'Dim
+forall s t a b. Setter s t a b -&gt; (a -&gt; b) -&gt; s -&gt; t
+</span><span class="hs-identifier hs-var">Lens.Family2.over</span></span><span>
+</span><span id="line-303"></span><span>                           </span><span class="annot"><span class="annottext">forall msg. Message msg =&gt; Lens' msg FieldSet
+Setter TensorShapeProto'Dim TensorShapeProto'Dim FieldSet FieldSet
+</span><span class="hs-identifier hs-var">Data.ProtoLens.unknownFields</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621679474864"><span class="annot"><span class="annottext">FieldSet
+</span><a href="#local-6989586621679474864"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">FieldSet -&gt; FieldSet
+forall a. [a] -&gt; [a]
+</span><span class="hs-identifier hs-var">Prelude.reverse</span></span><span> </span><span class="annot"><span class="annottext">FieldSet
+</span><a href="#local-6989586621679474864"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">TensorShapeProto'Dim
+</span><a href="#local-6989586621679474867"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-304"></span><span>               </span><span class="hs-keyword">else</span><span>
+</span><span id="line-305"></span><span>                   </span><span class="hs-keyword">do</span><span> </span><span id="local-6989586621679474863"><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679474863"><span class="hs-identifier hs-var">tag</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Word64
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.getVarInt</span></span><span>
+</span><span id="line-306"></span><span>                      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679474863"><span class="hs-identifier hs-var">tag</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-307"></span><span>                        </span><span class="hs-number">8</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span> </span><span id="local-6989586621679474862"><span class="annot"><span class="annottext">Int64
+</span><a href="#local-6989586621679474862"><span class="hs-identifier hs-var">y</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Int64 -&gt; String -&gt; Parser Int64
+forall a. Parser a -&gt; String -&gt; Parser a
+</span><span class="hs-operator hs-var">(Data.ProtoLens.Encoding.Bytes.&lt;?&gt;)</span></span><span>
+</span><span id="line-308"></span><span>                                       </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Word64 -&gt; Int64) -&gt; Parser Word64 -&gt; Parser Int64
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">Prelude.fmap</span></span><span>
+</span><span id="line-309"></span><span>                                          </span><span class="annot"><span class="annottext">Word64 -&gt; Int64
+forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">Prelude.fromIntegral</span></span><span>
+</span><span id="line-310"></span><span>                                          </span><span class="annot"><span class="annottext">Parser Word64
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.getVarInt</span></span><span class="hs-special">)</span><span>
+</span><span id="line-311"></span><span>                                       </span><span class="annot"><span class="hs-string">&quot;size&quot;</span></span><span>
+</span><span id="line-312"></span><span>                                </span><span class="annot"><span class="annottext">TensorShapeProto'Dim -&gt; Parser TensorShapeProto'Dim
+</span><a href="#local-6989586621679474868"><span class="hs-identifier hs-var">loop</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Setter TensorShapeProto'Dim TensorShapeProto'Dim Int64 Int64
+-&gt; Int64 -&gt; TensorShapeProto'Dim -&gt; TensorShapeProto'Dim
+forall s t a b. Setter s t a b -&gt; b -&gt; s -&gt; t
+</span><span class="hs-identifier hs-var">Lens.Family2.set</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall s a (f :: * -&gt; *).
+(HasField s &quot;size&quot; a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+forall (x :: Symbol) s a (f :: * -&gt; *).
+(HasField s x a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Field.field</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-string">&quot;size&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Int64
+</span><a href="#local-6989586621679474862"><span class="hs-identifier hs-var">y</span></a></span><span> </span><span class="annot"><span class="annottext">TensorShapeProto'Dim
+</span><a href="#local-6989586621679474867"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-313"></span><span>                        </span><span class="hs-number">18</span><span>
+</span><span id="line-314"></span><span>                          </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span> </span><span id="local-6989586621679474861"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679474861"><span class="hs-identifier hs-var">y</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Text -&gt; String -&gt; Parser Text
+forall a. Parser a -&gt; String -&gt; Parser a
+</span><span class="hs-operator hs-var">(Data.ProtoLens.Encoding.Bytes.&lt;?&gt;)</span></span><span>
+</span><span id="line-315"></span><span>                                       </span><span class="hs-special">(</span><span class="hs-keyword">do</span><span> </span><span id="local-6989586621679474860"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679474860"><span class="hs-identifier hs-var">value</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">do</span><span> </span><span id="local-6989586621679474859"><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679474859"><span class="hs-identifier hs-var">len</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Word64
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.getVarInt</span></span><span>
+</span><span id="line-316"></span><span>                                                       </span><span class="annot"><span class="annottext">Int -&gt; Parser ByteString
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.getBytes</span></span><span>
+</span><span id="line-317"></span><span>                                                         </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word64 -&gt; Int
+forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">Prelude.fromIntegral</span></span><span> </span><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679474859"><span class="hs-identifier hs-var">len</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-318"></span><span>                                           </span><span class="annot"><span class="annottext">Either String Text -&gt; Parser Text
+forall a. Either String a -&gt; Parser a
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.runEither</span></span><span>
+</span><span id="line-319"></span><span>                                             </span><span class="hs-special">(</span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Either UnicodeException Text
+</span><span class="hs-identifier hs-var">Data.Text.Encoding.decodeUtf8'</span></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679474860"><span class="hs-identifier hs-var">value</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-320"></span><span>                                                </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Prelude.Left</span></span><span> </span><span id="local-6989586621679474855"><span class="annot"><span class="annottext">err :: UnicodeException
+</span><a href="#local-6989586621679474855"><span class="hs-identifier hs-var">err</span></a></span></span><span class="hs-special">)</span><span>
+</span><span id="line-321"></span><span>                                                  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Either String Text
+forall a b. a -&gt; Either a b
+</span><span class="hs-identifier hs-var">Prelude.Left</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">UnicodeException -&gt; String
+forall a. Show a =&gt; a -&gt; String
+</span><span class="hs-identifier hs-var">Prelude.show</span></span><span> </span><span class="annot"><span class="annottext">UnicodeException
+</span><a href="#local-6989586621679474855"><span class="hs-identifier hs-var">err</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-322"></span><span>                                                </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Prelude.Right</span></span><span> </span><span id="local-6989586621679474854"><span class="annot"><span class="annottext">r :: Text
+</span><a href="#local-6989586621679474854"><span class="hs-identifier hs-var">r</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either String Text
+forall a b. b -&gt; Either a b
+</span><span class="hs-identifier hs-var">Prelude.Right</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679474854"><span class="hs-identifier hs-var">r</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-323"></span><span>                                       </span><span class="annot"><span class="hs-string">&quot;name&quot;</span></span><span>
+</span><span id="line-324"></span><span>                                </span><span class="annot"><span class="annottext">TensorShapeProto'Dim -&gt; Parser TensorShapeProto'Dim
+</span><a href="#local-6989586621679474868"><span class="hs-identifier hs-var">loop</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Setter TensorShapeProto'Dim TensorShapeProto'Dim Text Text
+-&gt; Text -&gt; TensorShapeProto'Dim -&gt; TensorShapeProto'Dim
+forall s t a b. Setter s t a b -&gt; b -&gt; s -&gt; t
+</span><span class="hs-identifier hs-var">Lens.Family2.set</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall s a (f :: * -&gt; *).
+(HasField s &quot;name&quot; a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+forall (x :: Symbol) s a (f :: * -&gt; *).
+(HasField s x a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Field.field</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-string">&quot;name&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679474861"><span class="hs-identifier hs-var">y</span></a></span><span> </span><span class="annot"><span class="annottext">TensorShapeProto'Dim
+</span><a href="#local-6989586621679474867"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-325"></span><span>                        </span><span id="local-6989586621679474853"><span class="annot"><span class="annottext">wire :: Word64
+</span><a href="#local-6989586621679474853"><span class="hs-identifier hs-var">wire</span></a></span></span><span>
+</span><span id="line-326"></span><span>                          </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621679474852"><span class="annot"><span class="annottext">TaggedValue
+</span><a href="#local-6989586621679474852"><span class="hs-identifier hs-var">y</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Word64 -&gt; Parser TaggedValue
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Wire.parseTaggedValueFromWire</span></span><span>
+</span><span id="line-327"></span><span>                                        </span><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621679474853"><span class="hs-identifier hs-var">wire</span></a></span><span>
+</span><span id="line-328"></span><span>                                </span><span class="annot"><span class="annottext">TensorShapeProto'Dim -&gt; Parser TensorShapeProto'Dim
+</span><a href="#local-6989586621679474868"><span class="hs-identifier hs-var">loop</span></a></span><span>
+</span><span id="line-329"></span><span>                                  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Setter TensorShapeProto'Dim TensorShapeProto'Dim FieldSet FieldSet
+-&gt; (FieldSet -&gt; FieldSet)
+-&gt; TensorShapeProto'Dim
+-&gt; TensorShapeProto'Dim
+forall s t a b. Setter s t a b -&gt; (a -&gt; b) -&gt; s -&gt; t
+</span><span class="hs-identifier hs-var">Lens.Family2.over</span></span><span>
+</span><span id="line-330"></span><span>                                     </span><span class="annot"><span class="annottext">forall msg. Message msg =&gt; Lens' msg FieldSet
+Setter TensorShapeProto'Dim TensorShapeProto'Dim FieldSet FieldSet
+</span><span class="hs-identifier hs-var">Data.ProtoLens.unknownFields</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621679474851"><span class="annot"><span class="annottext">FieldSet
+</span><a href="#local-6989586621679474851"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="hs-glyph">:</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">TaggedValue
+</span><a href="#local-6989586621679474852"><span class="hs-identifier hs-var">y</span></a></span><span> </span><span class="annot"><span class="annottext">FieldSet
+</span><a href="#local-6989586621679474851"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">TensorShapeProto'Dim
+</span><a href="#local-6989586621679474867"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-331"></span><span>      </span><span class="hs-keyword">in</span><span>
+</span><span id="line-332"></span><span>        </span><span class="annot"><span class="annottext">Parser TensorShapeProto'Dim
+-&gt; String -&gt; Parser TensorShapeProto'Dim
+forall a. Parser a -&gt; String -&gt; Parser a
+</span><span class="hs-operator hs-var">(Data.ProtoLens.Encoding.Bytes.&lt;?&gt;)</span></span><span>
+</span><span id="line-333"></span><span>          </span><span class="hs-special">(</span><span class="hs-keyword">do</span><span> </span><span class="annot"><span class="annottext">TensorShapeProto'Dim -&gt; Parser TensorShapeProto'Dim
+</span><a href="#local-6989586621679474868"><span class="hs-identifier hs-var">loop</span></a></span><span> </span><span class="annot"><span class="annottext">TensorShapeProto'Dim
+forall msg. Message msg =&gt; msg
+</span><span class="hs-identifier hs-var">Data.ProtoLens.defMessage</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="hs-string">&quot;Dim&quot;</span></span><span>
+</span><span id="line-334"></span><span>  </span><span id="local-6989586621679474850"><span class="annot"><span class="annottext">buildMessage :: TensorShapeProto'Dim -&gt; Builder
+</span><a href="#local-6989586621679474850"><span class="hs-identifier hs-var hs-var hs-var hs-var">buildMessage</span></a></span></span><span>
+</span><span id="line-335"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span> </span><span id="local-6989586621679474849"><span class="annot"><span class="annottext">_x :: TensorShapeProto'Dim
+</span><a href="#local-6989586621679474849"><span class="hs-identifier hs-var">_x</span></a></span></span><span>
+</span><span id="line-336"></span><span>        </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Builder -&gt; Builder -&gt; Builder
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">(Data.Monoid.&lt;&gt;)</span></span><span>
+</span><span id="line-337"></span><span>             </span><span class="hs-special">(</span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679474848"><span class="annot"><span class="annottext">_v :: Int64
+</span><a href="#local-6989586621679474848"><span class="hs-identifier hs-var hs-var">_v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">FoldLike
+  Int64 TensorShapeProto'Dim TensorShapeProto'Dim Int64 Int64
+-&gt; TensorShapeProto'Dim -&gt; Int64
+forall a s t b. FoldLike a s t a b -&gt; s -&gt; a
+</span><span class="hs-identifier hs-var">Lens.Family2.view</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall s a (f :: * -&gt; *).
+(HasField s &quot;size&quot; a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+forall (x :: Symbol) s a (f :: * -&gt; *).
+(HasField s x a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Field.field</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-string">&quot;size&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">TensorShapeProto'Dim
+</span><a href="#local-6989586621679474849"><span class="hs-identifier hs-var">_x</span></a></span><span>
+</span><span id="line-338"></span><span>              </span><span class="hs-keyword">in</span><span>
+</span><span id="line-339"></span><span>                </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Int64 -&gt; Int64 -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">(Prelude.==)</span></span><span> </span><span class="annot"><span class="annottext">Int64
+</span><a href="#local-6989586621679474848"><span class="hs-identifier hs-var">_v</span></a></span><span> </span><span class="annot"><span class="annottext">Int64
+forall value. FieldDefault value =&gt; value
+</span><span class="hs-identifier hs-var">Data.ProtoLens.fieldDefault</span></span><span> </span><span class="hs-keyword">then</span><span>
+</span><span id="line-340"></span><span>                    </span><span class="annot"><span class="annottext">Builder
+forall a. Monoid a =&gt; a
+</span><span class="hs-identifier hs-var">Data.Monoid.mempty</span></span><span>
+</span><span id="line-341"></span><span>                </span><span class="hs-keyword">else</span><span>
+</span><span id="line-342"></span><span>                    </span><span class="annot"><span class="annottext">Builder -&gt; Builder -&gt; Builder
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">(Data.Monoid.&lt;&gt;)</span></span><span>
+</span><span id="line-343"></span><span>                      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word64 -&gt; Builder
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.putVarInt</span></span><span> </span><span class="annot"><span class="hs-number">8</span></span><span class="hs-special">)</span><span>
+</span><span id="line-344"></span><span>                      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Word64 -&gt; Builder) -&gt; (Int64 -&gt; Word64) -&gt; Int64 -&gt; Builder
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">(Prelude..)</span></span><span>
+</span><span id="line-345"></span><span>                         </span><span class="annot"><span class="annottext">Word64 -&gt; Builder
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.putVarInt</span></span><span> </span><span class="annot"><span class="annottext">Int64 -&gt; Word64
+forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">Prelude.fromIntegral</span></span><span> </span><span class="annot"><span class="annottext">Int64
+</span><a href="#local-6989586621679474848"><span class="hs-identifier hs-var">_v</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-346"></span><span>             </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Builder -&gt; Builder -&gt; Builder
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">(Data.Monoid.&lt;&gt;)</span></span><span>
+</span><span id="line-347"></span><span>                </span><span class="hs-special">(</span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679474847"><span class="annot"><span class="annottext">_v :: Text
+</span><a href="#local-6989586621679474847"><span class="hs-identifier hs-var hs-var">_v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">FoldLike Text TensorShapeProto'Dim TensorShapeProto'Dim Text Text
+-&gt; TensorShapeProto'Dim -&gt; Text
+forall a s t b. FoldLike a s t a b -&gt; s -&gt; a
+</span><span class="hs-identifier hs-var">Lens.Family2.view</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall s a (f :: * -&gt; *).
+(HasField s &quot;name&quot; a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+forall (x :: Symbol) s a (f :: * -&gt; *).
+(HasField s x a, Functor f) =&gt;
+(a -&gt; f a) -&gt; s -&gt; f s
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Field.field</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-string">&quot;name&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">TensorShapeProto'Dim
+</span><a href="#local-6989586621679474849"><span class="hs-identifier hs-var">_x</span></a></span><span>
+</span><span id="line-348"></span><span>                 </span><span class="hs-keyword">in</span><span>
+</span><span id="line-349"></span><span>                   </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">(Prelude.==)</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679474847"><span class="hs-identifier hs-var">_v</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+forall value. FieldDefault value =&gt; value
+</span><span class="hs-identifier hs-var">Data.ProtoLens.fieldDefault</span></span><span> </span><span class="hs-keyword">then</span><span>
+</span><span id="line-350"></span><span>                       </span><span class="annot"><span class="annottext">Builder
+forall a. Monoid a =&gt; a
+</span><span class="hs-identifier hs-var">Data.Monoid.mempty</span></span><span>
+</span><span id="line-351"></span><span>                   </span><span class="hs-keyword">else</span><span>
+</span><span id="line-352"></span><span>                       </span><span class="annot"><span class="annottext">Builder -&gt; Builder -&gt; Builder
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">(Data.Monoid.&lt;&gt;)</span></span><span>
+</span><span id="line-353"></span><span>                         </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word64 -&gt; Builder
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.putVarInt</span></span><span> </span><span class="annot"><span class="hs-number">18</span></span><span class="hs-special">)</span><span>
+</span><span id="line-354"></span><span>                         </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(ByteString -&gt; Builder) -&gt; (Text -&gt; ByteString) -&gt; Text -&gt; Builder
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">(Prelude..)</span></span><span>
+</span><span id="line-355"></span><span>                            </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span> </span><span id="local-6989586621679474846"><span class="annot"><span class="annottext">bs :: ByteString
+</span><a href="#local-6989586621679474846"><span class="hs-identifier hs-var">bs</span></a></span></span><span>
+</span><span id="line-356"></span><span>                               </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Builder -&gt; Builder -&gt; Builder
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">(Data.Monoid.&lt;&gt;)</span></span><span>
+</span><span id="line-357"></span><span>                                    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word64 -&gt; Builder
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.putVarInt</span></span><span>
+</span><span id="line-358"></span><span>                                       </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; Word64
+forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">Prelude.fromIntegral</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; Int
+</span><span class="hs-identifier hs-var">Data.ByteString.length</span></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679474846"><span class="hs-identifier hs-var">bs</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-359"></span><span>                                    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; Builder
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Bytes.putBytes</span></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679474846"><span class="hs-identifier hs-var">bs</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-360"></span><span>                            </span><span class="annot"><span class="annottext">Text -&gt; ByteString
+</span><span class="hs-identifier hs-var">Data.Text.Encoding.encodeUtf8</span></span><span>
+</span><span id="line-361"></span><span>                            </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621679474847"><span class="hs-identifier hs-var">_v</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-362"></span><span>                </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FieldSet -&gt; Builder
+</span><span class="hs-identifier hs-var">Data.ProtoLens.Encoding.Wire.buildFieldSet</span></span><span>
+</span><span id="line-363"></span><span>                   </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FoldLike
+  FieldSet
+  TensorShapeProto'Dim
+  TensorShapeProto'Dim
+  FieldSet
+  FieldSet
+-&gt; TensorShapeProto'Dim -&gt; FieldSet
+forall a s t b. FoldLike a s t a b -&gt; s -&gt; a
+</span><span class="hs-identifier hs-var">Lens.Family2.view</span></span><span> </span><span class="annot"><span class="annottext">FoldLike
+  FieldSet
+  TensorShapeProto'Dim
+  TensorShapeProto'Dim
+  FieldSet
+  FieldSet
+forall msg. Message msg =&gt; Lens' msg FieldSet
+</span><span class="hs-identifier hs-var">Data.ProtoLens.unknownFields</span></span><span> </span><span class="annot"><span class="annottext">TensorShapeProto'Dim
+</span><a href="#local-6989586621679474849"><span class="hs-identifier hs-var">_x</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-364"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Control.DeepSeq.NFData</span></span><span> </span><span class="annot"><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#TensorShapeProto%27Dim"><span class="hs-identifier hs-type">TensorShapeProto'Dim</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-365"></span><span>  </span><span id="local-6989586621679474843"><span class="annot"><span class="annottext">rnf :: TensorShapeProto'Dim -&gt; ()
+</span><a href="#local-6989586621679474843"><span class="hs-identifier hs-var hs-var hs-var hs-var">rnf</span></a></span></span><span>
+</span><span id="line-366"></span><span>    </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span> </span><span id="local-6989586621679474842"><span class="annot"><span class="annottext">x__ :: TensorShapeProto'Dim
+</span><a href="#local-6989586621679474842"><span class="hs-identifier hs-var">x__</span></a></span></span><span>
+</span><span id="line-367"></span><span>        </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">FieldSet -&gt; () -&gt; ()
+forall a b. NFData a =&gt; a -&gt; b -&gt; b
+</span><span class="hs-identifier hs-var">Control.DeepSeq.deepseq</span></span><span>
+</span><span id="line-368"></span><span>             </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TensorShapeProto'Dim -&gt; FieldSet
+</span><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#_TensorShapeProto%27Dim%27_unknownFields"><span class="hs-identifier hs-var hs-var">_TensorShapeProto'Dim'_unknownFields</span></a></span><span> </span><span class="annot"><span class="annottext">TensorShapeProto'Dim
+</span><a href="#local-6989586621679474842"><span class="hs-identifier hs-var">x__</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-369"></span><span>             </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int64 -&gt; () -&gt; ()
+forall a b. NFData a =&gt; a -&gt; b -&gt; b
+</span><span class="hs-identifier hs-var">Control.DeepSeq.deepseq</span></span><span>
+</span><span id="line-370"></span><span>                </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TensorShapeProto'Dim -&gt; Int64
+</span><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#_TensorShapeProto%27Dim%27size"><span class="hs-identifier hs-var hs-var">_TensorShapeProto'Dim'size</span></a></span><span> </span><span class="annot"><span class="annottext">TensorShapeProto'Dim
+</span><a href="#local-6989586621679474842"><span class="hs-identifier hs-var">x__</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-371"></span><span>                </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; () -&gt; ()
+forall a b. NFData a =&gt; a -&gt; b -&gt; b
+</span><span class="hs-identifier hs-var">Control.DeepSeq.deepseq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TensorShapeProto'Dim -&gt; Text
+</span><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#_TensorShapeProto%27Dim%27name"><span class="hs-identifier hs-var hs-var">_TensorShapeProto'Dim'name</span></a></span><span> </span><span class="annot"><span class="annottext">TensorShapeProto'Dim
+</span><a href="#local-6989586621679474842"><span class="hs-identifier hs-var">x__</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-372"></span><span class="annot"><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#packedFileDescriptor"><span class="hs-identifier hs-type">packedFileDescriptor</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data.ByteString.ByteString</span></span><span>
+</span><span id="line-373"></span><span id="packedFileDescriptor"><span class="annot"><span class="annottext">packedFileDescriptor :: ByteString
+</span><a href="Proto.Tensorflow.Core.Framework.TensorShape.html#packedFileDescriptor"><span class="hs-identifier hs-var hs-var">packedFileDescriptor</span></a></span></span><span>
+</span><span id="line-374"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-string">&quot;\n\
+    \,tensorflow/core/framework/tensor_shape.proto\DC2\n\
+    \tensorflow\&quot;\152\SOH\n\
+    \\DLETensorShapeProto\DC22\n\
+    \\ETXdim\CAN\STX \ETX(\v2 .tensorflow.TensorShapeProto.DimR\ETXdim\DC2!\n\
+    \\funknown_rank\CAN\ETX \SOH(\bR\vunknownRank\SUB-\n\
+    \\ETXDim\DC2\DC2\n\
+    \\EOTsize\CAN\SOH \SOH(\ETXR\EOTsize\DC2\DC2\n\
+    \\EOTname\CAN\STX \SOH(\tR\EOTnameB\135\SOH\n\
+    \\CANorg.tensorflow.frameworkB\DC1TensorShapeProtosP\SOHZSgithub.com/tensorflow/tensorflow/tensorflow/go/core/framework/tensor_shape_go_proto\248\SOH\SOHJ\139\f\n\
+    \\ACK\DC2\EOT\STX\NUL-\STX\n\
+    \&gt;\n\
+    \\SOH\f\DC2\ETX\STX\NUL\DC224 Protocol buffer representing the shape of tensors.\n\
+    \\n\
+    \\b\n\
+    \\SOH\b\DC2\ETX\ETX\NUL\US\n\
+    \\t\n\
+    \\STX\b\US\DC2\ETX\ETX\NUL\US\n\
+    \\b\n\
+    \\SOH\b\DC2\ETX\EOT\NUL2\n\
+    \\t\n\
+    \\STX\b\b\DC2\ETX\EOT\NUL2\n\
+    \\b\n\
+    \\SOH\b\DC2\ETX\ENQ\NUL\&quot;\n\
+    \\t\n\
+    \\STX\b\n\
+    \\DC2\ETX\ENQ\NUL\&quot;\n\
+    \\b\n\
+    \\SOH\b\DC2\ETX\ACK\NUL1\n\
+    \\t\n\
+    \\STX\b\SOH\DC2\ETX\ACK\NUL1\n\
+    \\b\n\
+    \\SOH\b\DC2\ETX\a\NULj\n\
+    \\t\n\
+    \\STX\b\v\DC2\ETX\a\NULj\n\
+    \\b\n\
+    \\SOH\STX\DC2\ETX\t\NUL\DC3\n\
+    \%\n\
+    \\STX\EOT\NUL\DC2\EOT\f\NUL-\SOH\SUB\EM Dimensions of a tensor.\n\
+    \\n\
+    \\n\
+    \\n\
+    \\ETX\EOT\NUL\SOH\DC2\ETX\f\b\CAN\n\
+    \,\n\
+    \\EOT\EOT\NUL\ETX\NUL\DC2\EOT\SO\STX\CAN\ETX\SUB\RS One dimension of the tensor.\n\
+    \\n\
+    \\f\n\
+    \\ENQ\EOT\NUL\ETX\NUL\SOH\DC2\ETX\SO\n\
+    \\r\n\
+    \\187\STX\n\
+    \\ACK\EOT\NUL\ETX\NUL\STX\NUL\DC2\ETX\DC4\EOT\DC3\SUB\171\STX Size of the tensor in that dimension.\n\
+    \ This value must be &gt;= -1, but values of -1 are reserved for \&quot;unknown\&quot;\n\
+    \ shapes (values of -1 mean \&quot;unknown\&quot; dimension).  Certain wrappers\n\
+    \ that work with TensorShapeProto may fail at runtime when deserializing\n\
+    \ a TensorShapeProto containing a dim value of -1.\n\
+    \\n\
+    \\SO\n\
+    \\a\EOT\NUL\ETX\NUL\STX\NUL\ENQ\DC2\ETX\DC4\EOT\t\n\
+    \\SO\n\
+    \\a\EOT\NUL\ETX\NUL\STX\NUL\SOH\DC2\ETX\DC4\n\
+    \\SO\n\
+    \\SO\n\
+    \\a\EOT\NUL\ETX\NUL\STX\NUL\ETX\DC2\ETX\DC4\DC1\DC2\n\
+    \7\n\
+    \\ACK\EOT\NUL\ETX\NUL\STX\SOH\DC2\ETX\ETB\EOT\DC4\SUB( Optional name of the tensor dimension.\n\
+    \\n\
+    \\SO\n\
+    \\a\EOT\NUL\ETX\NUL\STX\SOH\ENQ\DC2\ETX\ETB\EOT\n\
+    \\n\
+    \\SO\n\
+    \\a\EOT\NUL\ETX\NUL\STX\SOH\SOH\DC2\ETX\ETB\v\SI\n\
+    \\SO\n\
+    \\a\EOT\NUL\ETX\NUL\STX\SOH\ETX\DC2\ETX\ETB\DC2\DC3\n\
+    \\183\EOT\n\
+    \\EOT\EOT\NUL\STX\NUL\DC2\ETX'\STX\ETB\SUB\169\EOT Dimensions of the tensor, such as {\&quot;input\&quot;, 30}, {\&quot;output\&quot;, 40}\n\
+    \ for a 30 x 40 2D tensor.  If an entry has size -1, this\n\
+    \ corresponds to a dimension of unknown size. The names are\n\
+    \ optional.\n\
+    \\n\
+    \ The order of entries in \&quot;dim\&quot; matters: It indicates the layout of the\n\
+    \ values in the tensor in-memory representation.\n\
+    \\n\
+    \ The first entry in \&quot;dim\&quot; is the outermost dimension used to layout the\n\
+    \ values, the last entry is the innermost dimension.  This matches the\n\
+    \ in-memory layout of RowMajor Eigen tensors.\n\
+    \\n\
+    \ If \&quot;dim.size()\&quot; &gt; 0, \&quot;unknown_rank\&quot; must be false.\n\
+    \\n\
+    \\f\n\
+    \\ENQ\EOT\NUL\STX\NUL\EOT\DC2\ETX'\STX\n\
+    \\n\
+    \\f\n\
+    \\ENQ\EOT\NUL\STX\NUL\ACK\DC2\ETX'\v\SO\n\
+    \\f\n\
+    \\ENQ\EOT\NUL\STX\NUL\SOH\DC2\ETX'\SI\DC2\n\
+    \\f\n\
+    \\ENQ\EOT\NUL\STX\NUL\ETX\DC2\ETX'\NAK\SYN\n\
+    \l\n\
+    \\EOT\EOT\NUL\STX\SOH\DC2\ETX,\STX\CAN\SUB_ If true, the number of dimensions in the shape is unknown.\n\
+    \\n\
+    \ If true, \&quot;dim.size()\&quot; must be 0.\n\
+    \\n\
+    \\f\n\
+    \\ENQ\EOT\NUL\STX\SOH\ENQ\DC2\ETX,\STX\ACK\n\
+    \\f\n\
+    \\ENQ\EOT\NUL\STX\SOH\SOH\DC2\ETX,\a\DC3\n\
+    \\f\n\
+    \\ENQ\EOT\NUL\STX\SOH\ETX\DC2\ETX,\SYN\ETBb\ACKproto3&quot;</span></span></pre></body></html>
