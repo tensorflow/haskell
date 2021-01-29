@@ -321,6 +321,7 @@ typeSig pre pOp = constraints
         AttrType -> "DataType"
         AttrShape -> "Shape"
         AttrTensor -> "TensorProto"
+        AttrFunc -> error "AttrFunc not supported"
 
     tensorArgAndComment t = tensorArg t <+> hang 0 ("-- ^" <+> argComment t)
     outputs = case parsedOutputs pOp of

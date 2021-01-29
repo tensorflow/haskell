@@ -101,7 +101,7 @@ data AttrType = AttrSingle AttrBaseType
                 deriving Eq
 
 data AttrBaseType = AttrBytes | AttrInt64 | AttrFloat | AttrBool
-                | AttrType | AttrShape | AttrTensor
+                | AttrType | AttrShape | AttrTensor | AttrFunc
                 deriving Eq
 
 data TypeParam = TypeParam
@@ -334,6 +334,7 @@ parseAttrType o = \case
     "type" -> AttrSingle AttrType
     "shape" -> AttrSingle AttrShape
     "tensor" -> AttrSingle AttrTensor
+    "func" -> AttrSingle AttrFunc
     "list(string)" -> AttrList AttrBytes
     "list(int)" -> AttrList AttrInt64
     "list(float)" -> AttrList AttrFloat
@@ -341,5 +342,6 @@ parseAttrType o = \case
     "list(type)" -> AttrList AttrType
     "list(shape)" -> AttrList AttrShape
     "list(tensor)" -> AttrList AttrTensor
+    "list(func)" -> AttrList AttrFunc
     t -> error $ "parseAttrType: unrecognized type " ++ show t
               ++ " for op " ++ show (o ^. name)
