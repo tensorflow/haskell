@@ -1,4 +1,4 @@
-![Build Status](https://storage.googleapis.com/tensorflow-haskell-kokoro-build-badges/github.png)
+![Build Status](https://storage.googleapis.com/tensorflow-kokoro-build-badges/haskell/github.png)
 
 The tensorflow-haskell package provides Haskell bindings to
 [TensorFlow](https://www.tensorflow.org/).
