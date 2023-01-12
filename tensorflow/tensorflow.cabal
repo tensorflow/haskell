@@ -42,7 +42,7 @@ library
                 , base >= 4.7 && < 5
                 , async
                 , attoparsec
-                , bytestring
+                , bytestring >= 0.10.2
                 , containers
                 , data-default
                 , exceptions

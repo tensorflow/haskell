@@ -27,7 +27,7 @@ module TensorFlow.Internal.VarInt
 
 import Data.Attoparsec.ByteString as Parse
 import Data.Bits
-import Data.ByteString.Lazy.Builder as Builder
+import Data.ByteString.Builder as Builder
 import Data.Word (Word64)
 
 -- | Decode an unsigned varint.
