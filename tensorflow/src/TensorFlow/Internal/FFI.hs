@@ -20,6 +20,7 @@ module TensorFlow.Internal.FFI
     ( TensorFlowException(..)
     , Raw.Session
     , withSession
+    , withSessionFromSavedModel
     , run
 
     , SessionAction
@@ -106,6 +107,28 @@ withSession :: (MonadIO m, MonadMask m)
             -> SessionAction m a
             -> m a
 withSession = withSession_ Raw.newSession
+
+withSessionFromSavedModel :: (MonadIO m, MonadMask m)
+                          => B.ByteString
+                          -- ^ exportDir
+                          -> [B.ByteString]
+                          -- ^ Tags.
+                          -> (Raw.SessionOptions -> IO ())
+                          -- ^ optionSetter
+                          -> SessionAction m a
+                          -> m a
+withSessionFromSavedModel exportDir tags =
+    withSession_ $ \graph options status ->
+      Raw.loadSessionFromSavedModel options
+                                    runOptions
+                                    exportDir
+                                    tags
+                                    graph
+                                    metaGraphDef
+                                    status
+  where
+    runOptions = nullPtr
+    metaGraphDef = nullPtr
 
 withSession_ :: (MonadIO m, MonadMask m)
              => (Raw.Graph -> Raw.SessionOptions -> Raw.Status -> IO Raw.Session)

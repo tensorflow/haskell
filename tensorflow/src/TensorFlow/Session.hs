@@ -27,6 +27,8 @@ module TensorFlow.Session (
     sessionTracer,
     runSession,
     runSessionWithOptions,
+    runSavedModel,
+    runSavedModelWithOptions,
     MonadBuild(..),
     extend,
     addGraphDef,
@@ -35,6 +37,7 @@ module TensorFlow.Session (
     run_,
     runWithFeeds_,
     asyncProdNodes,
+    SavedModelTag(..),
     ) where
 
 import Data.ProtoLens.Message(defMessage)
@@ -58,6 +61,7 @@ import TensorFlow.Nodes
 import TensorFlow.Output (NodeName(..), unNodeName)
 import TensorFlow.Tensor
 
+import qualified Data.ByteString.Char8 as C
 import qualified Data.ByteString.Builder as Builder
 import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
@@ -97,6 +101,14 @@ data Options = Options
     , _sessionTracer :: Tracer
     }
 
+data SavedModelTag = GPU | TPU | Serve | Train
+
+savedModelTagValue :: SavedModelTag -> ByteString
+savedModelTagValue GPU = "gpu"
+savedModelTagValue TPU = "tpu"
+savedModelTagValue Serve = "serve"
+savedModelTagValue Train = "train"
+
 instance Default Options where
     def = Options
           { _sessionTarget = ""
@@ -122,6 +134,25 @@ sessionTracer = lens _sessionTracer (\g x -> g { _sessionTracer = x })
 runSessionWithOptions :: (MonadMask m, MonadIO m) => Options -> SessionT m a -> m a
 runSessionWithOptions options session =
     _runSessionWithOptions session options $ FFI.withSession
+
+runSavedModel :: (MonadMask m, MonadIO m)
+              => FilePath
+              -- ^ Export directory.
+              -> Set SavedModelTag
+              -> SessionT m a
+              -> m a
+runSavedModel exportDir tags = runSavedModelWithOptions exportDir tags def
+
+runSavedModelWithOptions :: (MonadMask m, MonadIO m)
+                         => FilePath
+                         -- ^ Export directory.
+                         -> Set SavedModelTag
+                         -> Options
+                         -> SessionT m a
+                         -> m a
+runSavedModelWithOptions exportDir tags options session =
+    _runSessionWithOptions session options $
+        FFI.withSessionFromSavedModel (C.pack exportDir) (map savedModelTagValue $ Set.toList tags)
 
 _runSessionWithOptions :: (MonadMask m, MonadIO m)
                        => SessionT m a
