@@ -200,6 +200,16 @@ deleteSessionOptions = {# call TF_DeleteSessionOptions as ^ #}
 newSession :: Graph -> SessionOptions -> Status -> IO Session
 newSession = {# call TF_NewSession as ^ #}
 
+{# fun TF_LoadSessionFromSavedModel as loadSessionFromSavedModel
+    {                     `SessionOptions'
+    ,                     `BufferPtr'     -- RunOptions proto.
+    , useAsCString*       `ByteString'    -- Export directory.
+    , withStringArrayLen* `[ByteString]'& -- Tags.
+    ,                     `Graph'
+    ,                     `BufferPtr'     -- MetaGraphDef.
+    ,                     `Status'
+    } ->                  `Session'
+#}
 
 closeSession :: Session -> Status -> IO ()
 closeSession = {# call TF_CloseSession as ^ #}
@@ -231,3 +241,18 @@ foreign import ccall "wrapper"
 -- in this address space.
 getAllOpList :: IO BufferPtr
 getAllOpList = {# call TF_GetAllOpList as ^ #}
+
+-- | Use a list of ByteString as a list of CString.
+withStringList :: [ByteString] -> ([CString] -> IO a) -> IO a
+withStringList strings fn = go strings []
+  where
+    go [] cs = fn (reverse cs)
+    -- TODO(fmayle): Is it worth using unsafeAsCString here?
+    go (x:xs) cs = useAsCString x $ \c -> go xs (c:cs)
+
+
+-- | Use a list of ByteString as an array of CString with its length.
+withStringArrayLen :: [ByteString] -> ((Ptr CString, CInt) -> IO a) -> IO a
+withStringArrayLen xs fn =
+    withStringList xs $ \strings ->
+      withArrayLen strings $ \len ptr -> fn (ptr, fromIntegral len)

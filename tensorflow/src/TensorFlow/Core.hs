@@ -30,6 +30,9 @@ module TensorFlow.Core
     , sessionTracer
     , runSession
     , runSessionWithOptions
+    , SavedModelTag(..)
+    , runSavedModel
+    , runSavedModelWithOptions
       -- ** Building graphs
     , MonadBuild(..)
       -- ** Running graphs
