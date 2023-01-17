@@ -72,18 +72,17 @@ working, the following commands will compile and run the tests.
 ```
 git clone --recursive https://github.com/tensorflow/haskell.git tensorflow-haskell
 cd tensorflow-haskell
-IMAGE_NAME=tensorflow/haskell:2.3.0
-docker build -t $IMAGE_NAME docker
+docker build -t tensorflow/haskell:2.3.0 docker
 # TODO: move the setup step to the docker script.
-stack --docker --docker-image=$IMAGE_NAME setup
-stack --docker --docker-image=$IMAGE_NAME test
+stack --docker setup
+stack --docker test
 ```
 
 There is also a demo application:
 
 ```
 cd tensorflow-mnist
-stack --docker --docker-image=$IMAGE_NAME build --exec Main
+stack --docker build --exec Main
 ```
 
 ### Stack + Docker + GPU
@@ -93,6 +92,9 @@ If you want to use GPU you can do:
 ```
 IMAGE_NAME=tensorflow/haskell:2.3.0-gpu
 docker build -t $IMAGE_NAME docker/gpu
+# TODO: move the setup step to the docker script.
+stack --docker --docker-image=$IMAGE_NAME setup
+stack --docker --docker-image=$IMAGE_NAME test
 ```
 
 ### Using nvidia-docker version 2

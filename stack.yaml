@@ -25,6 +25,10 @@ extra-lib-dirs:
 extra-include-dirs:
     - /usr/local/include
 
+docker:
+    enable: false
+    image: tensorflow/haskell:2.3.0
+
 nix:
     enable: false
     # nixos-21.05 with libtensorflow 2.3.0
