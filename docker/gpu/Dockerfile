@@ -6,8 +6,6 @@ LABEL maintainer="TensorFlow authors <tensorflow-haskell@googlegroups.com>"
 RUN apt-get update
 
 RUN apt-get install -y \
-        # stack needs git
-        git \
         # Required by snappy-frames dependency.
         libsnappy-dev \
         # Avoids /usr/bin/ld: cannot find -ltinfo
@@ -19,7 +17,9 @@ RUN apt-get install -y \
         curl \
         unzip \
         # Required for locales configuration.
-        locales
+        locales \
+        # Required for tcp connections by stack (See: https://github.com/tensorflow/haskell/issues/182)
+        netbase
 
 # Support output of Unicode characters.
 RUN dpkg-reconfigure locales && \
