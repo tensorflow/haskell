@@ -148,6 +148,16 @@ blackList =
     , "_TPUReplicate"
     , "_While"
     , "_XlaCompile"
+    -- Incorrectly generated:
+    , "_FusedBatchNormGradEx"
+    -- Could not deduce:
+    , "_MklFusedBatchNorm"
+    , "_MklFusedBatchNormEx"
+    , "_MklFusedBatchNormGrad"
+    , "_MklFusedBatchNormGradV2"
+    , "_MklFusedBatchNormGradV3"
+    , "_MklFusedBatchNormV2"
+    , "_MklFusedBatchNormV3"
     ]
 
 autogenModulesDir :: LocalBuildInfo -> FilePath
