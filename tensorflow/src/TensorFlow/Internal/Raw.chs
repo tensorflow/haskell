@@ -21,12 +21,12 @@ module TensorFlow.Internal.Raw where
 import Foreign
 import Foreign.C
 
-{#enum TF_DataType as DataType {} deriving (Show, Eq) #}
-{#enum TF_Code as Code {} deriving (Show, Eq) #}
+{# enum TF_DataType as DataType {} deriving (Show, Eq) #}
+{# enum TF_Code as Code {} deriving (Show, Eq) #}
 
 
 -- Status.
-{#pointer *TF_Status as Status newtype #}
+{# pointer *TF_Status as Status newtype #}
 
 newStatus :: IO Status
 newStatus = {# call TF_NewStatus as ^ #}
@@ -46,16 +46,16 @@ message = {# call TF_Message as ^ #}
 
 -- Buffer.
 data Buffer
-{#pointer *TF_Buffer as BufferPtr -> Buffer #}
+{# pointer *TF_Buffer as BufferPtr -> Buffer #}
 
 getBufferData :: BufferPtr -> IO (Ptr ())
-getBufferData = {#get TF_Buffer->data #}
+getBufferData = {# get TF_Buffer->data #}
 
 getBufferLength :: BufferPtr -> IO CULong
-getBufferLength ={#get TF_Buffer->length #}
+getBufferLength = {# get TF_Buffer->length #}
 
 -- Tensor.
-{#pointer *TF_Tensor as Tensor newtype #}
+{# pointer *TF_Tensor as Tensor newtype #}
 
 instance Storable Tensor where
     sizeOf (Tensor t) = sizeOf t
