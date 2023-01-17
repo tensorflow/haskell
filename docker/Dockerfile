@@ -1,6 +1,6 @@
 # Prepare the image with:
-#   docker build -t tensorflow/haskell:2.3.0 docker
-FROM tensorflow/tensorflow:2.3.0
+#   docker build -t tensorflow/haskell:2.10.1 docker
+FROM tensorflow/tensorflow:2.10.1
 LABEL maintainer="TensorFlow authors <tensorflow-haskell@googlegroups.com>"
 
 RUN apt-get update
@@ -31,8 +31,8 @@ RUN \
     curl -O -L https://github.com/google/protobuf/releases/download/v3.13.0/protoc-3.13.0-linux-x86_64.zip && \
     unzip -d /usr/local protoc-3.13.0-linux-x86_64.zip bin/protoc && \
     chmod 755 /usr/local/bin/protoc && \
-    curl -O https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-cpu-linux-x86_64-2.3.0.tar.gz && \
-    tar zxf libtensorflow-cpu-linux-x86_64-2.3.0.tar.gz -C /usr/local && \
+    curl -O https://storage.googleapis.com/tensorflow/libtensorflow/libtensorflow-cpu-linux-x86_64-2.10.1.tar.gz && \
+    tar zxf libtensorflow-cpu-linux-x86_64-2.10.1.tar.gz -C /usr/local && \
     ldconfig
 
 ENV LANG en_US.UTF-8

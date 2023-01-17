@@ -29,7 +29,7 @@ extra-include-dirs:
 
 docker:
     enable: false
-    image: tensorflow/haskell:2.3.0
+    image: tensorflow/haskell:2.10.1
 
 nix:
     enable: false
