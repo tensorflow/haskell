@@ -18,7 +18,7 @@ maintainer:          tensorflow-haskell@googlegroups.com
 copyright:           Google Inc.
 category:            Machine Learning
 build-type:          Simple
-cabal-version:       >=1.22
+cabal-version:       2.0
 extra-source-files: third_party/tensorflow/c/c_api.h
 
 library
@@ -35,7 +35,8 @@ library
                   , TensorFlow.Tensor
                   , TensorFlow.Types
   other-modules:    TensorFlow.Internal.Raw
-  build-tools:      c2hs
+  autogen-modules:  TensorFlow.Internal.Raw
+  build-tool-depends: c2hs:c2hs
   build-depends:  proto-lens == 0.7.*
                 , tensorflow-proto == 0.3.*
                 , base >= 4.7 && < 5

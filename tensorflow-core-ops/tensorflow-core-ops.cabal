@@ -10,7 +10,7 @@ maintainer:          tensorflow-haskell@googlegroups.com
 copyright:           Google Inc.
 category:            Machine Learning
 build-type:          Custom
-cabal-version:       >=2.0
+cabal-version:       2.0
 
 library
   exposed-modules:  TensorFlow.GenOps.Core

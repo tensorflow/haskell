@@ -10,7 +10,7 @@ maintainer:          tensorflow-haskell@googlegroups.com
 copyright:           Google Inc.
 category:            Machine Learning
 build-type:          Custom
-cabal-version:       >=1.24
+cabal-version:       2.0
 -- These files are downloaded automatically by Setup.hs. If the
 -- automatic download fails, follow the instructions in error messages
 -- displayed by Setup.hs.
