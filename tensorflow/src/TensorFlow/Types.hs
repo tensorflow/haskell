@@ -322,6 +322,8 @@ instance {-# OVERLAPPING #-} TensorDataType V.Vector ByteString where
     --   at each element offset:
     --     string length :: VarInt64
     --     string data   :: [Word8]
+    -- TODO: According to the v2.4.0 release notes, the byte layout for string
+    -- tensors has been changed to a contiguous array of TF_TStrings.
     decodeTensorData tensorData =
         either (\err -> error $ "Malformed TF_STRING tensor; " ++ err) id $
             if expected /= count
