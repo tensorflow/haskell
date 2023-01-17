@@ -1,5 +1,5 @@
 # Prepare the image with:
-#   docker build -t tensorflow/haskell:1.14.0-gpu docker/gpu
+#   docker build -t tensorflow/haskell:2.3.0-gpu docker/gpu
 FROM tensorflow/tensorflow:2.3.0-gpu
 LABEL maintainer="TensorFlow authors <tensorflow-haskell@googlegroups.com>"
 

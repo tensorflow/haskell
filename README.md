@@ -72,7 +72,7 @@ working, the following commands will compile and run the tests.
 ```
 git clone --recursive https://github.com/tensorflow/haskell.git tensorflow-haskell
 cd tensorflow-haskell
-IMAGE_NAME=tensorflow/haskell:v0
+IMAGE_NAME=tensorflow/haskell:2.3.0
 docker build -t $IMAGE_NAME docker
 # TODO: move the setup step to the docker script.
 stack --docker --docker-image=$IMAGE_NAME setup
