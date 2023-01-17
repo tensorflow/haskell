@@ -10,7 +10,7 @@ maintainer:          tensorflow-haskell@googlegroups.com
 copyright:           Google Inc.
 category:            Machine Learning
 build-type:          Custom
-cabal-version:       >=1.24
+cabal-version:       2.0
 extra-source-files:  third_party/tensorflow/tensorflow/core/example/*.proto
                    , third_party/tensorflow/tensorflow/core/framework/*.proto
                    , third_party/tensorflow/tensorflow/core/lib/core/error_codes.proto
