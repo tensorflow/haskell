@@ -126,18 +126,10 @@ After running the script to install system dependencies, build the project with 
 
 ## Build on NixOS
 
-The `shell.nix` provides an environment containing the necessary
+The `stack.yaml` file describes a NixOS environment containing the necessary
 dependencies. To build, run:
 
     $ stack --nix build
-
-or alternatively you can run
-
-    $ nix-shell
-
-to enter the environment and build the project. Note, that it is an emulation
-of common Linux environment rather than full-featured Nix package expression.
-No exportable Nix package will appear, but local development is possible.
 
 ## Installation on CentOS
 
