@@ -27,6 +27,6 @@ extra-include-dirs:
 
 nix:
     enable: false
-    # release-19.09 with libtensorflow 1.14.0
-    path: ["nixpkgs=https://github.com/NixOS/nixpkgs/archive/8731aaaf8b30888bc24994096db830993090d7c4.tar.gz"]
-    packages: [snappy, zlib, protobuf, libtensorflow]
+    # nixos-21.05 with libtensorflow 2.3.0
+    path: ["nixpkgs=https://github.com/NixOS/nixpkgs/archive/c7cb72b0cae397d311236d6773338efb4bd4f2d1.tar.gz"]
+    packages: [snappy, zlib, protobuf, python3Packages.tensorflow_2.libtensorflow]
