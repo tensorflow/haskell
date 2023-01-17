@@ -11,14 +11,126 @@ copyright:           Google Inc.
 category:            Machine Learning
 build-type:          Custom
 cabal-version:       2.0
-extra-source-files:  third_party/tensorflow/tensorflow/core/example/*.proto
+extra-source-files:  third_party/tensorflow/tensorflow/compiler/jit/*.proto
+                   , third_party/tensorflow/tensorflow/compiler/mlir/lite/quantization/*.proto
+                   , third_party/tensorflow/tensorflow/compiler/mlir/quantization/tensorflow/*.proto
+                   , third_party/tensorflow/tensorflow/compiler/mlir/tfrt/analysis/*.proto
+                   , third_party/tensorflow/tensorflow/compiler/mlir/tools/kernel_gen/*.proto
+                   , third_party/tensorflow/tensorflow/compiler/tf2tensorrt/utils/*.proto
+                   , third_party/tensorflow/tensorflow/compiler/tf2xla/*.proto
+                   , third_party/tensorflow/tensorflow/compiler/tf2xla/kernels/*.proto
+                   , third_party/tensorflow/tensorflow/compiler/xla/*.proto
+                   , third_party/tensorflow/tensorflow/compiler/xla/pjrt/distributed/*.proto
+                   , third_party/tensorflow/tensorflow/compiler/xla/python/tpu_driver/*.proto
+                   , third_party/tensorflow/tensorflow/compiler/xla/rpc/*.proto
+                   , third_party/tensorflow/tensorflow/compiler/xla/service/*.proto
+                   , third_party/tensorflow/tensorflow/compiler/xla/service/gpu/*.proto
+                   , third_party/tensorflow/tensorflow/compiler/xla/tools/*.proto
+                   , third_party/tensorflow/tensorflow/compiler/xrt/*.proto
+                   , third_party/tensorflow/tensorflow/core/data/*.proto
+                   , third_party/tensorflow/tensorflow/core/data/service/*.proto
+                   , third_party/tensorflow/tensorflow/core/debug/*.proto
+                   , third_party/tensorflow/tensorflow/core/example/*.proto
                    , third_party/tensorflow/tensorflow/core/framework/*.proto
-                   , third_party/tensorflow/tensorflow/core/lib/core/error_codes.proto
+                   , third_party/tensorflow/tensorflow/core/function/trace_type/*.proto
+                   , third_party/tensorflow/tensorflow/core/grappler/costs/*.proto
+                   , third_party/tensorflow/tensorflow/core/grappler/optimizers/inference/*.proto
+                   , third_party/tensorflow/tensorflow/core/lib/core/*.proto
+                   , third_party/tensorflow/tensorflow/core/profiler/*.proto
+                   , third_party/tensorflow/tensorflow/core/profiler/protobuf/*.proto
                    , third_party/tensorflow/tensorflow/core/protobuf/*.proto
+                   , third_party/tensorflow/tensorflow/core/protobuf/tpu/*.proto
+                   , third_party/tensorflow/tensorflow/core/tfrt/fallback/*.proto
+                   , third_party/tensorflow/tensorflow/core/tpu/kernels/*.proto
                    , third_party/tensorflow/tensorflow/core/util/*.proto
+                   , third_party/tensorflow/tensorflow/core/util/autotune_maps/*.proto
+                   , third_party/tensorflow/tensorflow/distribute/experimental/rpc/proto/*.proto
+                   , third_party/tensorflow/tensorflow/dtensor/proto/*.proto
+                   , third_party/tensorflow/tensorflow/lite/experimental/acceleration/configuration/*.proto
+                   , third_party/tensorflow/tensorflow/lite/python/metrics/*.proto
+                   , third_party/tensorflow/tensorflow/lite/toco/*.proto
+                   , third_party/tensorflow/tensorflow/lite/toco/logging/*.proto
+                   , third_party/tensorflow/tensorflow/lite/tools/evaluation/proto/*.proto
+                   , third_party/tensorflow/tensorflow/python/framework/*.proto
+                   , third_party/tensorflow/tensorflow/python/keras/protobuf/*.proto
+                   , third_party/tensorflow/tensorflow/python/kernel_tests/proto/*.proto
+                   , third_party/tensorflow/tensorflow/python/tpu/*.proto
+                   , third_party/tensorflow/tensorflow/python/training/*.proto
+                   , third_party/tensorflow/tensorflow/python/util/protobuf/*.proto
+                   , third_party/tensorflow/tensorflow/security/fuzzing/*.proto
+                   , third_party/tensorflow/tensorflow/stream_executor/*.proto
+                   , third_party/tensorflow/tensorflow/tools/api/lib/*.proto
+                   , third_party/tensorflow/tensorflow/tools/proto_text/*.proto
+
 
 library
-  exposed-modules:     Proto.Tensorflow.Core.Example.Example
+  exposed-modules:     Proto.Tensorflow.Compiler.Jit.XlaActivity
+                     , Proto.Tensorflow.Compiler.Jit.XlaActivity_Fields
+                     , Proto.Tensorflow.Compiler.Jit.XlaCompilationCache
+                     , Proto.Tensorflow.Compiler.Jit.XlaCompilationCache_Fields
+                     , Proto.Tensorflow.Compiler.Mlir.Lite.Quantization.QuantizationInfo
+                     , Proto.Tensorflow.Compiler.Mlir.Lite.Quantization.QuantizationInfo_Fields
+                     , Proto.Tensorflow.Compiler.Mlir.Quantization.Tensorflow.QuantizationOptions
+                     , Proto.Tensorflow.Compiler.Mlir.Quantization.Tensorflow.QuantizationOptions_Fields
+                     , Proto.Tensorflow.Compiler.Mlir.Tfrt.Analysis.Analysis
+                     , Proto.Tensorflow.Compiler.Mlir.Tfrt.Analysis.Analysis_Fields
+                     , Proto.Tensorflow.Compiler.Mlir.Tools.KernelGen.CompileCacheItem
+                     , Proto.Tensorflow.Compiler.Mlir.Tools.KernelGen.CompileCacheItem_Fields
+                     , Proto.Tensorflow.Compiler.Tf2tensorrt.Utils.TrtEngineInstance
+                     , Proto.Tensorflow.Compiler.Tf2tensorrt.Utils.TrtEngineInstance_Fields
+                     , Proto.Tensorflow.Compiler.Tf2xla.HostComputeMetadata
+                     , Proto.Tensorflow.Compiler.Tf2xla.HostComputeMetadata_Fields
+                     , Proto.Tensorflow.Compiler.Tf2xla.Kernels.Callback
+                     , Proto.Tensorflow.Compiler.Tf2xla.Kernels.Callback_Fields
+                     , Proto.Tensorflow.Compiler.Tf2xla.Support
+                     , Proto.Tensorflow.Compiler.Tf2xla.Support_Fields
+                     , Proto.Tensorflow.Compiler.Tf2xla.Tf2xla
+                     , Proto.Tensorflow.Compiler.Tf2xla.Tf2xla_Fields
+                     , Proto.Tensorflow.Compiler.Xla.Pjrt.Distributed.Protocol
+                     , Proto.Tensorflow.Compiler.Xla.Pjrt.Distributed.Protocol_Fields
+                     , Proto.Tensorflow.Compiler.Xla.Python.TpuDriver.TpuDriver
+                     , Proto.Tensorflow.Compiler.Xla.Python.TpuDriver.TpuDriver_Fields
+                     , Proto.Tensorflow.Compiler.Xla.Python.TpuDriver.TpuService
+                     , Proto.Tensorflow.Compiler.Xla.Python.TpuDriver.TpuService_Fields
+                     , Proto.Tensorflow.Compiler.Xla.Rpc.XlaService
+                     , Proto.Tensorflow.Compiler.Xla.Rpc.XlaService_Fields
+                     , Proto.Tensorflow.Compiler.Xla.Service.Gpu.BackendConfigs
+                     , Proto.Tensorflow.Compiler.Xla.Service.Gpu.BackendConfigs_Fields
+                     , Proto.Tensorflow.Compiler.Xla.Service.Gpu.GpuAutotuning
+                     , Proto.Tensorflow.Compiler.Xla.Service.Gpu.GpuAutotuning_Fields
+                     , Proto.Tensorflow.Compiler.Xla.Service.Hlo
+                     , Proto.Tensorflow.Compiler.Xla.Service.Hlo_Fields
+                     , Proto.Tensorflow.Compiler.Xla.Service.HloExecutionProfileData
+                     , Proto.Tensorflow.Compiler.Xla.Service.HloExecutionProfileData_Fields
+                     , Proto.Tensorflow.Compiler.Xla.Service.HloProfilePrinterData
+                     , Proto.Tensorflow.Compiler.Xla.Service.HloProfilePrinterData_Fields
+                     , Proto.Tensorflow.Compiler.Xla.Service.TestCompilationEnvironment
+                     , Proto.Tensorflow.Compiler.Xla.Service.TestCompilationEnvironment_Fields
+                     , Proto.Tensorflow.Compiler.Xla.Tools.RunHloModule
+                     , Proto.Tensorflow.Compiler.Xla.Tools.RunHloModule_Fields
+                     , Proto.Tensorflow.Compiler.Xla.Xla
+                     , Proto.Tensorflow.Compiler.Xla.Xla_Fields
+                     , Proto.Tensorflow.Compiler.Xla.XlaData
+                     , Proto.Tensorflow.Compiler.Xla.XlaData_Fields
+                     , Proto.Tensorflow.Compiler.Xrt.Xrt
+                     , Proto.Tensorflow.Compiler.Xrt.Xrt_Fields
+                     , Proto.Tensorflow.Core.Data.Dataset
+                     , Proto.Tensorflow.Core.Data.Dataset_Fields
+                     , Proto.Tensorflow.Core.Data.Service.Common
+                     , Proto.Tensorflow.Core.Data.Service.Common_Fields
+                     , Proto.Tensorflow.Core.Data.Service.Dispatcher
+                     , Proto.Tensorflow.Core.Data.Service.Dispatcher_Fields
+                     , Proto.Tensorflow.Core.Data.Service.Export
+                     , Proto.Tensorflow.Core.Data.Service.Export_Fields
+                     , Proto.Tensorflow.Core.Data.Service.Journal
+                     , Proto.Tensorflow.Core.Data.Service.Journal_Fields
+                     , Proto.Tensorflow.Core.Data.Service.Worker
+                     , Proto.Tensorflow.Core.Data.Service.Worker_Fields
+                     , Proto.Tensorflow.Core.Debug.DebugService
+                     , Proto.Tensorflow.Core.Debug.DebugService_Fields
+                     , Proto.Tensorflow.Core.Debug.DebuggerEventMetadata
+                     , Proto.Tensorflow.Core.Debug.DebuggerEventMetadata_Fields
+                     , Proto.Tensorflow.Core.Example.Example
                      , Proto.Tensorflow.Core.Example.Example_Fields
                      , Proto.Tensorflow.Core.Example.ExampleParserConfiguration
                      , Proto.Tensorflow.Core.Example.ExampleParserConfiguration_Fields
@@ -26,24 +138,38 @@ library
                      , Proto.Tensorflow.Core.Example.Feature_Fields
                      , Proto.Tensorflow.Core.Framework.AllocationDescription
                      , Proto.Tensorflow.Core.Framework.AllocationDescription_Fields
+                     , Proto.Tensorflow.Core.Framework.ApiDef
+                     , Proto.Tensorflow.Core.Framework.ApiDef_Fields
                      , Proto.Tensorflow.Core.Framework.AttrValue
                      , Proto.Tensorflow.Core.Framework.AttrValue_Fields
                      , Proto.Tensorflow.Core.Framework.CostGraph
                      , Proto.Tensorflow.Core.Framework.CostGraph_Fields
+                     , Proto.Tensorflow.Core.Framework.DatasetMetadata
+                     , Proto.Tensorflow.Core.Framework.DatasetMetadata_Fields
+                     , Proto.Tensorflow.Core.Framework.DatasetOptions
+                     , Proto.Tensorflow.Core.Framework.DatasetOptions_Fields
                      , Proto.Tensorflow.Core.Framework.DeviceAttributes
                      , Proto.Tensorflow.Core.Framework.DeviceAttributes_Fields
+                     , Proto.Tensorflow.Core.Framework.FullType
+                     , Proto.Tensorflow.Core.Framework.FullType_Fields
                      , Proto.Tensorflow.Core.Framework.Function
                      , Proto.Tensorflow.Core.Framework.Function_Fields
                      , Proto.Tensorflow.Core.Framework.Graph
                      , Proto.Tensorflow.Core.Framework.Graph_Fields
+                     , Proto.Tensorflow.Core.Framework.GraphTransferInfo
+                     , Proto.Tensorflow.Core.Framework.GraphTransferInfo_Fields
                      , Proto.Tensorflow.Core.Framework.KernelDef
                      , Proto.Tensorflow.Core.Framework.KernelDef_Fields
                      , Proto.Tensorflow.Core.Framework.LogMemory
                      , Proto.Tensorflow.Core.Framework.LogMemory_Fields
+                     , Proto.Tensorflow.Core.Framework.Model
+                     , Proto.Tensorflow.Core.Framework.Model_Fields
                      , Proto.Tensorflow.Core.Framework.NodeDef
                      , Proto.Tensorflow.Core.Framework.NodeDef_Fields
                      , Proto.Tensorflow.Core.Framework.OpDef
                      , Proto.Tensorflow.Core.Framework.OpDef_Fields
+                     , Proto.Tensorflow.Core.Framework.ReaderBase
+                     , Proto.Tensorflow.Core.Framework.ReaderBase_Fields
                      , Proto.Tensorflow.Core.Framework.ResourceHandle
                      , Proto.Tensorflow.Core.Framework.ResourceHandle_Fields
                      , Proto.Tensorflow.Core.Framework.StepStats
@@ -64,46 +190,307 @@ library
                      , Proto.Tensorflow.Core.Framework.Variable_Fields
                      , Proto.Tensorflow.Core.Framework.Versions
                      , Proto.Tensorflow.Core.Framework.Versions_Fields
+                     , Proto.Tensorflow.Core.Function.TraceType.DefaultTypes
+                     , Proto.Tensorflow.Core.Function.TraceType.DefaultTypes_Fields
+                     , Proto.Tensorflow.Core.Function.TraceType.Serialization
+                     , Proto.Tensorflow.Core.Function.TraceType.Serialization_Fields
+                     , Proto.Tensorflow.Core.Function.TraceType.SerializationTest
+                     , Proto.Tensorflow.Core.Function.TraceType.SerializationTest_Fields
+                     , Proto.Tensorflow.Core.Grappler.Costs.OpPerformanceData
+                     , Proto.Tensorflow.Core.Grappler.Costs.OpPerformanceData_Fields
+                     , Proto.Tensorflow.Core.Grappler.Optimizers.Inference.BatchOpRewriter
+                     , Proto.Tensorflow.Core.Grappler.Optimizers.Inference.BatchOpRewriter_Fields
                      , Proto.Tensorflow.Core.Lib.Core.ErrorCodes
+                     , Proto.Tensorflow.Core.Lib.Core.ErrorCodes_Fields
+                     , Proto.Tensorflow.Core.Profiler.Profile
+                     , Proto.Tensorflow.Core.Profiler.Profile_Fields
+                     , Proto.Tensorflow.Core.Profiler.ProfilerAnalysis
+                     , Proto.Tensorflow.Core.Profiler.ProfilerAnalysis_Fields
+                     , Proto.Tensorflow.Core.Profiler.ProfilerOptions
+                     , Proto.Tensorflow.Core.Profiler.ProfilerOptions_Fields
+                     , Proto.Tensorflow.Core.Profiler.ProfilerService
+                     , Proto.Tensorflow.Core.Profiler.ProfilerService_Fields
+                     , Proto.Tensorflow.Core.Profiler.ProfilerServiceMonitorResult
+                     , Proto.Tensorflow.Core.Profiler.ProfilerServiceMonitorResult_Fields
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.Diagnostics
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.Diagnostics_Fields
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.HardwareTypes
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.HardwareTypes_Fields
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.InputPipeline
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.InputPipeline_Fields
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.KernelStats
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.KernelStats_Fields
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.MemoryProfile
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.MemoryProfile_Fields
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.MemoryViewerPreprocess
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.MemoryViewerPreprocess_Fields
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.OpMetrics
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.OpMetrics_Fields
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.OpProfile
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.OpProfile_Fields
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.OpStats
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.OpStats_Fields
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.OverviewPage
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.OverviewPage_Fields
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.PodStats
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.PodStats_Fields
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.PodViewer
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.PodViewer_Fields
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.StepsDb
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.StepsDb_Fields
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.TfDataStats
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.TfDataStats_Fields
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.TfFunction
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.TfFunction_Fields
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.TfStats
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.TfStats_Fields
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.Tfstreamz
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.Tfstreamz_Fields
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.TraceEvents
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.TraceEvents_Fields
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.Xplane
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.Xplane_Fields
+                     , Proto.Tensorflow.Core.Profiler.TfprofLog
+                     , Proto.Tensorflow.Core.Profiler.TfprofLog_Fields
+                     , Proto.Tensorflow.Core.Profiler.TfprofOptions
+                     , Proto.Tensorflow.Core.Profiler.TfprofOptions_Fields
+                     , Proto.Tensorflow.Core.Profiler.TfprofOutput
+                     , Proto.Tensorflow.Core.Profiler.TfprofOutput_Fields
+                     , Proto.Tensorflow.Core.Protobuf.Autotuning
+                     , Proto.Tensorflow.Core.Protobuf.Autotuning_Fields
+                     , Proto.Tensorflow.Core.Protobuf.BfcMemoryMap
+                     , Proto.Tensorflow.Core.Protobuf.BfcMemoryMap_Fields
                      , Proto.Tensorflow.Core.Protobuf.Cluster
                      , Proto.Tensorflow.Core.Protobuf.Cluster_Fields
+                     , Proto.Tensorflow.Core.Protobuf.CompositeTensorVariant
+                     , Proto.Tensorflow.Core.Protobuf.CompositeTensorVariant_Fields
                      , Proto.Tensorflow.Core.Protobuf.Config
                      , Proto.Tensorflow.Core.Protobuf.Config_Fields
                      , Proto.Tensorflow.Core.Protobuf.ControlFlow
                      , Proto.Tensorflow.Core.Protobuf.ControlFlow_Fields
+                     , Proto.Tensorflow.Core.Protobuf.ConvAutotuning
+                     , Proto.Tensorflow.Core.Protobuf.ConvAutotuning_Fields
+                     , Proto.Tensorflow.Core.Protobuf.CoordinationConfig
+                     , Proto.Tensorflow.Core.Protobuf.CoordinationConfig_Fields
+                     , Proto.Tensorflow.Core.Protobuf.CoordinationService
+                     , Proto.Tensorflow.Core.Protobuf.CoordinationService_Fields
+                     , Proto.Tensorflow.Core.Protobuf.CorePlatformPayloads
+                     , Proto.Tensorflow.Core.Protobuf.CorePlatformPayloads_Fields
+                     , Proto.Tensorflow.Core.Protobuf.CriticalSection
+                     , Proto.Tensorflow.Core.Protobuf.CriticalSection_Fields
+                     , Proto.Tensorflow.Core.Protobuf.DataService
+                     , Proto.Tensorflow.Core.Protobuf.DataService_Fields
                      , Proto.Tensorflow.Core.Protobuf.Debug
                      , Proto.Tensorflow.Core.Protobuf.Debug_Fields
+                     , Proto.Tensorflow.Core.Protobuf.DebugEvent
+                     , Proto.Tensorflow.Core.Protobuf.DebugEvent_Fields
                      , Proto.Tensorflow.Core.Protobuf.DeviceFilters
+                     , Proto.Tensorflow.Core.Protobuf.DeviceFilters_Fields
+                     , Proto.Tensorflow.Core.Protobuf.DeviceProperties
+                     , Proto.Tensorflow.Core.Protobuf.DeviceProperties_Fields
+                     , Proto.Tensorflow.Core.Protobuf.DistributedRuntimePayloads
+                     , Proto.Tensorflow.Core.Protobuf.DistributedRuntimePayloads_Fields
+                     , Proto.Tensorflow.Core.Protobuf.EagerService
+                     , Proto.Tensorflow.Core.Protobuf.EagerService_Fields
                      , Proto.Tensorflow.Core.Protobuf.ErrorCodes
+                     , Proto.Tensorflow.Core.Protobuf.ErrorCodes_Fields
+                     , Proto.Tensorflow.Core.Protobuf.Fingerprint
+                     , Proto.Tensorflow.Core.Protobuf.Fingerprint_Fields
+                     , Proto.Tensorflow.Core.Protobuf.GraphDebugInfo
+                     , Proto.Tensorflow.Core.Protobuf.GraphDebugInfo_Fields
+                     , Proto.Tensorflow.Core.Protobuf.Master
+                     , Proto.Tensorflow.Core.Protobuf.Master_Fields
+                     , Proto.Tensorflow.Core.Protobuf.MasterService
+                     , Proto.Tensorflow.Core.Protobuf.MasterService_Fields
                      , Proto.Tensorflow.Core.Protobuf.MetaGraph
                      , Proto.Tensorflow.Core.Protobuf.MetaGraph_Fields
                      , Proto.Tensorflow.Core.Protobuf.NamedTensor
                      , Proto.Tensorflow.Core.Protobuf.NamedTensor_Fields
                      , Proto.Tensorflow.Core.Protobuf.QueueRunner
                      , Proto.Tensorflow.Core.Protobuf.QueueRunner_Fields
+                     , Proto.Tensorflow.Core.Protobuf.RemoteTensorHandle
+                     , Proto.Tensorflow.Core.Protobuf.RemoteTensorHandle_Fields
+                     , Proto.Tensorflow.Core.Protobuf.ReplayLog
+                     , Proto.Tensorflow.Core.Protobuf.ReplayLog_Fields
                      , Proto.Tensorflow.Core.Protobuf.RewriterConfig
                      , Proto.Tensorflow.Core.Protobuf.RewriterConfig_Fields
                      , Proto.Tensorflow.Core.Protobuf.SavedModel
                      , Proto.Tensorflow.Core.Protobuf.SavedModel_Fields
                      , Proto.Tensorflow.Core.Protobuf.SavedObjectGraph
+                     , Proto.Tensorflow.Core.Protobuf.SavedObjectGraph_Fields
                      , Proto.Tensorflow.Core.Protobuf.Saver
                      , Proto.Tensorflow.Core.Protobuf.Saver_Fields
+                     , Proto.Tensorflow.Core.Protobuf.ServiceConfig
+                     , Proto.Tensorflow.Core.Protobuf.ServiceConfig_Fields
+                     , Proto.Tensorflow.Core.Protobuf.Snapshot
+                     , Proto.Tensorflow.Core.Protobuf.Snapshot_Fields
+                     , Proto.Tensorflow.Core.Protobuf.Status
+                     , Proto.Tensorflow.Core.Protobuf.Status_Fields
                      , Proto.Tensorflow.Core.Protobuf.Struct
+                     , Proto.Tensorflow.Core.Protobuf.Struct_Fields
                      , Proto.Tensorflow.Core.Protobuf.TensorBundle
                      , Proto.Tensorflow.Core.Protobuf.TensorBundle_Fields
                      , Proto.Tensorflow.Core.Protobuf.TensorflowServer
                      , Proto.Tensorflow.Core.Protobuf.TensorflowServer_Fields
+                     , Proto.Tensorflow.Core.Protobuf.Tpu.CompilationResult
+                     , Proto.Tensorflow.Core.Protobuf.Tpu.CompilationResult_Fields
+                     , Proto.Tensorflow.Core.Protobuf.Tpu.CompileMetadata
+                     , Proto.Tensorflow.Core.Protobuf.Tpu.CompileMetadata_Fields
+                     , Proto.Tensorflow.Core.Protobuf.Tpu.DynamicPadding
+                     , Proto.Tensorflow.Core.Protobuf.Tpu.DynamicPadding_Fields
+                     , Proto.Tensorflow.Core.Protobuf.Tpu.OptimizationParameters
+                     , Proto.Tensorflow.Core.Protobuf.Tpu.OptimizationParameters_Fields
+                     , Proto.Tensorflow.Core.Protobuf.Tpu.Topology
+                     , Proto.Tensorflow.Core.Protobuf.Tpu.Topology_Fields
+                     , Proto.Tensorflow.Core.Protobuf.Tpu.TpuEmbeddingConfiguration
+                     , Proto.Tensorflow.Core.Protobuf.Tpu.TpuEmbeddingConfiguration_Fields
                      , Proto.Tensorflow.Core.Protobuf.TrackableObjectGraph
+                     , Proto.Tensorflow.Core.Protobuf.TrackableObjectGraph_Fields
+                     , Proto.Tensorflow.Core.Protobuf.TransportOptions
+                     , Proto.Tensorflow.Core.Protobuf.TransportOptions_Fields
                      , Proto.Tensorflow.Core.Protobuf.VerifierConfig
+                     , Proto.Tensorflow.Core.Protobuf.VerifierConfig_Fields
+                     , Proto.Tensorflow.Core.Protobuf.Worker
+                     , Proto.Tensorflow.Core.Protobuf.Worker_Fields
+                     , Proto.Tensorflow.Core.Protobuf.WorkerService
+                     , Proto.Tensorflow.Core.Protobuf.WorkerService_Fields
+                     , Proto.Tensorflow.Core.Tfrt.Fallback.OpCostMap
+                     , Proto.Tensorflow.Core.Tfrt.Fallback.OpCostMap_Fields
+                     , Proto.Tensorflow.Core.Tpu.Kernels.TpuCompilationCache
+                     , Proto.Tensorflow.Core.Tpu.Kernels.TpuCompilationCache_Fields
+                     , Proto.Tensorflow.Core.Tpu.Kernels.TpuCompilationCacheCommon
+                     , Proto.Tensorflow.Core.Tpu.Kernels.TpuCompilationCacheCommon_Fields
+                     , Proto.Tensorflow.Core.Tpu.Kernels.TpuCompile
+                     , Proto.Tensorflow.Core.Tpu.Kernels.TpuCompile_Fields
+                     , Proto.Tensorflow.Core.Tpu.Kernels.TpuExecutableInfo
+                     , Proto.Tensorflow.Core.Tpu.Kernels.TpuExecutableInfo_Fields
+                     , Proto.Tensorflow.Core.Util.AutotuneMaps.AutotuneMap
+                     , Proto.Tensorflow.Core.Util.AutotuneMaps.AutotuneMap_Fields
+                     , Proto.Tensorflow.Core.Util.AutotuneMaps.ConvParameters
+                     , Proto.Tensorflow.Core.Util.AutotuneMaps.ConvParameters_Fields
                      , Proto.Tensorflow.Core.Util.Event
                      , Proto.Tensorflow.Core.Util.Event_Fields
+                     , Proto.Tensorflow.Core.Util.ExampleProtoFastParsingTest
+                     , Proto.Tensorflow.Core.Util.ExampleProtoFastParsingTest_Fields
                      , Proto.Tensorflow.Core.Util.MemmappedFileSystem
                      , Proto.Tensorflow.Core.Util.MemmappedFileSystem_Fields
                      , Proto.Tensorflow.Core.Util.SavedTensorSlice
                      , Proto.Tensorflow.Core.Util.SavedTensorSlice_Fields
                      , Proto.Tensorflow.Core.Util.TestLog
                      , Proto.Tensorflow.Core.Util.TestLog_Fields
-  autogen-modules:     Proto.Tensorflow.Core.Example.Example
+                     , Proto.Tensorflow.Distribute.Experimental.Rpc.Proto.TfRpcService
+                     , Proto.Tensorflow.Distribute.Experimental.Rpc.Proto.TfRpcService_Fields
+                     , Proto.Tensorflow.Dtensor.Proto.Layout
+                     , Proto.Tensorflow.Dtensor.Proto.Layout_Fields
+                     , Proto.Tensorflow.Lite.Experimental.Acceleration.Configuration.Configuration
+                     , Proto.Tensorflow.Lite.Experimental.Acceleration.Configuration.Configuration_Fields
+                     , Proto.Tensorflow.Lite.Python.Metrics.ConverterErrorData
+                     , Proto.Tensorflow.Lite.Python.Metrics.ConverterErrorData_Fields
+                     , Proto.Tensorflow.Lite.Toco.Logging.TocoConversionLog
+                     , Proto.Tensorflow.Lite.Toco.Logging.TocoConversionLog_Fields
+                     , Proto.Tensorflow.Lite.Toco.ModelFlags
+                     , Proto.Tensorflow.Lite.Toco.ModelFlags_Fields
+                     , Proto.Tensorflow.Lite.Toco.TocoFlags
+                     , Proto.Tensorflow.Lite.Toco.TocoFlags_Fields
+                     , Proto.Tensorflow.Lite.Toco.Types
+                     , Proto.Tensorflow.Lite.Toco.Types_Fields
+                     , Proto.Tensorflow.Lite.Tools.Evaluation.Proto.EvaluationConfig
+                     , Proto.Tensorflow.Lite.Tools.Evaluation.Proto.EvaluationConfig_Fields
+                     , Proto.Tensorflow.Lite.Tools.Evaluation.Proto.EvaluationStages
+                     , Proto.Tensorflow.Lite.Tools.Evaluation.Proto.EvaluationStages_Fields
+                     , Proto.Tensorflow.Lite.Tools.Evaluation.Proto.PreprocessingSteps
+                     , Proto.Tensorflow.Lite.Tools.Evaluation.Proto.PreprocessingSteps_Fields
+                     , Proto.Tensorflow.Python.Framework.CppShapeInference
+                     , Proto.Tensorflow.Python.Framework.CppShapeInference_Fields
+                     , Proto.Tensorflow.Python.Keras.Protobuf.ProjectorConfig
+                     , Proto.Tensorflow.Python.Keras.Protobuf.ProjectorConfig_Fields
+                     , Proto.Tensorflow.Python.Keras.Protobuf.SavedMetadata
+                     , Proto.Tensorflow.Python.Keras.Protobuf.SavedMetadata_Fields
+                     , Proto.Tensorflow.Python.Keras.Protobuf.Versions
+                     , Proto.Tensorflow.Python.Keras.Protobuf.Versions_Fields
+                     , Proto.Tensorflow.Python.KernelTests.Proto.TestExample
+                     , Proto.Tensorflow.Python.KernelTests.Proto.TestExample_Fields
+                     , Proto.Tensorflow.Python.Tpu.TensorTracer
+                     , Proto.Tensorflow.Python.Tpu.TensorTracer_Fields
+                     , Proto.Tensorflow.Python.Training.CheckpointState
+                     , Proto.Tensorflow.Python.Training.CheckpointState_Fields
+                     , Proto.Tensorflow.Python.Util.Protobuf.CompareTest
+                     , Proto.Tensorflow.Python.Util.Protobuf.CompareTest_Fields
+                     , Proto.Tensorflow.Security.Fuzzing.CheckpointReaderFuzzInput
+                     , Proto.Tensorflow.Security.Fuzzing.CheckpointReaderFuzzInput_Fields
+                     , Proto.Tensorflow.StreamExecutor.Dnn
+                     , Proto.Tensorflow.StreamExecutor.Dnn_Fields
+                     , Proto.Tensorflow.Tools.Api.Lib.ApiObjects
+                     , Proto.Tensorflow.Tools.Api.Lib.ApiObjects_Fields
+                     , Proto.Tensorflow.Tools.ProtoText.Test
+                     , Proto.Tensorflow.Tools.ProtoText.Test_Fields
+  autogen-modules:     Proto.Tensorflow.Compiler.Jit.XlaActivity
+                     , Proto.Tensorflow.Compiler.Jit.XlaActivity_Fields
+                     , Proto.Tensorflow.Compiler.Jit.XlaCompilationCache
+                     , Proto.Tensorflow.Compiler.Jit.XlaCompilationCache_Fields
+                     , Proto.Tensorflow.Compiler.Mlir.Lite.Quantization.QuantizationInfo
+                     , Proto.Tensorflow.Compiler.Mlir.Lite.Quantization.QuantizationInfo_Fields
+                     , Proto.Tensorflow.Compiler.Mlir.Quantization.Tensorflow.QuantizationOptions
+                     , Proto.Tensorflow.Compiler.Mlir.Quantization.Tensorflow.QuantizationOptions_Fields
+                     , Proto.Tensorflow.Compiler.Mlir.Tfrt.Analysis.Analysis
+                     , Proto.Tensorflow.Compiler.Mlir.Tfrt.Analysis.Analysis_Fields
+                     , Proto.Tensorflow.Compiler.Mlir.Tools.KernelGen.CompileCacheItem
+                     , Proto.Tensorflow.Compiler.Mlir.Tools.KernelGen.CompileCacheItem_Fields
+                     , Proto.Tensorflow.Compiler.Tf2tensorrt.Utils.TrtEngineInstance
+                     , Proto.Tensorflow.Compiler.Tf2tensorrt.Utils.TrtEngineInstance_Fields
+                     , Proto.Tensorflow.Compiler.Tf2xla.HostComputeMetadata
+                     , Proto.Tensorflow.Compiler.Tf2xla.HostComputeMetadata_Fields
+                     , Proto.Tensorflow.Compiler.Tf2xla.Kernels.Callback
+                     , Proto.Tensorflow.Compiler.Tf2xla.Kernels.Callback_Fields
+                     , Proto.Tensorflow.Compiler.Tf2xla.Support
+                     , Proto.Tensorflow.Compiler.Tf2xla.Support_Fields
+                     , Proto.Tensorflow.Compiler.Tf2xla.Tf2xla
+                     , Proto.Tensorflow.Compiler.Tf2xla.Tf2xla_Fields
+                     , Proto.Tensorflow.Compiler.Xla.Pjrt.Distributed.Protocol
+                     , Proto.Tensorflow.Compiler.Xla.Pjrt.Distributed.Protocol_Fields
+                     , Proto.Tensorflow.Compiler.Xla.Python.TpuDriver.TpuDriver
+                     , Proto.Tensorflow.Compiler.Xla.Python.TpuDriver.TpuDriver_Fields
+                     , Proto.Tensorflow.Compiler.Xla.Python.TpuDriver.TpuService
+                     , Proto.Tensorflow.Compiler.Xla.Python.TpuDriver.TpuService_Fields
+                     , Proto.Tensorflow.Compiler.Xla.Rpc.XlaService
+                     , Proto.Tensorflow.Compiler.Xla.Rpc.XlaService_Fields
+                     , Proto.Tensorflow.Compiler.Xla.Service.Gpu.BackendConfigs
+                     , Proto.Tensorflow.Compiler.Xla.Service.Gpu.BackendConfigs_Fields
+                     , Proto.Tensorflow.Compiler.Xla.Service.Gpu.GpuAutotuning
+                     , Proto.Tensorflow.Compiler.Xla.Service.Gpu.GpuAutotuning_Fields
+                     , Proto.Tensorflow.Compiler.Xla.Service.Hlo
+                     , Proto.Tensorflow.Compiler.Xla.Service.Hlo_Fields
+                     , Proto.Tensorflow.Compiler.Xla.Service.HloExecutionProfileData
+                     , Proto.Tensorflow.Compiler.Xla.Service.HloExecutionProfileData_Fields
+                     , Proto.Tensorflow.Compiler.Xla.Service.HloProfilePrinterData
+                     , Proto.Tensorflow.Compiler.Xla.Service.HloProfilePrinterData_Fields
+                     , Proto.Tensorflow.Compiler.Xla.Service.TestCompilationEnvironment
+                     , Proto.Tensorflow.Compiler.Xla.Service.TestCompilationEnvironment_Fields
+                     , Proto.Tensorflow.Compiler.Xla.Tools.RunHloModule
+                     , Proto.Tensorflow.Compiler.Xla.Tools.RunHloModule_Fields
+                     , Proto.Tensorflow.Compiler.Xla.Xla
+                     , Proto.Tensorflow.Compiler.Xla.Xla_Fields
+                     , Proto.Tensorflow.Compiler.Xla.XlaData
+                     , Proto.Tensorflow.Compiler.Xla.XlaData_Fields
+                     , Proto.Tensorflow.Compiler.Xrt.Xrt
+                     , Proto.Tensorflow.Compiler.Xrt.Xrt_Fields
+                     , Proto.Tensorflow.Core.Data.Dataset
+                     , Proto.Tensorflow.Core.Data.Dataset_Fields
+                     , Proto.Tensorflow.Core.Data.Service.Common
+                     , Proto.Tensorflow.Core.Data.Service.Common_Fields
+                     , Proto.Tensorflow.Core.Data.Service.Dispatcher
+                     , Proto.Tensorflow.Core.Data.Service.Dispatcher_Fields
+                     , Proto.Tensorflow.Core.Data.Service.Export
+                     , Proto.Tensorflow.Core.Data.Service.Export_Fields
+                     , Proto.Tensorflow.Core.Data.Service.Journal
+                     , Proto.Tensorflow.Core.Data.Service.Journal_Fields
+                     , Proto.Tensorflow.Core.Data.Service.Worker
+                     , Proto.Tensorflow.Core.Data.Service.Worker_Fields
+                     , Proto.Tensorflow.Core.Debug.DebugService
+                     , Proto.Tensorflow.Core.Debug.DebugService_Fields
+                     , Proto.Tensorflow.Core.Debug.DebuggerEventMetadata
+                     , Proto.Tensorflow.Core.Debug.DebuggerEventMetadata_Fields
+                     , Proto.Tensorflow.Core.Example.Example
                      , Proto.Tensorflow.Core.Example.Example_Fields
                      , Proto.Tensorflow.Core.Example.ExampleParserConfiguration
                      , Proto.Tensorflow.Core.Example.ExampleParserConfiguration_Fields
@@ -111,27 +498,40 @@ library
                      , Proto.Tensorflow.Core.Example.Feature_Fields
                      , Proto.Tensorflow.Core.Framework.AllocationDescription
                      , Proto.Tensorflow.Core.Framework.AllocationDescription_Fields
+                     , Proto.Tensorflow.Core.Framework.ApiDef
+                     , Proto.Tensorflow.Core.Framework.ApiDef_Fields
                      , Proto.Tensorflow.Core.Framework.AttrValue
                      , Proto.Tensorflow.Core.Framework.AttrValue_Fields
                      , Proto.Tensorflow.Core.Framework.CostGraph
                      , Proto.Tensorflow.Core.Framework.CostGraph_Fields
+                     , Proto.Tensorflow.Core.Framework.DatasetMetadata
+                     , Proto.Tensorflow.Core.Framework.DatasetMetadata_Fields
+                     , Proto.Tensorflow.Core.Framework.DatasetOptions
+                     , Proto.Tensorflow.Core.Framework.DatasetOptions_Fields
                      , Proto.Tensorflow.Core.Framework.DeviceAttributes
                      , Proto.Tensorflow.Core.Framework.DeviceAttributes_Fields
+                     , Proto.Tensorflow.Core.Framework.FullType
+                     , Proto.Tensorflow.Core.Framework.FullType_Fields
                      , Proto.Tensorflow.Core.Framework.Function
                      , Proto.Tensorflow.Core.Framework.Function_Fields
                      , Proto.Tensorflow.Core.Framework.Graph
                      , Proto.Tensorflow.Core.Framework.Graph_Fields
+                     , Proto.Tensorflow.Core.Framework.GraphTransferInfo
+                     , Proto.Tensorflow.Core.Framework.GraphTransferInfo_Fields
                      , Proto.Tensorflow.Core.Framework.KernelDef
                      , Proto.Tensorflow.Core.Framework.KernelDef_Fields
                      , Proto.Tensorflow.Core.Framework.LogMemory
                      , Proto.Tensorflow.Core.Framework.LogMemory_Fields
+                     , Proto.Tensorflow.Core.Framework.Model
+                     , Proto.Tensorflow.Core.Framework.Model_Fields
                      , Proto.Tensorflow.Core.Framework.NodeDef
                      , Proto.Tensorflow.Core.Framework.NodeDef_Fields
                      , Proto.Tensorflow.Core.Framework.OpDef
                      , Proto.Tensorflow.Core.Framework.OpDef_Fields
+                     , Proto.Tensorflow.Core.Framework.ReaderBase
+                     , Proto.Tensorflow.Core.Framework.ReaderBase_Fields
                      , Proto.Tensorflow.Core.Framework.ResourceHandle
                      , Proto.Tensorflow.Core.Framework.ResourceHandle_Fields
-                     , Proto.Tensorflow.Core.Protobuf.SavedObjectGraph
                      , Proto.Tensorflow.Core.Framework.StepStats
                      , Proto.Tensorflow.Core.Framework.StepStats_Fields
                      , Proto.Tensorflow.Core.Framework.Summary
@@ -150,45 +550,240 @@ library
                      , Proto.Tensorflow.Core.Framework.Variable_Fields
                      , Proto.Tensorflow.Core.Framework.Versions
                      , Proto.Tensorflow.Core.Framework.Versions_Fields
+                     , Proto.Tensorflow.Core.Function.TraceType.DefaultTypes
+                     , Proto.Tensorflow.Core.Function.TraceType.DefaultTypes_Fields
+                     , Proto.Tensorflow.Core.Function.TraceType.Serialization
+                     , Proto.Tensorflow.Core.Function.TraceType.Serialization_Fields
+                     , Proto.Tensorflow.Core.Function.TraceType.SerializationTest
+                     , Proto.Tensorflow.Core.Function.TraceType.SerializationTest_Fields
+                     , Proto.Tensorflow.Core.Grappler.Costs.OpPerformanceData
+                     , Proto.Tensorflow.Core.Grappler.Costs.OpPerformanceData_Fields
+                     , Proto.Tensorflow.Core.Grappler.Optimizers.Inference.BatchOpRewriter
+                     , Proto.Tensorflow.Core.Grappler.Optimizers.Inference.BatchOpRewriter_Fields
                      , Proto.Tensorflow.Core.Lib.Core.ErrorCodes
+                     , Proto.Tensorflow.Core.Lib.Core.ErrorCodes_Fields
+                     , Proto.Tensorflow.Core.Profiler.Profile
+                     , Proto.Tensorflow.Core.Profiler.Profile_Fields
+                     , Proto.Tensorflow.Core.Profiler.ProfilerAnalysis
+                     , Proto.Tensorflow.Core.Profiler.ProfilerAnalysis_Fields
+                     , Proto.Tensorflow.Core.Profiler.ProfilerOptions
+                     , Proto.Tensorflow.Core.Profiler.ProfilerOptions_Fields
+                     , Proto.Tensorflow.Core.Profiler.ProfilerService
+                     , Proto.Tensorflow.Core.Profiler.ProfilerService_Fields
+                     , Proto.Tensorflow.Core.Profiler.ProfilerServiceMonitorResult
+                     , Proto.Tensorflow.Core.Profiler.ProfilerServiceMonitorResult_Fields
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.Diagnostics
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.Diagnostics_Fields
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.HardwareTypes
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.HardwareTypes_Fields
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.InputPipeline
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.InputPipeline_Fields
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.KernelStats
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.KernelStats_Fields
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.MemoryProfile
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.MemoryProfile_Fields
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.MemoryViewerPreprocess
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.MemoryViewerPreprocess_Fields
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.OpMetrics
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.OpMetrics_Fields
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.OpProfile
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.OpProfile_Fields
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.OpStats
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.OpStats_Fields
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.OverviewPage
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.OverviewPage_Fields
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.PodStats
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.PodStats_Fields
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.PodViewer
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.PodViewer_Fields
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.StepsDb
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.StepsDb_Fields
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.TfDataStats
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.TfDataStats_Fields
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.TfFunction
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.TfFunction_Fields
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.TfStats
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.TfStats_Fields
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.Tfstreamz
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.Tfstreamz_Fields
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.TraceEvents
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.TraceEvents_Fields
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.Xplane
+                     , Proto.Tensorflow.Core.Profiler.Protobuf.Xplane_Fields
+                     , Proto.Tensorflow.Core.Profiler.TfprofLog
+                     , Proto.Tensorflow.Core.Profiler.TfprofLog_Fields
+                     , Proto.Tensorflow.Core.Profiler.TfprofOptions
+                     , Proto.Tensorflow.Core.Profiler.TfprofOptions_Fields
+                     , Proto.Tensorflow.Core.Profiler.TfprofOutput
+                     , Proto.Tensorflow.Core.Profiler.TfprofOutput_Fields
+                     , Proto.Tensorflow.Core.Protobuf.Autotuning
+                     , Proto.Tensorflow.Core.Protobuf.Autotuning_Fields
+                     , Proto.Tensorflow.Core.Protobuf.BfcMemoryMap
+                     , Proto.Tensorflow.Core.Protobuf.BfcMemoryMap_Fields
                      , Proto.Tensorflow.Core.Protobuf.Cluster
                      , Proto.Tensorflow.Core.Protobuf.Cluster_Fields
+                     , Proto.Tensorflow.Core.Protobuf.CompositeTensorVariant
+                     , Proto.Tensorflow.Core.Protobuf.CompositeTensorVariant_Fields
                      , Proto.Tensorflow.Core.Protobuf.Config
                      , Proto.Tensorflow.Core.Protobuf.Config_Fields
                      , Proto.Tensorflow.Core.Protobuf.ControlFlow
                      , Proto.Tensorflow.Core.Protobuf.ControlFlow_Fields
+                     , Proto.Tensorflow.Core.Protobuf.ConvAutotuning
+                     , Proto.Tensorflow.Core.Protobuf.ConvAutotuning_Fields
+                     , Proto.Tensorflow.Core.Protobuf.CoordinationConfig
+                     , Proto.Tensorflow.Core.Protobuf.CoordinationConfig_Fields
+                     , Proto.Tensorflow.Core.Protobuf.CoordinationService
+                     , Proto.Tensorflow.Core.Protobuf.CoordinationService_Fields
+                     , Proto.Tensorflow.Core.Protobuf.CorePlatformPayloads
+                     , Proto.Tensorflow.Core.Protobuf.CorePlatformPayloads_Fields
+                     , Proto.Tensorflow.Core.Protobuf.CriticalSection
+                     , Proto.Tensorflow.Core.Protobuf.CriticalSection_Fields
+                     , Proto.Tensorflow.Core.Protobuf.DataService
+                     , Proto.Tensorflow.Core.Protobuf.DataService_Fields
                      , Proto.Tensorflow.Core.Protobuf.Debug
                      , Proto.Tensorflow.Core.Protobuf.Debug_Fields
+                     , Proto.Tensorflow.Core.Protobuf.DebugEvent
+                     , Proto.Tensorflow.Core.Protobuf.DebugEvent_Fields
                      , Proto.Tensorflow.Core.Protobuf.DeviceFilters
+                     , Proto.Tensorflow.Core.Protobuf.DeviceFilters_Fields
+                     , Proto.Tensorflow.Core.Protobuf.DeviceProperties
+                     , Proto.Tensorflow.Core.Protobuf.DeviceProperties_Fields
+                     , Proto.Tensorflow.Core.Protobuf.DistributedRuntimePayloads
+                     , Proto.Tensorflow.Core.Protobuf.DistributedRuntimePayloads_Fields
+                     , Proto.Tensorflow.Core.Protobuf.EagerService
+                     , Proto.Tensorflow.Core.Protobuf.EagerService_Fields
                      , Proto.Tensorflow.Core.Protobuf.ErrorCodes
+                     , Proto.Tensorflow.Core.Protobuf.ErrorCodes_Fields
+                     , Proto.Tensorflow.Core.Protobuf.Fingerprint
+                     , Proto.Tensorflow.Core.Protobuf.Fingerprint_Fields
+                     , Proto.Tensorflow.Core.Protobuf.GraphDebugInfo
+                     , Proto.Tensorflow.Core.Protobuf.GraphDebugInfo_Fields
+                     , Proto.Tensorflow.Core.Protobuf.Master
+                     , Proto.Tensorflow.Core.Protobuf.Master_Fields
+                     , Proto.Tensorflow.Core.Protobuf.MasterService
+                     , Proto.Tensorflow.Core.Protobuf.MasterService_Fields
                      , Proto.Tensorflow.Core.Protobuf.MetaGraph
                      , Proto.Tensorflow.Core.Protobuf.MetaGraph_Fields
                      , Proto.Tensorflow.Core.Protobuf.NamedTensor
                      , Proto.Tensorflow.Core.Protobuf.NamedTensor_Fields
                      , Proto.Tensorflow.Core.Protobuf.QueueRunner
                      , Proto.Tensorflow.Core.Protobuf.QueueRunner_Fields
+                     , Proto.Tensorflow.Core.Protobuf.RemoteTensorHandle
+                     , Proto.Tensorflow.Core.Protobuf.RemoteTensorHandle_Fields
+                     , Proto.Tensorflow.Core.Protobuf.ReplayLog
+                     , Proto.Tensorflow.Core.Protobuf.ReplayLog_Fields
                      , Proto.Tensorflow.Core.Protobuf.RewriterConfig
                      , Proto.Tensorflow.Core.Protobuf.RewriterConfig_Fields
                      , Proto.Tensorflow.Core.Protobuf.SavedModel
                      , Proto.Tensorflow.Core.Protobuf.SavedModel_Fields
                      , Proto.Tensorflow.Core.Protobuf.SavedObjectGraph
+                     , Proto.Tensorflow.Core.Protobuf.SavedObjectGraph_Fields
                      , Proto.Tensorflow.Core.Protobuf.Saver
                      , Proto.Tensorflow.Core.Protobuf.Saver_Fields
+                     , Proto.Tensorflow.Core.Protobuf.ServiceConfig
+                     , Proto.Tensorflow.Core.Protobuf.ServiceConfig_Fields
+                     , Proto.Tensorflow.Core.Protobuf.Snapshot
+                     , Proto.Tensorflow.Core.Protobuf.Snapshot_Fields
+                     , Proto.Tensorflow.Core.Protobuf.Status
+                     , Proto.Tensorflow.Core.Protobuf.Status_Fields
                      , Proto.Tensorflow.Core.Protobuf.Struct
+                     , Proto.Tensorflow.Core.Protobuf.Struct_Fields
                      , Proto.Tensorflow.Core.Protobuf.TensorBundle
                      , Proto.Tensorflow.Core.Protobuf.TensorBundle_Fields
                      , Proto.Tensorflow.Core.Protobuf.TensorflowServer
                      , Proto.Tensorflow.Core.Protobuf.TensorflowServer_Fields
+                     , Proto.Tensorflow.Core.Protobuf.Tpu.CompilationResult
+                     , Proto.Tensorflow.Core.Protobuf.Tpu.CompilationResult_Fields
+                     , Proto.Tensorflow.Core.Protobuf.Tpu.CompileMetadata
+                     , Proto.Tensorflow.Core.Protobuf.Tpu.CompileMetadata_Fields
+                     , Proto.Tensorflow.Core.Protobuf.Tpu.DynamicPadding
+                     , Proto.Tensorflow.Core.Protobuf.Tpu.DynamicPadding_Fields
+                     , Proto.Tensorflow.Core.Protobuf.Tpu.OptimizationParameters
+                     , Proto.Tensorflow.Core.Protobuf.Tpu.OptimizationParameters_Fields
+                     , Proto.Tensorflow.Core.Protobuf.Tpu.Topology
+                     , Proto.Tensorflow.Core.Protobuf.Tpu.Topology_Fields
+                     , Proto.Tensorflow.Core.Protobuf.Tpu.TpuEmbeddingConfiguration
+                     , Proto.Tensorflow.Core.Protobuf.Tpu.TpuEmbeddingConfiguration_Fields
                      , Proto.Tensorflow.Core.Protobuf.TrackableObjectGraph
+                     , Proto.Tensorflow.Core.Protobuf.TrackableObjectGraph_Fields
+                     , Proto.Tensorflow.Core.Protobuf.TransportOptions
+                     , Proto.Tensorflow.Core.Protobuf.TransportOptions_Fields
                      , Proto.Tensorflow.Core.Protobuf.VerifierConfig
+                     , Proto.Tensorflow.Core.Protobuf.VerifierConfig_Fields
+                     , Proto.Tensorflow.Core.Protobuf.Worker
+                     , Proto.Tensorflow.Core.Protobuf.Worker_Fields
+                     , Proto.Tensorflow.Core.Protobuf.WorkerService
+                     , Proto.Tensorflow.Core.Protobuf.WorkerService_Fields
+                     , Proto.Tensorflow.Core.Tfrt.Fallback.OpCostMap
+                     , Proto.Tensorflow.Core.Tfrt.Fallback.OpCostMap_Fields
+                     , Proto.Tensorflow.Core.Tpu.Kernels.TpuCompilationCache
+                     , Proto.Tensorflow.Core.Tpu.Kernels.TpuCompilationCache_Fields
+                     , Proto.Tensorflow.Core.Tpu.Kernels.TpuCompilationCacheCommon
+                     , Proto.Tensorflow.Core.Tpu.Kernels.TpuCompilationCacheCommon_Fields
+                     , Proto.Tensorflow.Core.Tpu.Kernels.TpuCompile
+                     , Proto.Tensorflow.Core.Tpu.Kernels.TpuCompile_Fields
+                     , Proto.Tensorflow.Core.Tpu.Kernels.TpuExecutableInfo
+                     , Proto.Tensorflow.Core.Tpu.Kernels.TpuExecutableInfo_Fields
+                     , Proto.Tensorflow.Core.Util.AutotuneMaps.AutotuneMap
+                     , Proto.Tensorflow.Core.Util.AutotuneMaps.AutotuneMap_Fields
+                     , Proto.Tensorflow.Core.Util.AutotuneMaps.ConvParameters
+                     , Proto.Tensorflow.Core.Util.AutotuneMaps.ConvParameters_Fields
                      , Proto.Tensorflow.Core.Util.Event
                      , Proto.Tensorflow.Core.Util.Event_Fields
+                     , Proto.Tensorflow.Core.Util.ExampleProtoFastParsingTest
+                     , Proto.Tensorflow.Core.Util.ExampleProtoFastParsingTest_Fields
                      , Proto.Tensorflow.Core.Util.MemmappedFileSystem
                      , Proto.Tensorflow.Core.Util.MemmappedFileSystem_Fields
                      , Proto.Tensorflow.Core.Util.SavedTensorSlice
                      , Proto.Tensorflow.Core.Util.SavedTensorSlice_Fields
                      , Proto.Tensorflow.Core.Util.TestLog
                      , Proto.Tensorflow.Core.Util.TestLog_Fields
+                     , Proto.Tensorflow.Distribute.Experimental.Rpc.Proto.TfRpcService
+                     , Proto.Tensorflow.Distribute.Experimental.Rpc.Proto.TfRpcService_Fields
+                     , Proto.Tensorflow.Dtensor.Proto.Layout
+                     , Proto.Tensorflow.Dtensor.Proto.Layout_Fields
+                     , Proto.Tensorflow.Lite.Experimental.Acceleration.Configuration.Configuration
+                     , Proto.Tensorflow.Lite.Experimental.Acceleration.Configuration.Configuration_Fields
+                     , Proto.Tensorflow.Lite.Python.Metrics.ConverterErrorData
+                     , Proto.Tensorflow.Lite.Python.Metrics.ConverterErrorData_Fields
+                     , Proto.Tensorflow.Lite.Toco.Logging.TocoConversionLog
+                     , Proto.Tensorflow.Lite.Toco.Logging.TocoConversionLog_Fields
+                     , Proto.Tensorflow.Lite.Toco.ModelFlags
+                     , Proto.Tensorflow.Lite.Toco.ModelFlags_Fields
+                     , Proto.Tensorflow.Lite.Toco.TocoFlags
+                     , Proto.Tensorflow.Lite.Toco.TocoFlags_Fields
+                     , Proto.Tensorflow.Lite.Toco.Types
+                     , Proto.Tensorflow.Lite.Toco.Types_Fields
+                     , Proto.Tensorflow.Lite.Tools.Evaluation.Proto.EvaluationConfig
+                     , Proto.Tensorflow.Lite.Tools.Evaluation.Proto.EvaluationConfig_Fields
+                     , Proto.Tensorflow.Lite.Tools.Evaluation.Proto.EvaluationStages
+                     , Proto.Tensorflow.Lite.Tools.Evaluation.Proto.EvaluationStages_Fields
+                     , Proto.Tensorflow.Lite.Tools.Evaluation.Proto.PreprocessingSteps
+                     , Proto.Tensorflow.Lite.Tools.Evaluation.Proto.PreprocessingSteps_Fields
+                     , Proto.Tensorflow.Python.Framework.CppShapeInference
+                     , Proto.Tensorflow.Python.Framework.CppShapeInference_Fields
+                     , Proto.Tensorflow.Python.Keras.Protobuf.ProjectorConfig
+                     , Proto.Tensorflow.Python.Keras.Protobuf.ProjectorConfig_Fields
+                     , Proto.Tensorflow.Python.Keras.Protobuf.SavedMetadata
+                     , Proto.Tensorflow.Python.Keras.Protobuf.SavedMetadata_Fields
+                     , Proto.Tensorflow.Python.Keras.Protobuf.Versions
+                     , Proto.Tensorflow.Python.Keras.Protobuf.Versions_Fields
+                     , Proto.Tensorflow.Python.KernelTests.Proto.TestExample
+                     , Proto.Tensorflow.Python.KernelTests.Proto.TestExample_Fields
+                     , Proto.Tensorflow.Python.Tpu.TensorTracer
+                     , Proto.Tensorflow.Python.Tpu.TensorTracer_Fields
+                     , Proto.Tensorflow.Python.Training.CheckpointState
+                     , Proto.Tensorflow.Python.Training.CheckpointState_Fields
+                     , Proto.Tensorflow.Python.Util.Protobuf.CompareTest
+                     , Proto.Tensorflow.Python.Util.Protobuf.CompareTest_Fields
+                     , Proto.Tensorflow.Security.Fuzzing.CheckpointReaderFuzzInput
+                     , Proto.Tensorflow.Security.Fuzzing.CheckpointReaderFuzzInput_Fields
+                     , Proto.Tensorflow.StreamExecutor.Dnn
+                     , Proto.Tensorflow.StreamExecutor.Dnn_Fields
+                     , Proto.Tensorflow.Tools.Api.Lib.ApiObjects
+                     , Proto.Tensorflow.Tools.Api.Lib.ApiObjects_Fields
+                     , Proto.Tensorflow.Tools.ProtoText.Test
+                     , Proto.Tensorflow.Tools.ProtoText.Test_Fields
   build-depends:  proto-lens == 0.7.*
                 , proto-lens-runtime == 0.7.*
                 , proto-lens-protobuf-types == 0.7.*
