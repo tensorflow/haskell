@@ -1,5 +1,5 @@
 # Prepare the image with:
-#   docker build -t tensorflow/haskell:v0 docker
+#   docker build -t tensorflow/haskell:2.3.0 docker
 FROM tensorflow/tensorflow:2.3.0
 LABEL maintainer="TensorFlow authors <tensorflow-haskell@googlegroups.com>"
 
