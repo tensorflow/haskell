@@ -72,7 +72,7 @@ working, the following commands will compile and run the tests.
 ```
 git clone --recursive https://github.com/tensorflow/haskell.git tensorflow-haskell
 cd tensorflow-haskell
-docker build -t tensorflow/haskell:2.3.0 docker
+docker build -t tensorflow/haskell:2.10.1 docker
 # TODO: move the setup step to the docker script.
 stack --docker setup
 stack --docker test
@@ -90,7 +90,7 @@ stack --docker build --exec Main
 If you want to use GPU you can do:
 
 ```
-IMAGE_NAME=tensorflow/haskell:2.3.0-gpu
+IMAGE_NAME=tensorflow/haskell:2.10.1-gpu
 docker build -t $IMAGE_NAME docker/gpu
 # TODO: move the setup step to the docker script.
 stack --docker --docker-image=$IMAGE_NAME setup
