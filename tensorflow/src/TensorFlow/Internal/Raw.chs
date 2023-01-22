@@ -44,6 +44,23 @@ message :: Status -> IO CString
 message = {# call TF_Message as ^ #}
 
 
+-- TString.
+{# pointer *TF_TString as TString newtype #}
+
+sizeOfTString :: Int
+sizeOfTString = 24
+
+-- TF_TString_Type::TF_TSTR_OFFSET
+tstringOffsetTypeTag :: Word32
+tstringOffsetTypeTag = 2
+
+stringGetDataPointer :: TString -> IO CString
+stringGetDataPointer = {# call TF_StringGetDataPointer as ^ #}
+
+stringGetSize :: TString -> IO CULong
+stringGetSize = {# call TF_StringGetSize as ^ #}
+
+
 -- Buffer.
 data Buffer
 {# pointer *TF_Buffer as BufferPtr -> Buffer #}
