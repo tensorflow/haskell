@@ -26,11 +26,13 @@ module TensorFlow.Internal.FFI
     , setSessionConfig
     , setSessionTarget
     , getAllOpList
+    , unsafeTStringToByteString
       -- * Internal helper.
     , useProtoAsVoidPtrLen
     )
     where
 
+import Control.Exception (assert)
 import Control.Concurrent.Async (Async, async, cancel, waitCatch)
 import Control.Concurrent.MVar (MVar, modifyMVarMasked_, newMVar, takeMVar)
 import Control.Monad (when)
@@ -60,6 +62,17 @@ import Proto.Tensorflow.Core.Framework.Types (DataType(..))
 import Proto.Tensorflow.Core.Protobuf.Config (ConfigProto)
 
 import qualified TensorFlow.Internal.Raw as Raw
+
+-- Interpret a vector of bytes as a TF_TString struct and copy the pointed
+-- to string into a ByteString.
+unsafeTStringToByteString :: S.Vector Word8 -> B.ByteString
+unsafeTStringToByteString v =
+    assert (S.length v == Raw.sizeOfTString) $
+    unsafePerformIO $ S.unsafeWith v $ \tstringPtr -> do
+        let tstring = Raw.TString (castPtr tstringPtr)
+        p <- Raw.stringGetDataPointer tstring
+        n <- Raw.stringGetSize tstring
+        B.packCStringLen (p, fromIntegral n)
 
 data TensorFlowException = TensorFlowException Raw.Code T.Text
     deriving (Show, Eq, Typeable)
