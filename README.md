@@ -9,7 +9,7 @@ This is not an official Google product.
 
 https://tensorflow.github.io/haskell/haddock/
 
-[TensorFlow.Core](https://tensorflow.github.io/haskell/haddock/tensorflow/TensorFlow-Core.html)
+[TensorFlow.Core](https://tensorflow.github.io/haskell/haddock/tensorflow-0.3.0.0/TensorFlow-Core.html)
 is a good place to start.
 
 # Examples
