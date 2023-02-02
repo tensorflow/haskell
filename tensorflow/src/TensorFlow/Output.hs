@@ -121,7 +121,7 @@ opControlInputs = lens _opControlInputs (\o x -> o {_opControlInputs = x})
 -- code into a Build function
 instance IsString Output where
     fromString s = case break (==':') s of
-        (n, ':':ixStr) | [(ix, "" :: String)] <- read ixStr
-                         -> Output (fromInteger ix) $ assigned n
+        (n, ':':ixStr) | ix <- read ixStr
+          -> Output (fromInteger ix) $ assigned n
         _ -> Output 0 $ assigned s
      where assigned = NodeName . Text.pack

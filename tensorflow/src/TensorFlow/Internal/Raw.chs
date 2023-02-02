@@ -18,6 +18,7 @@ module TensorFlow.Internal.Raw where
 
 #include "third_party/tensorflow/c/c_api.h"
 
+import Data.ByteString (ByteString, packCString, useAsCString)
 import Foreign
 import Foreign.C
 
@@ -61,6 +62,35 @@ stringGetSize :: TString -> IO CULong
 stringGetSize = {# call TF_StringGetSize as ^ #}
 
 
+-- Operation.
+{# pointer *TF_Operation as Operation newtype #}
+{# fun TF_OperationName as operationName { `Operation' } -> `ByteString' packCString* #}
+{# fun TF_OperationNumOutputs as operationNumOutputs { `Operation' } -> `Int' #}
+
+instance Storable Operation where
+    sizeOf (Operation t) = sizeOf t
+    alignment (Operation t) = alignment t
+    peek p = fmap Operation (peek (castPtr p))
+    poke p (Operation t) = poke (castPtr p) t
+
+
+-- Output.
+data Output = Output
+    { outputOperation :: Operation
+    , outputIndex     :: CInt
+    }
+{# pointer *TF_Output as OutputPtr -> Output #}
+
+instance Storable Output where
+    sizeOf _ = {# sizeof TF_Output #}
+    alignment _ = {# alignof TF_Output #}
+    peek p = Output <$> {# get TF_Output->oper #} p
+                    <*> (fromIntegral <$> {# get TF_Output->index #} p)
+    poke p (Output oper index) = do
+        {# set TF_Output->oper #} p oper
+        {# set TF_Output->index #} p $ fromIntegral index
+
+
 -- Buffer.
 data Buffer
 {# pointer *TF_Buffer as BufferPtr -> Buffer #}
@@ -70,6 +100,12 @@ getBufferData = {# get TF_Buffer->data #}
 
 getBufferLength :: BufferPtr -> IO CULong
 getBufferLength = {# get TF_Buffer->length #}
+
+newBufferFromString :: Ptr () -> CULong -> IO BufferPtr
+newBufferFromString = {# call TF_NewBufferFromString as ^ #}
+
+deleteBuffer :: BufferPtr -> IO ()
+deleteBuffer = {# call TF_DeleteBuffer as ^ #}
 
 -- Tensor.
 {# pointer *TF_Tensor as Tensor newtype #}
@@ -85,6 +121,8 @@ instance Storable Tensor where
 -- and as far as Haskell is concerned, those are distinct types (`CLong` vs
 -- `CLLong`).
 type CInt64 = {#type int64_t #}
+
+{# pointer *size_t as CSizePtr -> CSize #}
 
 newTensor :: DataType
           -> Ptr CInt64   -- dimensions array
@@ -114,6 +152,31 @@ tensorByteSize = {# call TF_TensorByteSize as ^ #}
 tensorData :: Tensor -> IO (Ptr ())
 tensorData = {# call TF_TensorData as ^ #}
 
+-- ImportGraphDefOptions.
+{# pointer *TF_ImportGraphDefOptions as ImportGraphDefOptions newtype #}
+{# fun TF_NewImportGraphDefOptions as newImportGraphDefOptions { } -> `ImportGraphDefOptions' #}
+{# fun TF_DeleteImportGraphDefOptions as deleteImportGraphDefOptions { `ImportGraphDefOptions' } -> `()' #}
+{# fun TF_ImportGraphDefOptionsAddInputMapping as importGraphDefOptionsAddInputMapping
+    {                `ImportGraphDefOptions'
+    , useAsCString*  `ByteString'
+    ,                `Int'
+    ,               %`OutputPtr'
+    } ->             `()'
+#}
+
+
+-- Graph.
+{# pointer *TF_Graph as Graph newtype #}
+{# fun TF_NewGraph as newGraph { } -> `Graph' #}
+{# fun TF_DeleteGraph as deleteGraph { `Graph' } -> `()' #}
+{# fun TF_GraphOperationByName as graphOperationByName
+    {               `Graph'
+    , useAsCString* `ByteString'
+    } ->            `Operation'
+#}
+{# fun TF_GraphNextOperation as graphNextOperation { `Graph', `CSizePtr' } -> `Operation' #}
+{# fun TF_GraphImportGraphDef as graphImportGraphDef { `Graph', `BufferPtr', `ImportGraphDefOptions', `Status' } -> `()' #}
+
 
 -- Session Options.
 {# pointer *TF_SessionOptions as SessionOptions newtype #}
@@ -132,29 +195,27 @@ deleteSessionOptions = {# call TF_DeleteSessionOptions as ^ #}
 
 
 -- Session.
-{# pointer *TF_DeprecatedSession as Session newtype #}
+{# pointer *TF_Session as Session newtype #}
 
-newSession :: SessionOptions -> Status -> IO Session
-newSession = {# call TF_NewDeprecatedSession as ^ #}
+newSession :: Graph -> SessionOptions -> Status -> IO Session
+newSession = {# call TF_NewSession as ^ #}
+
 
 closeSession :: Session -> Status -> IO ()
-closeSession = {# call TF_CloseDeprecatedSession as ^ #}
+closeSession = {# call TF_CloseSession as ^ #}
 
 deleteSession :: Session -> Status -> IO ()
-deleteSession = {# call TF_DeleteDeprecatedSession as ^ #}
-
-extendGraph :: Session -> Ptr () -> CULong -> Status -> IO ()
-extendGraph = {# call TF_ExtendGraph as ^ #}
+deleteSession = {# call TF_DeleteSession as ^ #}
 
 run :: Session
-    -> BufferPtr                          -- RunOptions proto.
-    -> Ptr CString -> Ptr Tensor -> CInt  -- Input (names, tensors, count).
-    -> Ptr CString -> Ptr Tensor -> CInt  -- Output (names, tensors, count).
-    -> Ptr CString -> CInt                -- Target nodes (names, count).
-    -> BufferPtr                          -- RunMetadata proto.
+    -> BufferPtr                       -- RunOptions proto.
+    -> OutputPtr -> Ptr Tensor -> CInt -- Input (names, tensors, count).
+    -> OutputPtr -> Ptr Tensor -> CInt -- Output (names, tensors, count).
+    -> Ptr Operation           -> CInt -- Target operations (ops, count).
+    -> BufferPtr                       -- RunMetadata proto.
     -> Status
     -> IO ()
-run = {# call TF_Run as ^ #}
+run = {# call TF_SessionRun as ^ #}
 
 -- FFI helpers.
 type TensorDeallocFn = Ptr () -> CULong -> Ptr () -> IO ()
@@ -170,6 +231,3 @@ foreign import ccall "wrapper"
 -- in this address space.
 getAllOpList :: IO BufferPtr
 getAllOpList = {# call TF_GetAllOpList as ^ #}
-
-foreign import ccall "&TF_DeleteBuffer"
-  deleteBuffer :: FunPtr (BufferPtr -> IO ())
