@@ -28,6 +28,9 @@ import Distribution.Simple
     , simpleUserHooks
     , UserHooks(..)
     )
+#if MIN_VERSION_Cabal(3,1,0)
+import Distribution.Utils.Path (unsafeMakeSymbolicPath)
+#endif
 import Data.List (intercalate)
 import Data.ProtoLens (decodeMessage)
 import System.Directory (createDirectoryIfMissing)
@@ -81,7 +84,11 @@ fudgePackageDesc lbi p = p
     }
   where
     fudgeBuildInfo bi =
+#if MIN_VERSION_Cabal(3,1,0)
+        bi { hsSourceDirs = unsafeMakeSymbolicPath (autogenModulesDir lbi) : hsSourceDirs bi }
+#else    
         bi { hsSourceDirs = autogenModulesDir lbi : hsSourceDirs bi }
+#endif
 
 blackList =
     [ -- Requires the "func" type:
