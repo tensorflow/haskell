@@ -168,7 +168,7 @@ gradients y xs = build $ do
         (\f x -> fromMaybe (error $ "no NodeDef found for " ++ show x) (f x))
         . flip Map.lookup
     let (gr, nodeMap) = createGraph yName nodeDefLookup
-        xnodes = mapMaybe (\x -> nodeMap ^. (at . outputNodeName . renderedOutput $ x)) xs
+        xnodes = mapMaybe (\x -> nodeMap ^. (at $ outputNodeName $ renderedOutput x)) xs
         -- make a set of the nodes reachable from the xnodes
         -- The xnodes are not part of this set (unless reachable from another xnode)
         reachableSet = computeReachableSet xnodes gr
@@ -199,7 +199,8 @@ computeReachableSet vs g =
   IntSet.fromList $ concatMap (drop 1 . FGL.preorder) (FGL.dff vs g)
 
 outputIxAt :: OutputIx -> Lens' (IntMap.IntMap v) (Maybe v)
-outputIxAt = intAt . unOutputIx
+-- NOTE: point-free notation leads to unification problems here
+outputIxAt x = intAt (unOutputIx x)
 
 -- | Incomplete gradients of a node's outputs.
 --
