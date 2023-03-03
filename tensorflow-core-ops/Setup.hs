@@ -28,7 +28,7 @@ import Distribution.Simple
     , simpleUserHooks
     , UserHooks(..)
     )
-#if MIN_VERSION_Cabal(3,1,0)
+#if MIN_VERSION_Cabal(3,6,0)
 import Distribution.Utils.Path (unsafeMakeSymbolicPath)
 #endif
 import Data.List (intercalate)
@@ -84,7 +84,7 @@ fudgePackageDesc lbi p = p
     }
   where
     fudgeBuildInfo bi =
-#if MIN_VERSION_Cabal(3,1,0)
+#if MIN_VERSION_Cabal(3,6,0)
         bi { hsSourceDirs = unsafeMakeSymbolicPath (autogenModulesDir lbi) : hsSourceDirs bi }
 #else    
         bi { hsSourceDirs = autogenModulesDir lbi : hsSourceDirs bi }
