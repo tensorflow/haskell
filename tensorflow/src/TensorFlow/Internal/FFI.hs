@@ -261,7 +261,7 @@ resolveOperation graph name = do
   where
     exception =
         let msg = "Operation not found in graph: " <> (T.pack $ show name)
-        in TensorFlowException Raw.TF_INVALID_ARGUMENT msg
+        in TensorFlowException Raw.TSL_INVALID_ARGUMENT msg
 
 
 -- Internal.
@@ -325,7 +325,7 @@ checkStatus fn =
     bracket Raw.newStatus Raw.deleteStatus $ \status -> do
         result <- fn status
         code <- Raw.getCode status
-        when (code /= Raw.TF_OK) $ do
+        when (code /= Raw.TSL_OK) $ do
             msg <- T.decodeUtf8With T.lenientDecode <$>
                    (Raw.message status >>= B.packCString)
             throwM $ TensorFlowException code msg
@@ -372,4 +372,4 @@ getAllOpList =
           when (p == nullPtr) (throwM exception)
           return p
       exception = TensorFlowException
-                Raw.TF_UNKNOWN "GetAllOpList failure, check logs"
+                Raw.TSL_UNKNOWN "GetAllOpList failure, check logs"
