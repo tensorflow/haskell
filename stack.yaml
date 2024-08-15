@@ -29,10 +29,10 @@ extra-include-dirs:
 
 docker:
     enable: false
-    image: tensorflow/haskell:2.12.0
+    image: tensorflow/haskell:2.17.0
 
 nix:
     enable: false
-    # nixos-22.11 with libtensorflow 2.10.1
-    path: ["nixpkgs=https://github.com/NixOS/nixpkgs/archive/2dea8991d89b9f1e78d874945f78ca15f6954289.tar.gz"]
+    # nixos-24.05 with libtensorflow 2.13.0
+    path: ["nixpkgs=https://github.com/NixOS/nixpkgs/archive/63dacb46bf939521bdc93981b4cbb7ecb58427a0.tar.gz"]
     packages: [snappy, zlib, protobuf, libtensorflow]
